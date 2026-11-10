@@ -5,12 +5,13 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import { getPublicAboutPayload } from "backend/SKANDI_CORE/publicContent.web";
+import { getPublicNetworkMapData } from "backend/SKANDI_CORE/networkMap.web";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 
 const EMBED_ID = "#aboutEmbed";
 const SOURCE = "SKANDI_ABOUT_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.4";
+const VERSION = "BACKEND-BASE-1.1-B011.4";
 const LANGUAGES = new Set(["EN", "SV", "NO", "DA"]);
 
 function parse(value) {
@@ -48,6 +49,22 @@ async function load(embed, payload = {}) {
   }
 }
 
+let networkRequest;
+async function loadNetwork(embed) {
+  try {
+    if (!networkRequest) networkRequest = getPublicNetworkMapData().finally(() => { networkRequest = null; });
+    const data = await networkRequest;
+    post(embed, "ABOUT_NETWORK_DATA", {
+      destinations: data.destinations,
+      airports: data.airports,
+      airlines: data.airlines,
+      routes: data.routes
+    });
+  } catch (_) {
+    post(embed, "ABOUT_NETWORK_ERROR", { message: "The network is temporarily unavailable." });
+  }
+}
+
 function navigate(path) {
   const target = String(path || "").trim();
   if (target && isSafeInternalRoute(target)) wixLocationFrontend.to(target);
@@ -77,7 +94,12 @@ $w.onReady(() => {
         : {};
 
     if (message.type === "ABOUT_PAGE_READY" || message.type === "ABOUT_PAGE_REFRESH") {
-      await load(embed, payload);
+      await Promise.all([load(embed, payload), loadNetwork(embed)]);
+      return;
+    }
+
+    if (message.type === "ABOUT_NETWORK_REFRESH") {
+      await loadNetwork(embed);
       return;
     }
 

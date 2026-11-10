@@ -1,5 +1,9 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+## 2026-11-10 — Map controls and network overview
+
+The map title, view modes, search, region filters and optional map key now sit in a single responsive control panel instead of overlapping independent overlays. All four map modes remain available on mobile. The large destination-list overlay and the Trusted Connections chapter moved to the compact network overview on `/about`; the existing accessible map directory and booking handoff remain. The directory is collapsed by default and opens automatically when the map cannot start. This supersedes the older in-page directory and airline-chapter descriptions below. Map records and the existing Wix bridge remain owned by the canonical public network projection. The About page controller supplies that same projection to its new overview.
+
 ## 2026-11-10 — Responsive map controls
 
 The map title, view modes, search, country filters and optional map key are grouped in one responsive control panel. All four view modes remain available on small screens, and region buttons report their selected state to assistive technology. The existing full destination list and partner-airline section stay in place until their coordinated About-page release is ready.

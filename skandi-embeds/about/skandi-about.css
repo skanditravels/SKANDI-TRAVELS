@@ -1005,3 +1005,43 @@ img{display:block;max-width:100%}
     transition-duration:.01ms!important;
   }
 }
+
+/* Compact network overview; inventory remains owned by the public network feed. */
+.about-network-heading{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:20px}
+.about-network-heading h2{max-width:700px;margin-top:10px;color:#022e64;font-size:clamp(27px,3vw,38px);line-height:1.15;letter-spacing:-.035em}
+.about-network-map-link{flex:none;color:#075d79;font-weight:700;white-space:nowrap}
+.about-network-map-link:hover{text-decoration:underline;text-underline-offset:4px}
+.about-network-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.about-network-card{min-width:0;padding:21px;border:1px solid #dce6ee;border-radius:14px;background:#f8fbfd}
+.about-network-card-head h3{color:#022e64;font-size:18px;letter-spacing:-.02em}
+.about-network-card-head p{margin-top:6px;color:#5d7080;font-size:13px;line-height:1.5}
+.about-airlines{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.about-airline-link{min-width:0;min-height:48px;display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e1eaf0;border-radius:9px;background:#fff;color:#123b60;font-size:13px;font-weight:700}
+.about-airline-link:hover,.about-destination-link:hover{border-color:#89cbd0;background:#edf9f9}
+.about-airline-link img{width:34px;height:26px;object-fit:contain;flex:none}
+.about-airline-link span{min-width:0;overflow-wrap:anywhere}
+.about-airlines-more{grid-column:1/-1}
+.about-airlines-more summary,.about-destination-browser>summary{min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;color:#075d79;font-weight:700;list-style:none}
+.about-airlines-more summary::-webkit-details-marker,.about-destination-browser>summary::-webkit-details-marker{display:none}
+.about-airlines-more summary::after,.about-destination-browser>summary::after{content:"+";font-size:19px;line-height:1}
+.about-airlines-more[open] summary::after,.about-destination-browser[open]>summary::after{content:"−"}
+.about-airlines-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.about-destination-browser{margin-top:12px;border-top:1px solid #dbe7ed}
+.about-destination-browser label{display:block;margin:4px 0 7px;color:#50677a;font-size:13px;font-weight:700}
+.about-destination-browser input{width:100%;min-height:44px;padding:9px 11px;border:1px solid #bdcfdc;border-radius:8px;background:#fff;color:#173747;font-size:16px}
+.about-network-countries{max-height:260px;overflow-y:auto;overscroll-behavior:contain;margin-top:10px;padding-right:3px}
+.about-network-country{border-bottom:1px solid #e0eaf0}
+.about-network-country summary{min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:#173e60;font-weight:700;list-style:none}
+.about-network-country summary::-webkit-details-marker{display:none}
+.about-network-country summary span{margin-left:auto;color:#687d8c;font-weight:600}
+.about-network-country summary::after{content:"+";color:#4c7286;font-size:17px;font-weight:600}
+.about-network-country[open] summary::after{content:"−"}
+.about-network-country-links{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 12px}
+.about-destination-link{display:inline-flex;align-items:center;min-height:38px;padding:7px 10px;border:1px solid #d8e6ec;border-radius:7px;background:#fff;color:#124467;font-size:13px;font-weight:600}
+.about-network-status{margin-top:12px;color:#607687;font-size:13px;line-height:1.5}
+.about-network-status[data-error="true"]{color:#9a302b}
+.about-network-retry{min-height:40px;margin-top:8px;padding:0 12px;border:1px solid #9db6c6;border-radius:8px;background:#fff;color:#022e64;font-weight:700}
+.about-network [hidden]{display:none!important}
+.about-network a:focus-visible,.about-network button:focus-visible,.about-network summary:focus-visible,.about-network input:focus-visible{outline:3px solid #5fc7cf;outline-offset:2px}
+@media(max-width:760px){.about-network-heading{align-items:start;flex-direction:column;gap:12px}.about-network-grid{grid-template-columns:1fr}.about-network-card{padding:17px}}
+@media(max-width:380px){.about-airlines,.about-airlines-extra{grid-template-columns:1fr}}

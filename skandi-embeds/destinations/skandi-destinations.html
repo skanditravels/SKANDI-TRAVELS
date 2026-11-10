@@ -25,7 +25,6 @@
         <h1 id="networkTitle">Our Network</h1>
         <p>Explore our destinations, Collection stays and airline connections on the map.</p>
         <div class="network-meta" id="networkMeta" aria-live="polite"></div>
-        <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
       </header>
 
       <div class="map-control-dock">
@@ -126,15 +125,7 @@
     <div class="collection-rail" id="collectionRail"></div>
   </section>
 
-  <section class="chapter" id="airlineChapter" aria-labelledby="airlineHeading">
-    <div class="chapter-head">
-      <div>
-        <div class="chapter-kicker">Trusted connections</div>
-        <h2 id="airlineHeading">Partner airlines</h2>
-      </div>
-      <p class="chapter-intro">Explore the airline relationships attached to published SKANDI network connections. Airline operation remains clearly attributed to the operating carrier.</p>
-    </div>
-    <div class="airline-rail" id="airlineRail"></div>
+  <section class="chapter journey-chapter" aria-label="Plan your journey">
     <div class="plan-band">
       <div>
         <h3>Seen somewhere you want to go?</h3>
@@ -145,7 +136,8 @@
   </section>
 </main>
 
-<section class="directory" aria-labelledby="directoryHeading">
+<details class="directory" id="networkDirectory">
+  <summary class="directory-toggle"><span>Browse accessible map links</span><span aria-hidden="true" class="directory-toggle-icon">+</span></summary>
   <div class="directory-inner">
     <div class="directory-head">
       <div><h2 id="directoryHeading">Network directory</h2></div>
@@ -153,26 +145,7 @@
     </div>
     <div class="directory-grid" id="directoryGrid"></div>
   </div>
-</section>
-
-<section class="destinations-list-page" id="destinationsListPage" aria-labelledby="destinationsListHeading" hidden>
-  <div class="destinations-list-page-header">
-    <div class="destinations-list-page-header-inner">
-      <button class="destinations-list-back" id="destinationsListBack" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
-        <span>Back to Our Network</span>
-      </button>
-      <div class="destinations-list-page-label">SKANDI Travels</div>
-    </div>
-  </div>
-  <div class="destinations-list-hero">
-    <div class="destinations-list-kicker">Explore with SKANDI</div>
-    <h2 id="destinationsListHeading">All destinations.</h2>
-    <p>Browse every published SKANDI destination by country. Countries and destinations are listed alphabetically and open the existing Country and Destination pages.</p>
-    <nav class="destinations-alphabet" id="destinationsAlphabet" aria-label="Jump to country"></nav>
-  </div>
-  <div class="destinations-list-content" id="destinationsListContent" aria-live="polite"></div>
-</section>
+</details>
 
 <script src="skandi-destinations.js"></script>
 </body>

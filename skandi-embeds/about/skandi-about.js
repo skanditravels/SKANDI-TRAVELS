@@ -60,6 +60,27 @@ const I18N = {
     "focus.title": "Partners and places we are building around.",
     "focus.copy": "These are public-safe selected records from the SKANDI content library.",
 
+    "network.kicker": "Our network",
+    "network.title": "The places and partners that connect us.",
+    "network.map": "Explore the map →",
+    "network.airlines": "Trusted connections",
+    "network.airlinesCopy": "Meet the airlines in our published network.",
+    "network.destinations": "Our destinations",
+    "network.destinationsCopy": "Find a place by country and open it on the map.",
+    "network.browse": "Browse destinations",
+    "network.search": "Search destinations",
+    "network.placeholder": "City or country",
+    "network.loading": "Loading our network…",
+    "network.error": "Our network is temporarily unavailable. Please try again.",
+    "network.retry": "Try again",
+    "network.noAirlines": "No airlines are currently available.",
+    "network.noDestinations": "No destinations are currently available.",
+    "network.noMatches": "No destinations match your search.",
+    "network.other": "Other destinations",
+    "network.more": "More airlines",
+    "network.countOne": "destination",
+    "network.countMany": "destinations",
+
     "links.kicker": "Helpful links",
     "links.title": "Find what you need quickly.",
     "links.copy": "Careers, press, legal policies and travel information are easy to access from one place.",
@@ -142,6 +163,27 @@ const I18N = {
     "focus.title": "Våra närmaste partners",
     "focus.copy": "Handplockade favoriter och hotell från SKANDI:s utbud.",
 
+    "network.kicker": "Vårt nätverk",
+    "network.title": "Platserna och partnerna som förenar oss.",
+    "network.map": "Utforska kartan →",
+    "network.airlines": "Trygga förbindelser",
+    "network.airlinesCopy": "Möt flygbolagen i vårt publicerade nätverk.",
+    "network.destinations": "Våra destinationer",
+    "network.destinationsCopy": "Hitta en plats efter land och öppna den på kartan.",
+    "network.browse": "Visa destinationer",
+    "network.search": "Sök destinationer",
+    "network.placeholder": "Stad eller land",
+    "network.loading": "Laddar vårt nätverk…",
+    "network.error": "Nätverket är tillfälligt otillgängligt. Försök igen.",
+    "network.retry": "Försök igen",
+    "network.noAirlines": "Inga flygbolag är tillgängliga just nu.",
+    "network.noDestinations": "Inga destinationer är tillgängliga just nu.",
+    "network.noMatches": "Inga destinationer matchar din sökning.",
+    "network.other": "Övriga destinationer",
+    "network.more": "Fler flygbolag",
+    "network.countOne": "destination",
+    "network.countMany": "destinationer",
+
     "links.kicker": "Genvägar",
     "links.title": "Hitta snabbt det du söker.",
     "links.copy": "Allt från reseinformation till lediga tjänster och våra villkor, samlat på ett och samma ställe.",
@@ -183,6 +225,9 @@ let MASTER = { settings:{ language:"EN", currency:"USD" }, routes:{} };
 let DATA = { settings:{}, facts:[], timeline:[], partners:[], collection:{items:[],tiers:{},counts:{}} };
 let collectionTypeFilter = "all";
 let lastRequestedLanguage = "";
+let NETWORK = null;
+let networkState = "loading";
+let networkTimeout;
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? "").replace(/[&<>'"]/g, c => ({
@@ -218,6 +263,144 @@ function navTo(path) {
   if (!target) return;
   post("ABOUT_NAVIGATE", { path: target });
 }
+
+// The About overview receives the same public network projection as the map.
+const networkFirst = (...values) => values.find(value => value !== undefined && value !== null && value !== "") ?? "";
+const networkText = (value, max = 160) => String(value ?? "").trim().slice(0, max);
+const networkSlug = value => networkText(value,120).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+function networkValues(value) {
+  const values = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
+  return values.map(item => networkText(typeof item === "object" && item ? networkFirst(item.code,item.id,item.name,item.label) : item)).filter(Boolean);
+}
+function isNetworkAirport(item = {}) {
+  const iata = networkText(networkFirst(item.iata,item.IATA,item.airportCode,item.code),8);
+  const words = [item.summary,item.description,item.title,item.name].map(value => networkText(value).toLowerCase()).join(" ");
+  return Boolean(iata && iata.length === 3 && (words.includes("airport") || item.icao || item.ICAO || item.airportCode));
+}
+function normalizeNetwork(payload = {}) {
+  const rawDestinations = Array.isArray(payload.destinations) ? payload.destinations : [];
+  const rawAirports = Array.isArray(payload.airports) ? payload.airports : [];
+  let destinations = rawDestinations.filter(item => item && (!isNetworkAirport(item) || rawAirports.length > 0)).map(item => {
+    const name = networkText(networkFirst(item.name,item.title,item.destinationName,item.city,item.label,item.code),180);
+    const fallbackId = networkSlug(networkFirst(item.name,item.title,item.city));
+    return { id:networkText(networkFirst(item.publicId,item.id,item.code,item.Code,item.slug,item._id,item.iata,item.IATA)) || fallbackId, name, country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120) };
+  }).filter(item => item.id && item.name);
+
+  // Match the map's city fallback when its feed contains airports but no destinations.
+  if (!destinations.length) {
+    const normalizeAirport = item => {
+      if (!item) return null;
+      const code = networkText(networkFirst(item.iata,item.IATA,item.code,item.airportCode,item.id),8).toUpperCase();
+      const id = networkText(networkFirst(item.id,item.publicId,code,item._id)) || code;
+      return id && code ? {id, code, name:networkText(networkFirst(item.airportName,item.title,item.name,code),180),city:networkText(networkFirst(item.city,item.locationCity,item.destination,item.name),140),country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120)} : null;
+    };
+    const explicitAirports = rawAirports.map(normalizeAirport).filter(Boolean);
+    const airportSource = explicitAirports.length ? explicitAirports : rawDestinations.filter(isNetworkAirport).map(normalizeAirport).filter(Boolean);
+    const cities = new Map();
+    airportSource.forEach(item => {
+      const name = item.city || item.name, country = item.country;
+      const key = `${name}|${country}`.toLowerCase();
+      if (!key.replace("|","").trim()) return;
+      if (!cities.has(key)) cities.set(key,{id:`city:${networkSlug(name)}:${networkSlug(country)}`,name,country});
+    });
+    destinations = [...cities.values()];
+  }
+
+  const airlines = (Array.isArray(payload.airlines) ? payload.airlines : []).filter(Boolean).map(item => {
+    const iata = networkText(networkFirst(item.iata,item.IATA,item.code,item.airlineCode),8).toUpperCase();
+    const name = networkText(networkFirst(item.name,item.title,item.shortName,iata));
+    return { id:networkText(networkFirst(item.id,item.publicId,item.recordId,iata,item.icao,item.name)) || iata || networkSlug(name), name, iata, logo:networkText(networkFirst(item.logo,item.logoUrl,item.logoFile,item.logoIcon,item.logoIconUrl),1500), partner:Boolean(networkFirst(item.partnerStatus,item.partner,item.isPartner,item.selected,true)) };
+  }).filter(item => item.id && item.name && item.partner);
+  const codes = (Array.isArray(payload.routes) ? payload.routes : []).filter(route => route && networkText(networkFirst(route.fromId,route.fromCode,route.originId,route.originCode,route.from,route.origin,route.originIata)) && networkText(networkFirst(route.toId,route.toCode,route.destinationId,route.destinationCode,route.to,route.destination,route.destinationIata))).flatMap(route => networkValues(networkFirst(route.airlineIds,route.airlines,route.carriers,route.airline)).map(code => code.toUpperCase()));
+  codes.forEach(code => { if (!airlines.some(item => item.id.toUpperCase() === code || item.iata === code)) airlines.push({id:code,name:code,iata:code,logo:""}); });
+  const uniqueById = items => { const seen = new Set(); return items.filter(item => {const key = item.id.toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true;}); };
+  return { destinations:uniqueById(destinations), airlines:uniqueById(airlines) };
+}
+function networkMapPath(type, id) {
+  const params = new URLSearchParams();
+  // Legacy type parameters preserve IDs that contain colons, including derived cities.
+  params.set(type, id);
+  return `${masterRoute("destinations", "/destinations")}?${params.toString()}`;
+}
+function networkLink(type, item, className) {
+  const link = document.createElement("a");
+  const path = networkMapPath(type, item.id);
+  link.className = className;
+  link.href = path;
+  link.target = "_top";
+  if (type === "airline" && item.logo) {
+    try {
+      const url = new URL(item.logo, document.referrer || window.location.href);
+      if (url.protocol === "https:") {
+        const image = document.createElement("img");
+        image.src = url.href; image.alt = ""; image.loading = "lazy"; image.onerror = () => image.remove();
+        link.append(image);
+      }
+    } catch (_) {}
+  }
+  const label = document.createElement("span"); label.textContent = item.name; link.append(label);
+  link.addEventListener("click", event => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault(); navTo(path);
+  });
+  return link;
+}
+function renderNetworkDestinations() {
+  const host = $("aboutNetworkDestinations"), search = $("aboutDestinationSearch"), count = $("aboutDestinationCount");
+  if (!host || !search || !count || !NETWORK) return;
+  host.replaceChildren();
+  search.placeholder = tr("network.placeholder");
+  const query = search.value.trim().toLocaleLowerCase();
+  const groups = new Map();
+  NETWORK.destinations.forEach(item => {
+    const country = item.country || tr("network.other");
+    if (query && !`${country} ${item.name}`.toLocaleLowerCase().includes(query)) return;
+    if (!groups.has(country)) groups.set(country,[]);
+    groups.get(country).push(item);
+  });
+  const destinationCount = NETWORK.destinations.length;
+  count.textContent = `${destinationCount} ${tr(destinationCount===1?"network.countOne":"network.countMany")}`;
+  if (!groups.size) {
+    const empty=document.createElement("p"); empty.className="about-network-status";
+    empty.textContent=tr(destinationCount ? "network.noMatches" : "network.noDestinations"); host.append(empty); return;
+  }
+  [...groups.entries()].sort(([a],[b])=>a.localeCompare(b,undefined,{sensitivity:"base"})).forEach(([country,items]) => {
+    const section=document.createElement("details"); section.className="about-network-country"; section.open=Boolean(query);
+    const summary=document.createElement("summary"), name=document.createElement("strong"), total=document.createElement("span");
+    name.textContent=country; total.textContent=String(items.length); summary.append(name,total); section.append(summary);
+    const links=document.createElement("div"); links.className="about-network-country-links";
+    items.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"})).forEach(item=>links.append(networkLink("destination",item,"about-destination-link")));
+    section.append(links); host.append(section);
+  });
+}
+function renderNetwork() {
+  const status=$("aboutNetworkStatus"), retry=$("aboutNetworkRetry"), host=$("aboutNetworkAirlines");
+  if (!status || !retry || !host) return;
+  retry.textContent=tr("network.retry");
+  retry.hidden=networkState!=="error";
+  status.hidden=networkState==="ready";
+  status.dataset.error=String(networkState==="error");
+  if (networkState!=="ready" || !NETWORK) {
+    status.textContent=tr(networkState==="error"?"network.error":"network.loading");
+    host.replaceChildren(); return;
+  }
+  host.replaceChildren();
+  const airlines=[...NETWORK.airlines].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+  if (!airlines.length) { const empty=document.createElement("p"); empty.className="about-network-status"; empty.textContent=tr("network.noAirlines"); host.append(empty); }
+  airlines.slice(0,8).forEach(item=>host.append(networkLink("airline",item,"about-airline-link")));
+  if (airlines.length>8) {
+    const more=document.createElement("details"); more.className="about-airlines-more";
+    const label=document.createElement("summary"); label.textContent=tr("network.more"); more.append(label);
+    const extra=document.createElement("div"); extra.className="about-airlines-extra";
+    airlines.slice(8).forEach(item=>extra.append(networkLink("airline",item,"about-airline-link"))); more.append(extra); host.append(more);
+  }
+  renderNetworkDestinations();
+}
+function waitForNetwork() {
+  clearTimeout(networkTimeout); networkState="loading"; renderNetwork();
+  networkTimeout=setTimeout(()=>{if(networkState==="loading"){networkState="error";renderNetwork()}},12000);
+}
+function requestNetwork() { waitForNetwork(); post("ABOUT_NETWORK_REFRESH",{}); }
 
 function requestAbout(force = false) {
   const language = currentLang();
@@ -420,6 +603,7 @@ window.addEventListener("message", event => {
     };
     applyTranslations();
     bindNavigation();
+    renderNetwork();
     if (currentLang() !== previous || !lastRequestedLanguage) requestAbout(true);
     return;
   }
@@ -443,6 +627,21 @@ window.addEventListener("message", event => {
     return;
   }
 
+  if (msg.type === "ABOUT_NETWORK_DATA" && event.source === window.parent) {
+    clearTimeout(networkTimeout);
+    NETWORK = normalizeNetwork(msg.payload || {});
+    networkState = "ready";
+    renderNetwork();
+    return;
+  }
+
+  if (msg.type === "ABOUT_NETWORK_ERROR" && event.source === window.parent) {
+    clearTimeout(networkTimeout);
+    networkState = "error";
+    renderNetwork();
+    return;
+  }
+
   if (msg.type === "ABOUT_PAGE_ERROR") {
     const state = $("collectionLiveState");
     if (state) {
@@ -456,6 +655,9 @@ window.addEventListener("message", event => {
 applyTranslations();
 renderData();
 bindNavigation();
+$("aboutDestinationSearch")?.addEventListener("input",renderNetworkDestinations);
+$("aboutNetworkRetry")?.addEventListener("click",requestNetwork);
+waitForNetwork();
 post("MASTER_CONFIG_REQUEST", {});
 post("ABOUT_PAGE_READY", { language: currentLang() });
 

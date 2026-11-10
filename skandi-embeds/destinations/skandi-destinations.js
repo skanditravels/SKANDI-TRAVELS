@@ -21,7 +21,6 @@ const state = {
   selectedAirlineId:null,
   selectedRegion:null,
   searchOpen:false,
-  destinationDirectoryOpen:false,
   panelOpen:false,
   mobileSheetState:"peek",
   mapReady:false,
@@ -33,6 +32,7 @@ const state = {
   model:{destinations:[],hotels:[],airports:[],airlines:[],routes:[],regions:[],stats:{}},
   map:null,
   mapInitialized:false,
+  mapFailed:false,
   pendingPayload:null,
   linkedSelection:null,
   siteBridge:false,
@@ -42,7 +42,7 @@ const state = {
 
 const el = {};
 function cacheElements(){
-  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","airlineChapter","airlineRail","planJourney","directoryGrid","destinationsListOpen","destinationsListPage","destinationsListBack","destinationsAlphabet","destinationsListContent"].forEach(id=>{el[id]=document.getElementById(id)});
+  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","planJourney","networkDirectory","directoryGrid"].forEach(id=>{el[id]=document.getElementById(id)});
 }
 
 /* =========================================================
@@ -355,7 +355,7 @@ function emptyFC(){return {type:"FeatureCollection",features:[]}}
    ========================================================= */
 function initMap(){
   if(state.mapInitialized)return;
-  if(!window.maplibregl){showMapFailure("The interactive atlas could not start in this browser.");return}
+  if(!window.maplibregl){showMapFailure("The map couldn’t start. Browse the network below.");return}
   state.mapInitialized=true;
   try{
     state.map=new maplibregl.Map({
@@ -399,6 +399,7 @@ function initMap(){
 }
 function onMapLoad(){
   state.mapReady=true;
+  state.mapFailed=false;
   el.networkHero.classList.add("map-ready");
   const loadingVeil=document.getElementById("mapLoading");
   if(loadingVeil)loadingVeil.remove();
@@ -667,7 +668,7 @@ function focusSelection(type,obj){
 }
 function cameraDuration(ms){return REDUCED_MOTION?60:ms}
 function panelPadding(){return IS_MOBILE()?{top:170,bottom:190,left:36,right:36}:{top:90,bottom:90,left:80,right:470}}
-function fitBoundsFor(items,animate=false,options={}){const bounds=boundsForFeatures(items);if(!bounds||bounds.isEmpty?.())return;state.map.fitBounds(bounds,{padding:options.padding||panelPadding(),maxZoom:6.3,duration:animate?cameraDuration(options.duration||800):0,essential:true})}
+function fitBoundsFor(items,animate=false,options={}){if(!state.mapReady||!state.map)return;const bounds=boundsForFeatures(items);if(!bounds||bounds.isEmpty?.())return;state.map.fitBounds(bounds,{padding:options.padding||panelPadding(),maxZoom:6.3,duration:animate?cameraDuration(options.duration||800):0,essential:true})}
 function fitDefaultBounds(animate=true){
   const items=[...state.model.destinations.filter(d=>d.mappable),...state.model.airports.filter(a=>a.mappable&&state.model.routes.some(r=>routeTouchesNode(r,a))),...state.model.hotels.filter(h=>h.mappable)];
   if(items.length)fitBoundsFor(items,animate,{padding:IS_MOBILE()?{top:150,bottom:110,left:35,right:35}:{top:150,bottom:90,left:90,right:90}});else state.map?.easeTo({center:[12,45],zoom:2,duration:animate?cameraDuration(700):0});
@@ -818,7 +819,7 @@ function searchSecondary(type,item){if(type==="destination")return [item.country
 /* =========================================================
    EDITORIAL / DIRECTORY
    ========================================================= */
-function renderEditorial(){renderFeatured();renderCollection();renderAirlines()}
+function renderEditorial(){renderFeatured();renderCollection()}
 function renderFeatured(){
   el.featuredDestinations.replaceChildren();
   const items=[...state.model.destinations].sort((a,b)=>(Number(b.featured)-Number(a.featured))||a.priority-b.priority||a.name.localeCompare(b.name)).slice(0,3);
@@ -837,130 +838,6 @@ function renderCollection(){
     const copy=document.createElement("div");copy.className="collection-copy";const small=document.createElement("small");small.textContent=[h.area||h.city,h.country].filter(Boolean).join(" · ");const strong=document.createElement("strong");strong.textContent=h.name;const p=document.createElement("p");p.textContent=h.summary||"Handpicked by SKANDI.";copy.append(small,strong,p);b.append(media,copy);b.addEventListener("click",()=>{scrollToMap();selectObject("hotel",h.id,{camera:true,history:true})});el.collectionRail.append(b)
   });
 }
-function renderAirlines(){
-  el.airlineRail.replaceChildren();el.airlineChapter.hidden=!state.model.airlines.length;
-  state.model.airlines.forEach(a=>{
-    const b=document.createElement("button");b.type="button";b.className="airline-chip";if(a.logo&&!SAVE_DATA){const img=document.createElement("img");img.alt="";img.loading="lazy";img.src=a.logo;img.onerror=()=>img.remove();b.append(img)}const copy=document.createElement("div");const strong=document.createElement("strong");strong.textContent=a.name;const small=document.createElement("small");const count=state.model.routes.filter(r=>routeHasAirline(r,a.id)).length;small.textContent=[a.iata,count?`${count} ${count===1?"connection":"connections"}`:"Partner airline"].filter(Boolean).join(" · ");copy.append(strong,small);b.append(copy);b.addEventListener("click",()=>{scrollToMap();setMode("airlines",true);selectObject("airline",a.id,{camera:true,history:true})});el.airlineRail.append(b)
-  });
-}
-
-function countryRoute(countryName){
-  const slug=slugify(countryName);
-  return slug?`${paths.explore}?country=${encodeURIComponent(slug)}`:"";
-}
-function destinationRoute(destination){
-  return destination ? mapLink("destination",destination) : "";
-}
-function renderDestinationsList(){
-  if(!el.destinationsListContent||!el.destinationsAlphabet)return;
-  el.destinationsListContent.replaceChildren();
-  el.destinationsAlphabet.replaceChildren();
-
-  const grouped=new Map();
-  [...state.model.destinations]
-    .filter(destination=>destination?.name)
-    .sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"}))
-    .forEach(destination=>{
-      const country=cleanString(destination.country||"Other destinations",120);
-      if(!grouped.has(country))grouped.set(country,[]);
-      grouped.get(country).push(destination);
-    });
-
-  const countries=[...grouped.entries()]
-    .sort(([a],[b])=>a.localeCompare(b,undefined,{sensitivity:"base"}));
-
-  if(!countries.length){
-    const empty=document.createElement("div");
-    empty.className="destinations-list-empty";
-    empty.textContent=state.dataState==="error"?"Destinations are unavailable right now. Return to the network and try again.":"Published destinations are loading.";
-    el.destinationsListContent.append(empty);
-    return;
-  }
-
-  const letters=new Map();
-  countries.forEach(([country])=>{
-    const letter=(country[0]||"#").toUpperCase();
-    if(!letters.has(letter))letters.set(letter,`destination-country-${slugify(country)||"other"}`);
-  });
-  [...letters.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([letter,target])=>{
-    const link=document.createElement("a");
-    link.href=`#${target}`;
-    link.textContent=letter;
-    link.addEventListener("click",event=>{
-      event.preventDefault();
-      document.getElementById(target)?.scrollIntoView({behavior:REDUCED_MOTION?"auto":"smooth",block:"start"});
-    });
-    el.destinationsAlphabet.append(link);
-  });
-
-  countries.forEach(([country,destinations])=>{
-    const section=document.createElement("section");
-    section.className="destination-country";
-    section.id=`destination-country-${slugify(country)||"other"}`;
-
-    const countryColumn=document.createElement("div");
-    const heading=document.createElement("button");
-    heading.type="button";
-    heading.className="destination-country-name";
-    heading.textContent=country;
-
-    const countryPath=country==="Other destinations"?"":countryRoute(country);
-    if(countryPath){
-      heading.addEventListener("click",()=>navigate(countryPath,{type:"country",country:slugify(country)}));
-    }else{
-      heading.disabled=true;
-    }
-
-    const count=document.createElement("span");
-    count.className="destination-country-count";
-    count.textContent=`${destinations.length} ${destinations.length===1?"destination":"destinations"}`;
-    countryColumn.append(heading,count);
-
-    const list=document.createElement("div");
-    list.className="destination-country-list";
-    destinations
-      .sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"}))
-      .forEach(destination=>{
-        const button=document.createElement("button");
-        button.type="button";
-        button.className="destination-list-link";
-        button.textContent=destination.name;
-        const path=destinationRoute(destination);
-        if(path){
-          button.addEventListener("click",()=>navigate(path,{
-            type:"destination",
-            country:slugify(destination.country||""),
-            destination:destination.slug||slugify(destination.name)
-          }));
-        }else{
-          button.disabled=true;
-        }
-        list.append(button);
-      });
-
-    section.append(countryColumn,list);
-    el.destinationsListContent.append(section);
-  });
-}
-function openDestinationsList(){
-  if(!el.destinationsListPage)return;
-  renderDestinationsList();
-  state.destinationDirectoryOpen=true;
-  el.destinationsListPage.hidden=false;
-  document.body.classList.add("destinations-directory-open");
-  requestAnimationFrame(()=>{
-    el.destinationsListPage.scrollTop=0;
-    el.destinationsListBack?.focus();
-  });
-}
-function closeDestinationsList(){
-  if(!el.destinationsListPage||!state.destinationDirectoryOpen)return;
-  state.destinationDirectoryOpen=false;
-  el.destinationsListPage.hidden=true;
-  document.body.classList.remove("destinations-directory-open");
-  el.destinationsListOpen?.focus();
-}
-
 function renderDirectory(){
   el.directoryGrid.replaceChildren();
   const groups=[
@@ -1145,16 +1022,17 @@ function installNetworkDynamics(){
    STATUS / ERROR / BRIDGE
    ========================================================= */
 function setStatus(message,{tone="info",retry=false}={}){el.mapStatusText.textContent=message||"";el.mapStatus.dataset.tone=tone;el.mapRetry.hidden=!retry;el.mapStatus.hidden=!message}
-function showMapFailure(message){state.dataState="error";el.networkHero.classList.add("map-ready");setStatus(message,{tone:"error",retry:true});renderDirectory()}
-function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_REFRESH"},"*");setStatus("Refreshing the published network…",{tone:"info"})}catch{}}
+function showMapFailure(message){state.mapFailed=true;if(!state.dataReceived)state.dataState="error";el.networkHero.classList.add("map-ready");if(el.networkDirectory)el.networkDirectory.open=true;setStatus(message,{tone:"error",retry:true});renderDirectory()}
+function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_REFRESH"},"*");if(!state.mapFailed)setStatus("Refreshing the published network…",{tone:"info"})}catch{}}
 function notifyReady(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_READY"},"*")}catch{}}
 function applyPayload(payload){
   try{
     if(payload.paths){paths={...paths,...payload.paths};state.siteBridge=true;}
     if(payload.selection)state.linkedSelection=payload.selection;
-    const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";if(state.destinationDirectoryOpen)renderDestinationsList();
-    if(state.mapReady)renderModel();else state.pendingPayload=payload;
-    setStatus("");
+    const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";
+    if(!state.mapReady)state.pendingPayload=payload;
+    renderModel();
+    if(!state.mapFailed)setStatus(state.mapReady?"":"Loading the map…");
     if(previousSelection.id&&getObject(previousSelection.type,previousSelection.id))selectObject(previousSelection.type,previousSelection.id,{camera:false,history:false});else if(previousSelection.id)clearSelection({camera:false,history:false});
     else applyDeepLink(state.linkedSelection);
     analytics("network_view",state.model.stats);
@@ -1188,8 +1066,6 @@ window.addEventListener("message",event=>{
 document.addEventListener("DOMContentLoaded",()=>{
   cacheElements();
   installNetworkDynamics();
-  el.destinationsListOpen.addEventListener("click",openDestinationsList);
-  el.destinationsListBack.addEventListener("click",closeDestinationsList);
   el.modeRail.addEventListener("click",e=>{const b=e.target.closest("[data-mode]");if(b)setMode(b.dataset.mode,true)});
   el.searchOpen.addEventListener("click",()=>{el.networkSearch.placeholder="Search the SKANDI network";openSearch()});
   el.searchClose.addEventListener("click",closeSearch);
@@ -1200,14 +1076,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   el.panelClose.addEventListener("click",()=>clearSelection({camera:false,history:true}));
   el.sheetSnap.addEventListener("click",cycleSheet);installSheetGestures();
   el.zoomIn.addEventListener("click",()=>state.map?.zoomIn({duration:cameraDuration(250)}));el.zoomOut.addEventListener("click",()=>state.map?.zoomOut({duration:cameraDuration(250)}));el.resetMap.addEventListener("click",()=>{clearSelection({camera:false,history:true});state.selectedRegion=null;state.selectedAirlineId=null;state.mode="explore";syncModeButtons();renderRegions();applyMode();fitDefaultBounds(true)});
-  el.mapRetry.addEventListener("click",requestRefresh);
+  el.mapRetry.addEventListener("click",()=>{
+    if(state.mapFailed){state.resizeObserver?.disconnect();try{state.map?.remove()}catch{}state.map=null;state.mapInitialized=false;state.mapFailed=false;initMap()}
+    if(!state.dataReceived)requestRefresh();
+  });
   el.planJourney.addEventListener("click",()=>{const selected=getObject(state.selectionType,state.selectionId);if(state.selectionType==="route")bookRoute(selected);else if(state.selectionType==="destination")bookDestination(selected);else navigate(paths.booking,{kind:"general"})});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.destinationDirectoryOpen)closeDestinationsList();else if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
 
   initMap();
   notifyReady();
   state.dataState="loading";
-  setStatus("Loading the published SKANDI network…",{tone:"info"});
+  if(!state.mapFailed)setStatus("Loading the published SKANDI network…",{tone:"info"});
   setTimeout(()=>{if(!state.dataReceived&&state.retryCount<1){state.retryCount++;requestRefresh()}},4500);
 });
 

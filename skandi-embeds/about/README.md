@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- **2026-11-10:** Added a compact, searchable country/destination browser and Trusted Connections overview moved from `/destinations`. `About.xcftf.js` separately requests the existing `getPublicNetworkMapData` facade and sends `ABOUT_NETWORK_DATA` or `ABOUT_NETWORK_ERROR`; `ABOUT_NETWORK_REFRESH` retries without replacing the existing About payload. Items link to the existing map selection contract, including derived city IDs. New presentation labels are registered in `src/public/siteMap.js`; network records stay with their existing Inventory/public-network owner. The page controller and site map must be updated in Wix along with the generated embed for the network overview to load. Historical notes below remain for earlier versions.
+
 - **Status:** READY
 - **System:** SKANDI
 - **Route:** `/about`
