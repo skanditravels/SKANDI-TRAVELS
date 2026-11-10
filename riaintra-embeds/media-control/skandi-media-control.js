@@ -3,14 +3,22 @@
 "use strict";
 const SOURCE="SKANDI_MEDIA_CONTROL";
 const PARENT="SKANDI_WIX_PARENT";
-const STORAGE_KEY="SKANDI_MM_VOY_MAGAZINE_STUDIO_V2";
+const LEGACY_STORAGE_KEY="SKANDI_MM_VOY_MAGAZINE_STUDIO_V2";
+const STORAGE_KEY="SKANDI_MEDIA_CONTROL_UI_V1";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
 const logoAssetValue=value=>{const source=String(value||"").trim();return source==="[LEAVE_PLACEHOLDER]"?"":source};
 const arr=v=>Array.isArray(v)?v:String(v||"").split(",").map(x=>x.trim()).filter(Boolean);
 const uid=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
 function today(){return new Date().toISOString().slice(0,10)}
-function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+function post(type,payload={}){
+  if(/^(?:VOY_ADMIN_SAVE_|VOY_BRAND_KIT_SAVE|VOY_DISTRIBUTION_KIT_SAVE|NEWSROOM_SAVE_|NEWSROOM_PUBLISH_POST)/.test(type)){
+    const requestId=`mc-save-${Date.now()}-${++saveSequence}`,panel=state.activePanel,key=actionKey(lastActionOrigin);
+    payload={...payload,requestId};pendingActions.set(requestId,{type,panel,key,version:editVersions.get(panel)||0});
+    if(lastActionOrigin?.isConnected){let slot=lastActionOrigin.parentElement?.querySelector(":scope > .mc-action-state");if(!slot){slot=document.createElement("span");slot.className="mc-action-state";slot.setAttribute("role","status");lastActionOrigin.insertAdjacentElement("afterend",slot)}slot.textContent="Saving…"}
+  }
+  window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+}
 const LIVE_REFRESH_MS=300000;
 const EXPECTED_COLLECTIONS=["VoyIssues","VoyPages","VoyArticles","VoyAssets","VoyCampaigns","VoyApprovals","VoyCategories","VoyBanners","VoyTravelCards","VoyBrandKits","VoyQualityReports","VoyDistributionKits","VoyPrintPackages","VoyApiAttributions"];
 let lastLiveRefreshAt=0;
@@ -22,13 +30,20 @@ function refreshAfterSave(reason="save"){
   window.setTimeout(()=>requestLiveRefresh(reason),900);
   window.setTimeout(()=>requestLiveRefresh(reason+"-confirm"),2600);
 }
-function toast(msg,mode=""){const el=$("toast");el.textContent=msg;el.style.background=mode==="bad"?"#b91c1c":mode==="ok"?"#15803d":"#020617";el.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.display="none",2600)}
-function status(msg,mode=""){const el=$("statusLine");el.textContent=msg||"";el.style.display=msg?"block":"none";el.style.borderLeftColor=mode==="bad"?"#b91c1c":mode==="ok"?"#15803d":mode==="warn"?"#b45309":"#022e64"}
-function loadLocal(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
-function saveLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(_error){/* Wix iframe storage can be restricted. Canonical server remains the persistence authority. */}}
+let lastActionOrigin=null;
+const pendingActions=new Map();
+const dirtyPanels=new Set(),editVersions=new Map();
+let saveSequence=0;
+function actionKey(button){if(!button)return "";for(const attr of ["data-action","data-save-web-plan","data-save-web-content","data-save-web-media","data-release-status"]){if(button.hasAttribute(attr))return attr+"="+button.getAttribute(attr)}return ""}
+function findAction(key){if(!key)return null;const [attr,...parts]=key.split("=");const value=parts.join("=");return [...document.querySelectorAll("button["+attr+"]")].find(node=>node.getAttribute(attr)===value&&node.closest(".panel-view.active, .toolbar"))||null}
+function actionError(message,key=""){const origin=(key?findAction(key):null)||(lastActionOrigin?.isConnected?lastActionOrigin:null);if(!origin||(origin.closest(".panel-view")&&!origin.closest(".panel-view.active"))){status(message,"bad");return}origin.parentElement?.querySelectorAll(":scope > .mc-action-state").forEach(el=>el.remove());let slot=origin.parentElement?.querySelector(":scope > .mc-inline-error");if(!slot){slot=document.createElement("span");slot.className="mc-inline-error";slot.setAttribute("role","alert");origin.insertAdjacentElement("afterend",slot)}slot.textContent=message}
+function toast(msg,mode=""){if(mode==="bad")actionError(msg)}
+function status(msg,mode=""){const el=$("statusLine");if(!el)return;const show=Boolean(msg)&&(mode==="bad"||mode==="warn");el.textContent=show?msg:"";el.hidden=!show;el.style.display=show?"block":"none";el.dataset.severity=mode||""}
+function loadLocal(){try{const raw=localStorage.getItem(STORAGE_KEY)||localStorage.getItem(LEGACY_STORAGE_KEY)||"{}";const saved=JSON.parse(raw);return {activeModule:String(saved.activeModule||""),activePanel:String(saved.activePanel||""),selectedIssueId:String(saved.selectedIssueId||""),selectedPageId:String(saved.selectedPageId||""),selectedArticleId:String(saved.selectedArticleId||"")}}catch(_){return {}}}
+function saveLocal(){try{const {activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}=state;localStorage.setItem(STORAGE_KEY,JSON.stringify({activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}))}catch(_){/* Preferences are optional; server data remains authoritative. */}}
 const baseState={
-  session:{}, activeModule:"management", activePanel:"dashboard", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
-  issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], assetResults:[],
+  session:{}, voyLoaded:false, libraryLoaded:false, activeModule:"overview", activePanel:"controlhome", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
+  issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], libraryAssets:[], assetResults:[],
   campaigns:[], approvals:[], connectors:{}, destinationResearch:null, seoResult:null, apiStatus:[],
   newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], editingPostId:"", editingContactId:"",
   brandKit:{name:"SKANDI VOY",tone:"Premium, warm, practical and commercially sharp",fonts:"Montserrat / Tahoma",colors:"#022e64, #0b3a7a, #5FC7CF, #ffffff",requiredWords:"SKANDI Travels, curated, destination, experience",blockedWords:"cheap, guaranteed, best in the world",defaultCta:"Explore destination"},
@@ -38,21 +53,16 @@ const baseState={
 };
 let state={...baseState,...loadLocal()};
 const modules=[
-  {id:"website",title:"Website",panels:["websiteeditor","siteplan","webcontent","webmedia","assets","pressreleases"]},
-  {id:"management",title:"Management",panels:["dashboard","issues","workflow"]},
-  {id:"contacts",title:"Contacts",panels:["presscontacts","articles"]},
-  {id:"reports",title:"Reports",panels:["quality","printqa","distribution"]},
-  {id:"marketing",title:"Marketing",panels:["pressreleases","campaign","banners","travelcards"]},
-  {id:"circulation",title:"Circulation",panels:["distribution","issues"]},
-  {id:"production",title:"Production",panels:["builder","articles","assets","printqa"]},
-  {id:"tools",title:"Tools",panels:["research","quality","brandkit","api"]},
-  {id:"nonadmin",title:"NonAdmin Setup",panels:["categories","brandkit"]},
-  {id:"chargebrite",title:"ChargeBrite",panels:["campaign","banners"]},
-  {id:"governance",title:"Governance",panels:["presentationmatrix","contentaudit","releasecenter","quality","brandkit"]},
-  {id:"communications",title:"Communications",panels:["emailstudio"]}
+  {id:"overview",title:"Overview",icon:"⌂",panels:["controlhome"]},
+  {id:"website",title:"Website",icon:"▣",panels:["websiteeditor","webcontent","webmedia","siteplan"]},
+  {id:"assets",title:"Asset Library",icon:"▧",panels:["assets"]},
+  {id:"voy",title:"VOY Magazine",icon:"▤",panels:["dashboard","issues","builder","articles","workflow","categories"]},
+  {id:"newsroom",title:"Newsroom",icon:"✎",panels:["pressreleases","presscontacts"]},
+  {id:"marketing",title:"Marketing",icon:"◇",panels:["campaign","banners","travelcards","emailstudio","brandkit"]},
+  {id:"review",title:"Review & tools",icon:"✓",panels:["presentationmatrix","contentaudit","releasecenter","quality","printqa","distribution","research","api"]}
 ];
 const panels=[
-  ["websiteeditor","Visual Website Editor","EDIT"],["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
+  ["controlhome","Overview","HOME"],["websiteeditor","Visual Website Editor","EDIT"],["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
   ["research","Destination Research","F6"],["campaign","Campaigns","F7"],["quality","Quality Lab","QA"],["brandkit","Brand Kit","BK"],["printqa","Print QA","PQ"],["distribution","Distribution","DS"],["workflow","Workflow","F8"],["categories","Categories","F9"],["banners","Banners","F10"],["travelcards","Travel Cards","F11"],["api","API Connectors","F12"],
   ["pressreleases","Press Releases","PR"],["presscontacts","Press Contacts","PC"],["siteplan","Website Planner","WEB"],["webcontent","Page Copy","TXT"],["webmedia","Hero / Card Media","IMG"],
   ["presentationmatrix","Presentation Matrix","PM"],["contentaudit","Content Audit","CA"],["releasecenter","Release Center","RC"],["emailstudio","Email Template Studio","EM"]
@@ -193,7 +203,9 @@ function makeTemplatePage(template,index,issueId){
   return {pageId:uid("PAGE"),issueId,pageNo:index+1,template:template.id,status:"DRAFT",category:"VOY Magazine",kicker:"VOY by SKANDI",title:copy[0],deck:copy[1],body:copy[2],imageUrl:"",secondaryImageUrl:"",imageCredit:"",imageFit:"cover",imagePosition:"center center",destination:"",ctaLabel:template.id==="back-cover"?"Explore SKANDI":"Explore more",ctaPath:"/",backgroundColor:dark?"#07162c":"#ffffff",textColor:dark?"#ffffff":"#103154",accentColor:"#4dcad6",headingFont:"Montserrat",bodyFont:"Inter",footerText:"VOY by SKANDI · skanditravels.com",blocks:defaultBlocksForTemplate(template.id),seoNotes:"",updatedAt:new Date().toISOString()};
 }
 function init(){
-  if(!modules.some(m=>m.id===state.activeModule))state.activeModule="management";
+  const legacy={management:"voy",production:"voy",contacts:"newsroom",reports:"review",tools:"review",nonadmin:"voy",chargebrite:"marketing",governance:"review",communications:"marketing",circulation:"review"};
+  state.activeModule=legacy[state.activeModule]||state.activeModule;
+  if(!modules.some(m=>m.id===state.activeModule))state.activeModule="overview";
   const activeModule=modules.find(m=>m.id===state.activeModule)||modules[0];
   if(!activeModule.panels.includes(state.activePanel))state.activePanel=activeModule.panels[0];
   renderModules(); renderNav(); renderShell(); setInterval(()=>{const c=$("clock");if(c)c.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})},1000);
@@ -205,19 +217,21 @@ function init(){
   setInterval(()=>requestLiveRefresh("auto-5-minute-field-refresh"),LIVE_REFRESH_MS);
   window.addEventListener("pageshow",()=>requestLiveRefresh("page-show"));
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now()-lastLiveRefreshAt>LIVE_REFRESH_MS)requestLiveRefresh("visible-after-idle")});
-  status("Magazine Manager ready. Waiting for live data sync or use the local editorial draft.");
+  status("");
 }
 function renderModules(){
   const host=$("mmModules");if(!host)return;
-  host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}">${esc(m.title)}</button>`).join("");
+  host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}" ${state.activeModule===m.id?'aria-current="page"':""}><span class="mc-module-icon" aria-hidden="true">${esc(m.icon)}</span><span>${esc(m.title)}</span></button>`).join("");
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
   const panel=panels.find(p=>p[0]===state.activePanel);
-  if($("mmBreadcrumb"))$("mmBreadcrumb").textContent=`${module.title} / ${panel?.[1]||"Overview"}`;
-  if($("mmPageTitle"))$("mmPageTitle").textContent=state.activePanel==="builder"?"VOY Magazine Page Builder":state.activePanel==="pressreleases"?"Newsroom & Press Releases":state.activePanel==="emailstudio"?"Email Template Studio":"VOY Magazine & Newsroom Control";
+  if($("mmBreadcrumb"))$("mmBreadcrumb").textContent=module.id==="overview"?"MEDIA CONTROL":`MEDIA CONTROL / ${module.title.toUpperCase()}`;
+  if($("mmPageTitle"))$("mmPageTitle").textContent=panel?.[1]||"Overview";
+  const search=$("globalQuery"),toolbar=document.querySelector(".mc-toolbar"),preview=toolbar?.querySelector('[data-action="public-preview"]');
+  const searchable=["issues","articles"].includes(state.activePanel);if(toolbar)toolbar.hidden=!searchable&&module.id!=="voy";if(search){search.hidden=!searchable;search.placeholder=state.activePanel==="issues"?"Search issues":"Search articles";search.setAttribute("aria-label",search.placeholder)}const label=toolbar?.querySelector(".mc-search-label");if(label)label.hidden=!searchable;if(preview)preview.hidden=module.id!=="voy";
 }
 function renderNav(){
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
-  $("nav").innerHTML=`<div class="nav-title">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}"><span>${esc(p[1])}</span><span class="nav-key">${esc(p[2])}</span></button>`).join("");
+  $("nav").innerHTML=module.panels.length>1?`<div class="mc-subnav-heading">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button type="button" class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}" ${state.activePanel===p[0]?'aria-current="page"':""}><span>${esc(p[1])}</span></button>`).join(""):"";
   renderModules();
 }
 function renderShell(){
@@ -227,41 +241,18 @@ function renderShell(){
 }
 function renderAll(){
   renderNav();
-  renderDashboard();
-  renderIssues();
-  renderBuilder();
-  renderArticles();
-  renderAssets();
-  renderResearch();
-  renderCampaign();
-  renderQualityLab();
-  renderBrandKit();
-  renderPrintQa();
-  renderDistribution();
-  renderWorkflow();
-  renderCategories();
-  renderBanners();
-  renderTravelCards();
-  renderApi();
-  renderPressReleases();
-  renderPressContacts();
-  renderSitePlanner();
-  renderWebContent();
-  renderWebMedia();
-  renderPresentationMatrix();
-  renderContentAudit();
-  renderReleaseCenter();
-  saveLocal();window.SKANDIEmailStudioHostMount?.();window.SKANDIWebsiteStudioMount?.({pages:state.catalog,assets:state.assets});
+  const views={controlhome:renderControlHome,dashboard:renderDashboard,issues:renderIssues,builder:renderBuilder,articles:renderArticles,assets:renderAssets,research:renderResearch,campaign:renderCampaign,quality:renderQualityLab,brandkit:renderBrandKit,printqa:renderPrintQa,distribution:renderDistribution,workflow:renderWorkflow,categories:renderCategories,banners:renderBanners,travelcards:renderTravelCards,api:renderApi,pressreleases:renderPressReleases,presscontacts:renderPressContacts,siteplan:renderSitePlanner,webcontent:renderWebContent,webmedia:renderWebMedia,presentationmatrix:renderPresentationMatrix,contentaudit:renderContentAudit,releasecenter:renderReleaseCenter};
+  Object.entries(views).forEach(([id,render])=>{if(!dirtyPanels.has(id))render()});
+  saveLocal();window.SKANDIEmailStudioHostMount?.();window.SKANDIWebsiteStudioMount?.({pages:state.catalog,assets:state.libraryAssets});
 }
 function setPanel(panel){
   if(!panels.some(p=>p[0]===panel))return;
   const current=modules.find(m=>m.id===state.activeModule);
   if(!current?.panels.includes(panel)){
-    const preferred={siteplan:"website",webcontent:"website",webmedia:"website",presentationmatrix:"governance",contentaudit:"governance",releasecenter:"governance",builder:"production",assets:"production",articles:"production",pressreleases:"marketing",presscontacts:"contacts",distribution:"circulation",quality:"reports",printqa:"reports",research:"tools",api:"tools",brandkit:"tools",categories:"nonadmin",banners:"marketing",travelcards:"marketing",campaign:"marketing"};
-    state.activeModule=preferred[panel]||modules.find(m=>m.panels.includes(panel))?.id||"management";
+    state.activeModule=modules.find(m=>m.panels.includes(panel))?.id||"overview";
   }
   state.activePanel=panel;
-  document.body.classList.remove("mobile-drawer-open");
+  closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${panel}`));
   renderAll();
   post("VOY_ADMIN_PANEL_CHANGED",{panel});
@@ -270,6 +261,7 @@ function setModule(moduleId){
   const module=modules.find(m=>m.id===moduleId);if(!module)return;
   state.activeModule=module.id;
   if(!module.panels.includes(state.activePanel))state.activePanel=module.panels[0];
+  if(module.panels.length===1)closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
   renderAll();
   post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
@@ -360,6 +352,18 @@ function saveWebsiteRecordWithStatus(record,status){const published=status==="PU
 function releasePageTo(status){const page=currentCatalogPage("release");if(!page)return;const records=pageRecordSet(page.path),all=[...records.plans,...records.copy,...records.media];if(status==="PUBLISHED"&&!confirm(`Publish ${all.length} presentation record(s) for ${page.label}?`))return;if(!all.length){toast("No presentation records exist for this page.","bad");return}all.forEach(r=>saveWebsiteRecordWithStatus(r,status));toast(`${all.length} records queued for ${status}.`,status==="PUBLISHED"?"ok":"");refreshAfterSave(`release-${status.toLowerCase()}`)}
 function exportEditorialSnapshot(){const payload={exportedAt:new Date().toISOString(),catalog:catalogPages(),pagePlans:websiteRecords("campaign","PAGE_PLAN"),contentBlocks:websiteRecords("article","CONTENT_BLOCK"),mediaSlots:websiteRecords("banner","MEDIA_SLOT"),audit:editorialAudit()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`skandi-media-control-editorial-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200)}
 
+function renderControlHome(){
+  const host=$("panel-controlhome");if(!host)return;
+  const cards=[
+    ["websiteeditor","Website editor","Edit page layouts, text, links and presentation images.","Edit website"],
+    ["assets","Asset Library","Find, upload and organize approved media for your content.","Open library"],
+    ["issues","VOY Magazine","Create issues, arrange pages and prepare your next edition.","Manage VOY"],
+    ["pressreleases","Newsroom","Create and manage published company announcements.","Open newsroom"],
+    ["campaign","Marketing","Manage campaigns, banners and travel cards.","View marketing"],
+    ["contentaudit","Content review","Check presentation records and identify issues before release.","Review content"]
+  ];
+  host.innerHTML=`<section class="mc-welcome"><div><p class="mc-eyebrow">SKANDI CONTENT WORKSPACE</p><h2>Everything you need to manage your content.</h2><p>Choose a workspace to edit the website, manage your media, or create and review publications.</p></div></section><div class="mc-card-grid">${cards.map(([id,title,description,cta])=>`<article class="mc-card"><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information continues to come from its existing source.</p>`;
+}
 function renderDashboard(){
   const issue=currentIssue();
   const due=state.articles.filter(a=>["DRAFT","IN PROGRESS","REVIEW"].includes(String(a.status||"").toUpperCase())).length;
@@ -368,23 +372,23 @@ function renderDashboard(){
   $("panel-dashboard").innerHTML=`
     <div class="hero">
       <div>
-        <div class="eyebrow">SKANDI SKANDI publishing & website studio</div>
-        <h2>Magazine & website control room</h2>
-        <p>Plan and publish VOY, Newsroom and public-site presentation from one controlled workspace. Website copy, hero/card/ad presentation slots and shared assets are managed here; Inventory-owned facts and Inventory-owned media remain read-only and outside this editor.</p>
+        <div class="eyebrow">VOY MAGAZINE</div>
+        <h2>VOY production desk</h2>
+        <p>Plan issues, arrange pages, review articles and prepare a magazine for publication.</p>
       </div>
       <div class="status-card">
         <span class="status-pill">Active issue</span>
-        <div class="status-number">${esc(issue?.edition || "No issue")}</div>
-        <div class="status-sub">${esc(issue?.title || "Create or select an issue to start building the magazine.")}</div>
+        <div class="status-number">${esc(issue?.edition || (state.voyLoaded?"No issue":"Loading…"))}</div>
+        <div class="status-sub">${esc(issue?.title || (state.voyLoaded?"Create or select an issue to start building the magazine.":"Loading your magazine workspace."))}</div>
       </div>
     </div>
     <div class="kpi-row">
-      <div class="kpi"><small>Issues</small><b>${state.issues.length}</b><div class="help">VOY publications</div></div>
-      <div class="kpi"><small>Pages</small><b>${state.pages.length}</b><div class="help">Magazine layouts</div></div>
-      <div class="kpi"><small>Article tasks</small><b>${state.articles.length}</b><div class="help">Editorial pipeline</div></div>
-      <div class="kpi"><small>Open editorial</small><b>${due}</b><div class="help">Draft/review work</div></div>
-      <div class="kpi"><small>Assets</small><b>${state.assets.length}</b><div class="help">Media library</div></div>
-      <div class="kpi"><small>Ad slots</small><b>${adSlots}</b><div class="help">Active banners/campaigns</div></div>
+      <div class="kpi"><small>Issues</small><b>${state.voyLoaded?state.issues.length:"—"}</b><div class="help">VOY publications</div></div>
+      <div class="kpi"><small>Pages</small><b>${state.voyLoaded?state.pages.length:"—"}</b><div class="help">Magazine layouts</div></div>
+      <div class="kpi"><small>Article tasks</small><b>${state.voyLoaded?state.articles.length:"—"}</b><div class="help">Editorial pipeline</div></div>
+      <div class="kpi"><small>Open editorial</small><b>${state.voyLoaded?due:"—"}</b><div class="help">Draft/review work</div></div>
+      <div class="kpi"><small>VOY assets</small><b>${state.voyLoaded?state.assets.length:"—"}</b><div class="help">Editorial asset records</div></div>
+      <div class="kpi"><small>Ad slots</small><b>${state.voyLoaded?adSlots:"—"}</b><div class="help">Active banners/campaigns</div></div>
     </div>
     <div class="split">
       <div class="panel scroll"><h3>Current issue page plan</h3>${pages.length?pages.map(pageRow).join(""):`<div class="empty">No pages yet. Open Magazine Builder and add cover/feature/catalogue pages.</div>`}</div>
@@ -602,25 +606,22 @@ function collectArticle(){
   return {articleId:a.articleId||a._id||state.selectedArticleId||uid("ARTICLE"),issueId:currentIssueId(),title:$("articleTitle").value.trim(),contentType:$("articleType").value,status:$("articleStatus").value,writer:$("articleWriter").value.trim(),deadline:$("articleDeadline").value,destination:$("articleDestination").value.trim(),targetWords:Number($("articleTargetWords").value||0),tags:arr($("articleTags").value),brief:$("articleBrief").value.trim(),seo:$("articleSeo").value.trim(),socialCopy:$("articleSocial").value.trim(),updatedAt:new Date().toISOString()};
 }
 function renderAssets(){
-  $("panel-assets").innerHTML=`
-  <div class="split">
-    <div class="panel scroll"><h3>External media references</h3>
-      <div class="admin-grid">
-        <div class="field"><label class="label">Provider</label><select id="assetProvider"><option>openverse</option><option>unsplash</option><option>pexels</option><option>pixabay</option><option>wikimedia_commons</option></select></div>
-        <div class="field wide"><label class="label">Search</label><input id="assetQuery" class="input" placeholder="Mallorca beach aerial, Crete village, Nordic cabin"></div>
-        <div class="field"><label class="label">License</label><select id="assetLicense"><option>commercial-safe</option><option>cc0</option><option>cc-by</option><option>public-domain</option><option>provider-standard</option></select></div>
-        <div class="field"><label class="label">Orientation</label><select id="assetOrientation"><option>any</option><option>landscape</option><option>portrait</option><option>square</option></select></div>
-      </div>
-      <div class="row" style="margin:8px 0"><button class="btn primary" data-action="search-assets">Search assets</button><button class="btn" data-action="clear-asset-results">Clear results</button></div>
-      <div class="asset-grid">${state.assetResults.length?state.assetResults.map(assetCard).join(""):`<div class="empty">No external reference results yet. External results are references only; upload an approved copy to Supabase Storage before using it in VOY.</div>`}</div>
-    </div>
-    <div class="panel scroll"><h3>Legacy VOY media references</h3>
-      <div class="row" style="margin-bottom:8px"><button class="btn" data-action="open-asset-upload">Upload to Supabase</button><button class="btn" data-action="audit-asset-licenses">License audit</button><button class="btn primary" data-action="image-enhance">Enhance / optimize</button></div>
-      <div class="asset-grid">${state.assets.length?state.assets.map(assetCard).join(""):`<div class="empty">No legacy media references. New production assets are stored in Supabase Storage above.</div>`}</div>
-    </div>
+  const panel=$("panel-assets");
+  const references=state.assets.length?state.assets.map(assetCard).join(""):`<div class="empty">No VOY editorial references.</div>`;
+  const results=state.assetResults.length?state.assetResults.map(assetCard).join(""):`<div class="empty">No external references loaded.</div>`;
+  if(panel.querySelector("[data-mc-library-host]")){
+    const voy=panel.querySelector("[data-mc-voy-references]"),external=panel.querySelector("[data-mc-external-results]");
+    if(voy&&voy.innerHTML!==references)voy.innerHTML=references;
+    if(external&&external.innerHTML!==results)external.innerHTML=results;
+    return;
+  }
+  panel.innerHTML=`<div class="mc-assets-layout">
+    <section class="panel scroll mc-assets-primary" data-mc-library-host><h3>Asset Library</h3><p class="mc-assets-help">Search your available media, preview files, or upload an image for use in SKANDI content.</p></section>
+    <details class="mc-asset-detail"><summary>VOY editorial references</summary><div class="panel scroll"><p class="help">Older magazine reference records are listed here separately from the shared library.</p><div class="row"><button class="btn" data-action="audit-asset-licenses">Review asset information</button><button class="btn" type="button" disabled title="Image enhancement service is not connected">Image enhancement unavailable</button></div><div class="asset-grid" data-mc-voy-references>${references}</div></div></details>
+    <details class="mc-asset-detail"><summary>External media references</summary><div class="panel scroll"><p class="help">External reference search needs a connected service. The page editor also offers its configured media discovery tools.</p><div class="admin-grid"><div class="field"><label class="label">Provider</label><select id="assetProvider"><option>openverse</option><option>unsplash</option><option>pexels</option><option>pixabay</option><option>wikimedia_commons</option></select></div><div class="field wide"><label class="label">Search</label><input id="assetQuery" class="input" placeholder="Search media references"></div><div class="field"><label class="label">License</label><select id="assetLicense"><option>commercial-safe</option><option>cc0</option><option>cc-by</option><option>public-domain</option><option>provider-standard</option></select></div><div class="field"><label class="label">Orientation</label><select id="assetOrientation"><option>any</option><option>landscape</option><option>portrait</option><option>square</option></select></div></div><div class="row" style="margin:8px 0"><button class="btn" type="button" disabled>Search unavailable</button><button class="btn" data-action="clear-asset-results">Clear results</button><button class="btn" data-panel="websiteeditor">Open page editor</button></div><div class="asset-grid" data-mc-external-results>${results}</div></div></details>
   </div>`;
 }
-function assetCard(a){return `<div class="asset-card"><div class="asset-img" style="${a.thumbUrl||a.imageUrl?`background-image:url('${esc(a.thumbUrl||a.imageUrl)}')`:""}">${a.thumbUrl||a.imageUrl?"":"IMAGE"}</div><div class="asset-body"><div class="asset-title">${esc(a.title||a.provider||"Media reference")}</div><div class="asset-meta">${esc(a.creator||"")} · ${esc(a.license||"license")}<br>${esc(a.provider||"")}<br><b>Reference only · upload to Supabase before use</b></div><div class="row" style="margin-top:7px"><button class="btn" data-import-asset="${esc(a.assetId||a.id||a.url||"")}">Save reference</button></div></div></div>`}
+function assetCard(a){return `<div class="asset-card"><div class="asset-img" style="${a.thumbUrl||a.imageUrl?`background-image:url('${esc(a.thumbUrl||a.imageUrl)}')`:""}">${a.thumbUrl||a.imageUrl?"":"IMAGE"}</div><div class="asset-body"><div class="asset-title">${esc(a.title||a.provider||"Media reference")}</div><div class="asset-meta">${esc(a.creator||"")} · ${esc(a.license||"license")}<br>${esc(a.provider||"")}<br><b>Reference only · add an approved image to the library before use</b></div><div class="row" style="margin-top:7px"><button class="btn" data-import-asset="${esc(a.assetId||a.id||a.url||"")}">Save reference</button></div></div></div>`}
 function renderResearch(){
   const r=state.destinationResearch||{};
   $("panel-research").innerHTML=`
@@ -667,7 +668,8 @@ function collectCampaign(){
 function readinessStats(){
   const issue=currentIssue();
   const pages=issuePages();
-  const articleDrafts=state.articles.filter(a=>String(a.status||"").toUpperCase().includes("DRAFT")||String(a.status||"").toUpperCase().includes("REVIEW")).length;
+  const selectedIssueId=currentIssueId();
+  const articleDrafts=state.articles.filter(a=>String(a.issueId||a.issueRef||"")===String(selectedIssueId)&&["DRAFT","REVIEW"].some(status=>String(a.status||"").toUpperCase().includes(status))).length;
   const pageWarnings=pages.reduce((n,p)=>n+[
     !p.title,
     !p.deck,
@@ -694,46 +696,60 @@ function printQaData(){
   return {issueId:currentIssueId(),generatedAt:new Date().toISOString(),readinessScore:r.score,pageWarnings:r.pageWarnings,assetWarnings:r.assetWarnings,articleDrafts:r.articleDrafts,pages};
 }
 function qualityChecklist(){
-  const page=currentPage()||{};
-  const article=currentArticle()||{};
+  const page=currentPage()||{},article=currentArticle()||{},title=String(page.title||article.title||"").trim(),body=String(page.body||article.body||"").trim();
+  const image=page.imageUrl||article.imageUrl,alt=page.imageAlt||article.imageAlt;
   return [
-    ["Editorial voice",page.title||article.title?"Ready for tone check":"Missing page/article title",page.title||article.title?"ok":"warn"],
-    ["Destination facts",page.destination||article.destination?"Destination present":"Destination missing",page.destination||article.destination?"ok":"warn"],
-    ["SEO headline",String(page.title||article.title||"").length>=28?"Strong length":"Headline may be too short","warn"],
-    ["Image licensing",(state.assets||[]).every(a=>a.license&&a.creator)?"Attribution fields present":"Run license audit before publishing",(state.assets||[]).every(a=>a.license&&a.creator)?"ok":"warn"],
-    ["Print body length",String(page.body||"").length>500?"Feature depth available":"Body may need more editorial depth",String(page.body||"").length>500?"ok":"warn"],
-    ["Accessibility",page.imageAlt||article.imageAlt?"Alt text present":"Alt text should be added","warn"]
+    ["Title",title?"Title is present.":"Add a title before review.",title?"ok":"warn"],
+    ["Destination",page.destination||article.destination?"Destination is recorded; verify factual claims with sources.":"No destination is recorded.",page.destination||article.destination?"ok":"warn"],
+    ["Headline length",title?`${title.length} characters. Check the length in context.`:"No title to check.",title?"ok":"warn"],
+    ["Image description",!image?"No image selected for this item.":alt?"Image description is present.":"Add an image description.",!image||alt?"ok":"warn"],
+    ["Body",body?`${body.split(/\s+/).length} words available for review.`:"No body text to review.",body?"ok":"warn"]
   ];
 }
+function makeQualityReport(kind){
+  const page=currentPage(),article=currentArticle(),item=page||article,assets=Array.isArray(state.assets)?state.assets:[];
+  if(["copy","accessibility","facts"].includes(kind)&&!item){actionError("Select a magazine page or article first.");return}
+  const title=String(item?.title||"").trim(),body=String(item?.body||item?.summary||"").trim(),findings=[];
+  if(kind==="copy"){
+    if(!title)findings.push("Add a title.");
+    if(!body)findings.push("Add body text before a copy review.");
+    if(/ {2,}/.test(title+" "+body))findings.push("Repeated spaces found; review the copy.");
+    if(/\b(\w+)\s+\1\b/i.test(body))findings.push("A repeated adjacent word was found; review it in context.");
+    if(body.split(/[.!?]+/).some(sentence=>sentence.trim().split(/\s+/).length>35))findings.push("A sentence contains more than 35 words; consider whether it can be clearer.");
+    if(!findings.length)findings.push("No basic spacing, repetition or sentence-length flags were found.");
+    state.qualityResult={summary:"Basic copy checks",note:"These checks do not assess grammar, brand voice or factual accuracy.",findings};
+  }else if(kind==="accessibility"){
+    const img=item.imageUrl||"",alt=item.imageAlt||"",description=String(item.seo||item.deck||item.summary||"").trim();
+    findings.push(title?`Title: ${title.length} characters.`:"Title is missing.");
+    findings.push(description?`Description: ${description.length} characters.`:"No description is recorded.");
+    findings.push(!img?"No image is selected.":alt?"An image description is recorded.":"The selected image has no recorded description.");
+    state.qualityResult={summary:"Accessibility and search checks",note:"Review the actual published page, links and assistive-technology behavior separately.",findings};
+  }else if(kind==="facts"){
+    findings.push("Check prices, dates, hours, locations and travel requirements against current primary sources.");
+    findings.push("Record the source and the date reviewed before publication.");
+    state.qualityResult={summary:"Fact review guide",note:"This guide does not verify claims automatically.",findings};
+  }else if(kind==="licenses"){
+    if(!assets.length)findings.push("No asset records are loaded.");
+    else {const missing=assets.filter(asset=>!(asset.license||asset.licenseName)||!(asset.creator||asset.credit)||!(asset.sourceUrl||asset.source_url));findings.push(`${assets.length} loaded asset record(s) reviewed for recorded source, credit and license fields.`);findings.push(`${missing.length} record(s) have one or more fields missing or not supplied in this view.`);}
+    state.qualityResult={summary:"Asset information review",note:"Missing metadata does not establish that an asset is unlicensed; confirm rights with the source.",findings};
+  }else{
+    state.qualityResult={summary:"Editorial checklist",note:"A local review of the loaded information; it does not verify factual claims or usage rights.",findings:qualityChecklist().map(row=>row[0]+": "+row[1])};
+  }
+  renderQualityLab();
+}
 function renderQualityLab(){
-  const r=readinessStats();
-  const qr=state.qualityResult||{};
+  const r=readinessStats(),qr=state.qualityResult||{},hasIssue=Boolean(r.issue&&r.pages.length);
   $("panel-quality").innerHTML=`
-  <div class="split">
-    <div class="stack">
-      <div class="voy-score">
-        <div class="qa-card"><small>Readiness</small><b>${r.score}%</b><span>Computed from draft, asset and page warnings.</span></div>
-        <div class="qa-card"><small>Page warnings</small><b>${r.pageWarnings}</b><span>Missing images, credits, decks or body depth.</span></div>
-        <div class="qa-card"><small>Asset warnings</small><b>${r.assetWarnings}</b><span>License, creator or source gaps.</span></div>
-        <div class="qa-card"><small>Open editorial</small><b>${r.articleDrafts}</b><span>Draft/review article tasks.</span></div>
-      </div>
-      <div class="panel scroll"><h3>Quality lab</h3>
-        <div class="voy-tool-grid">
-          <div class="voy-tool-card"><b>Copy Chief</b><div class="help">Tone, grammar, line edit, headline alternatives and deck polish.</div><button class="btn primary" data-action="copy-chief-review">Run copy chief review</button></div>
-          <div class="voy-tool-card"><b>Fact & Claim Check</b><div class="help">Flags destination claims, prices, opening times, distances and source gaps.</div><button class="btn" data-action="fact-check-claims">Check claims</button></div>
-          <div class="voy-tool-card"><b>Accessibility / SEO</b><div class="help">Alt text, reading level, metadata, OpenGraph and search snippets.</div><button class="btn" data-action="accessibility-seo-check">Run accessibility + SEO</button></div>
-          <div class="voy-tool-card"><b>Translation Desk</b><div class="help">Create market versions while preserving brand voice and legal disclaimers.</div><div class="row"><input id="qualityLangs" class="input" value="sv,no,da,fi,de" style="min-width:130px"><button class="btn" data-action="translate-package">Translate</button></div></div>
-          <div class="voy-tool-card"><b>License Audit</b><div class="help">Validate provider, license, source URL, creator credit and usage rights.</div><button class="btn warn" data-action="audit-asset-licenses">Audit assets</button></div>
-          <div class="voy-tool-card"><b>Full Quality Run</b><div class="help">Sends issue, pages, assets and brand kit to backend QA worker.</div><button class="btn ok" data-action="run-quality-lab">Run full quality lab</button></div>
-        </div>
-      </div>
-    </div>
-    <div class="panel scroll"><h3>Current checks</h3>
-      <div class="qa-list">${qualityChecklist().map(c=>`<div class="qa-card"><b>${esc(c[0])} ${pill(c[2])}</b><span>${esc(c[1])}</span></div>`).join("")}</div>
-      <h3 style="margin-top:12px">Backend result</h3>
-      ${qr.summary?`<div class="notice">${esc(qr.summary)}</div><div class="kv" style="margin-top:8px"><div class="k">Score</div><div class="v">${esc(qr.score||"—")}</div><div class="k">Priority</div><div class="v">${esc(qr.priority||"—")}</div><div class="k">Updated</div><div class="v">${esc(qr.generatedAt||"—")}</div></div>`:`<div class="empty">No backend quality result yet.</div>`}
-    </div>
-  </div>`;
+  <div class="mc-quality-intro"><h2>Review your content</h2><p>Run practical checks on the selected VOY page or article. Confirm facts and image rights with their original sources.</p></div>
+  <div class="voy-score"><div class="qa-card"><small>Issue checklist</small><b>${hasIssue?esc(r.score)+"%":"—"}</b><span>${hasIssue?"Based on the loaded issue and current checks.":"Select an issue with pages to calculate."}</span></div><div class="qa-card"><small>Page notes</small><b>${hasIssue?esc(r.pageWarnings):"—"}</b><span>Items to review in the selected issue.</span></div><div class="qa-card"><small>Assets to review</small><b>${state.voyLoaded?esc(r.assetWarnings):"—"}</b><span>Source or credit fields not recorded here.</span></div><div class="qa-card"><small>Open editorial</small><b>${state.voyLoaded?esc(r.articleDrafts):"—"}</b><span>Articles in draft or review.</span></div></div>
+  <div class="split"><div class="panel scroll"><h3>Checks</h3><div class="voy-tool-grid">
+   <div class="voy-tool-card"><b>Copy checks</b><div class="help">Find repeated spaces, repeated words and unusually long sentences.</div><button class="btn primary" data-action="copy-chief-review">Review copy</button></div>
+   <div class="voy-tool-card"><b>Fact review</b><div class="help">Use a source-review checklist for destination and travel claims.</div><button class="btn" data-action="fact-check-claims">Open checklist</button></div>
+   <div class="voy-tool-card"><b>Accessibility &amp; search</b><div class="help">Check the recorded title, description and image description.</div><button class="btn" data-action="accessibility-seo-check">Run checks</button></div>
+   <div class="voy-tool-card"><b>Asset information</b><div class="help">Review available source, credit and license fields.</div><button class="btn" data-action="audit-asset-licenses">Review asset information</button></div>
+   <div class="voy-tool-card"><b>Editorial checklist</b><div class="help">Review the loaded page and article information together.</div><button class="btn" data-action="run-quality-lab">Run checklist</button></div>
+   <div class="voy-tool-card"><b>Translation</b><div class="help">Translation requires a configured translation service.</div><button class="btn" type="button" disabled>Unavailable</button></div>
+  </div></div><div class="panel scroll"><h3>Results</h3>${qr.summary?`<div class="mc-quality-result"><b>${esc(qr.summary)}</b><p>${esc(qr.note||"")}</p><ul>${(qr.findings||[]).map(item=>`<li>${esc(item)}</li>`).join("")}</ul></div>`:'<div class="empty">Choose a check to see its results here.</div>'}</div></div>`;
 }
 function renderBrandKit(){
   const b=state.brandKit||{};
@@ -1030,7 +1046,7 @@ function handleAction(action){
   if(action==="search-assets"){post("VOY_ASSET_SEARCH_REQUEST",{provider:$("assetProvider").value,query:$("assetQuery").value,license:$("assetLicense").value,orientation:$("assetOrientation").value});toast("Asset search requested.");return}
   if(action==="clear-asset-results"){state.assetResults=[];renderAssets();return}
   if(action==="open-asset-upload"){post("VOY_ASSET_UPLOAD_OPEN_REQUEST",{issueId:currentIssueId()});toast("Upload hook requested.");return}
-  if(action==="audit-asset-licenses"){post("VOY_ASSET_LICENSE_AUDIT_REQUEST",{issueId:currentIssueId(),assets:state.assets});toast("License audit requested.");return}
+  if(action==="audit-asset-licenses"){makeQualityReport("licenses");setPanel("quality");return}
   if(action==="research-destination"){post("VOY_DESTINATION_RESEARCH_REQUEST",{destination:$("researchDestination").value,tone:$("researchTone").value,language:$("researchLang").value,providers:["mediawiki","wikidata","restcountries","opentripmap","openverse"]});toast("Destination research requested.");return}
   if(action==="insert-research-page"){if(!state.destinationResearch){toast("Run research first.","bad");return}if(!currentPage()){handleAction("new-page")}const p=currentPage();p.destination=state.destinationResearch.destination;p.kicker="Destination guide";p.title=state.destinationResearch.headline||p.title;p.deck=state.destinationResearch.summary||p.deck;p.body=[state.destinationResearch.summary,arr(state.destinationResearch.pois).join("\\n")].filter(Boolean).join("\\n\\n");state.selectedPageId=p.pageId;setPanel("builder");return}
   if(action==="make-travel-card-from-research"){const r=state.destinationResearch;if(!r){toast("Run research first.","bad");return}const c={cardId:uid("CARD"),title:r.destination,path:`/destinations/${String(r.destination).toLowerCase().replace(/[^a-z0-9]+/g,"-")}`,imageUrl:"",active:true,tags:arr(r.bestFor),summary:r.summary};state.travelCards.unshift(c);post("VOY_ADMIN_SAVE_TRAVEL_CARD",{card:c});refreshAfterSave("save-travel-card");setPanel("travelcards");return}
@@ -1043,12 +1059,10 @@ function handleAction(action){
   if(action==="clear-banner"){state.editingBannerId="";renderBanners();return}
   if(action==="save-card"){const c=collectCard();if(!c.title){toast("Travel card title is required.","bad");return}upsert("travelCards","cardId",c);post("VOY_ADMIN_SAVE_TRAVEL_CARD",{card:c});refreshAfterSave("save-travel-card");renderAll();return}
   if(action==="clear-card"){state.editingCardId="";renderTravelCards();return}
-  if(action==="run-quality-lab"){
-    const payload={issue:currentIssue(),pages:issuePages(),assets:state.assets,articles:state.articles.filter(a=>String(a.issueId||"")===String(currentIssueId())),brandKit:state.brandKit,localChecks:qualityChecklist(),readiness:readinessStats()};
-    post("VOY_QUALITY_LAB_REQUEST",payload);toast("Quality lab request sent.");return}
-  if(action==="copy-chief-review"){post("VOY_COPY_CHIEF_REVIEW_REQUEST",{page:currentPage(),article:currentArticle(),brandKit:state.brandKit});toast("Copy chief review requested.");return}
-  if(action==="fact-check-claims"){post("VOY_FACT_CHECK_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle(),destination:currentPage()?.destination||currentArticle()?.destination||""});toast("Fact check requested.");return}
-  if(action==="accessibility-seo-check"){post("VOY_ACCESSIBILITY_SEO_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle()});toast("Accessibility and SEO check requested.");return}
+  if(action==="run-quality-lab"){makeQualityReport("all");return}
+  if(action==="copy-chief-review"){makeQualityReport("copy");return}
+  if(action==="fact-check-claims"){makeQualityReport("facts");return}
+  if(action==="accessibility-seo-check"){makeQualityReport("accessibility");return}
   if(action==="translate-package"){post("VOY_TRANSLATION_PACKAGE_REQUEST",{issue:currentIssue(),pages:issuePages(),languages:arr($("qualityLangs")?.value||"sv,no,da,fi,de"),brandKit:state.brandKit});toast("Translation package requested.");return}
   if(action==="save-brand-kit"){state.brandKit=collectBrandKit();post("VOY_BRAND_KIT_SAVE",{brandKit:state.brandKit});toast("Brand kit saved locally and sent to backend.","ok");refreshAfterSave("save-brand-kit");renderAll();return}
   if(action==="run-brand-guard"){const kit=document.getElementById("brandName")?collectBrandKit():state.brandKit;post("VOY_BRAND_GUARD_REQUEST",{brandKit:kit,issue:currentIssue(),pages:issuePages(),articles:state.articles.filter(a=>String(a.issueId||a.issueRef||"")===String(currentIssueId()))});toast("Brand guard requested.");return}
@@ -1077,6 +1091,26 @@ function handleAction(action){
     const item=collectPressContact();if(!item.name||!item.email){toast("Contact name and email are required.","bad");return}upsert("pressContacts","contactId",item);state.editingContactId=item.contactId;post("NEWSROOM_SAVE_CONTACT",{item});toast("Press contact saved.","ok");return;
   }
 }
+// Preserve in-progress editor inputs when background data arrives or a different
+// workspace is opened. Switching the record itself may discard those inputs.
+document.addEventListener("click",event=>{
+  const button=event.target.closest("button");if(button){lastActionOrigin=button;button.parentElement?.querySelectorAll(":scope > .mc-inline-error").forEach(el=>el.remove())}
+  const changingRecord=event.target.closest("[data-edit-page],[data-select-issue],[data-edit-article],[data-edit-web-content],[data-edit-web-media],[data-web-plan-page],[data-edit-press-contact],[data-edit-news-post]");
+  const fresh=button?.dataset.action&&["new-issue","new-page","new-article","clear-issue","clear-news-post","clear-press-contact"].includes(button.dataset.action);
+  if((changingRecord||fresh)&&dirtyPanels.has(state.activePanel)){
+    if(!confirm("Discard the unsaved changes in this editor and open another record?")){event.preventDefault();event.stopImmediatePropagation();return}
+    dirtyPanels.delete(state.activePanel);
+  }
+},true);
+const editablePanels=new Set(["siteplan","webcontent","webmedia","issues","builder","articles","pressreleases","presscontacts","brandkit","categories","banners","travelcards","campaign"]);
+const selectionIds=new Set(["builderIssueSelect","pageTemplate","webPlanPage","webContentPage","webContentSection","webContentField","webMediaPage","webMediaSection","webMediaSlotSelect","releasePage"]);
+const originalSelections=new WeakMap();
+document.addEventListener("focusin",event=>{if(selectionIds.has(event.target.id))originalSelections.set(event.target,event.target.value)},true);
+document.addEventListener("change",event=>{if(selectionIds.has(event.target.id)&&dirtyPanels.has(state.activePanel)){if(!confirm("Discard unsaved changes before changing this selection?")){event.target.value=originalSelections.get(event.target)??event.target.value;event.stopImmediatePropagation()}else dirtyPanels.delete(state.activePanel)}},true);
+function markEditorDirty(event){const field=event.target;if(!field?.matches?.("input,textarea,select,[contenteditable=true]")||selectionIds.has(field.id))return;const panel=field.closest(".panel-view");if(!panel||!editablePanels.has(panel.id.replace(/^panel-/,""))||field.type==="search"||/query|search|filter/i.test(field.id||""))return;const id=panel.id.replace(/^panel-/,"");dirtyPanels.add(id);editVersions.set(id,(editVersions.get(id)||0)+1)}
+document.addEventListener("input",markEditorDirty,true);document.addEventListener("change",markEditorDirty,true);
+window.addEventListener("beforeunload",event=>{if(dirtyPanels.size){event.preventDefault();event.returnValue=""}});
+function settleSave(prefix,payload={}){const matching=[...pendingActions.entries()].filter(([,item])=>item.type.startsWith(prefix));const entry=payload.requestId?matching.find(([id])=>id===payload.requestId):null;if(!entry)return;const [id,item]=entry;pendingActions.delete(id);const button=findAction(item.key);button?.parentElement?.querySelectorAll(":scope > .mc-action-state").forEach(el=>el.remove());if((editVersions.get(item.panel)||0)===item.version&&![...pendingActions.values()].some(other=>other.panel===item.panel))dirtyPanels.delete(item.panel)}
 document.addEventListener("click",e=>{
   const openKit=e.target.closest("[data-open-distribution-kit]");if(openKit){const kit=state.distributionKits.find(x=>String(x.kitId||x._id||"")===openKit.dataset.openDistributionKit);if(kit){state.distributionKit=JSON.parse(JSON.stringify(kit));renderDistribution()}return}
   const module=e.target.closest("[data-module]");if(module){setModule(module.dataset.module);return}
@@ -1142,18 +1176,22 @@ document.addEventListener("input",e=>{
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
 $("globalQuery").addEventListener("input",()=>renderAll());
-$("mobileMenuBtn").addEventListener("click",()=>document.body.classList.add("mobile-drawer-open"));
-$("drawerOverlay").addEventListener("click",()=>document.body.classList.remove("mobile-drawer-open"));
+function closeMobileMenu(){document.body.classList.remove("mobile-drawer-open");$("mobileMenuBtn")?.setAttribute("aria-expanded","false")}
+$("mobileMenuBtn").addEventListener("click",()=>{const open=!document.body.classList.contains("mobile-drawer-open");document.body.classList.toggle("mobile-drawer-open",open);$("mobileMenuBtn").setAttribute("aria-expanded",String(open))});
+$("mcCloseMenu").addEventListener("click",closeMobileMenu);
+$("drawerOverlay").addEventListener("click",closeMobileMenu);
+document.addEventListener("SKANDI_MEDIA_SHOW_ASSETS",()=>setPanel("assets"));
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeMobileMenu()});
 window.addEventListener("message",e=>{
-  const m=e.data||{};if(m.source&&m.source!==PARENT)return;const p=m.payload||{};
+  const m=e.data||{};if(e.source!==window.parent||m.source!==PARENT)return;const p=m.payload||{};
   if(m.type==="INTERNAL_CHROME_BOOTSTRAP"){
     const profile=p.profile||{};const name=profile.name||profile.fullName||[profile.firstName,profile.lastName].filter(Boolean).join(" ")||profile.email||"SKANDI Editor";
     if($("mmUserName"))$("mmUserName").textContent=name;if($("mmUserRole"))$("mmUserRole").textContent=profile.position||profile.jobTitle||profile.role||"Editorial access";if($("mmUserInitials"))$("mmUserInitials").textContent=name.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"SK";return;
   }
   if(m.type==="MEDIA_CONTROL_EDITORIAL_CATALOG"){state.catalog=Array.isArray(p.pages)?p.pages:[];ensureCatalogSelections();if($("mmSyncState"))$("mmSyncState").textContent="Catalog";renderAll();return}
-  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.assets=p.assets||state.assets;renderAssets();return}
-  if(m.type==="MEDIA_CONTROL_ERROR"){status(p.message||"Media Control action failed.","bad");return}
-  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
+  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.libraryAssets=Array.isArray(p.assets)?p.assets:state.libraryAssets;state.libraryLoaded=true;return}
+  if(m.type==="MEDIA_CONTROL_ERROR"){if(!p.requestId)actionError(p.message||"Media Control action failed.");return}
+  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p,voyLoaded:true};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
   if(m.type==="NEWSROOM_ADMIN_BOOTSTRAP"||m.type==="NEWSROOM_ADMIN_DATA"){
     const d=p.data||p;
     state.newsroomPosts=d.posts||d.newsroomPosts||state.newsroomPosts;
@@ -1162,15 +1200,15 @@ window.addEventListener("message",e=>{
     state.pressContacts=d.pressContacts||d.contacts||state.pressContacts;
     if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return;
   }
-  if(m.type==="VOY_ADMIN_SAVED"){status("Saved. Refreshing live data.","ok");requestLiveRefresh("backend-saved");return}
+  if(m.type==="VOY_ADMIN_SAVED"){settleSave("VOY_",p);status("");requestLiveRefresh("backend-saved");return}
   if(m.type==="VOY_ADMIN_PUBLISHED"){
     const result=p.result||p;const issue=state.issues.find(i=>String(i.issueId||i._id)===String(result.issueId||result.issue_id||currentIssueId()));if(issue){issue.publishStatus="PUBLISHED";issue.publicUrl=result.publicUrl||result.public_url||issue.publicUrl;issue.publishedAt=result.publishedAt||result.published_at||new Date().toISOString()}
     status("Published. This issue is now available on the public VOY Magazine page.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Published";renderAll();return;
   }
   if(m.type==="VOY_ADMIN_ARCHIVED"){const issue=state.issues.find(i=>String(i.issueId||i._id)===String(p.issueId||p.issue_id||currentIssueId()));if(issue)issue.publishStatus="ARCHIVED";status("Issue archived and removed from the public reader.","ok");renderAll();return}
-  if(m.type==="NEWSROOM_ADMIN_SAVED"){status("Newsroom record saved.","ok");post("NEWSROOM_ADMIN_REFRESH",{});return}
-  if(m.type==="VOY_ADMIN_ERROR"){status(m.message||p.message||"VOY backend error.","bad");return}
-  if(m.type==="NEWSROOM_ADMIN_ERROR"){status(m.message||p.message||"Newsroom action failed.","bad");return}
+  if(m.type==="NEWSROOM_ADMIN_SAVED"){settleSave("NEWSROOM_",p);status("");post("NEWSROOM_ADMIN_REFRESH",{});return}
+  if(m.type==="VOY_ADMIN_ERROR"){const match=p.requestId?[p.requestId,pendingActions.get(p.requestId)]:[...pendingActions.entries()].find(([,item])=>item.type===p.action)||[];const pending=match[1];if(match[0])pendingActions.delete(match[0]);actionError(m.message||p.message||"The action could not be completed.",pending?.key);return}
+  if(m.type==="NEWSROOM_ADMIN_ERROR"){const match=p.requestId?[p.requestId,pendingActions.get(p.requestId)]:[...pendingActions.entries()].find(([,item])=>item.type===p.action)||[];const pending=match[1];if(match[0])pendingActions.delete(match[0]);actionError(m.message||p.message||"The newsroom action could not be completed.",pending?.key);return}
   if(m.type==="VOY_ASSET_SEARCH_RESULT"){state.assetResults=p.results||p.assets||[];status(`${state.assetResults.length} asset results loaded.`,"ok");setPanel("assets");return}
   if(m.type==="VOY_DESTINATION_RESEARCH_RESULT"){state.destinationResearch=p.result||p;status("Destination research loaded.","ok");setPanel("research");return}
   if(m.type==="VOY_COPY_ASSIST_RESULT"){const text=p.text||p.copy||"";if(currentPage()&&text){currentPage().body=text;setPanel("builder")}toast("Copy assist result received.");return}

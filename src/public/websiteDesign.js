@@ -26,6 +26,26 @@ export function validateWebsiteSelector(value) {
   if (!selector || selector.length > 1200 || !/^[a-zA-Z0-9_\-#\. >:\[\]="()]+$/.test(selector) || /(?:script|style|iframe|object|embed|head|meta|link)(?:\b)/i.test(selector)) throw new Error('WEBSITE_TARGET_INVALID');
   return selector;
 }
+function websiteHref(value) {
+  const href=String(value||'');
+  if(href.length>2000||!(/^(?:\/(?!\/)|#[\w-]|https:\/\/|mailto:|tel:)/.test(href))||/[<>\u0000-\u0020]/.test(href))throw new Error('WEBSITE_LINK_INVALID');
+  return href;
+}
+function websiteBlock(input) {
+  const block=object(input),id=String(block.id||''),type=String(block.type||'');
+  if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||!['heading','text','button','image'].includes(type))throw new Error('WEBSITE_BLOCK_INVALID');
+  const result={id,type};
+  if(type==='heading'||type==='text'||type==='button'){
+    if(typeof block.text!=='string'||block.text.length>4000)throw new Error('WEBSITE_BLOCK_TEXT_INVALID');
+    result.text=block.text;
+  }
+  if(type==='button'&&block.href)result.href=websiteHref(block.href);
+  if(type==='image'){
+    if(block.assetId){if(!/^[0-9a-f-]{36}$/i.test(block.assetId))throw new Error('WEBSITE_ASSET_INVALID');result.assetId=block.assetId;}
+    result.alt=String(block.alt||'').slice(0,1000);
+  }
+  return result;
+}
 export function validateWebsiteDesign(input) {
   const data = object(input);
   if (!Array.isArray(data.elements) || data.elements.length > 2000) throw new Error('WEBSITE_ELEMENTS_INVALID');
@@ -36,9 +56,10 @@ export function validateWebsiteDesign(input) {
     const out={selector,styles:{}};
     if(Object.hasOwn(item,'text')) { if(typeof item.text!=='string'||item.text.length>40000)throw new Error('WEBSITE_TEXT_INVALID');out.text=item.text; }
     if(Object.hasOwn(item,'alt')) out.alt=String(item.alt).slice(0,1000);
+    if(Object.hasOwn(item,'placeholder')) {if(typeof item.placeholder!=='string'||item.placeholder.length>500)throw new Error('WEBSITE_PLACEHOLDER_INVALID');out.placeholder=item.placeholder;}
+    if(Object.hasOwn(item,'blocks')) {if(!Array.isArray(item.blocks)||item.blocks.length>30)throw new Error('WEBSITE_BLOCKS_INVALID');const ids=new Set();out.blocks=item.blocks.map(raw=>{const block=websiteBlock(raw);if(ids.has(block.id))throw new Error('WEBSITE_DUPLICATE_BLOCK');ids.add(block.id);return block;});}
     if(Object.hasOwn(item,'href')) {
-      const href=String(item.href);
-      if(href.length>2000||!(/^(?:\/(?!\/)|#[\w-]|https:\/\/|mailto:|tel:)/.test(href))||/[<>\u0000-\u0020]/.test(href))throw new Error('WEBSITE_LINK_INVALID');out.href=href;
+      out.href=websiteHref(item.href);
     }
     if(item.assetId) {
       if(!/^[0-9a-f-]{36}$/i.test(item.assetId))throw new Error('WEBSITE_ASSET_INVALID');

@@ -86,10 +86,10 @@ async function bootstrap(force = false) {
 }
 async function refreshVoy() { const result = await getVoyAdminBootstrap({}); send("VOY_ADMIN_BOOTSTRAP_RESULT", result || {}); return result; }
 async function refreshNewsroom(filters = {}) { const result = await listNewsroomAdminData(filters); send("NEWSROOM_ADMIN_DATA", result || {}); return result; }
-async function runVoy(action, op, success = "VOY_ADMIN_SAVED") {
+async function runVoy(action, op, success = "VOY_ADMIN_SAVED", requestId = "") {
   const result = await op();
   if (!result || result.ok === false) throw new Error(result?.error || `${action} failed.`);
-  send(success, result);
+  send(success, { ...result, action, requestId });
   return result;
 }
 function entityId(type, item = {}) {
@@ -102,10 +102,10 @@ function entityId(type, item = {}) {
   for (const key of map[type] || []) if (item?.[key]) return item[key];
   return `${type}-${Date.now()}`;
 }
-async function saveEntity(type, item = {}) {
-  return runVoy(`SAVE_${type.toUpperCase()}`, () => saveVoyEntity({
+async function saveEntity(type, item = {}, requestId = "", action = "") {
+  return runVoy(action || `SAVE_${type.toUpperCase()}`, () => saveVoyEntity({
     entityType:type, entityId:entityId(type, item), issueId:item?.issueId || item?.issue_id || "", item
-  }));
+  }), "VOY_ADMIN_SAVED", requestId);
 }
 function localTool(type, payload = {}) {
   if (type === "VOY_QUALITY_LAB_REQUEST") return ["VOY_QUALITY_LAB_RESULT", { result:{ readinessScore:payload.readiness?.score || 0, pageWarnings:payload.localChecks?.pageWarnings || 0, assetWarnings:payload.localChecks?.assetWarnings || 0, articleDrafts:payload.localChecks?.articleDrafts || 0, checks:payload.localChecks || {}, pages:payload.pages || [] } }];
@@ -123,7 +123,7 @@ async function media(payload = {}) {
     visibility:payload.visibility || "", assetType:payload.assetType || "", libraryRoot:payload.libraryRoot || "",
     libraryFolder:payload.libraryFolder || "", category:payload.category || "", search:payload.search || payload.query || ""
   });
-  send("VOY_MEDIA_LIBRARY_RESULT", result || { ok:true, assets:[] });
+  send("VOY_MEDIA_LIBRARY_RESULT", { ...(result || { ok:true, assets:[] }), requestId:payload.requestId || "" });
   return result;
 }
 
@@ -175,17 +175,17 @@ $w.onReady(function () {
 
       if (type === "NEWSROOM_ADMIN_READY" || type === "VOY_ADMIN_BOOTSTRAP") { await bootstrap(type === "VOY_ADMIN_BOOTSTRAP" && payload.reason === "manual"); return; }
       if (type === "NEWSROOM_ADMIN_REFRESH") { await refreshNewsroom(payload); return; }
-      if (type === "NEWSROOM_SAVE_CATEGORY") { send("NEWSROOM_ADMIN_SAVED", await saveNewsroomCategory(payload.item || payload)); await refreshNewsroom({}); return; }
-      if (type === "NEWSROOM_SAVE_POST") { send("NEWSROOM_ADMIN_SAVED", await saveNewsroomPost(payload.item || payload)); await refreshNewsroom({}); return; }
-      if (type === "NEWSROOM_PUBLISH_POST") { if (payload.item) await saveNewsroomPost(payload.item); send("NEWSROOM_ADMIN_SAVED", await publishNewsroomPost({ id:payload.id || payload.articleId || payload.postId, articleId:payload.articleId || payload.postId })); await refreshNewsroom({}); return; }
+      if (type === "NEWSROOM_SAVE_CATEGORY") { send("NEWSROOM_ADMIN_SAVED", { ...(await saveNewsroomCategory(payload.item || payload)), action:type, requestId:payload.requestId || "" }); await refreshNewsroom({}); return; }
+      if (type === "NEWSROOM_SAVE_POST") { send("NEWSROOM_ADMIN_SAVED", { ...(await saveNewsroomPost(payload.item || payload)), action:type, requestId:payload.requestId || "" }); await refreshNewsroom({}); return; }
+      if (type === "NEWSROOM_PUBLISH_POST") { if (payload.item) await saveNewsroomPost(payload.item); send("NEWSROOM_ADMIN_SAVED", { ...(await publishNewsroomPost({ id:payload.id || payload.articleId || payload.postId, articleId:payload.articleId || payload.postId })), action:type, requestId:payload.requestId || "" }); await refreshNewsroom({}); return; }
       if (type === "NEWSROOM_ARCHIVE_POST") { send("NEWSROOM_ADMIN_SAVED", await archiveNewsroomPost({ id:payload.id || payload.articleId || payload.postId, articleId:payload.articleId || payload.postId })); await refreshNewsroom({}); return; }
-      if (type === "NEWSROOM_SAVE_MEDIA") { send("NEWSROOM_ADMIN_SAVED", await saveNewsroomMediaAsset(payload.item || payload)); await refreshNewsroom({}); return; }
-      if (type === "NEWSROOM_SAVE_CONTACT") { send("NEWSROOM_ADMIN_SAVED", await saveNewsroomPressContact(payload.item || payload)); await refreshNewsroom({}); return; }
+      if (type === "NEWSROOM_SAVE_MEDIA") { send("NEWSROOM_ADMIN_SAVED", { ...(await saveNewsroomMediaAsset(payload.item || payload)), action:type, requestId:payload.requestId || "" }); await refreshNewsroom({}); return; }
+      if (type === "NEWSROOM_SAVE_CONTACT") { send("NEWSROOM_ADMIN_SAVED", { ...(await saveNewsroomPressContact(payload.item || payload)), action:type, requestId:payload.requestId || "" }); await refreshNewsroom({}); return; }
 
-      if (type === "VOY_ADMIN_SAVE_ISSUE_METADATA" || type === "VOY_ADMIN_SAVE_ISSUE_WITH_UPLOAD") { await runVoy(type, () => saveVoyIssue({ issue:payload.issue })); await refreshVoy(); return; }
-      if (type === "VOY_ADMIN_SAVE_ISSUE_PACKAGE") { await runVoy(type, () => saveVoyIssuePackage({ issue:payload.issue, pages:payload.pages })); await refreshVoy(); return; }
-      if (type === "VOY_ADMIN_SAVE_PAGE") { await runVoy(type, () => saveVoyPage({ page:payload.page })); await refreshVoy(); return; }
-      if (type === "VOY_ADMIN_SAVE_PAGES") { await runVoy(type, () => saveVoyPages({ issueId:payload.issueId, pages:payload.pages, replaceIssuePages:payload.replaceIssuePages === true })); await refreshVoy(); return; }
+      if (type === "VOY_ADMIN_SAVE_ISSUE_METADATA" || type === "VOY_ADMIN_SAVE_ISSUE_WITH_UPLOAD") { await runVoy(type, () => saveVoyIssue({ issue:payload.issue }), "VOY_ADMIN_SAVED", payload.requestId || ""); await refreshVoy(); return; }
+      if (type === "VOY_ADMIN_SAVE_ISSUE_PACKAGE") { await runVoy(type, () => saveVoyIssuePackage({ issue:payload.issue, pages:payload.pages }), "VOY_ADMIN_SAVED", payload.requestId || ""); await refreshVoy(); return; }
+      if (type === "VOY_ADMIN_SAVE_PAGE") { await runVoy(type, () => saveVoyPage({ page:payload.page }), "VOY_ADMIN_SAVED", payload.requestId || ""); await refreshVoy(); return; }
+      if (type === "VOY_ADMIN_SAVE_PAGES") { await runVoy(type, () => saveVoyPages({ issueId:payload.issueId, pages:payload.pages, replaceIssuePages:payload.replaceIssuePages === true }), "VOY_ADMIN_SAVED", payload.requestId || ""); await refreshVoy(); return; }
       if (type === "VOY_ADMIN_REORDER_PAGES") { await runVoy(type, () => reorderVoyPages(payload)); await refreshVoy(); return; }
       if (type === "VOY_ADMIN_DELETE_PAGE") { await runVoy(type, () => deleteVoyPage(payload)); await refreshVoy(); return; }
       if (type === "VOY_ADMIN_DELETE_ISSUE") { await runVoy(type, () => deleteVoyIssue(payload)); await refreshVoy(); return; }
@@ -199,7 +199,7 @@ $w.onReady(function () {
         VOY_BRAND_KIT_SAVE:["brand_kit", { brandKitId:"default-brand-kit", ...(payload.brandKit || {}) }],
         VOY_DISTRIBUTION_KIT_SAVE:["distribution_kit", payload.kit], VOY_ASSET_IMPORT_REQUEST:["asset", payload.asset]
       };
-      if (saveMap[type]) { await saveEntity(saveMap[type][0], saveMap[type][1] || {}); await refreshVoy(); return; }
+      if (saveMap[type]) { await saveEntity(saveMap[type][0], saveMap[type][1] || {}, payload.requestId || "", type); await refreshVoy(); return; }
       const deleteMap = {
         VOY_ADMIN_DELETE_ARTICLE:["article",payload.articleId], VOY_ADMIN_DELETE_CATEGORY:["category",payload.categoryId],
         VOY_ADMIN_DELETE_CAMPAIGN:["campaign",payload.campaignId], VOY_ADMIN_DELETE_BANNER:["banner",payload.bannerId], VOY_ADMIN_DELETE_TRAVEL_CARD:["travel_card",payload.cardId]

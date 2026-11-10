@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-10 — The active sidecars reorganize Media Control, protect in-progress forms and extend the website design draft format with validated structured content and placeholders. The historical HTML below is unchanged and is not the active implementation. See `docs/media-control-website-editor.md` for current scope and required Wix runtime updates.
+
 - 2026-11-08 — The active Media Control sidecars remove the unused toolbar counters; this historical reference retains its original markup.
 
 - 2026-11-07 — VOY launch kits prepare editable newsletter, social and agency drafts from supplied issue details and track campaign links. Saved kits use the existing editorial store; generation is deterministic and requires human review.

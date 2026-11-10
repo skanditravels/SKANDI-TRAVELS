@@ -89,51 +89,27 @@
   </nav>
 </div>
 
-<header class="mm-appbar" aria-label="Magazine Manager navigation">
-  <div class="mm-brand">
-    <div class="mm-brand-mark" aria-hidden="true">MM</div>
-    <div class="mm-brand-copy"><b>MEDIA MANAGER</b><span>VOY · Newsroom · Website planning · Media control</span></div>
-  </div>
-  <nav class="mm-modules" id="mmModules" aria-label="Primary modules"></nav>
-  <div class="mm-account">
-    <div class="mm-account-badge" id="mmUserInitials">SK</div>
-    <div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div>
-  </div>
+<header class="mm-appbar" aria-label="Media Control">
+  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>Your content workspace</span></div></div>
+  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span> Menu</button>
+  <div class="mm-account"><div class="mm-account-badge" id="mmUserInitials">SK</div><div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div></div>
 </header>
-<section class="mm-contextbar" aria-label="Current workspace">
-  <div>
-    <p class="mm-breadcrumb" id="mmBreadcrumb">Management / Studio Overview</p>
-    <h1 id="mmPageTitle">VOY Magazine &amp; Newsroom Control</h1>
-  </div>
-
-</section>
-
 <div class="app">
-  <header class="header">
-    <div class="brand">
-      <button class="mobile-menu-btn" id="moduleHeaderMobileMenuBtn" aria-label="Open menu">☰</button>
-      <div class="logo" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</div>
-      <div style="min-width:0">
-        <div class="title">VOY Atelier · Editorial Desk</div>
-        <div class="subtitle">Premium travel magazine editing · PR campaigns · destination catalogues · print and digital publishing</div>
+  <header class="header" hidden><button id="moduleHeaderMobileMenuBtn" type="button">Menu</button><span id="sessionLine"><span id="clock">--:--</span></span></header>
+  <div class="shell mc-shell">
+    <aside class="sidebar mc-sidebar" id="mcSidebar" aria-label="Media Control navigation">
+      <div class="mc-menu-heading"><span>WORKSPACES</span><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+      <nav class="mm-modules" id="mmModules" aria-label="Workspaces"></nav>
+      <nav id="nav" class="mc-subnav" aria-label="Workspace sections"></nav>
+    </aside>
+    <main class="workspace mc-workspace">
+      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle">Overview</h1></div></section>
+      <div class="toolbar mc-toolbar">
+        <label class="mc-search-label" for="globalQuery">Search this section</label><input class="input search" id="globalQuery" type="search" placeholder="Search" />
+        <button class="btn primary" data-action="save-current" hidden>Save current</button>
+        <button class="btn dark" data-action="public-preview" hidden>Preview VOY</button>
       </div>
-    </div>
-    <div class="session" id="sessionLine"><span id="clock">--:--</span></div>
-  </header>
-  <div class="shell">
-    <aside class="sidebar" id="nav"></aside>
-      <div class="toolbar">
-        <button class="btn dark mobile-menu-btn toolbar-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open VOY menu">☰ Menu</button>
-
-
-
-
-
-        <input class="input search" id="globalQuery" placeholder="Search issue, article, destination, campaign, asset..." />
-        <button class="btn primary" data-action="save-current">Save</button>
-        <button class="btn dark" data-action="public-preview">Public preview</button>
-      </div>
-      <div id="statusLine" class="notice">Loading VOY Control...</div>
+      <div id="statusLine" class="notice" role="alert" hidden></div>
       <div class="content" id="content"></div>
     </main>
   </div>
@@ -155,17 +131,17 @@
 
 
 <link rel="stylesheet" href="skandi-media-control.part-03.css" id="skandi-supabase-media-integration-style">
-<div class="sk-media-picker" id="skMediaPicker" aria-hidden="true">
+<div class="sk-media-picker" id="skMediaPicker" role="dialog" aria-modal="true" aria-labelledby="skMediaPickerTitle" aria-hidden="true">
   <div class="sk-media-dialog">
-    <div class="sk-media-dialog-head"><div><b>Supabase Media Library</b><div class="help">Browse every Storage bucket. Public image assets can be selected for VOY; private assets remain view-only.</div></div><button class="btn" id="skMediaClose" type="button">Close</button></div>
+    <div class="sk-media-dialog-head"><div><b id="skMediaPickerTitle">Asset Library</b><div class="help">Browse available media. Public images can be used in content; private files remain view-only.</div></div><button class="btn" id="skMediaClose" type="button">Close</button></div>
     <div class="sk-media-dialog-tools">
       <select class="input" id="skMediaBucketFilter"><option value="">All buckets</option></select>
       <input class="input" id="skMediaQuery" placeholder="Search assets">
       <button class="btn" id="skMediaRefresh" type="button">Refresh</button>
       <button class="btn primary" id="skMediaUpload" type="button">Upload image</button>
-      <button class="btn dark" id="skMediaOpenControl" type="button">Open Media Control</button>
+      <button class="btn dark" id="skMediaOpenControl" type="button">View asset library</button>
     </div>
-    <div class="sk-media-dialog-body"><div class="sk-media-grid" id="skMediaPickerGrid"></div></div>
+    <div class="sk-media-dialog-body"><div class="sk-media-grid" id="skMediaPickerGrid"></div></div><div class="sk-media-paging"><button class="btn" id="skMediaPickerPrev" type="button">Previous</button><span id="skMediaPickerCount" aria-live="polite"></span><button class="btn" id="skMediaPickerNext" type="button">Next</button></div>
   </div>
 </div>
 <input id="skVoyMediaFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" hidden>

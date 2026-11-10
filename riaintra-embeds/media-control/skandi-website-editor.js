@@ -3,7 +3,9 @@
   const requests=new Map(),clone=v=>JSON.parse(JSON.stringify(v)),arr=v=>Array.isArray(v)?v:[];
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let pages=[],assets=[],properties=[],root,frame,selected,previewHTML='',pageKey='',nonce='',revision=0,dirty=false,design={version:1,elements:[]},history=[],future=[];
-  let homeCards=[],homeCardAssets=[],homeCardId='',homeCardsLoaded=false,homeCardDirty=false,activeMode='visual';
+  let homeCards=[],homeCardAssets=[],homeCardId='',homeCardsLoaded=false,homeCardDirty=false,activeMode='visual',busy=false;
+  const busyControls=new Map();
+  function setBusy(value){busy=value;if(value){root.querySelectorAll('button,input,select,textarea').forEach(control=>{busyControls.set(control,control.disabled);control.disabled=true})}else{busyControls.forEach((disabled,control)=>{if(control.isConnected)control.disabled=disabled});busyControls.clear()}}
   const el=id=>root?.querySelector('[data-we="'+id+'"]');
   const homeEl=id=>root?.querySelector('[data-home="'+id+'"]');
   function status(message,error=false){if(el('status')){el('status').textContent=message;el('status').dataset.error=String(error);}}
@@ -29,18 +31,26 @@
     if(['opacity','order','flex-grow','flex-shrink'].includes(property))return '<label>'+esc(label)+'<input type="number" step="any"'+data+' value="'+esc(value)+'" placeholder="'+esc(computed)+'"></label>';
     return '<label>'+esc(label)+'<input'+data+' value="'+esc(value)+'" placeholder="'+esc(computed||'Keep original')+'"></label>';
   }
+  function publicImageAssets(){return assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket));}
+  function blocksEditor(item){
+    if(!selected?.canAddBlocks)return '';
+    const blocks=arr(item.blocks);
+    return '<details class="we-block-editor"><summary>Added content ('+blocks.length+')</summary><p class="we-note">Add content inside this selected section. Existing page elements and operational data stay in place.</p><div class="we-block-add"><button class="btn" type="button" data-we-add-block="heading">+ Heading</button><button class="btn" type="button" data-we-add-block="text">+ Text</button><button class="btn" type="button" data-we-add-block="button">+ Button</button><button class="btn" type="button" data-we-add-block="image">+ Image</button></div>'+blocks.map((block,index)=>'<div class="we-block-row"><strong>'+esc(block.type)+'</strong>'+(['heading','text','button'].includes(block.type)?'<label>Text<textarea data-we-block-id="'+esc(block.id)+'" data-we-block-field="text">'+esc(block.text||'')+'</textarea></label>':'')+(block.type==='button'?'<label>Destination link<input data-we-block-id="'+esc(block.id)+'" data-we-block-field="href" value="'+esc(block.href||'')+'" placeholder="/destinations"></label>':'')+(block.type==='image'?'<label>Image<select data-we-block-id="'+esc(block.id)+'" data-we-block-field="assetId"><option value="">Choose an image</option>'+publicImageAssets().map(a=>'<option value="'+esc(a.id)+'" '+(a.id===block.assetId?'selected':'')+'>'+esc(a.name||a.id)+'</option>').join('')+'</select></label><label>Image description<input data-we-block-id="'+esc(block.id)+'" data-we-block-field="alt" value="'+esc(block.alt||'')+'"></label>':'')+'<div class="we-block-actions"><button type="button" class="btn" data-we-block-move="up" data-we-block-id="'+esc(block.id)+'" '+(index===0?'disabled':'')+'>Move up</button><button type="button" class="btn" data-we-block-move="down" data-we-block-id="'+esc(block.id)+'" '+(index===blocks.length-1?'disabled':'')+'>Move down</button><button type="button" class="btn" data-we-block-remove="'+esc(block.id)+'">Remove</button></div></div>').join('')+'</details>';
+  }
+  function setMobileView(view){const workspace=el('workspace');if(!workspace)return;workspace.dataset.mobileView=view;root.querySelectorAll('[data-we-mobile-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.weMobileView===view)));}
   function inspector(){
     if(!selected){el('inspector').innerHTML='<h3>Select an element</h3><p class="we-note">Click text, an image, a card or a section in the preview. Select its parent to style the surrounding layout.</p>';return;}
     const item=current()||{},viewport=el('viewport').value;
     const names={h1:'Heading',h2:'Heading',h3:'Heading',p:'Paragraph',article:'Card',section:'Section',div:'Container',a:'Link',img:'Image',button:'Button'};
     el('inspector').innerHTML='<h3>'+esc(names[selected.tag]||'Element')+'</h3><button class="btn" data-we-action="parent">Select parent</button><button class="btn" data-we-action="reset">Reset element</button>'+
-      (selected.text!==null?'<label>Text<textarea data-we="text">'+esc(Object.hasOwn(item,'text')?item.text:selected.text)+'</textarea></label>':'')+
+      (selected.text!==null&&!['input','textarea'].includes(selected.tag)?'<label>Text<textarea data-we="text">'+esc(Object.hasOwn(item,'text')?item.text:selected.text)+'</textarea></label>':'')+
       (selected.tag==='a'?'<label>Link<input data-we="href" value="'+esc(item.href??selected.href)+'"></label>':'')+
-      '<label>Image from Supabase<select data-we="asset"><option value="">Keep existing image</option>'+assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket)).map(a=>'<option value="'+esc(a.id)+'" '+(a.id===item.assetId?'selected':'')+'>'+esc(a.displayName||a.originalName)+'</option>').join('')+'</select></label>'+
+      (['input','textarea'].includes(selected.tag)?'<label>Placeholder text<input data-we="placeholder" value="'+esc(item.placeholder??selected.placeholder)+'"></label>':'')+
+      '<label>Choose an image<select data-we="asset"><option value="">Keep existing image</option>'+assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket)).map(a=>'<option value="'+esc(a.id)+'" '+(a.id===item.assetId?'selected':'')+'>'+esc(a.displayName||a.originalName)+'</option>').join('')+'</select></label>'+
       '<label>Image placement<select data-we="imageMode"><option value="image" '+(selected.image?'selected':'')+'>Image element</option><option value="background" '+(!selected.image?'selected':'')+'>Background</option></select></label>'+
-      '<label>Image description<input data-we="alt" value="'+esc(item.alt??selected.alt)+'"></label><p class="we-note">Upload images in Assets / Media, then reload this page’s assets. Existing images stay unchanged until you select a replacement.</p>'+
-      (selected.currentImage?'<button class="btn" data-we-action="import-existing">Copy current image to Supabase</button>':'')+
-      '<details open><summary>Appearance — '+esc(viewport)+'</summary>'+properties.filter(p=>p!=='background-image').map(p=>styleControl(p,item.styles?.[viewport]?.[p]||'',selected.styles?.[p]||'')).join('')+'</details>';
+      '<label>Image description<input data-we="alt" value="'+esc(item.alt??selected.alt)+'"></label><p class="we-note">Upload images in Asset Library, then reload this page’s assets. Existing images stay unchanged until you select a replacement.</p>'+
+      (selected.currentImage?'<button class="btn" data-we-action="import-existing">Add current image to library</button>':'')+
+      blocksEditor(item)+'<details><summary>Appearance — '+esc(viewport)+'</summary>'+properties.filter(p=>p!=='background-image').map(p=>styleControl(p,item.styles?.[viewport]?.[p]||'',selected.styles?.[p]||'')).join('')+'</details>';
   }
   function preview(html){
     nonce=crypto.randomUUID();
@@ -53,6 +63,7 @@
     frame.srcdoc='<!doctype html>'+doc.documentElement.outerHTML;
   }
   async function load(key){
+    if(!key)throw new Error('Choose a page first.');
     if(dirty&&!confirm('Discard unsaved changes and open another page?')){el('page').value=pageKey;return;}
     status('Loading page and draft…');
     const result=await rpc('GET_WEBSITE_DESIGN',{pageKey:key});
@@ -61,6 +72,7 @@
   }
   async function save(action){
     if(!pageKey)throw new Error('Open a page first.');
+    if(el('page').value!==pageKey)throw new Error('Load the selected page before saving.');
     if(action==='PUBLISH'&&!confirm('Publish this page’s presentation changes?'))return;
     status(action==='PUBLISH'?'Publishing…':'Saving…');
     const result=await rpc('SAVE_WEBSITE_DESIGN',{pageKey,action,expectedRevision:revision,design});
@@ -137,25 +149,35 @@
     pages=data.pages||pages;assets=data.assets||assets;
     const section=document.getElementById('panel-websiteeditor');if(!section)return;
     if(root===section){if(el('page').options.length<=1)pageOptions();return;}
-    root=section;root.innerHTML='<div class="we-modebar"><button type="button" class="active" data-we-mode="visual">Visual Website Editor</button><button type="button" data-we-mode="homecards">Home Cards &amp; Pricing</button></div><div data-we="visual-panel"><div class="we-toolbar"><select data-we="page"><option value="">Select a public page</option></select><button class="btn" data-we-action="load">Load page</button><select data-we="viewport"><option value="all">Desktop / all sizes</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select><button class="btn" data-we-action="undo">Undo</button><button class="btn" data-we-action="redo">Redo</button><button class="btn" data-we-action="save">Save draft</button><button class="btn primary" data-we-action="publish">Publish</button><button class="btn" data-we-action="restore">Discard draft</button><button class="btn" data-we-action="rollback">Roll back publication</button></div><div class="we-status" data-we="status" role="status"></div><p class="we-note">Layout preview. Live inventory, account and booking data run on the public site. Pages without a successful published build cannot be previewed yet.</p><div class="we-workspace"><div class="we-canvas"><iframe data-we="preview" title="Public website layout preview" sandbox="allow-scripts"></iframe></div><aside class="we-inspector" data-we="inspector"></aside></div><details><summary>Discover media and fonts</summary><div class="we-toolbar"><select data-we="provider"><option value="wikimedia">Wikimedia Commons</option><option value="openverse">Openverse</option><option value="fontsource">Fontsource</option></select><input data-we="query" placeholder="Search by subject or font family"><button class="btn" data-we-action="search">Search</button></div><div class="we-media-results" data-we="results"></div></details></div><section data-we="homecards-panel" hidden><div class="hc-status" data-home="status" role="status"></div><div data-home="content"></div></section>';
+    root=section;root.innerHTML='<div class="we-intro"><h2>Make your website yours</h2><p>Choose a page, select an element in the preview, then save and publish your changes.</p></div><div class="we-modebar"><button type="button" class="active" data-we-mode="visual">Page editor</button><button type="button" data-we-mode="homecards">Home cards &amp; pricing</button></div><div data-we="visual-panel"><div class="we-toolbar"><label class="we-page-search">Find page<input type="search" data-we="pageQuery" placeholder="Search pages"></label><label class="we-page-picker">Page<select data-we="page"><option value="">Select a public page</option></select></label><button class="btn" data-we-action="load">Open page</button><label class="we-viewport-picker">Preview<select data-we="viewport"><option value="all">Desktop / all sizes</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select></label><button class="btn" data-we-action="save">Save draft</button><button class="btn primary" data-we-action="publish">Publish</button><details class="we-more"><summary>More actions</summary><div><button class="btn" data-we-action="undo">Undo</button><button class="btn" data-we-action="redo">Redo</button><button class="btn" data-we-action="restore">Discard draft</button><button class="btn" data-we-action="rollback">Roll back publication</button></div></details></div><div class="we-status" data-we="status" role="status"></div><p class="we-note">Layout preview. Live inventory, account and booking data run on the public site. Pages without a successful published build cannot be previewed yet.</p><div class="we-mobile-switch"><button type="button" data-we-mobile-view="preview" aria-pressed="true">Page preview</button><button type="button" data-we-mobile-view="inspector" aria-pressed="false">Edit selection</button></div><div class="we-workspace" data-we="workspace" data-mobile-view="preview"><div class="we-canvas"><iframe data-we="preview" title="Public website layout preview" sandbox="allow-scripts"></iframe></div><aside class="we-inspector" data-we="inspector"></aside></div><details><summary>Discover media and fonts</summary><div class="we-toolbar"><select data-we="provider"><option value="wikimedia">Wikimedia Commons</option><option value="openverse">Openverse</option><option value="fontsource">Fontsource</option></select><input data-we="query" placeholder="Search by subject or font family"><button class="btn" data-we-action="search">Search</button></div><div class="we-media-results" data-we="results"></div></details></div><section data-we="homecards-panel" hidden><div class="hc-status" data-home="status" role="status"></div><div data-home="content"></div></section>';
     frame=el('preview');pageOptions();inspector();
     root.addEventListener('click',async event=>{try{
+      if(busy)return;
+      const mobile=event.target.closest('[data-we-mobile-view]')?.dataset.weMobileView;if(mobile){setMobileView(mobile);return;}
+      const addBlock=event.target.closest('[data-we-add-block]')?.dataset.weAddBlock;
+      if(addBlock&&selected?.canAddBlocks){const id='block-'+crypto.randomUUID();edit(item=>{item.blocks||=[];if(item.blocks.length>=30)throw new Error('This section has reached its content limit.');item.blocks.push({id,type:addBlock,...(addBlock==='image'?{alt:''}:{text:''})});});inspector();return;}
+      const removeBlock=event.target.closest('[data-we-block-remove]')?.dataset.weBlockRemove;if(removeBlock){edit(item=>{item.blocks=arr(item.blocks).filter(block=>block.id!==removeBlock)});inspector();return;}
+      const moveButton=event.target.closest('[data-we-block-move]');if(moveButton){edit(item=>{const blocks=arr(item.blocks),index=blocks.findIndex(block=>block.id===moveButton.dataset.weBlockId),target=index+(moveButton.dataset.weBlockMove==='up'?-1:1);if(index>=0&&target>=0&&target<blocks.length)[blocks[index],blocks[target]]=[blocks[target],blocks[index]];item.blocks=blocks});inspector();return;}
       const mode=event.target.closest('[data-we-mode]')?.dataset.weMode;
       if(mode==='visual'||mode==='homecards'){await setMode(mode);return;}
       const cardButton=event.target.closest('[data-home-card]');
       if(cardButton){const next=cardButton.dataset.homeCard;if(next!==homeCardId&&homeCardDirty&&!confirm('Discard unsaved changes to this Home card?'))return;homeCardId=next;homeCardDirty=false;renderHomeCards();homeCardStatus('Editing '+(currentHomeCard()?.title||homeCardId)+'.');return;}
       const homeAction=event.target.closest('[data-home-action]')?.dataset.homeAction;
       if(homeAction==='refresh'){if(homeCardDirty&&!confirm('Discard unsaved Home card changes and refresh?'))return;await loadHomeCards();return;}
-      if(homeAction==='save'){await saveHomeCard();return;}
+      if(homeAction==='save'){setBusy(true);try{await saveHomeCard()}finally{setBusy(false)}return;}
       if(homeAction==='add-addon'){syncHomeFormToCard();homeCards.find(card=>card.publicId===homeCardId).homePrice.packageAddOns.push({name:'',retailAmount:'',quantity:1});homeCardDirty=true;renderHomeCards();homeCardStatus('Unsaved changes');return;}
       if(homeAction==='remove-addon'){syncHomeFormToCard();const item=homeCards.find(card=>card.publicId===homeCardId);item.homePrice.packageAddOns.splice(Number(event.target.closest('[data-home-action]').dataset.addonIndex),1);homeCardDirty=true;renderHomeCards();homeCardStatus('Unsaved changes');return;}
       const action=event.target.closest('[data-we-action]')?.dataset.weAction;
+      if(['load','save','publish','restore','rollback'].includes(action)&&busy)return;
+      if(['load','save','publish','restore','rollback'].includes(action))setBusy(true);
+      try{
       if(action==='load')await load(el('page').value);
       if(action==='save')await save('SAVE');if(action==='publish')await save('PUBLISH');
       if(action==='restore'&&confirm('Replace this draft with the currently published version?'))await save('RESTORE_PUBLISHED');
       if(action==='rollback'&&confirm('Restore the previous published version?'))await save('ROLLBACK');
+      }finally{if(busy)setBusy(false)}
       if(action==='search')await search();
-      if(action==='import-existing'&&selected?.currentImage){status('Copying the existing image into Supabase…');const target=selected.selector,result=await rpc('IMPORT_WEBSITE_IMAGE',{pageKey,url:selected.currentImage});if(!result.asset)throw new Error('The image needs duplicate review in Assets / Media.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];if(selected?.selector!==target){status('Image imported. Select it from the library to apply it.');return;}edit(item=>{item.assetId=result.asset.id;item.assetUrl=result.asset.publicUrl;item.imageMode=selected.image?'image':'background';});inspector();status('Image copied to Supabase and applied to the draft.');}
+      if(action==='import-existing'&&selected?.currentImage){status('Adding the existing image to the library…');const target=selected.selector,result=await rpc('IMPORT_WEBSITE_IMAGE',{pageKey,url:selected.currentImage});if(!result.asset)throw new Error('The image needs duplicate review in Assets / Media.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];if(selected?.selector!==target){status('Image imported. Select it from the library to apply it.');return;}edit(item=>{item.assetId=result.asset.id;item.assetUrl=result.asset.publicUrl;item.imageMode=selected.image?'image':'background';});inspector();status('Image added to the library and applied to the draft.');}
       if(action==='parent'&&selected)frame.contentWindow.postMessage({source:'SKANDI_MEDIA_CONTROL',type:'WEBSITE_PREVIEW_PARENT',nonce,payload:{selector:selected.selector}},'*');
       if(action==='reset'&&selected){snapshot();design.elements=design.elements.filter(x=>x.selector!==selected.selector);sendPreview();inspector();}
       if(action==='undo'&&history.length){future.push(clone(design));design=history.pop();dirty=true;sendPreview();inspector();}
@@ -163,8 +185,9 @@
       const fontButton=event.target.closest('[data-font-index]');
       if(fontButton){if(!selected)throw new Error('Select an element in the preview first.');const choice=el('results')._items[Number(fontButton.dataset.fontIndex)],target=selected.selector;const result=await rpc('GET_WEBSITE_FONT',{id:choice.id,weight:choice.weights?.includes(400)?400:choice.weights?.[0]||400});if(selected?.selector!==target)throw new Error('Selection changed; choose the font again.');edit(item=>{design.fonts=[...(design.fonts||[]).filter(f=>f.id!==result.font.id),result.font];item.styles.all['font-family']=result.font.family;item.styles.all['font-weight']=String(result.font.weight);});inspector();status('Font applied to the draft.');}
       const importButton=event.target.closest('[data-import-index]');
-      if(importButton){const item=el('results')._items[Number(importButton.dataset.importIndex)];if(!confirm('Have you reviewed the license and source for this image and confirmed it can be used on SKANDI?'))return;status('Importing into Supabase…');const result=await rpc('IMPORT_MEDIA_SOURCE',{provider:item.provider,id:item.id,licenseReviewed:true});if(!result.asset)throw new Error(result.needsReview?'A possible duplicate needs review in Assets / Media.':'Import did not return an asset.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];inspector();status('Imported into the Supabase Asset Library. Select the image in the inspector.');}
+      if(importButton){const item=el('results')._items[Number(importButton.dataset.importIndex)];if(!confirm('Have you reviewed the license and source for this image and confirmed it can be used on SKANDI?'))return;status('Adding image to the library…');const result=await rpc('IMPORT_MEDIA_SOURCE',{provider:item.provider,id:item.id,licenseReviewed:true});if(!result.asset)throw new Error(result.needsReview?'A possible duplicate needs review in Assets / Media.':'Import did not return an asset.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];inspector();status('Imported into the Asset Library. Select the image in the inspector.');}
     }catch(error){activeMode==='homecards'?homeCardStatus(error.message,true):status(error.message,true);}});
+    root.addEventListener('input',event=>{if(event.target.dataset.we==='pageQuery'){pageOptions();return}if(event.target.dataset.homeField){homeCardDirty=true;homeCardStatus('Unsaved Home card changes')}else if(event.target.dataset.weBlockField||['text','alt','href','placeholder'].includes(event.target.dataset.we)){dirty=true;status('Unsaved changes')} });
     root.addEventListener('change',event=>{try{
       const target=event.target,name=target.dataset.we;
       if(target.dataset.homeCard){const next=target.dataset.homeCard;if(next!==homeCardId&&homeCardDirty&&!confirm('Discard unsaved changes to this Home card?')){renderHomeCards();return;}homeCardId=next;homeCardDirty=false;renderHomeCards();return;}
@@ -172,12 +195,13 @@
       if(name==='viewport'){frame.style.width=target.value==='mobile'?'390px':target.value==='tablet'?'820px':'100%';inspector();return;}
       if(!selected)return;
       if(target.dataset.weStyle||target.dataset.weUnit){const property=target.dataset.weStyle||target.dataset.weUnit,input=root.querySelector('[data-we-style="'+property+'"]'),unit=root.querySelector('[data-we-unit="'+property+'"]');const value=input.value.trim()+(input.value.trim()&&unit?unit.value:'');if(value&&!CSS.supports(property,value))throw new Error('Invalid '+property+' value.');edit(item=>{const mode=el('viewport').value;item.styles[mode]||={};if(value)item.styles[mode][property]=value;else delete item.styles[mode][property];});}
-      if(['text','alt','href'].includes(name))edit(item=>item[name]=target.value);
+      if(['text','alt','href','placeholder'].includes(name))edit(item=>item[name]=target.value);
+      if(target.dataset.weBlockField){const id=target.dataset.weBlockId,field=target.dataset.weBlockField;edit(item=>{const block=arr(item.blocks).find(entry=>entry.id===id);if(!block)return;if(field==='assetId'){const asset=publicImageAssets().find(entry=>entry.id===target.value);if(asset){block.assetId=asset.id;block.assetUrl=asset.publicUrl}else{delete block.assetId;delete block.assetUrl}}else block[field]=target.value;});}
       if(name==='asset'){const asset=assets.find(a=>a.id===target.value);edit(item=>{if(asset){item.assetId=asset.id;item.assetUrl=asset.publicUrl;item.imageMode=el('imageMode').value;item.alt=el('alt').value;}else {delete item.assetId;delete item.assetUrl;}});}
       if(name==='imageMode'&&current()?.assetId)edit(item=>item.imageMode=target.value);
     }catch(error){status(error.message,true);}});
   };
-  function pageOptions(){const value=el('page').value;el('page').innerHTML='<option value="">Select a public page</option>'+pages.filter(p=>p.path&&!/^\/(riaintra|altea)(\/|$)/.test(p.path)).map(p=>'<option value="'+esc(p.key)+'">'+esc(p.label)+'</option>').join('');el('page').value=value;}
+  function pageOptions(){const value=el('page').value||pageKey,query=String(el('pageQuery')?.value||'').trim().toLowerCase();const available=pages.filter(p=>p.path&&!/^\/(riaintra|altea)(\/|$)/.test(p.path)&&(String(p.key)===value||!query||[p.label,p.path,p.key].some(part=>String(part||'').toLowerCase().includes(query))));el('page').innerHTML='<option value="">Select a public page</option>'+available.map(p=>'<option value="'+esc(p.key)+'">'+esc(p.label)+'</option>').join('');el('page').value=value;}
   window.addEventListener('message',event=>{
     const m=event.data||{};
     if(event.source===parent&&m.source==='SKANDI_WIX_PARENT'){
@@ -185,9 +209,9 @@
       if(m.type==='MEDIA_CONTROL_LIBRARY'){assets=m.payload?.assets||assets;if(root)inspector();}
       if(m.type==='MEDIA_CONTROL_WEBSITE_RESULT'||m.type==='MEDIA_CONTROL_ERROR'){const pending=requests.get(m.payload?.requestId);if(pending){clearTimeout(pending.timer);requests.delete(m.payload.requestId);m.type==='MEDIA_CONTROL_ERROR'?pending.reject(new Error(m.payload.message)):pending.resolve(m.payload.result);}}
     }
-    if(event.source===frame?.contentWindow&&m.source==='SKANDI_WEBSITE_PREVIEW'&&m.nonce===nonce){if(m.type==='WEBSITE_PREVIEW_READY')sendPreview();if(m.type==='WEBSITE_PREVIEW_ACTIVITY')parent.postMessage({source:'SKANDI_SHELL',type:'SKANDI_STAFF_ACTIVITY',payload:{key:'mediaControl'}},'*');if(m.type==='WEBSITE_PREVIEW_SELECTED'){selected=m.payload;inspector();}}
+    if(event.source===frame?.contentWindow&&m.source==='SKANDI_WEBSITE_PREVIEW'&&m.nonce===nonce){if(m.type==='WEBSITE_PREVIEW_READY')sendPreview();if(m.type==='WEBSITE_PREVIEW_ACTIVITY')parent.postMessage({source:'SKANDI_SHELL',type:'SKANDI_STAFF_ACTIVITY',payload:{key:'mediaControl'}},'*');if(m.type==='WEBSITE_PREVIEW_SELECTED'){selected=m.payload;inspector();if(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches)setMobileView('inspector');}}
   });
-  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(dirty||homeCardDirty){event.preventDefault();event.returnValue='';}});
   window.SKANDIWebsiteStudioMount();
   parent.postMessage({source:'SKANDI_MEDIA_CONTROL',type:'MEDIA_CONTROL_CATALOG_REQUEST',payload:{}},'*');
 })();
