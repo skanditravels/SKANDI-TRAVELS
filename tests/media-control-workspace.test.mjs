@@ -39,6 +39,27 @@ test('workspace drawer searches every section and closes accessibly after naviga
  toggle.click();d.getElementById('mcDrawerOverlay').click();assert.equal(toggle.getAttribute('aria-expanded'),'false');
 });
 
+test('RIAINTRA chrome hosts the workspace menu without replacing the staff menu',async t=>{
+ const {w,d,dom}=setup();t.after(()=>dom.window.close());await tick();
+ const desktop=d.getElementById('desktopMenuBtn'),mobile=d.getElementById('mobileMenuBtn');
+ const globalMenu=d.querySelector('#skandi-mobile-nav-root [data-skandi-mobile-route="menu"]');
+ const app=d.getElementById('skandi-app-root'),sidebar=d.getElementById('mcSidebar');
+ assert(!d.querySelector('.mm-appbar'));
+ assert(desktop.closest('#riaintra-global-header-root .shell-left'));
+ assert.equal(mobile.parentElement.id,'skandi-mobile-nav-root');
+ assert.equal(mobile.nextElementSibling,globalMenu);
+ assert.equal(d.querySelectorAll('#skandi-mobile-nav-root [data-skandi-mobile-route]').length,5);
+ assert.match(d.querySelector('.mc-menu-kicker').textContent,/RIAINTRA/);
+ mobile.click();assert.equal(sidebar.getAttribute('aria-hidden'),'false');assert.equal(desktop.getAttribute('aria-expanded'),'true');
+ d.activeElement.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+ assert.equal(sidebar.getAttribute('aria-hidden'),'true');assert.equal(d.activeElement,mobile);
+ desktop.click();assert.equal(mobile.getAttribute('aria-expanded'),'true');
+ d.getElementById('mcCloseMenu').click();assert.equal(d.activeElement,desktop);
+ globalMenu.click();assert(d.body.classList.contains('drawer-open'));assert.equal(app.inert,true);
+ mobile.click();assert(!d.body.classList.contains('drawer-open'));assert(d.body.classList.contains('mobile-drawer-open'));assert.equal(app.inert,false);
+ globalMenu.click();assert(!d.body.classList.contains('mobile-drawer-open'));assert(d.body.classList.contains('drawer-open'));
+});
+
 test('overview counts distinguish loaded records from unavailable data',t=>{
  const {d,dom,receive}=setup();t.after(()=>dom.window.close());
  assert.equal(d.querySelector('[data-mc-count="assets"]').textContent,'—');assert.equal(d.querySelector('[data-mc-count="pressreleases"]').textContent,'—');

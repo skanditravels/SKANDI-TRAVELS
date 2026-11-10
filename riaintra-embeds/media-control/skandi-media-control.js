@@ -380,7 +380,7 @@ function renderControlHome(){
     ["assets","Loaded assets",state.libraryLoaded?state.libraryAssets.length:"—"],
     ["pressreleases","Newsroom posts",state.newsroomLoaded?state.newsroomPosts.length:"—"]
   ];
-  host.innerHTML=`<section class="mc-overview-head"><div><p class="mc-eyebrow">SKANDI DIGITAL CONTENT</p><h2>Your content, in one workspace.</h2><p>Manage website presentation, media, VOY, newsroom and marketing from one place.</p></div><button class="btn" type="button" data-panel="api">Connections <span aria-hidden="true">↗</span></button></section><div class="mc-overview-metrics" aria-label="Workspace overview">${metrics.map(([id,label,value])=>`<button type="button" class="mc-overview-metric" data-panel="${id}"><span>${esc(label)}</span><strong data-mc-count="${id}">${esc(value)}</strong><small>Open workspace <span aria-hidden="true">→</span></small></button>`).join("")}</div><div class="mc-overview-layout"><section class="mc-workspaces"><div class="mc-section-head"><div><p class="mc-section-kicker">WORKSPACES</p><h3>Manage content</h3></div><span>Choose where to work</span></div><div class="mc-card-grid">${cards.map(([id,number,title,description,cta])=>`<article class="mc-card"><span class="mc-card-number">${number}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div></section><aside class="mc-production-summary"><p class="mc-section-kicker">VOY PRODUCTION</p><h3>${esc(issue?.edition||issue?.title||"No issue selected")}</h3><p>${issue?esc(issue.title||"Continue working on this edition."):"Create or select an issue to start planning your magazine."}</p><div class="mc-production-links"><button type="button" data-panel="issues">Issues <span aria-hidden="true">→</span></button><button type="button" data-panel="builder">Magazine builder <span aria-hidden="true">→</span></button><button type="button" data-panel="articles">Article briefs <span aria-hidden="true">→</span></button></div><div class="mc-production-divider"></div><p class="mc-section-kicker">EDITORIAL TOOLS</p><div class="mc-production-links"><button type="button" data-panel="research">Destination research <span aria-hidden="true">→</span></button><button type="button" data-panel="emailstudio">Email studio <span aria-hidden="true">→</span></button><button type="button" data-panel="api">Connections <span aria-hidden="true">→</span></button></div></aside></div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information remains with its existing owner.</p>`;
+  host.innerHTML=`<section class="mc-overview-head"><div><p class="mc-eyebrow">RIAINTRA · MEDIA CONTROL</p><h2>Your content, in one workspace.</h2><p>Manage website presentation, media, VOY, newsroom and marketing from one place.</p></div><button class="btn" type="button" data-panel="api">Connections <span aria-hidden="true">↗</span></button></section><div class="mc-overview-metrics" aria-label="Workspace overview">${metrics.map(([id,label,value])=>`<button type="button" class="mc-overview-metric" data-panel="${id}"><span>${esc(label)}</span><strong data-mc-count="${id}">${esc(value)}</strong><small>Open workspace <span aria-hidden="true">→</span></small></button>`).join("")}</div><div class="mc-overview-layout"><section class="mc-workspaces"><div class="mc-section-head"><div><p class="mc-section-kicker">WORKSPACES</p><h3>Manage content</h3></div><span>Choose where to work</span></div><div class="mc-card-grid">${cards.map(([id,number,title,description,cta])=>`<article class="mc-card"><span class="mc-card-number">${number}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div></section><aside class="mc-production-summary"><p class="mc-section-kicker">VOY PRODUCTION</p><h3>${esc(issue?.edition||issue?.title||"No issue selected")}</h3><p>${issue?esc(issue.title||"Continue working on this edition."):"Create or select an issue to start planning your magazine."}</p><div class="mc-production-links"><button type="button" data-panel="issues">Issues <span aria-hidden="true">→</span></button><button type="button" data-panel="builder">Magazine builder <span aria-hidden="true">→</span></button><button type="button" data-panel="articles">Article briefs <span aria-hidden="true">→</span></button></div><div class="mc-production-divider"></div><p class="mc-section-kicker">EDITORIAL TOOLS</p><div class="mc-production-links"><button type="button" data-panel="research">Destination research <span aria-hidden="true">→</span></button><button type="button" data-panel="emailstudio">Email studio <span aria-hidden="true">→</span></button><button type="button" data-panel="api">Connections <span aria-hidden="true">→</span></button></div></aside></div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information remains with its existing owner.</p>`;
 }
 function renderDashboard(){
   const issue=currentIssue();
@@ -1170,21 +1170,44 @@ document.addEventListener("input",e=>{
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
 $("globalQuery").addEventListener("input",()=>renderAll());
+let workspaceMenuTrigger=null;
+function workspaceMenuToggles(){return [$("desktopMenuBtn"),$("mobileMenuBtn")].filter(Boolean)}
+function mountRiaintraNavigation(){
+  const shell=document.querySelector('#skandi-shell-root[data-skandi-key="mediaControl"]');
+  if(!shell)return; // The standalone source keeps the controls beside the page title.
+  const desktop=shell.querySelector('#riaintra-global-header-root .shell-left');
+  const mobile=shell.querySelector('#skandi-mobile-nav-root');
+  const globalMenu=mobile?.querySelector('[data-skandi-mobile-route="menu"]');
+  const desktopToggle=$("desktopMenuBtn"),mobileToggle=$("mobileMenuBtn");
+  if(desktop&&desktopToggle&&desktopToggle.parentElement!==desktop)desktop.appendChild(desktopToggle);
+  if(mobile&&globalMenu&&mobileToggle&&mobileToggle.parentElement!==mobile)mobile.insertBefore(mobileToggle,globalMenu);
+  if(globalMenu&&!globalMenu.hasAttribute('data-mc-drawer-aware')){
+    globalMenu.setAttribute('data-mc-drawer-aware','');
+    globalMenu.addEventListener('click',()=>{if(document.body.classList.contains('mobile-drawer-open'))closeMobileMenu()},true);
+  }
+}
 function closeMobileMenu(restoreFocus=false){
   document.body.classList.remove("mobile-drawer-open");
-  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn"),search=$("mcMenuSearch");
+  const sidebar=$("mcSidebar"),search=$("mcMenuSearch");
   sidebar?.setAttribute("aria-hidden","true");sidebar?.setAttribute("inert","");
-  toggle?.setAttribute("aria-expanded","false");toggle?.setAttribute("aria-label","Open workspace menu");
+  workspaceMenuToggles().forEach(toggle=>{toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-label","Open Media Control menu")});
   if(search?.value){search.value="";renderNav()}
-  if(restoreFocus)toggle?.focus();
+  if(restoreFocus)workspaceMenuTrigger?.focus();
 }
-function openWorkspaceMenu(){
-  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn");
+function openWorkspaceMenu(trigger){
+  const globalMenu=document.querySelector('#skandi-mobile-nav-root [data-skandi-mobile-route="menu"]');
+  if(document.body.classList.contains("drawer-open"))globalMenu?.click();
+  workspaceMenuTrigger=trigger;
+  const sidebar=$("mcSidebar");
   document.body.classList.add("mobile-drawer-open");sidebar?.removeAttribute("inert");sidebar?.setAttribute("aria-hidden","false");
-  toggle?.setAttribute("aria-expanded","true");toggle?.setAttribute("aria-label","Close workspace menu");
+  workspaceMenuToggles().forEach(toggle=>{toggle.setAttribute("aria-expanded","true");toggle.setAttribute("aria-label","Close Media Control menu")});
   $("mcMenuSearch")?.focus();
+  const focusSearch=()=>{if(document.body.classList.contains("mobile-drawer-open")&&!sidebar?.contains(document.activeElement))$("mcMenuSearch")?.focus()};
+  window.requestAnimationFrame?.(focusSearch);window.setTimeout(focusSearch,220);
 }
-$("mobileMenuBtn").addEventListener("click",()=>{if(document.body.classList.contains("mobile-drawer-open"))closeMobileMenu(true);else openWorkspaceMenu()});
+workspaceMenuToggles().forEach(toggle=>toggle.addEventListener("click",()=>{if(document.body.classList.contains("mobile-drawer-open"))closeMobileMenu(true);else openWorkspaceMenu(toggle)}));
+mountRiaintraNavigation();
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mountRiaintraNavigation,{once:true});
 $("mcCloseMenu").addEventListener("click",()=>closeMobileMenu(true));
 $("mcDrawerOverlay").addEventListener("click",()=>closeMobileMenu(true));
 $("mcMenuSearch").addEventListener("input",renderNav);
