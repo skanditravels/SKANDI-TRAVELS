@@ -2,6 +2,8 @@
 
 ## INFO / LOG
 
+- 2026-11-10 — Kept the mobile navigation above both slide-out drawers and ended the drawers above the safe-area-aware bottom bar. This prevents the global drawer, including its sign-out control, from covering the Media Control menu button. The six mobile items share space responsively, with full accessible labels even where visual labels need truncation. The adjustment is scoped to Media Control.
+
 - 2026-11-10 — Removed Media Control's separate app header. Its content menu now mounts into the existing RIAINTRA header on desktop and into the shared RIAINTRA mobile navigation bar on mobile. The global staff menu remains a separate action. The controls keep the existing searchable workspace drawer, keyboard focus and closed-state behavior; standalone source retains an inline fallback. The drawer and overview identify the workspace as RIAINTRA. No shared navigation sources or Wix message contracts changed.
 
 - 2026-11-10 — Restored desktop document scrolling by overriding this page's legacy internal-chrome overflow lock at the desktop shell breakpoint. Mobile keeps the shared RIAINTRA app scroll area and bottom navigation, with touch scrolling enabled. Refined the workspace's typography, controls and surfaces; the VOY template grid now fits its available width. Existing template preview styles, message contracts and content ownership remain unchanged. The change requires the normal build and live runtime verification.
