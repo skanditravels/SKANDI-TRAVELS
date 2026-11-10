@@ -281,21 +281,26 @@ function normalizeNetwork(payload = {}) {
   const rawDestinations = Array.isArray(payload.destinations) ? payload.destinations : [];
   const rawAirports = Array.isArray(payload.airports) ? payload.airports : [];
   let destinations = rawDestinations.filter(item => item && (!isNetworkAirport(item) || rawAirports.length > 0)).map(item => {
-    const name = networkText(networkFirst(item.name,item.title,item.destinationName,item.city,item.label,item.code));
-    return { id:networkText(networkFirst(item.publicId,item.id,item.code,item.Code,item.slug,item._id,item.iata,item.IATA)) || networkSlug(name), name, country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120) };
+    const name = networkText(networkFirst(item.name,item.title,item.destinationName,item.city,item.label,item.code),180);
+    const fallbackId = networkSlug(networkFirst(item.name,item.title,item.city));
+    return { id:networkText(networkFirst(item.publicId,item.id,item.code,item.Code,item.slug,item._id,item.iata,item.IATA)) || fallbackId, name, country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120) };
   }).filter(item => item.id && item.name);
 
   // Match the map's city fallback when its feed contains airports but no destinations.
   if (!destinations.length) {
-    const airportSource = rawAirports.length ? rawAirports : rawDestinations.filter(isNetworkAirport);
-    const cities = new Map();
-    airportSource.filter(Boolean).forEach(item => {
+    const normalizeAirport = item => {
+      if (!item) return null;
       const code = networkText(networkFirst(item.iata,item.IATA,item.code,item.airportCode,item.id),8).toUpperCase();
-      const id = networkText(networkFirst(item.id,item.publicId,code,item._id));
-      const name = networkText(networkFirst(item.city,item.locationCity,item.destination,item.name),140);
-      const country = networkText(networkFirst(item.country,item.Country,item.locationCountry),120);
-      if (!id || !code || !name) return;
+      const id = networkText(networkFirst(item.id,item.publicId,code,item._id)) || code;
+      return id && code ? {id, code, name:networkText(networkFirst(item.airportName,item.title,item.name,code),180),city:networkText(networkFirst(item.city,item.locationCity,item.destination,item.name),140),country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120)} : null;
+    };
+    const explicitAirports = rawAirports.map(normalizeAirport).filter(Boolean);
+    const airportSource = explicitAirports.length ? explicitAirports : rawDestinations.filter(isNetworkAirport).map(normalizeAirport).filter(Boolean);
+    const cities = new Map();
+    airportSource.forEach(item => {
+      const name = item.city || item.name, country = item.country;
       const key = `${name}|${country}`.toLowerCase();
+      if (!key.replace("|","").trim()) return;
       if (!cities.has(key)) cities.set(key,{id:`city:${networkSlug(name)}:${networkSlug(country)}`,name,country});
     });
     destinations = [...cities.values()];
@@ -306,7 +311,7 @@ function normalizeNetwork(payload = {}) {
     const name = networkText(networkFirst(item.name,item.title,item.shortName,iata));
     return { id:networkText(networkFirst(item.id,item.publicId,item.recordId,iata,item.icao,item.name)) || iata || networkSlug(name), name, iata, logo:networkText(networkFirst(item.logo,item.logoUrl,item.logoFile,item.logoIcon,item.logoIconUrl),1500), partner:Boolean(networkFirst(item.partnerStatus,item.partner,item.isPartner,item.selected,true)) };
   }).filter(item => item.id && item.name && item.partner);
-  const codes = (Array.isArray(payload.routes) ? payload.routes : []).filter(Boolean).flatMap(route => networkValues(networkFirst(route.airlineIds,route.airlines,route.carriers,route.airline)).map(code => code.toUpperCase()));
+  const codes = (Array.isArray(payload.routes) ? payload.routes : []).filter(route => route && networkText(networkFirst(route.fromId,route.fromCode,route.originId,route.originCode,route.from,route.origin,route.originIata)) && networkText(networkFirst(route.toId,route.toCode,route.destinationId,route.destinationCode,route.to,route.destination,route.destinationIata))).flatMap(route => networkValues(networkFirst(route.airlineIds,route.airlines,route.carriers,route.airline)).map(code => code.toUpperCase()));
   codes.forEach(code => { if (!airlines.some(item => item.id.toUpperCase() === code || item.iata === code)) airlines.push({id:code,name:code,iata:code,logo:""}); });
   const uniqueById = items => { const seen = new Set(); return items.filter(item => {const key = item.id.toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true;}); };
   return { destinations:uniqueById(destinations), airlines:uniqueById(airlines) };

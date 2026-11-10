@@ -53,6 +53,15 @@ test('Derived cities link back to the same map IDs even when the IDs contain col
   assert.equal(messages[0].payload.selection.id,id);
 });
 
+test('About only links to airport-derived cities and route airlines that the map can resolve',async t=>{
+  const {d,receive}=await aboutFixture(t);
+  receive('ABOUT_NETWORK_DATA',{destinations:[],airports:[{iata:'ARN',airportName:'Stockholm Arlanda Airport',country:'Sweden'}],airlines:[],routes:[{airline:'INVALID'},{from:'ARN',to:'JFK',airline:'SK'}]});
+  assert.equal(new URL(d.querySelector('.about-destination-link').href).searchParams.get('destination'),'city:stockholm-arlanda-airport:sweden');
+  assert.deepEqual([...d.querySelectorAll('.about-airline-link')].map(link=>link.textContent),['SK']);
+  receive('ABOUT_NETWORK_DATA',{destinations:[{destinationName:'No map ID'}],airports:[],airlines:[],routes:[]});
+  assert.equal(d.querySelectorAll('.about-destination-link').length,0);
+});
+
 test('About reports network failures separately and retries without replacing About content',async t=>{
   const {d,sent,receive}=await aboutFixture(t);
   receive('ABOUT_NETWORK_DATA',{destinations:[{id:'unsafe',name:'<img src=x>',country:'Sweden'}],airlines:[],routes:[],airports:[]},{});
