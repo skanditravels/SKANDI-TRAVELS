@@ -423,3 +423,27 @@ body.mobile-drawer-open #skandi-shell-root #skandi-app-root .drawer-overlay{opac
  #skandi-shell-root #skandi-app-root .mc-workspaces,#skandi-shell-root #skandi-app-root .mc-production-summary{padding:16px}
  #skandi-shell-root #skandi-app-root .mc-card{min-height:165px;padding:14px}
 }
+
+/* Media Control uses the shared RIAINTRA chrome. Its workspace controls are
+   mounted in that header and mobile bar; the inline location is a fallback
+   for the standalone source before the shared shell is available. */
+#skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback:empty{display:none}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-navigation-fallback{display:flex;align-items:center;margin-right:14px}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-desktop-menu{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 11px;border:1px solid #a7bdcc;border-radius:6px;background:#fff;color:#244b68;font:600 12px/1 Inter,system-ui,sans-serif;white-space:nowrap}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-desktop-menu:focus-visible,#skandi-shell-root[data-skandi-key="mediaControl"] .mc-bottom-menu:focus-visible{outline:2px solid #76d5db;outline-offset:2px}
+#skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .mc-desktop-menu{margin-left:8px;border-color:#87a5b9;background:#ffffff12;color:#fff}
+#skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .mc-desktop-menu:hover,#skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .mc-desktop-menu[aria-expanded="true"]{background:#ffffff24}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-menu-kicker{color:#57758a}
+@media(min-width:1021px){
+ #skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root{position:sticky!important;top:0;z-index:3000}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .shell-nav{min-width:0;overflow-x:auto;scrollbar-width:none}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-bottom-menu{display:none!important}
+ #skandi-shell-root[data-skandi-key="mediaControl"] .mc-shell{min-height:calc(100dvh - 52px)!important}
+}
+@media(max-width:1020px){
+ #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-desktop-menu{display:none!important}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-bottom-menu{display:flex;min-height:44px;padding:4px 9px;border:1px solid #b8cad5;border-radius:6px;background:#fff;color:#244b68}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn{font-size:clamp(9px,2.7vw,11px);letter-spacing:0}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .mc-bottom-menu{display:flex;min-width:0;color:#d0e5f2}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .mc-bottom-menu[aria-expanded="true"]{background:#ffffff1f;color:#fff}
+}
