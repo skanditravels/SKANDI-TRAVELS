@@ -464,7 +464,7 @@ function renderBuilder(){
     <div class="stack">
       <div class="panel" style="display:flex;flex-direction:column;min-height:0">
         <h3>Live page preview</h3>
-        <div class="row" style="margin-bottom:8px"><button class="btn" data-action="toggle-bleed">Bleed / safety</button><button class="btn primary" data-action="print-page">Print page</button><button class="btn ok" data-action="export-page-pdf">Export PDF</button></div>
+        <div class="row" style="margin-bottom:8px"><button class="btn" data-action="toggle-bleed">Bleed / safety</button><button class="btn primary" data-action="print-page">Print / save page as PDF</button></div>
         <div class="mag-preview-wrap">${magPreview(p)}</div>
       </div>
     </div>
@@ -502,7 +502,7 @@ function pageEditorForm(p={}){
     </div>
     <div class="field full"><label class="label">SEO / social notes</label><textarea id="pageSeoNotes">${esc(p.seoNotes||"")}</textarea></div>
   </div>
-  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-page">Save page</button><button class="btn" data-action="request-copy-assist">Copy assist</button><button class="btn" data-action="seo-check">SEO check</button></div>`;
+  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-page">Save page</button><button class="btn" type="button" data-media-writing="pageBody">Writing assistant</button><button class="btn" data-panel="quality">Review SEO</button></div>`;
 }
 function normalizeHex(value,fallback){const v=String(value||"").trim();return /^#[0-9a-f]{6}$/i.test(v)?v:fallback}
 function fontOptions(selected){return ["Montserrat","Inter","Playfair Display","Cormorant Garamond","Georgia","Arial"].map(f=>`<option ${selected===f?"selected":""}>${f}</option>`).join("")}
@@ -519,12 +519,12 @@ function collectPage(){
   return {pageId:p.pageId||p._id||state.selectedPageId||uid("PAGE"),issueId,pageNo:Number($("pageNo").value||0),template:$("pageTemplate").value,status:$("pageStatus").value,category:$("pageCategory").value.trim(),kicker:$("pageKicker").value.trim(),title:$("pageTitle").value.trim(),deck:$("pageDeck").value.trim(),body:$("pageBody").value.trim(),imageUrl:$("pageImageUrl").value.trim(),secondaryImageUrl:$("pageSecondaryImageUrl").value.trim(),imageCredit:$("pageImageCredit").value.trim(),imageFit:$("pageImageFit")?.value||"cover",imagePosition:$("pageImagePosition")?.value.trim()||"center center",destination:$("pageDestination").value.trim(),ctaLabel:$("pageCtaLabel").value.trim(),ctaPath:$("pageCtaPath").value.trim(),backgroundColor:$("pageBackgroundColor").value,textColor:$("pageTextColor").value,accentColor:$("pageAccentColor").value,headingFont:$("pageHeadingFont").value,bodyFont:$("pageBodyFont").value,footerText:$("pageFooterText").value.trim(),blocks,seoNotes:$("pageSeoNotes").value.trim(),updatedAt:new Date().toISOString()};
 }
 function nextPageNo(){return issuePages().reduce((m,p)=>Math.max(m,Number(p.pageNo||0)),0)+1}
-function magPreview(p={}){
+function magPreview(p={},exportMode=false){
   const tpl=p.template||"cover";
   const title=esc(p.title||"Untitled VOY Page");
   const kicker=esc(p.kicker||"VOY Magazine");
-  const deck=esc(p.deck||"Travel inspiration, destination stories and curated SKANDI recommendations.");
-  const body=esc(p.body||"Start writing the article copy here. Build a destination feature, hotel spotlight, onboard magazine story, or campaign-ready catalogue page.").replace(/\n/g,"<br>");
+  const deck=esc(p.deck||(exportMode?"":"Travel inspiration, destination stories and curated SKANDI recommendations."));
+  const body=esc(p.body||(exportMode?"":"Start writing the article copy here. Build a destination feature, hotel spotlight, onboard magazine story, or campaign-ready catalogue page.")).replace(/\n/g,"<br>");
   const cta=esc(p.ctaLabel||"Explore more");
   const vars=previewVars(p);
   const hero=previewImage(p.imageUrl);
@@ -541,7 +541,7 @@ function magPreview(p={}){
     airports:[{title:"JFK · New York",subtitle:"Departure terminal and check-in details"},{title:"CPH · Copenhagen",subtitle:"Easy Nordic connection"},{title:"ATH · Athens",subtitle:"Gateway to the islands"}],
     signature:[{title:"The Aegean House",subtitle:"Santorini",meta:"SKANDI Signature Collection"},{title:"Cretan Coast Retreat",subtitle:"Crete",meta:"SKANDI Signature Collection"}]
   };
-  const items=(fallback)=>previewBlocks(p,fallback);
+  const items=(fallback)=>previewBlocks(p,exportMode?[]:fallback);
   const cards=(rows,cls="")=>rows.map(x=>`<article class="voyp-card ${cls}">${x.imageUrl?`<div class="voyp-card-img" ${previewImage(x.imageUrl)}></div>`:""}<small>${esc(x.meta||x.kicker||"")}</small><h3>${esc(x.title||"Untitled")}</h3><p>${esc(x.subtitle||x.body||"")}</p>${x.price?`<b class="voyp-price">${esc(x.price)}</b>`:""}${x.cta?`<span class="voyp-cta">${esc(x.cta)}</span>`:""}</article>`).join("");
   if(tpl==="cover")return `<div class="mag-page bleed"><section class="voyp voyp-cover" ${previewVars(p,p.imageUrl)}><div class="voyp-cover-top"><b>VOY</b><span>BY SKANDI</span></div><div class="voyp-cover-copy"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p><div class="voyp-cover-lines">${items(defaults.contents).slice(0,3).map(x=>`<span>${esc(x.title)}</span>`).join("")}</div><em>${esc(currentIssue()?.edition||"Special Edition")}</em></div>${credit}</section></div>`;
   if(tpl==="contents")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title||"Inside VOY"}</h1><p>${deck}</p></header><div class="voyp-contents">${items(defaults.contents).map((x,i)=>`<div><b>${esc(x.meta||String(i+1).padStart(2,"0"))}</b><span><strong>${esc(x.title)}</strong><em>${esc(x.subtitle||"")}</em></span></div>`).join("")}</div><aside class="voyp-note">${body}</aside>${footer}</section></div>`;
@@ -556,11 +556,21 @@ function magPreview(p={}){
   if(tpl==="airline-guide")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-guide-list">${items(defaults.airlines).map(x=>`<article><div>${logoAssetValue(x.logoUrl)||logoAssetValue(x.secondaryLogoUrl)?`<div class="voyp-logo-pair">${logoAssetValue(x.logoUrl)?`<img class="voyp-logo" src="${esc(logoAssetValue(x.logoUrl))}" alt="${esc(x.title||"Airline")} logo">`:""}${logoAssetValue(x.secondaryLogoUrl)?`<img class="voyp-logo" src="${esc(logoAssetValue(x.secondaryLogoUrl))}" alt="${esc(x.title||"Airline")} secondary logo">`:""}</div>`:""}<small>${esc(x.meta||"")}</small><h3>${esc(x.title)}</h3><p>${esc(x.subtitle||x.body||"")}</p></div><span>${esc(x.cta||"Profile")}</span></article>`).join("")}</div><div class="voyp-wide-copy">${body}</div>${footer}</section></div>`;
   if(tpl==="onboard-guide")return `<div class="mag-page bleed"><section class="voyp voyp-onboard" ${vars}><div class="voyp-feature-img" ${hero}></div><article><small>${kicker}</small><h1>${title}</h1><p class="voyp-lead">${deck}</p><div class="voyp-service-grid">${cards(items(defaults.tips))}</div></article>${footer}</section></div>`;
   if(tpl==="airport-guide")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-guide-list">${items(defaults.airports).map(x=>`<article class="voyp-airport-row">${logoAssetValue(x.logoUrl)?`<div class="voyp-airport-logo"><img src="${esc(logoAssetValue(x.logoUrl))}" alt="${esc(x.title||x.code||"Airport")} logo"></div>`:`<div class="voyp-airport-logo"><b>${esc(x.code||"APT")}</b></div>`}<div><small>${esc([x.code,x.location,x.meta].filter(Boolean).join(" · "))}</small><h3>${esc(x.title||x.code||"Airport")}</h3><p>${esc(x.role||x.subtitle||x.body||"")}</p></div><span>${esc(x.meta||"Airport")}</span></article>`).join("")}</div><div class="voyp-wide-copy">${body}</div>${footer}</section></div>`;
-  if(tpl==="route-map")return `<div class="mag-page bleed"><section class="voyp voyp-map" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-map-art"><span class="dot nyc">NYC</span><span class="dot cph">CPH</span><span class="dot ath">ATH</span><span class="dot isl">ISLANDS</span><i class="route r1"></i><i class="route r2"></i><i class="route r3"></i></div><div class="voyp-route-list">${items(defaults.airlines).map(x=>`<div><b>${esc(x.title)}</b><span>${esc(x.subtitle||x.body||"")}</span></div>`).join("")}</div>${footer}</section></div>`;
+  if(tpl==="route-map")return `<div class="mag-page bleed"><section class="voyp voyp-map" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header>${exportMode?"":'<div class="voyp-map-art"><span class="dot nyc">NYC</span><span class="dot cph">CPH</span><span class="dot ath">ATH</span><span class="dot isl">ISLANDS</span><i class="route r1"></i><i class="route r2"></i><i class="route r3"></i></div>'}<div class="voyp-route-list">${items(defaults.airlines).map(x=>`<div><b>${esc(x.title)}</b><span>${esc(x.subtitle||x.body||"")}</span></div>`).join("")}</div>${footer}</section></div>`;
   if(tpl==="airline-profile")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-airline-profiles">${items([]).map(x=>`<article class="voyp-airline-profile">${logoAssetValue(x.logoUrl)||logoAssetValue(x.secondaryLogoUrl)?`<div class="voyp-logo-pair">${logoAssetValue(x.logoUrl)?`<img class="voyp-logo" src="${esc(logoAssetValue(x.logoUrl))}" alt="${esc(x.title||"Airline")} logo">`:""}${logoAssetValue(x.secondaryLogoUrl)?`<img class="voyp-logo" src="${esc(logoAssetValue(x.secondaryLogoUrl))}" alt="${esc(x.title||"Airline")} secondary logo">`:""}</div>`:""}<small>${esc(x.subtitle||"")}</small><h3>${esc(x.title||"Airline")}</h3><p>${esc(x.body||"")}</p><div class="cabins">${String(x.meta||"").split("·").map(c=>c.trim()).filter(Boolean).map(c=>`<span>${esc(c)}</span>`).join("")}</div><div class="voyp-factgrid"><div><b>Seat & comfort</b><span>${esc(x.seat||"")}</span></div><div><b>Baggage</b><span>${esc(x.baggage||"")}</span></div><div><b>Food & drink</b><span>${esc(x.food||"")}</span></div><div><b>Wi-Fi & power</b><span>${esc(x.wifi||"")}</span></div><div><b>Airport benefits</b><span>${esc(x.airport||"")}</span></div><div><b>Loyalty</b><span>${esc(x.loyalty||"")}</span></div></div><div class="voyp-profile-tip"><b>VOY tip</b>${esc(x.tip||x.booking||"")}</div></article>`).join("")}</div>${footer}</section></div>`;
   if(tpl==="transfer-promise")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-transfer-grid">${cards(items(defaultBlocksForTemplate("transfer-promise")))}</div><div class="voyp-transfer-banner">${body}</div>${footer}</section></div>`;
   if(tpl==="signature-collection")return `<div class="mag-page bleed"><section class="voyp voyp-signature" ${vars}><div class="voyp-signature-hero" ${hero}><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></div><div class="voyp-signature-cards">${cards(items(defaults.signature))}</div>${footer}</section></div>`;
   return `<div class="mag-page bleed"><section class="voyp voyp-back" ${previewVars(p,p.imageUrl)}><div><small>${kicker}</small><h1>${title}</h1><p>${deck}</p><span class="voyp-back-cta">${cta}</span><em>${esc(p.ctaPath||"skanditravels.com")}</em></div>${credit}</section></div>`;
+}
+function printVoyPages(pages){
+  if(!Array.isArray(pages)||!pages.length){actionError("Add a page to this issue before printing.");return}
+  if(pages.some(page=>!String(page.title||"").trim())){actionError("Add a title to every page before printing.");return}
+  if(typeof window.print!=="function"){actionError("Printing is not available in this browser.");return}
+  document.getElementById("voy-print-root")?.remove();const root=document.createElement("div");root.id="voy-print-root";
+  root.innerHTML=pages.map(page=>magPreview(page,true)).join("");document.body.appendChild(root);document.body.classList.add("voy-printing");
+  const cleanup=()=>{document.body.classList.remove("voy-printing");root.remove();window.removeEventListener("afterprint",cleanup)};
+  window.addEventListener("afterprint",cleanup,{once:true});
+  try{window.print()}catch(error){cleanup();actionError("Unable to open the browser print dialog.")}
 }
 function previewBlocks(p,fallback){const rows=parseBlocks(p.blocks);return rows.length?rows:fallback}
 function previewImage(url,p=currentPage()||{}){const value=String(url||"").trim().replace(/["'()]/g,"");const fit=String(p.imageFit||"cover")==="contain"?"contain":"cover";const pos=String(p.imagePosition||"center center").replace(/["'<>]/g,"");return value?`style="background-image:url(${value});background-size:${fit};background-position:${pos};background-repeat:no-repeat"`:""}
@@ -599,7 +609,7 @@ function articleForm(a={}){
     <div class="field full"><label class="label">SEO title / meta description</label><textarea id="articleSeo">${esc(a.seo||"")}</textarea></div>
     <div class="field full"><label class="label">Social copy / PR hook</label><textarea id="articleSocial">${esc(a.socialCopy||"")}</textarea></div>
   </div>
-  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-article">Save article</button><button class="btn" data-action="send-approval">Send approval</button><button class="btn" data-action="request-copy-assist-article">Copy assist</button></div>`;
+  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-article">Save article</button><button class="btn" data-action="send-approval">Send approval</button><button class="btn" type="button" data-media-writing="articleBrief">Writing assistant</button></div>`;
 }
 function collectArticle(){
   const a=currentArticle()||{};
@@ -623,22 +633,8 @@ function renderAssets(){
 }
 function assetCard(a){return `<div class="asset-card"><div class="asset-img" style="${a.thumbUrl||a.imageUrl?`background-image:url('${esc(a.thumbUrl||a.imageUrl)}')`:""}">${a.thumbUrl||a.imageUrl?"":"IMAGE"}</div><div class="asset-body"><div class="asset-title">${esc(a.title||a.provider||"Media reference")}</div><div class="asset-meta">${esc(a.creator||"")} · ${esc(a.license||"license")}<br>${esc(a.provider||"")}<br><b>Reference only · add an approved image to the library before use</b></div><div class="row" style="margin-top:7px"><button class="btn" data-import-asset="${esc(a.assetId||a.id||a.url||"")}">Save reference</button></div></div></div>`}
 function renderResearch(){
-  const r=state.destinationResearch||{};
-  $("panel-research").innerHTML=`
-  <div class="split">
-    <div class="panel scroll"><h3>Destination research desk</h3>
-      <div class="admin-grid">
-        <div class="field wide"><label class="label">Destination / city / country</label><input id="researchDestination" class="input" value="${esc(r.destination||"")}" placeholder="Crete, Greece"></div>
-        <div class="field"><label class="label">Tone</label><select id="researchTone"><option>Luxury</option><option>Family</option><option>Adventure</option><option>Culture</option><option>Sun and beach</option></select></div>
-        <div class="field"><label class="label">Language</label><select id="researchLang"><option>en</option><option>sv</option><option>no</option><option>da</option><option>fi</option><option>de</option></select></div>
-      </div>
-      <div class="row" style="margin:8px 0"><button class="btn primary" data-action="research-destination">Research destination</button><button class="btn" data-action="insert-research-page">Insert into page</button><button class="btn" data-action="make-travel-card-from-research">Create travel card</button></div>
-      <div class="notice">Backend can combine Wikipedia/MediaWiki summaries, Wikidata facts, REST Countries, OpenTripMap POIs and licensed asset search. Editors should always verify claims before publishing.</div>
-    </div>
-    <div class="panel scroll"><h3>Research result</h3>
-      ${r.destination?`<div class="kv"><div class="k">Destination</div><div class="v">${esc(r.destination)}</div><div class="k">Country</div><div class="v">${esc(r.country||"—")}</div><div class="k">Best for</div><div class="v">${esc(arr(r.bestFor).join(", ")||"—")}</div><div class="k">Sources</div><div class="v">${esc(arr(r.sources).join(", ")||"—")}</div></div><hr><div class="item-title">${esc(r.headline||"Suggested story angle")}</div><p class="help">${esc(r.summary||"No summary returned yet.")}</p><h4>Points of interest</h4>${arr(r.pois).map(x=>`<div class="notice" style="margin-bottom:6px">${esc(x)}</div>`).join("")}`:`<div class="empty">No destination result yet.</div>`}
-    </div>
-  </div>`;
+  const panel=$("panel-research");
+  if(!panel.querySelector("[data-media-research]"))panel.innerHTML=`<div data-media-research></div>`;
 }
 function renderCampaign(){
   const issue=currentIssue();
@@ -803,8 +799,8 @@ function renderPrintQa(){
         <div class="qa-card"><small>Page warnings</small><b>${esc(qa.pageWarnings||0)}</b><span>Layout and content gaps.</span></div>
         <div class="qa-card"><small>Asset warnings</small><b>${esc(qa.assetWarnings||0)}</b><span>License and credit gaps.</span></div>
       </div>
-      <div class="row" style="margin-bottom:8px"><button class="btn primary" data-action="run-print-qa">Run print QA</button><button class="btn ok" data-action="prepare-print-export">Prepare press package</button><button class="btn" data-action="export-print">Export print package</button></div>
-      <div class="print-flatplan">${(qa.pages||[]).map(p=>`<div class="print-page-tile"><b>Page ${esc(p.pageNo||"—")} · ${esc(p.template||"feature")}</b><span>${esc(p.title||"Untitled")}</span><div style="margin-top:6px">${(p.warnings||[]).length?pill("WARN"):pill("OK")}</div><span>${esc((p.warnings||[]).join(", ")||"Ready")}</span></div>`).join("")||`<div class="empty">No pages in active issue.</div>`}</div>
+      <div class="row" style="margin-bottom:8px"><button class="btn primary" data-action="run-print-qa">Run print QA</button><button class="btn" data-action="export-print">Print / save issue as PDF</button></div>
+      <p class="help">Use your browser’s Save as PDF option for a review copy. This does not verify press-ready color, bleed or image resolution.</p><div class="print-flatplan">${(qa.pages||[]).map(p=>`<div class="print-page-tile"><b>Page ${esc(p.pageNo||"—")} · ${esc(p.template||"feature")}</b><span>${esc(p.title||"Untitled")}</span><div style="margin-top:6px">${(p.warnings||[]).length?pill("WARN"):pill("OK")}</div><span>${esc((p.warnings||[]).join(", ")||"Ready")}</span></div>`).join("")||`<div class="empty">No pages in active issue.</div>`}</div>
     </div>
     <div class="panel scroll"><h3>Production checklist</h3>
       <div class="qa-list">
@@ -860,27 +856,8 @@ function renderTravelCards(){
 function travelCardForm(){const c=state.travelCards.find(x=>(x.cardId||x._id)===state.editingCardId)||{};return `<div class="admin-grid"><div class="field wide"><label class="label">Title</label><input class="input" id="cardTitle" value="${esc(c.title||"")}" placeholder="Explore Crete"></div><div class="field"><label class="label">Path</label><input class="input" id="cardPath" value="${esc(c.path||"")}" placeholder="/destinations/greece?area=crete"></div><div class="field"><label class="label">Image asset</label><input class="input" id="cardImageUrl" value="${esc(c.imageUrl||"")}" placeholder="Select or upload a Supabase asset" readonly></div><div class="field"><label class="label">Active</label><select id="cardActive"><option value="true" ${c.active!==false?"selected":""}>Yes</option><option value="false" ${c.active===false?"selected":""}>No</option></select></div><div class="field wide"><label class="label">Tags</label><input class="input" id="cardTags" value="${esc(arr(c.tags).join(", "))}" placeholder="Beach, Greece, Family"></div><div class="field full"><label class="label">Summary</label><textarea id="cardSummary">${esc(c.summary||"")}</textarea></div></div>`}
 function collectCard(){return {cardId:state.editingCardId||uid("CARD"),title:$("cardTitle").value.trim(),path:$("cardPath").value.trim(),imageUrl:$("cardImageUrl").value.trim(),active:$("cardActive").value==="true",tags:arr($("cardTags").value),summary:$("cardSummary").value.trim()}}
 function renderApi(){
-  const apis=[
-    ["Openverse","Openly licensed/public-domain image and audio discovery","No key for public search; verify license before publishing","VOY_ASSET_SEARCH_REQUEST"],
-    ["Unsplash","High-quality travel photography","API key and attribution required","VOY_ASSET_SEARCH_REQUEST"],
-    ["Pexels","Free photo/video library","API key; credit/licensing policy should be checked","VOY_ASSET_SEARCH_REQUEST"],
-    ["Pixabay","Stock images/video/music search","API key; backend should store it","VOY_ASSET_SEARCH_REQUEST"],
-    ["Wikimedia Commons","Open media repository","Check license/author/source per file","VOY_ASSET_SEARCH_REQUEST"],
-    ["MediaWiki / Wikipedia","Destination summaries and references","Use for research, not as final unverified copy","VOY_DESTINATION_RESEARCH_REQUEST"],
-    ["Wikidata SPARQL","Structured destination facts","Backend should cache and rate-limit queries","VOY_DESTINATION_RESEARCH_REQUEST"],
-    ["REST Countries","Country facts, flags, currency, language, timezones","Good for catalogue fact boxes","VOY_DESTINATION_RESEARCH_REQUEST"],
-    ["OpenTripMap","POIs, attractions and travel places","API key; suitable for POI suggestions","VOY_DESTINATION_RESEARCH_REQUEST"],
-    ["Adobe Express Embed SDK","Embedded professional design editor, quick actions and AI-assisted editing","Use only through approved backend/session controls","VOY_ADOBE_EXPRESS_OPEN_REQUEST"],
-    ["Canva Connect Brand Templates","Brand template import/listing and template-driven creative workflows","OAuth + brand template permissions; store IDs in backend","VOY_CANVA_TEMPLATE_REQUEST"],
-    ["Figma REST API","Import design frames, layout references and export image/PDF previews","OAuth/token; backend should cache file metadata and export URLs","VOY_FIGMA_IMPORT_REQUEST"],
-    ["Cloudinary","Image transformations, background removal, crops and optimization","Cloud/backend credentials; track derivative assets","VOY_MEDIA_ENHANCE_REQUEST"],
-    ["Mapbox Static Images","Destination map art and static catalogue maps","API key; cache rendered map images","VOY_MAP_STATIC_REQUEST"],
-    ["TinyPNG / Tinify","Compress AVIF, WebP, JPEG and PNG for public pages","API key; run in backend optimization worker","VOY_IMAGE_OPTIMIZE_REQUEST"],
-    ["Getty Images / iStock","Licensed premium editorial visuals for campaigns","Commercial agreement + API credentials; strict rights metadata","VOY_PREMIUM_MEDIA_SEARCH_REQUEST"],
-    ["OpenAI image/copy tools","Image edits, campaign copy, headline alternatives and localization","Backend only; never expose API keys in HTML","VOY_AI_CREATIVE_REQUEST"],
-    ["PDF.js / pdf-lib","PDF preview, import and generated export jobs","Use backend for final press-ready PDF when possible","VOY_EXPORT_PDF_REQUEST"]
-  ];
-  $("panel-api").innerHTML=`<div class="panel scroll"><h3>API connector matrix</h3><div class="notice">The browser does not store API secrets. VOY sends connector requests to secure backend. The backend calls APIs, validates licensing/attribution, caches responses and returns normalized results.</div><div class="api-grid" style="margin-top:8px">${apis.map((a,i)=>`<div class="api-card"><b>${esc(a[0])}</b><div class="help">${esc(a[1])}</div><div class="kv" style="grid-template-columns:90px 1fr;margin-top:8px"><div class="k">Requirement</div><div class="v">${esc(a[2])}</div><div class="k">Event</div><div class="v mono">${esc(a[3])}</div></div><button class="btn" data-test-api="${i}" style="margin-top:8px">Test connector</button></div>`).join("")}</div><h3 style="margin-top:12px">Backend configuration aliases</h3><div class="admin-grid"><div class="field"><label class="label">Asset provider key alias</label><input id="apiAssetAlias" class="input" placeholder="VOY_ASSET_PROVIDER_KEYS"></div><div class="field"><label class="label">Research key alias</label><input id="apiResearchAlias" class="input" placeholder="VOY_RESEARCH_KEYS"></div><div class="field"><label class="label">Export webhook alias</label><input id="apiExportAlias" class="input" placeholder="VOY_EXPORT_WORKER"></div><div class="field"><label class="label">Status</label><select id="apiEnabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></div></div><div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-api-config">Save connector aliases</button></div></div>`;
+  const panel=$("panel-api");
+  if(!panel.querySelector("[data-media-connections]"))panel.innerHTML=`<div data-media-connections></div>`;
 }
 function newsroomPostId(item={}){return item.postId||item.post_id||item._id||item.id||""}
 function contactId(item={}){return item.contactId||item.contact_id||item._id||item.id||""}
@@ -1035,9 +1012,8 @@ function handleAction(action){
     const p=currentPage();if(!p||!confirm("Remove this page from the issue?"))return;const id=p.pageId||p._id;state.pages=state.pages.filter(x=>(x.pageId||x._id)!==id);state.selectedPageId=issuePages()[0]?.pageId||"";post("VOY_ADMIN_DELETE_PAGE",{pageId:id,issueId:currentIssueId()});renderAll();return;
   }
   if(action==="toggle-bleed"){document.querySelectorAll(".mag-page").forEach(p=>p.classList.toggle("bleed"));return}
-  if(action==="print-page"){window.print();return}
-  if(action==="export-page-pdf"){let page;try{page=collectPage()}catch(error){toast(error.message||"Check the page fields.","bad");return}post("VOY_EXPORT_PDF_REQUEST",{issueId:currentIssueId(),page,mode:"single-page"});toast("PDF export request sent.");return}
-  if(action==="export-print"){post("VOY_EXPORT_PRINT_PACKAGE_REQUEST",{issueId:currentIssueId(),pages:issuePages(),format:"press-ready-pdf"});toast("Print package export requested.");return}
+  if(action==="print-page"||action==="export-page-pdf"){let page;try{page=collectPage()}catch(error){toast(error.message||"Check the page fields.","bad");return}printVoyPages([page]);return}
+  if(action==="export-print"){printVoyPages(issuePages());return}
   if(action==="new-article"){const a={articleId:uid("ARTICLE"),issueId:currentIssueId(),title:"New article brief",status:"DRAFT",contentType:"Feature",targetWords:900};state.articles.unshift(a);state.selectedArticleId=a.articleId;setPanel("articles");return}
   if(action==="save-article"){const a=collectArticle();if(!a.title){toast("Article title is required.","bad");return}upsert("articles","articleId",a);state.selectedArticleId=a.articleId;post("VOY_ADMIN_SAVE_ARTICLE",{article:a});toast("Article saved.","ok");refreshAfterSave("save-article");renderAll();return}
   if(action==="send-approval"){const a=collectArticle();post("VOY_APPROVAL_SEND_REQUEST",{article:a,issueId:currentIssueId()});toast("Approval request sent.");return}

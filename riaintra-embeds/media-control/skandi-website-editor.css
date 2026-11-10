@@ -203,3 +203,37 @@
  #skandi-shell-root #skandi-app-root .sk-media-library-tools .btn{flex:1}
 }
 @media(max-width:340px){#skandi-shell-root #skandi-app-root .sk-media-grid{grid-template-columns:1fr}}
+
+#skandi-shell-root #skandi-app-root .mi-intro{margin:0 0 16px}
+#skandi-shell-root #skandi-app-root .mi-intro h2,#skandi-shell-root #skandi-app-root .mi-card h2{margin:0 0 6px;color:#022e64;font-size:22px}
+#skandi-shell-root #skandi-app-root .mi-intro p,#skandi-shell-root #skandi-app-root .mi-card p,#skandi-shell-root #skandi-app-root .mi-writer p,#skandi-shell-root #skandi-app-root .mi-help{color:#5b6f81;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .mi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+#skandi-shell-root #skandi-app-root .mi-card,#skandi-shell-root #skandi-app-root .mi-writer{padding:18px;border:1px solid #dce7ef;border-radius:11px;background:#fff;min-width:0}
+#skandi-shell-root #skandi-app-root .mi-card h3,#skandi-shell-root #skandi-app-root .mi-writer h3{margin:0 0 5px;color:#022e64;font-size:16px}
+#skandi-shell-root #skandi-app-root .mi-card .btn,#skandi-shell-root #skandi-app-root .mi-writer .btn{min-height:42px!important;margin:6px 6px 0 0;border-radius:7px!important}
+#skandi-shell-root #skandi-app-root .mi-state{margin:10px 0;color:#617588;font-size:12px}
+#skandi-shell-root #skandi-app-root .mi-state[data-state=ok]{color:#146652}
+#skandi-shell-root #skandi-app-root .mi-state[data-state=error],#skandi-shell-root #skandi-app-root [data-mi-error]{color:#a22b26;font-size:12px;line-height:1.45}
+#skandi-shell-root #skandi-app-root [data-mi-error]:not(:empty){display:block;margin:6px 0}
+#skandi-shell-root #skandi-app-root .mi-result{padding:10px 0;border-top:1px solid #e4edf3;overflow-wrap:anywhere}
+#skandi-shell-root #skandi-app-root .mi-result h4{margin:0;color:#022e64}
+#skandi-shell-root #skandi-app-root .mi-result a{color:#006887}
+#skandi-shell-root #skandi-app-root .mi-form{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin:12px 0}
+#skandi-shell-root #skandi-app-root .mi-form label,#skandi-shell-root #skandi-app-root .mi-writer>label{display:grid;gap:5px;flex:1 1 190px;color:#506679;font-size:12px;font-weight:700}
+#skandi-shell-root #skandi-app-root .mi-form .input,#skandi-shell-root #skandi-app-root .mi-writer textarea{min-height:42px;border:1px solid #c9d8e3;border-radius:7px;padding:9px;font:inherit}
+#skandi-shell-root #skandi-app-root .mi-writer{margin-top:12px;background:#f8fbfd}
+#skandi-shell-root #skandi-app-root .mi-table-wrap{overflow-x:auto}
+#skandi-shell-root #skandi-app-root .mi-table-wrap table{width:100%;border-collapse:collapse;font-size:12px}
+#skandi-shell-root #skandi-app-root .mi-table-wrap th,#skandi-shell-root #skandi-app-root .mi-table-wrap td{padding:8px;border-bottom:1px solid #e4edf3;text-align:left;overflow-wrap:anywhere}
+
+#voy-print-root{display:none}
+@media print{
+ body.voy-printing #skandi-shell-root{display:none!important}
+ body.voy-printing #voy-print-root{display:block!important;visibility:visible!important}
+ body.voy-printing #voy-print-root *{visibility:visible!important}
+ body.voy-printing #voy-print-root .mag-page{display:block!important;width:210mm!important;min-height:297mm!important;height:297mm!important;margin:0!important;box-shadow:none!important;border:0!important;break-after:page;page-break-after:always;overflow:hidden!important}
+ body.voy-printing #voy-print-root .mag-page:last-child{break-after:auto;page-break-after:auto}
+ body.voy-printing #voy-print-root .mag-page:before{display:none!important}
+ body.voy-printing #voy-print-root .voyp{height:100%!important;min-height:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ @page{size:A4;margin:0}
+}

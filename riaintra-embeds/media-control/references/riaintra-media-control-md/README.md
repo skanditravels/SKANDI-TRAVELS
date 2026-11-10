@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-10 — The active sidecars replace the placeholder connector matrix with real checks and add staff-authorized editorial integration paths and browser PDF printing. The historical payload below remains unchanged; current setup and live-test limits are documented in `docs/media-control-website-editor.md`.
+
 - 2026-11-10 — The active sidecars reorganize Media Control, protect in-progress forms and extend the website design draft format with validated structured content and placeholders. The historical HTML below is unchanged and is not the active implementation. See `docs/media-control-website-editor.md` for current scope and required Wix runtime updates.
 
 - 2026-11-08 — The active Media Control sidecars remove the unused toolbar counters; this historical reference retains its original markup.
