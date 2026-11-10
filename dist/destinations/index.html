@@ -1847,6 +1847,11 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
    ========================================================= */
 #skandi-app-root .directory{position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,.11);background:#022e64;color:var(--sk-ivory)}
 #skandi-app-root .directory::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 10% 0%,rgba(95,199,207,.18),transparent 30%),radial-gradient(circle at 88% 18%,rgba(40,92,168,.22),transparent 28%),radial-gradient(circle at 58% 100%,rgba(173,146,112,.10),transparent 30%),linear-gradient(180deg,rgba(255,255,255,.02),transparent 30%)}
+#skandi-app-root .directory-toggle{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1320px;margin:0 auto;padding:20px clamp(20px,5vw,68px);color:#e5f1f5;cursor:pointer;font-size:14px;font-weight:700;list-style:none}
+#skandi-app-root .directory-toggle::-webkit-details-marker{display:none}
+#skandi-app-root .directory-toggle:focus-visible{outline:2px solid #5fc7cf;outline-offset:-4px}
+#skandi-app-root .directory-toggle-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.28);border-radius:8px;font-size:20px;font-weight:400;line-height:1}
+#skandi-app-root .directory[open] .directory-toggle-icon{transform:rotate(45deg)}
 #skandi-app-root .directory-inner{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:48px clamp(20px,5vw,68px) 70px}
 #skandi-app-root .directory-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:24px}
 #skandi-app-root .directory-head h2{margin:0;color:var(--sk-ivory);font-size:25px;letter-spacing:-.035em}
@@ -2494,9 +2499,6 @@ body.destinations-directory-open #skandi-app-root{overflow:hidden}
   #skandi-app-root .fx-surface{display:none!important}
 }
 
-/* Keep the decorative atlas field inside the page without constraining its scrollable rails. */
-#skandi-app-root .editorial { overflow: clip; }
-
 /* A single flow-based control dock keeps the map controls clear of the title. */
 #skandi-app-root .map-interface{position:absolute;z-index:var(--z-overlay);top:clamp(18px,3vw,42px);left:clamp(16px,3.5vw,52px);width:min(510px,calc(100% - 32px));display:grid;grid-template-columns:minmax(0,1fr);gap:10px;pointer-events:none}
 #skandi-app-root .map-interface>.hero-copy,#skandi-app-root .map-control-dock{pointer-events:auto}
@@ -2528,6 +2530,7 @@ body.destinations-directory-open #skandi-app-root{overflow:hidden}
 #skandi-app-root .map-utilities .utility-stack button{width:46px;min-height:44px}
 #skandi-app-root .map-status[data-tone="error"]{border-color:#edc8c1;background:#fff3f1;color:#8f3028}
 #skandi-app-root .map-status[data-tone="error"] button{border-radius:8px;font-weight:700;letter-spacing:0;text-transform:none;white-space:nowrap}
+#skandi-app-root .journey-chapter{padding-top:0}
 @media (min-width:821px) and (max-width:1020px){#skandi-app-root .map-interface{width:min(420px,45vw)}}
 @media (max-width:820px){
  #skandi-app-root .map-interface{top:14px;left:14px;width:min(510px,calc(100% - 28px));gap:8px}
@@ -2548,8 +2551,8 @@ body.destinations-directory-open #skandi-app-root{overflow:hidden}
  #skandi-app-root .map-interface .region-btn{min-height:38px}
 }
 
-
-#skandi-app-root .map-interface .destinations-list-trigger{margin-top:10px;min-height:36px;padding:0 12px;border-radius:9px;font-size:13px;letter-spacing:0;text-transform:none}
+/* Keep the decorative atlas field inside the page without constraining its scrollable rails. */
+#skandi-app-root .editorial { overflow: clip; }
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -2844,7 +2847,6 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <h1 id="networkTitle">Our Network</h1>
         <p>Explore our destinations, Collection stays and airline connections on the map.</p>
         <div class="network-meta" id="networkMeta" aria-live="polite"></div>
-        <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
       </header>
 
       <div class="map-control-dock">
@@ -2945,15 +2947,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <div class="collection-rail" id="collectionRail"></div>
   </section>
 
-  <section class="chapter" id="airlineChapter" aria-labelledby="airlineHeading">
-    <div class="chapter-head">
-      <div>
-        <div class="chapter-kicker">Trusted connections</div>
-        <h2 id="airlineHeading">Partner airlines</h2>
-      </div>
-      <p class="chapter-intro">Explore the airline relationships attached to published SKANDI network connections. Airline operation remains clearly attributed to the operating carrier.</p>
-    </div>
-    <div class="airline-rail" id="airlineRail"></div>
+  <section class="chapter journey-chapter" aria-label="Plan your journey">
     <div class="plan-band">
       <div>
         <h3>Seen somewhere you want to go?</h3>
@@ -2964,7 +2958,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </section>
 </main>
 
-<section class="directory" aria-labelledby="directoryHeading">
+<details class="directory" id="networkDirectory">
+  <summary class="directory-toggle"><span>Browse accessible map links</span><span aria-hidden="true" class="directory-toggle-icon">+</span></summary>
   <div class="directory-inner">
     <div class="directory-head">
       <div><h2 id="directoryHeading">Network directory</h2></div>
@@ -2972,26 +2967,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     </div>
     <div class="directory-grid" id="directoryGrid"></div>
   </div>
-</section>
-
-<section class="destinations-list-page" id="destinationsListPage" aria-labelledby="destinationsListHeading" hidden="">
-  <div class="destinations-list-page-header">
-    <div class="destinations-list-page-header-inner">
-      <button class="destinations-list-back" id="destinationsListBack" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
-        <span>Back to Our Network</span>
-      </button>
-      <div class="destinations-list-page-label">SKANDI Travels</div>
-    </div>
-  </div>
-  <div class="destinations-list-hero">
-    <div class="destinations-list-kicker">Explore with SKANDI</div>
-    <h2 id="destinationsListHeading">All destinations.</h2>
-    <p>Browse every published SKANDI destination by country. Countries and destinations are listed alphabetically and open the existing Country and Destination pages.</p>
-    <nav class="destinations-alphabet" id="destinationsAlphabet" aria-label="Jump to country"></nav>
-  </div>
-  <div class="destinations-list-content" id="destinationsListContent" aria-live="polite"></div>
-</section>
+</details>
 
 
 
@@ -4604,7 +4580,6 @@ const state = {
   selectedAirlineId:null,
   selectedRegion:null,
   searchOpen:false,
-  destinationDirectoryOpen:false,
   panelOpen:false,
   mobileSheetState:"peek",
   mapReady:false,
@@ -4616,6 +4591,7 @@ const state = {
   model:{destinations:[],hotels:[],airports:[],airlines:[],routes:[],regions:[],stats:{}},
   map:null,
   mapInitialized:false,
+  mapFailed:false,
   pendingPayload:null,
   linkedSelection:null,
   siteBridge:false,
@@ -4625,7 +4601,7 @@ const state = {
 
 const el = {};
 function cacheElements(){
-  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","airlineChapter","airlineRail","planJourney","directoryGrid","destinationsListOpen","destinationsListPage","destinationsListBack","destinationsAlphabet","destinationsListContent"].forEach(id=>{el[id]=document.getElementById(id)});
+  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","planJourney","networkDirectory","directoryGrid"].forEach(id=>{el[id]=document.getElementById(id)});
 }
 
 /* =========================================================
@@ -4938,7 +4914,7 @@ function emptyFC(){return {type:"FeatureCollection",features:[]}}
    ========================================================= */
 function initMap(){
   if(state.mapInitialized)return;
-  if(!window.maplibregl){showMapFailure("The interactive atlas could not start in this browser.");return}
+  if(!window.maplibregl){showMapFailure("The map couldn’t start. Browse the network below.");return}
   state.mapInitialized=true;
   try{
     state.map=new maplibregl.Map({
@@ -4982,6 +4958,7 @@ function initMap(){
 }
 function onMapLoad(){
   state.mapReady=true;
+  state.mapFailed=false;
   el.networkHero.classList.add("map-ready");
   const loadingVeil=document.getElementById("mapLoading");
   if(loadingVeil)loadingVeil.remove();
@@ -5250,7 +5227,7 @@ function focusSelection(type,obj){
 }
 function cameraDuration(ms){return REDUCED_MOTION?60:ms}
 function panelPadding(){return IS_MOBILE()?{top:170,bottom:190,left:36,right:36}:{top:90,bottom:90,left:80,right:470}}
-function fitBoundsFor(items,animate=false,options={}){const bounds=boundsForFeatures(items);if(!bounds||bounds.isEmpty?.())return;state.map.fitBounds(bounds,{padding:options.padding||panelPadding(),maxZoom:6.3,duration:animate?cameraDuration(options.duration||800):0,essential:true})}
+function fitBoundsFor(items,animate=false,options={}){if(!state.mapReady||!state.map)return;const bounds=boundsForFeatures(items);if(!bounds||bounds.isEmpty?.())return;state.map.fitBounds(bounds,{padding:options.padding||panelPadding(),maxZoom:6.3,duration:animate?cameraDuration(options.duration||800):0,essential:true})}
 function fitDefaultBounds(animate=true){
   const items=[...state.model.destinations.filter(d=>d.mappable),...state.model.airports.filter(a=>a.mappable&&state.model.routes.some(r=>routeTouchesNode(r,a))),...state.model.hotels.filter(h=>h.mappable)];
   if(items.length)fitBoundsFor(items,animate,{padding:IS_MOBILE()?{top:150,bottom:110,left:35,right:35}:{top:150,bottom:90,left:90,right:90}});else state.map?.easeTo({center:[12,45],zoom:2,duration:animate?cameraDuration(700):0});
@@ -5401,7 +5378,7 @@ function searchSecondary(type,item){if(type==="destination")return [item.country
 /* =========================================================
    EDITORIAL / DIRECTORY
    ========================================================= */
-function renderEditorial(){renderFeatured();renderCollection();renderAirlines()}
+function renderEditorial(){renderFeatured();renderCollection()}
 function renderFeatured(){
   el.featuredDestinations.replaceChildren();
   const items=[...state.model.destinations].sort((a,b)=>(Number(b.featured)-Number(a.featured))||a.priority-b.priority||a.name.localeCompare(b.name)).slice(0,3);
@@ -5420,130 +5397,6 @@ function renderCollection(){
     const copy=document.createElement("div");copy.className="collection-copy";const small=document.createElement("small");small.textContent=[h.area||h.city,h.country].filter(Boolean).join(" · ");const strong=document.createElement("strong");strong.textContent=h.name;const p=document.createElement("p");p.textContent=h.summary||"Handpicked by SKANDI.";copy.append(small,strong,p);b.append(media,copy);b.addEventListener("click",()=>{scrollToMap();selectObject("hotel",h.id,{camera:true,history:true})});el.collectionRail.append(b)
   });
 }
-function renderAirlines(){
-  el.airlineRail.replaceChildren();el.airlineChapter.hidden=!state.model.airlines.length;
-  state.model.airlines.forEach(a=>{
-    const b=document.createElement("button");b.type="button";b.className="airline-chip";if(a.logo&&!SAVE_DATA){const img=document.createElement("img");img.alt="";img.loading="lazy";img.src=a.logo;img.onerror=()=>img.remove();b.append(img)}const copy=document.createElement("div");const strong=document.createElement("strong");strong.textContent=a.name;const small=document.createElement("small");const count=state.model.routes.filter(r=>routeHasAirline(r,a.id)).length;small.textContent=[a.iata,count?`${count} ${count===1?"connection":"connections"}`:"Partner airline"].filter(Boolean).join(" · ");copy.append(strong,small);b.append(copy);b.addEventListener("click",()=>{scrollToMap();setMode("airlines",true);selectObject("airline",a.id,{camera:true,history:true})});el.airlineRail.append(b)
-  });
-}
-
-function countryRoute(countryName){
-  const slug=slugify(countryName);
-  return slug?`${paths.explore}?country=${encodeURIComponent(slug)}`:"";
-}
-function destinationRoute(destination){
-  return destination ? mapLink("destination",destination) : "";
-}
-function renderDestinationsList(){
-  if(!el.destinationsListContent||!el.destinationsAlphabet)return;
-  el.destinationsListContent.replaceChildren();
-  el.destinationsAlphabet.replaceChildren();
-
-  const grouped=new Map();
-  [...state.model.destinations]
-    .filter(destination=>destination?.name)
-    .sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"}))
-    .forEach(destination=>{
-      const country=cleanString(destination.country||"Other destinations",120);
-      if(!grouped.has(country))grouped.set(country,[]);
-      grouped.get(country).push(destination);
-    });
-
-  const countries=[...grouped.entries()]
-    .sort(([a],[b])=>a.localeCompare(b,undefined,{sensitivity:"base"}));
-
-  if(!countries.length){
-    const empty=document.createElement("div");
-    empty.className="destinations-list-empty";
-    empty.textContent=state.dataState==="error"?"Destinations are unavailable right now. Return to the network and try again.":"Published destinations are loading.";
-    el.destinationsListContent.append(empty);
-    return;
-  }
-
-  const letters=new Map();
-  countries.forEach(([country])=>{
-    const letter=(country[0]||"#").toUpperCase();
-    if(!letters.has(letter))letters.set(letter,`destination-country-${slugify(country)||"other"}`);
-  });
-  [...letters.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([letter,target])=>{
-    const link=document.createElement("a");
-    link.href=`#${target}`;
-    link.textContent=letter;
-    link.addEventListener("click",event=>{
-      event.preventDefault();
-      document.getElementById(target)?.scrollIntoView({behavior:REDUCED_MOTION?"auto":"smooth",block:"start"});
-    });
-    el.destinationsAlphabet.append(link);
-  });
-
-  countries.forEach(([country,destinations])=>{
-    const section=document.createElement("section");
-    section.className="destination-country";
-    section.id=`destination-country-${slugify(country)||"other"}`;
-
-    const countryColumn=document.createElement("div");
-    const heading=document.createElement("button");
-    heading.type="button";
-    heading.className="destination-country-name";
-    heading.textContent=country;
-
-    const countryPath=country==="Other destinations"?"":countryRoute(country);
-    if(countryPath){
-      heading.addEventListener("click",()=>navigate(countryPath,{type:"country",country:slugify(country)}));
-    }else{
-      heading.disabled=true;
-    }
-
-    const count=document.createElement("span");
-    count.className="destination-country-count";
-    count.textContent=`${destinations.length} ${destinations.length===1?"destination":"destinations"}`;
-    countryColumn.append(heading,count);
-
-    const list=document.createElement("div");
-    list.className="destination-country-list";
-    destinations
-      .sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"}))
-      .forEach(destination=>{
-        const button=document.createElement("button");
-        button.type="button";
-        button.className="destination-list-link";
-        button.textContent=destination.name;
-        const path=destinationRoute(destination);
-        if(path){
-          button.addEventListener("click",()=>navigate(path,{
-            type:"destination",
-            country:slugify(destination.country||""),
-            destination:destination.slug||slugify(destination.name)
-          }));
-        }else{
-          button.disabled=true;
-        }
-        list.append(button);
-      });
-
-    section.append(countryColumn,list);
-    el.destinationsListContent.append(section);
-  });
-}
-function openDestinationsList(){
-  if(!el.destinationsListPage)return;
-  renderDestinationsList();
-  state.destinationDirectoryOpen=true;
-  el.destinationsListPage.hidden=false;
-  document.body.classList.add("destinations-directory-open");
-  requestAnimationFrame(()=>{
-    el.destinationsListPage.scrollTop=0;
-    el.destinationsListBack?.focus();
-  });
-}
-function closeDestinationsList(){
-  if(!el.destinationsListPage||!state.destinationDirectoryOpen)return;
-  state.destinationDirectoryOpen=false;
-  el.destinationsListPage.hidden=true;
-  document.body.classList.remove("destinations-directory-open");
-  el.destinationsListOpen?.focus();
-}
-
 function renderDirectory(){
   el.directoryGrid.replaceChildren();
   const groups=[
@@ -5728,16 +5581,17 @@ function installNetworkDynamics(){
    STATUS / ERROR / BRIDGE
    ========================================================= */
 function setStatus(message,{tone="info",retry=false}={}){el.mapStatusText.textContent=message||"";el.mapStatus.dataset.tone=tone;el.mapRetry.hidden=!retry;el.mapStatus.hidden=!message}
-function showMapFailure(message){state.dataState="error";el.networkHero.classList.add("map-ready");setStatus(message,{tone:"error",retry:true});renderDirectory()}
-function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_REFRESH"},"*");setStatus("Refreshing the published network…",{tone:"info"})}catch{}}
+function showMapFailure(message){state.mapFailed=true;if(!state.dataReceived)state.dataState="error";el.networkHero.classList.add("map-ready");if(el.networkDirectory)el.networkDirectory.open=true;setStatus(message,{tone:"error",retry:true});renderDirectory()}
+function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_REFRESH"},"*");if(!state.mapFailed)setStatus("Refreshing the published network…",{tone:"info"})}catch{}}
 function notifyReady(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_READY"},"*")}catch{}}
 function applyPayload(payload){
   try{
     if(payload.paths){paths={...paths,...payload.paths};state.siteBridge=true;}
     if(payload.selection)state.linkedSelection=payload.selection;
-    const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";if(state.destinationDirectoryOpen)renderDestinationsList();
-    if(state.mapReady)renderModel();else state.pendingPayload=payload;
-    setStatus("");
+    const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";
+    if(!state.mapReady)state.pendingPayload=payload;
+    renderModel();
+    if(!state.mapFailed)setStatus(state.mapReady?"":"Loading the map…");
     if(previousSelection.id&&getObject(previousSelection.type,previousSelection.id))selectObject(previousSelection.type,previousSelection.id,{camera:false,history:false});else if(previousSelection.id)clearSelection({camera:false,history:false});
     else applyDeepLink(state.linkedSelection);
     analytics("network_view",state.model.stats);
@@ -5771,8 +5625,6 @@ window.addEventListener("message",event=>{
 document.addEventListener("DOMContentLoaded",()=>{
   cacheElements();
   installNetworkDynamics();
-  el.destinationsListOpen.addEventListener("click",openDestinationsList);
-  el.destinationsListBack.addEventListener("click",closeDestinationsList);
   el.modeRail.addEventListener("click",e=>{const b=e.target.closest("[data-mode]");if(b)setMode(b.dataset.mode,true)});
   el.searchOpen.addEventListener("click",()=>{el.networkSearch.placeholder="Search the SKANDI network";openSearch()});
   el.searchClose.addEventListener("click",closeSearch);
@@ -5783,14 +5635,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   el.panelClose.addEventListener("click",()=>clearSelection({camera:false,history:true}));
   el.sheetSnap.addEventListener("click",cycleSheet);installSheetGestures();
   el.zoomIn.addEventListener("click",()=>state.map?.zoomIn({duration:cameraDuration(250)}));el.zoomOut.addEventListener("click",()=>state.map?.zoomOut({duration:cameraDuration(250)}));el.resetMap.addEventListener("click",()=>{clearSelection({camera:false,history:true});state.selectedRegion=null;state.selectedAirlineId=null;state.mode="explore";syncModeButtons();renderRegions();applyMode();fitDefaultBounds(true)});
-  el.mapRetry.addEventListener("click",requestRefresh);
+  el.mapRetry.addEventListener("click",()=>{
+    if(state.mapFailed){state.resizeObserver?.disconnect();try{state.map?.remove()}catch{}state.map=null;state.mapInitialized=false;state.mapFailed=false;initMap()}
+    if(!state.dataReceived)requestRefresh();
+  });
   el.planJourney.addEventListener("click",()=>{const selected=getObject(state.selectionType,state.selectionId);if(state.selectionType==="route")bookRoute(selected);else if(state.selectionType==="destination")bookDestination(selected);else navigate(paths.booking,{kind:"general"})});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.destinationDirectoryOpen)closeDestinationsList();else if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
 
   initMap();
   notifyReady();
   state.dataState="loading";
-  setStatus("Loading the published SKANDI network…",{tone:"info"});
+  if(!state.mapFailed)setStatus("Loading the published SKANDI network…",{tone:"info"});
   setTimeout(()=>{if(!state.dataReceived&&state.retryCount<1){state.retryCount++;requestRefresh()}},4500);
 });
 

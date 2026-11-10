@@ -768,8 +768,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "542732f2e2bfa9f83074cba7dfaae477ad34f2bb38abb89c5cbd77bfcabc7410",
-      "bytes": 318328
+      "sha256": "39ed0448f60370f9a2226c2da003a5ff5d6e16ec7a93ded641866d58489e28d6",
+      "bytes": 311955
     },
     {
       "key": "travelInfo",
@@ -1196,11 +1196,15 @@
       "missing": [],
       "issues": [],
       "backend": [
-        "src/backend/SKANDI_CORE/publicContent.web.js"
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/networkMap.web.js"
       ],
       "messages": [
         "ABOUT_HOST_READY",
         "ABOUT_NAVIGATE",
+        "ABOUT_NETWORK_DATA",
+        "ABOUT_NETWORK_ERROR",
+        "ABOUT_NETWORK_REFRESH",
         "ABOUT_PAGE_DATA",
         "ABOUT_PAGE_ERROR",
         "ABOUT_PAGE_LOADING",
@@ -1215,8 +1219,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/about/skandi-about.receiver.html",
       "receiverFile": "skandi-embeds/about/skandi-about.receiver.html",
-      "sha256": "356aa3ab0f6f29e6b50f7509efa741364f6635aac9cbc406303d2827fac0ea4e",
-      "bytes": 213601
+      "sha256": "6ebff55e2b52818f695c55fb43fb7f7afddcb98ed4268d9a84359a31c86e63e6",
+      "bytes": 233585
     },
     {
       "key": "support",
