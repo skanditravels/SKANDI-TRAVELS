@@ -768,8 +768,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "a0ce3eb1e114de38870cb3d9e04cb6b1bea9685730ebaf2e9817fc006729dfb5",
-      "bytes": 312262
+      "sha256": "542732f2e2bfa9f83074cba7dfaae477ad34f2bb38abb89c5cbd77bfcabc7410",
+      "bytes": 318328
     },
     {
       "key": "travelInfo",

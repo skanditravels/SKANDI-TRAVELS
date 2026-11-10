@@ -2496,6 +2496,60 @@ body.destinations-directory-open #skandi-app-root{overflow:hidden}
 
 /* Keep the decorative atlas field inside the page without constraining its scrollable rails. */
 #skandi-app-root .editorial { overflow: clip; }
+
+/* A single flow-based control dock keeps the map controls clear of the title. */
+#skandi-app-root .map-interface{position:absolute;z-index:var(--z-overlay);top:clamp(18px,3vw,42px);left:clamp(16px,3.5vw,52px);width:min(510px,calc(100% - 32px));display:grid;grid-template-columns:minmax(0,1fr);gap:10px;pointer-events:none}
+#skandi-app-root .map-interface>.hero-copy,#skandi-app-root .map-control-dock{pointer-events:auto}
+#skandi-app-root .map-interface .hero-copy{position:relative;top:auto;left:auto;width:100%;padding:21px 23px;border-radius:18px;background:rgba(255,255,255,.91);box-shadow:0 12px 35px rgba(2,46,100,.12)}
+#skandi-app-root .map-interface .hero-eyebrow{margin-bottom:8px;color:#347a86}
+#skandi-app-root .map-interface .hero-copy h1{margin:0;font-size:max(13px, clamp(32px,3.4vw,48px));line-height:1.03;color:#022e64}
+#skandi-app-root .map-interface .hero-copy p{margin:10px 0 0;max-width:42ch;font-size:14px;line-height:1.55;color:#52677a}
+#skandi-app-root .map-interface .network-meta{margin-top:14px;gap:5px 12px;color:#536b7e}
+#skandi-app-root .map-interface .network-meta span+span::before{margin-right:12px}
+#skandi-app-root .map-control-dock{min-width:0;padding:10px;border:1px solid rgba(194,213,228,.95);border-radius:16px;background:rgba(255,255,255,.95);box-shadow:0 12px 35px rgba(2,46,100,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#skandi-app-root .map-interface .map-toolbar{position:static;display:flex;align-items:stretch;gap:8px;max-width:none}
+#skandi-app-root .map-interface .mode-rail{flex:1;min-width:0;max-width:none;margin:0;padding:3px;gap:2px;overflow-x:auto;border:0;border-radius:10px;background:#edf3f7;box-shadow:none;scrollbar-width:thin}
+#skandi-app-root .map-interface .mode-btn{flex:1 0 auto;min-height:42px;padding:0 10px;border-radius:8px;font-weight:700;letter-spacing:0;text-transform:none;white-space:nowrap;color:#3b5871}
+#skandi-app-root .map-interface .mode-btn.active{color:#fff;background:#022e64;box-shadow:0 3px 10px rgba(2,46,100,.17)}
+#skandi-app-root .map-interface .mode-btn:not(.active):hover{background:#dcebf0;color:#022e64}
+#skandi-app-root .map-interface #searchOpen{flex:0 0 48px;width:48px;height:auto;min-height:48px;border-radius:10px;background:#f3f7fa;box-shadow:none}
+#skandi-app-root .map-interface #searchOpen:hover{background:#e4f2f4;transform:none}
+#skandi-app-root .map-interface .region-strip{position:static;max-width:100%;margin-top:9px;padding:0 0 3px;gap:6px;overflow-x:auto;scrollbar-width:thin}
+#skandi-app-root .map-interface .region-btn{min-height:38px;padding:0 12px;border-radius:8px;background:#f5f8fa;box-shadow:none;font-weight:650;letter-spacing:0;text-transform:none;white-space:nowrap}
+#skandi-app-root .map-interface .region-btn.active{background:#d9f0f2;border-color:#8ecbd0;color:#064c61}
+#skandi-app-root .map-interface .map-key{margin:6px 3px 0;color:#536d80}
+#skandi-app-root .map-interface .map-key summary{display:inline-flex;align-items:center;gap:6px;min-height:30px;cursor:pointer;font-weight:700;list-style:none}
+#skandi-app-root .map-interface .map-key summary::-webkit-details-marker{display:none}
+#skandi-app-root .map-interface .map-key summary::after{content:"+";font-size:17px;line-height:1}
+#skandi-app-root .map-interface .map-key[open] summary::after{content:"−"}
+#skandi-app-root .map-interface .map-legend{position:static;display:flex;flex-wrap:wrap;gap:8px 14px;max-width:none;margin:3px 0 2px;overflow:visible;pointer-events:none}
+#skandi-app-root .map-interface .legend-chip{min-height:24px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#476279;font-weight:600;letter-spacing:0;text-transform:none}
+#skandi-app-root .map-utilities .utility-stack,#skandi-app-root .map-utilities>#resetMap{border-radius:12px;background:rgba(255,255,255,.94);box-shadow:0 8px 26px rgba(2,46,100,.10)}
+#skandi-app-root .map-utilities .utility-stack button{width:46px;min-height:44px}
+#skandi-app-root .map-status[data-tone="error"]{border-color:#edc8c1;background:#fff3f1;color:#8f3028}
+#skandi-app-root .map-status[data-tone="error"] button{border-radius:8px;font-weight:700;letter-spacing:0;text-transform:none;white-space:nowrap}
+@media (min-width:821px) and (max-width:1020px){#skandi-app-root .map-interface{width:min(420px,45vw)}}
+@media (max-width:820px){
+ #skandi-app-root .map-interface{top:14px;left:14px;width:min(510px,calc(100% - 28px));gap:8px}
+ #skandi-app-root .map-interface .hero-copy{top:auto;left:auto;width:100%;padding:16px 18px}
+ #skandi-app-root .map-interface .hero-copy h1{margin:0;font-size:34px}
+ #skandi-app-root .map-interface .hero-copy p{font-size:13px;line-height:1.45}
+ #skandi-app-root .map-interface .network-meta{margin-top:10px}
+ #skandi-app-root .map-interface .map-toolbar,#skandi-app-root .map-interface .region-strip,#skandi-app-root .map-interface .map-legend{left:auto;right:auto;top:auto;bottom:auto}
+ #skandi-app-root .map-utilities{top:auto;bottom:18px;right:14px}
+ #skandi-app-root .map-status{left:14px;right:78px;bottom:18px;min-width:0;transform:none}
+}
+@media (max-width:560px){
+ #skandi-app-root .map-interface .mode-rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+ #skandi-app-root .map-interface .mode-btn{min-width:0;min-height:38px;padding:0 4px}
+ #skandi-app-root .map-interface .mode-btn[data-mode="destinations"]{display:block}
+ #skandi-app-root .map-interface #searchOpen{align-self:stretch}
+ #skandi-app-root .map-interface .map-legend{display:flex}
+ #skandi-app-root .map-interface .region-btn{min-height:38px}
+}
+
+
+#skandi-app-root .map-interface .destinations-list-trigger{margin-top:10px;min-height:36px;padding:0 12px;border-radius:9px;font-size:13px;letter-spacing:0;text-transform:none}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -2784,33 +2838,40 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <div class="map-loading" id="mapLoading" aria-hidden="true"></div>
     <div class="map-atmosphere" aria-hidden="true"></div>
 
-    <header class="hero-copy">
-      <div class="hero-eyebrow">SKANDI Travels</div>
-      <h1 id="networkTitle">Our Network</h1>
-      <p>Where the SKANDI world comes together. Explore destinations, handpicked Collection stays and trusted airline connections.</p>
-      <div class="network-meta" id="networkMeta" aria-live="polite"></div>
-      <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
-    </header>
+    <div class="map-interface">
+      <header class="hero-copy">
+        <div class="hero-eyebrow">SKANDI Travels</div>
+        <h1 id="networkTitle">Our Network</h1>
+        <p>Explore our destinations, Collection stays and airline connections on the map.</p>
+        <div class="network-meta" id="networkMeta" aria-live="polite"></div>
+        <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
+      </header>
 
-    <div class="map-toolbar" aria-label="Network map modes">
-      <div class="mode-rail" id="modeRail">
-        <button class="mode-btn active" type="button" data-mode="explore" aria-pressed="true">Explore</button>
-        <button class="mode-btn" type="button" data-mode="destinations" aria-pressed="false">Destinations</button>
-        <button class="mode-btn" type="button" data-mode="collection" aria-pressed="false">Collection</button>
-        <button class="mode-btn" type="button" data-mode="airlines" aria-pressed="false">Airlines</button>
+      <div class="map-control-dock">
+        <div class="map-toolbar" aria-label="Network map modes">
+          <div class="mode-rail" id="modeRail">
+            <button class="mode-btn active" type="button" data-mode="explore" aria-pressed="true">Explore</button>
+            <button class="mode-btn" type="button" data-mode="destinations" aria-pressed="false">Destinations</button>
+            <button class="mode-btn" type="button" data-mode="collection" aria-pressed="false">Collection</button>
+            <button class="mode-btn" type="button" data-mode="airlines" aria-pressed="false">Airlines</button>
+          </div>
+          <button class="icon-btn" id="searchOpen" type="button" aria-label="Search the SKANDI network">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></svg>
+          </button>
+        </div>
+
+        <div class="region-strip" id="regionStrip" aria-label="Filter network by region"></div>
+
+        <details class="map-key">
+          <summary>Map key</summary>
+          <div class="map-legend" aria-label="Map legend">
+            <div class="legend-chip"><span class="legend-dot destination" aria-hidden="true"></span><span>Destination</span></div>
+            <div class="legend-chip"><span class="legend-dot hotel" aria-hidden="true"></span><span>SKANDI Collection</span></div>
+            <div class="legend-chip"><span class="legend-dot airport" aria-hidden="true"></span><span>Airport</span></div>
+            <div class="legend-chip"><span class="legend-line" aria-hidden="true"></span><span>Partner route</span></div>
+          </div>
+        </details>
       </div>
-      <button class="icon-btn" id="searchOpen" type="button" aria-label="Search the SKANDI network">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></svg>
-      </button>
-    </div>
-
-    <div class="region-strip" id="regionStrip" aria-label="Filter network by region"></div>
-
-    <div class="map-legend" aria-label="Map legend">
-      <div class="legend-chip"><span class="legend-dot destination" aria-hidden="true"></span><span>Destination</span></div>
-      <div class="legend-chip"><span class="legend-dot hotel" aria-hidden="true"></span><span>SKANDI Collection</span></div>
-      <div class="legend-chip"><span class="legend-dot airport" aria-hidden="true"></span><span>Airport</span></div>
-      <div class="legend-chip"><span class="legend-line" aria-hidden="true"></span><span>Partner route</span></div>
     </div>
 
     <div class="map-utilities" aria-label="Map controls">
@@ -5030,7 +5091,7 @@ function renderRegions(){
   const all=createRegionButton("All",null);el.regionStrip.append(all);
   state.model.regions.forEach(region=>el.regionStrip.append(createRegionButton(region,region)));
 }
-function createRegionButton(label,value){const b=document.createElement("button");b.type="button";b.className="region-btn"+(state.selectedRegion===value?" active":"");b.textContent=label;b.addEventListener("click",()=>setRegion(value));return b}
+function createRegionButton(label,value){const b=document.createElement("button");b.type="button";b.className="region-btn"+(state.selectedRegion===value?" active":"");b.textContent=label;b.setAttribute("aria-pressed",String(state.selectedRegion===value));b.addEventListener("click",()=>setRegion(value));return b}
 function renderModes(){
   const hasHotels=state.model.hotels.length>0;const hasAirlines=state.model.airlines.length>0&&state.model.routes.some(r=>r.airlineIds.length);
   el.modeRail.querySelector('[data-mode="collection"]').hidden=!hasHotels;
