@@ -2,7 +2,7 @@
 
 ## 2026-11-10 — Map controls and network overview
 
-The map title, view modes, search, region filters and optional map key now sit in a single responsive control panel instead of overlapping independent overlays. All four map modes remain available on mobile. The large destination-list overlay and the Trusted Connections chapter moved to the compact network overview on `/about`; the existing accessible map directory and booking handoff remain. This supersedes the older in-page directory and airline-chapter descriptions below. Map records and the existing Wix bridge remain owned by the canonical public network projection. The About page controller supplies that same projection to its new overview.
+The map title, view modes, search, region filters and optional map key now sit in a single responsive control panel instead of overlapping independent overlays. All four map modes remain available on mobile. The large destination-list overlay and the Trusted Connections chapter moved to the compact network overview on `/about`; the existing accessible map directory and booking handoff remain. The directory is collapsed by default and opens automatically when the map cannot start. This supersedes the older in-page directory and airline-chapter descriptions below. Map records and the existing Wix bridge remain owned by the canonical public network projection. The About page controller supplies that same projection to its new overview.
 
 ## 2026-11-06 — Current atlas and public links
 

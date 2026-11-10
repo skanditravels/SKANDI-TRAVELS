@@ -711,6 +711,11 @@ a{color:inherit}
    ========================================================= */
 .directory{position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,.11);background:#022e64;color:var(--sk-ivory)}
 .directory::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 10% 0%,rgba(95,199,207,.18),transparent 30%),radial-gradient(circle at 88% 18%,rgba(40,92,168,.22),transparent 28%),radial-gradient(circle at 58% 100%,rgba(173,146,112,.10),transparent 30%),linear-gradient(180deg,rgba(255,255,255,.02),transparent 30%)}
+.directory-toggle{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1320px;margin:0 auto;padding:20px clamp(20px,5vw,68px);color:#e5f1f5;cursor:pointer;font-size:14px;font-weight:700;list-style:none}
+.directory-toggle::-webkit-details-marker{display:none}
+.directory-toggle:focus-visible{outline:2px solid #5fc7cf;outline-offset:-4px}
+.directory-toggle-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.28);border-radius:8px;font-size:20px;font-weight:400;line-height:1}
+.directory[open] .directory-toggle-icon{transform:rotate(45deg)}
 .directory-inner{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:48px clamp(20px,5vw,68px) 70px}
 .directory-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:24px}
 .directory-head h2{margin:0;color:var(--sk-ivory);font-size:25px;letter-spacing:-.035em}

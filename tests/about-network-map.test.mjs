@@ -107,6 +107,7 @@ test('Map controls remain operable after the directory and airline chapter move'
   w.loadMapData({destinations:[{id:'sto',name:'Stockholm',country:'Sweden',latitude:59,longitude:18},{id:'nyc',name:'New York',country:'United States',latitude:40,longitude:-74}],airports:[],airlines:[],routes:[],hotels:[]});
   assert(d.querySelector('.map-interface .map-toolbar'));assert(d.querySelector('.map-interface .map-key'));
   assert.equal(d.getElementById('destinationsListPage'),null);assert.equal(d.getElementById('airlineChapter'),null);
+  assert.equal(d.getElementById('networkDirectory').open,false);
   d.querySelector('[data-mode="destinations"]').click();assert.equal(d.querySelector('[data-mode="destinations"]').getAttribute('aria-pressed'),'true');
   const sweden=[...d.querySelectorAll('.region-btn')].find(button=>button.textContent==='Sweden');sweden.click();
   assert.equal([...d.querySelectorAll('.region-btn')].find(button=>button.textContent==='Sweden').getAttribute('aria-pressed'),'true');
@@ -123,6 +124,7 @@ test('Published network links remain available when the map library fails',async
   d.dispatchEvent(new w.Event('DOMContentLoaded'));
   w.loadMapData({destinations:[{id:'sto',name:'Stockholm',country:'Sweden'}],airports:[],airlines:[],routes:[],hotels:[]});
   assert.equal(d.querySelector('.directory-link').textContent,'Stockholm');
+  assert.equal(d.getElementById('networkDirectory').open,true);
   assert.match(d.getElementById('mapStatusText').textContent,/couldn’t start/);
   assert.equal(d.getElementById('mapStatus').hidden,false);
 });

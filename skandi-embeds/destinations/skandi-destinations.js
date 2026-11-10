@@ -42,7 +42,7 @@ const state = {
 
 const el = {};
 function cacheElements(){
-  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","planJourney","directoryGrid"].forEach(id=>{el[id]=document.getElementById(id)});
+  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","planJourney","networkDirectory","directoryGrid"].forEach(id=>{el[id]=document.getElementById(id)});
 }
 
 /* =========================================================
@@ -1022,7 +1022,7 @@ function installNetworkDynamics(){
    STATUS / ERROR / BRIDGE
    ========================================================= */
 function setStatus(message,{tone="info",retry=false}={}){el.mapStatusText.textContent=message||"";el.mapStatus.dataset.tone=tone;el.mapRetry.hidden=!retry;el.mapStatus.hidden=!message}
-function showMapFailure(message){state.mapFailed=true;if(!state.dataReceived)state.dataState="error";el.networkHero.classList.add("map-ready");setStatus(message,{tone:"error",retry:true});renderDirectory()}
+function showMapFailure(message){state.mapFailed=true;if(!state.dataReceived)state.dataState="error";el.networkHero.classList.add("map-ready");if(el.networkDirectory)el.networkDirectory.open=true;setStatus(message,{tone:"error",retry:true});renderDirectory()}
 function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_REFRESH"},"*");if(!state.mapFailed)setStatus("Refreshing the published network…",{tone:"info"})}catch{}}
 function notifyReady(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_READY"},"*")}catch{}}
 function applyPayload(payload){
