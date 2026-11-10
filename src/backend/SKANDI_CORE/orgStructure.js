@@ -210,8 +210,8 @@ function hrProfilePatch(input = {}) {
     if (["nationalIdLast4", "passportNumberLast4", "workPermitNumberLast4"].includes(key) && clean && !/^[a-z0-9]{4}$/i.test(String(clean))) {
       throw new SkandiError("HR_DOCUMENT_LAST4_INVALID", "Enter only the last four letters or digits of the document number.");
     }
-    if (["passportIssueDate", "passportExpiryDate", "workPermitIssueDate", "workPermitExpiryDate"].includes(key) && clean && (!/^\d{4}-\d{2}-\d{2}$/.test(String(clean)) || isoDateOnly(String(clean)) !== String(clean))) {
-      throw new SkandiError("HR_DOCUMENT_DATE_INVALID", "Enter a valid document date.");
+    if (["passportIssueDate", "passportExpiryDate", "workPermitIssueDate", "workPermitExpiryDate", "deploymentStartDate", "deploymentEndDate"].includes(key) && clean && (!/^\d{4}-\d{2}-\d{2}$/.test(String(clean)) || isoDateOnly(String(clean)) !== String(clean))) {
+      throw new SkandiError("HR_DOCUMENT_DATE_INVALID", "Enter a valid date.");
     }
     if (clean !== undefined) out[key] = clean;
   }
@@ -226,6 +226,9 @@ function validateDocumentDateOrder(profile = {}, changed = {}) {
     if (issued && expires && /^\d{4}-\d{2}-\d{2}$/.test(String(issued)) && /^\d{4}-\d{2}-\d{2}$/.test(String(expires)) && issued > expires) {
       throw new SkandiError("HR_DOCUMENT_DATE_ORDER", "The document expiry date must be on or after its issue date.");
     }
+  }
+  if (("deploymentStartDate" in changed || "deploymentEndDate" in changed) && profile.deploymentStartDate && profile.deploymentEndDate && profile.deploymentStartDate > profile.deploymentEndDate) {
+    throw new SkandiError("HR_DEPLOYMENT_DATE_ORDER", "The deployment end date must be on or after its start date.");
   }
 }
 
@@ -1946,6 +1949,19 @@ export async function saveRecruitingOnboardingTaskCore(input = {}) {
   const taskName = text(input.taskName ?? previous?.task_name, 180);
   if (!candidateId || !taskName) throw new SkandiError("RECRUITING_ONBOARDING_INPUT_REQUIRED", "Candidate and task name are required.");
   const status = upper(input.status || previous?.status || "OPEN", 80);
+  let owner = previous ? previous.owner_agent_user_id : actorId;
+  const assignee = upper(input.assignee || "", 30);
+  if (assignee === "RECRUITING") owner = actorId;
+  else if (assignee === "EMPLOYEE") {
+    if (!/^[A-Za-z0-9_-]+$/.test(candidateId)) throw new SkandiError("RECRUITING_CANDIDATE_REQUIRED", "Candidate is required.");
+    const candidate = firstRow(await select("career_applicant_accounts", { select: "id,applicant_id,status,payload", ...(UUID.test(candidateId) ? { id:`eq.${candidateId}` } : { applicant_id:`eq.${candidateId}` }), limit: 1 }));
+    const employeeId = text(candidate?.payload?.staffOnboarding?.agentUserId,80);
+    const employee = UUID.test(employeeId) ? await findAgent({agentUserId:employeeId}) : null;
+    if (upper(candidate?.status,40) !== "HIRED" || !employee || employee.active !== true || text(employee.payload?.successFactors?.recruitingApplicantId,80) !== text(candidate.id,80)) {
+      throw new SkandiError("RECRUITING_ONBOARDING_EMPLOYEE_NOT_LINKED", "Hire and link the employee before assigning this task to them.");
+    }
+    owner = employee.id;
+  } else if (assignee && assignee !== "KEEP") throw new SkandiError("RECRUITING_ONBOARDING_ASSIGNEE_INVALID", "Choose a valid task owner.");
   const body = {
     task_id: taskId,
     candidate_id: candidateId,
@@ -1953,8 +1969,8 @@ export async function saveRecruitingOnboardingTaskCore(input = {}) {
     status,
     due_at: input.dueAt === undefined ? previous?.due_at || null : text(input.dueAt, 80) || null,
     completed_at: COMPLETE_ONBOARDING_TASK.has(status) ? (previous?.completed_at || text(input.completedAt, 80) || new Date().toISOString()) : null,
-    owner_agent_user_id: previous ? previous.owner_agent_user_id : actorId,
-    payload: { ...portalObject(previous?.payload), ...portalObject(input.payload) },
+    owner_agent_user_id: owner,
+    payload: { ...portalObject(previous?.payload), ...portalObject(input.payload), ...(input.notes !== undefined ? {notes:text(input.notes,1000)} : {}) },
     updated_at: new Date().toISOString()
   };
   const saved = previous
@@ -2223,13 +2239,19 @@ export async function requestRecruitingDocumentCore({ candidateId = "", document
   return { ok: true, document: saved };
 }
 
-export async function verifyRecruitingDocumentCore({ documentId = "", candidateId = "" } = {}) {
+export async function verifyRecruitingDocumentCore({ documentId = "", candidateId = "", evidenceReference = "" } = {}) {
   const session = await requireRecruiting({ manage: true });
   const actorId = text(session.profile?.agentUserId || session.profile?.id, 80) || null;
   const id = text(documentId, 80);
   if (!id) throw new SkandiError("RECRUITING_DOCUMENT_ID_REQUIRED", "Document is required.");
-  const saved = firstRow(await restRequest({ table: "career_documents", method: "PATCH", query: { or: `(id.eq.${id},document_id.eq.${id})` }, body: { verification_status: "VERIFIED", verified_by_agent_user_id: actorId, verified_at: new Date().toISOString(), updated_at: new Date().toISOString() } }));
-  await recruitingAudit(actorId, "DOCUMENT_VERIFIED", "document", id, { candidateId });
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new SkandiError("RECRUITING_DOCUMENT_ID_REQUIRED", "Document is required.");
+  const existing = firstRow(await select("career_documents", {select:"*", ...(UUID.test(id) ? {id:`eq.${id}`} : {document_id:`eq.${id}`}), limit:1}));
+  if (!existing) throw new SkandiError("RECRUITING_DOCUMENT_NOT_FOUND", "Document not found.");
+  const reference = text(evidenceReference,300);
+  if (!existing.file_url && reference.length < 4) throw new SkandiError("RECRUITING_DOCUMENT_EVIDENCE_REQUIRED", "Attach the document or enter a reference to the record you reviewed.");
+  const saved = firstRow(await restRequest({ table: "career_documents", method: "PATCH", query: { id:`eq.${existing.id}`, updated_at:existing.updated_at?`eq.${existing.updated_at}`:"is.null" }, body: { verification_status: "VERIFIED", verified_by_agent_user_id: actorId, verified_at: new Date().toISOString(), payload:{...portalObject(existing.payload), ...(reference?{verificationEvidenceReference:reference}:{})}, updated_at: new Date().toISOString() } }));
+  if (!saved) throw new SkandiError("RECRUITING_DOCUMENT_CHANGED", "The document changed. Refresh and try again.");
+  await recruitingAudit(actorId, "DOCUMENT_VERIFIED", "document", id, { candidateId, evidence:existing.file_url?"attached_file":"review_reference" });
   return { ok: true, document: saved };
 }
 

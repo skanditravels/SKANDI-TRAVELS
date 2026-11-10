@@ -29,6 +29,8 @@
 
 ## Change log
 
+- 2026-11-10 — Published bus assignments show a bus details action using the same employee-owned roster record as EOS; draft services are excluded. Existing MyRoster eligibility and its independent flight functions remain unchanged. Source tests only; live Wix verification is pending.
+
 - 2026-10-28 — Added ALTEA route/chrome, desktop-only bootstrap gate, MasterPage logo binding, ALTEA flight search independent of staff assignments, and printable CARI briefing view.
 - 2026-10-28 — Routed MyRoster staff requests to the OPS Control review queue using existing request and leave-ledger tables. No Supabase schema change.
 - 2026-10-28 — Added a profile-based role/base fallback for empty organization directories, narrowed server-side flight search by the requested flight or airport code, and added MyRoster to ALTEA chrome navigation. The printable CARI logo uses the `masterPage.js` brand payload.

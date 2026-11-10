@@ -34,6 +34,8 @@
       myRosterRequests: [],
       trades: [],
       logistics: [],
+      transport: { available: false, vehicles: [], assignments: [], suppliers: [], staff: [] },
+      transportEdit: null,
       messages: [],
       jurisdictions: {}
     };
@@ -93,7 +95,8 @@
         if (!STATE.pendingActions.has(requestId)) return;
         STATE.pendingActions.delete(requestId);
         setSyncState('Error', 'error');
-        showToast('OPS did not confirm the change. Refresh before retrying.', 'error');
+        if (action.startsWith('SAVE_TRANSPORT_')) transportError(action, 'OPS did not confirm the change. Refresh before retrying.');
+        else showToast('OPS did not confirm the change. Refresh before retrying.', 'error');
       }, 20000);
       return requestId;
     }
@@ -254,6 +257,7 @@
       STATE.myRosterRequests = asArray(payload.myRosterRequests).map(row => normalizeMyRosterRequest(asObject(row)));
       STATE.trades = asArray(payload.tripTrades ?? payload.trades).map(row => normalizeTrade(asObject(row)));
       STATE.logistics = asArray(payload.logistics).map(row => normalizeLogistics(asObject(row)));
+      STATE.transport = asObject(payload.transport);
       STATE.messages = asArray(payload.messages).map(row => normalizeMessage(asObject(row)));
       STATE.auditLog = asArray(payload.auditLog ?? payload.audit).map(row => normalizeAudit(asObject(row)));
       STATE.openTime = asArray(payload.openTime ?? payload.open_time);
@@ -325,7 +329,8 @@
         STATE.pendingActions.delete(payload.requestId);
         if (payload.ok === false) {
           setSyncState('Error', 'error');
-          showToast(payload.error?.message ?? payload.message ?? 'Operation failed.', 'error');
+          if (pending?.action?.startsWith('SAVE_TRANSPORT_')) transportError(pending.action, payload.error?.message ?? payload.message ?? 'Operation failed.');
+          else showToast(payload.error?.message ?? payload.message ?? 'Operation failed.', 'error');
           return;
         }
         closeModal(false);
@@ -336,10 +341,12 @@
       }
       if (message.type === 'OPS_ERROR') {
         const requestId = message.payload?.requestId;
+        const pending = STATE.pendingActions.get(requestId);
         if (requestId) STATE.pendingActions.delete(requestId);
         STATE.loading = false;
         setSyncState('Error', 'error');
-        showToast(message.payload?.message ?? 'OPS synchronization failed.', 'error');
+        if (pending?.action?.startsWith('SAVE_TRANSPORT_')) transportError(pending.action, message.payload?.message ?? 'Operation failed.');
+        else showToast(message.payload?.message ?? 'OPS synchronization failed.', 'error');
       }
     });
 
@@ -378,8 +385,8 @@
         const p365 = jRules.maxFlight365 ? (crew.ftl.f365 / jRules.maxFlight365) * 100 : 0;
 
         let compStatus = 'Legal';
-        if (p7 > 100 || p28 > 100 || p365 > 100 || crew.acts.some(a => a.type === 'disrupted')) compStatus = 'Violation';
-        else if (p7 > 90 || p28 > 90 || p365 > 90 || crew.alert === 'warn') compStatus = 'Warning';
+        if (p7 > 100 || p28 > 100 || p365 > 100) compStatus = 'Violation';
+        else if (p7 > 90 || p28 > 90 || p365 > 90 || crew.alert === 'warn' || crew.acts.some(a => a.type === 'disrupted')) compStatus = 'Warning';
 
         const matchComp = STATE.filters.compliance.includes(compStatus);
         return matchSearch && matchRole && matchBase && matchComp;
@@ -783,17 +790,18 @@
         const p28 = Math.min(100, rawP28);
         const p365 = Math.min(100, rawP365);
         
-        let status = '<span class="j-badge green">LEGAL</span>';
-        if (rawP7 > 100 || rawP28 > 100 || rawP365 > 100 || c.acts.some(a => a.type === 'disrupted')) {
-            status = '<span class="j-badge red">VIOLATION</span>';
-        } else if (p7 > 90 || p28 > 90 || p365 > 90 || c.alert === 'warn') {
+        let status = '<span class="j-badge yellow">NOT ASSESSED</span>';
+        if (jRules.maxDuty7 && jRules.maxFlight28 && jRules.maxFlight365) status = '<span class="j-badge green">WITHIN REFERENCE</span>';
+        if (rawP7 > 100 || rawP28 > 100 || rawP365 > 100) {
+            status = '<span class="j-badge red">ABOVE REFERENCE</span>';
+        } else if (p7 > 90 || p28 > 90 || p365 > 90) {
             status = '<span class="j-badge yellow">WARNING</span>';
         }
 
         return `<tr><td><b>${escapeHtml(c.name)}</b></td><td>${escapeHtml(c.base)}</td><td>${escapeHtml(c.role)}</td>
-          <td>${c.ftl.d7}h <div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p7}%; background: ${p7>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div></td>
-          <td>${c.ftl.f28}h <div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p28}%; background: ${p28>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div></td>
-          <td>${c.ftl.f365}h <div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p365}%; background: ${p365>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div></td>
+          <td>${c.ftl.d7}h ${jRules.maxDuty7 ? `<div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p7}%; background: ${p7>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div>` : ''}</td>
+          <td>${c.ftl.f28}h ${jRules.maxFlight28 ? `<div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p28}%; background: ${p28>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div>` : ''}</td>
+          <td>${c.ftl.f365}h ${jRules.maxFlight365 ? `<div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p365}%; background: ${p365>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div>` : ''}</td>
           <td>${escapeHtml(jRules.name ?? 'Not configured')}</td><td>${status}</td></tr>`;
       }).join('');
     }
@@ -875,13 +883,14 @@
       tbody.innerHTML = STATE.trades.map(t => {
         const crewAObj = STATE.crewData.find(c => c.name === t.crewA);
         const jRules = crewAObj ? (STATE.jurisdictions[crewAObj.base]?.name ?? 'Not configured') : 'Checked';
-        return `<tr><td><b>${escapeHtml(t.id)}</b></td><td>${escapeHtml(t.crewA)}</td><td>${escapeHtml(t.crewB)}</td><td>${escapeHtml(t.details)}</td><td><span class="j-badge green">${escapeHtml(jRules)} OK</span></td><td>${escapeHtml(String(t.status ?? '').replace('_', ' '))}</td><td>${t.status === 'AWAITING_OCC' ? `<button class="btn primary" onclick="approveTrade('${escapeHtml(t.id)}')">Approve</button>` : '<span style="color:var(--j-text-muted)">Processed</span>'}</td></tr>`;
+        return `<tr><td><b>${escapeHtml(t.id)}</b></td><td>${escapeHtml(t.crewA)}</td><td>${escapeHtml(t.crewB)}</td><td>${escapeHtml(t.details)}</td><td><span class="j-badge green">${escapeHtml(jRules)} · review required</span></td><td>${escapeHtml(String(t.status ?? '').replace('_', ' '))}</td><td>${t.status === 'AWAITING_OCC' ? `<button class="btn primary" onclick="approveTrade('${escapeHtml(t.id)}')">Approve</button>` : '<span style="color:var(--j-text-muted)">Processed</span>'}</td></tr>`;
       }).join('');
     }
 
     function renderLogistics() {
       const tbody = document.getElementById('logisticsTableBody');
       if(!tbody) return;
+      renderTransport();
       
       window.toggleLogistic = function(id) {
           showToast('Logistics updates are read-only in this OPS backend.', 'error');
@@ -891,6 +900,81 @@
         return;
       }
       tbody.innerHTML = STATE.logistics.map(l => `<tr><td><b>${escapeHtml(l.id)}</b></td><td>${escapeHtml(l.name)}</td><td>${escapeHtml(l.loc)}</td><td>${escapeHtml(l.supplier)}</td><td>${escapeHtml(l.dates)}</td><td><span class="j-badge ${l.status==='CONFIRMED'?'green':'yellow'}">${escapeHtml(l.status)}</span></td><td><span style="color:var(--j-text-muted)">Read only</span></td></tr>`).join('');
+    }
+
+
+    function transportError(action, message) {
+      const form = document.getElementById(action === 'SAVE_TRANSPORT_VEHICLE' ? 'transportVehicleModal' : 'transportServiceModal');
+      const error = form?.querySelector('.transport-error');
+      if (error) error.textContent = String(message || 'The change could not be saved.');
+      const button = form?.querySelector('[type="submit"]');
+      if (button) button.disabled = false;
+    }
+    function renderTransport() {
+      const t=STATE.transport, ready=t.available===true, editable=ready&&t.canEdit===true;
+      const status=document.getElementById('transportStatus');
+      status.textContent=ready?(editable?'':'View only. Contact OPS management to make changes.'):(t.message||'Transport data is unavailable.');
+      for (const id of ['addTransportVehicle','addTransportService']) document.getElementById(id).disabled=!editable;
+      const suppliers=new Map(asArray(t.suppliers).map(x=>[x.id,x.name+(x.active===false?' (inactive)':'')]));
+      const staff=new Map(asArray(t.staff).map(x=>[x.id,x.name||x.id]));
+      const date=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString():'—';
+      const today=new Date(); const localDay=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      const due=value=>value?`${value}${value<localDay?' (date passed)':''}`:'Not set';
+      const serviceBody=document.getElementById('transportServiceBody');
+      serviceBody.innerHTML=asArray(t.assignments).map(a=>`<tr><td><b>${escapeHtml(a.label)}</b><br>${escapeHtml(asArray(a.stops).join(' → '))}</td><td>${escapeHtml([a.vehicleName,a.registration].filter(Boolean).join(' · '))}</td><td>${escapeHtml(staff.get(a.employeeId)||a.employeeId||'Unassigned')}</td><td>${escapeHtml(date(a.startAt))}<br>${escapeHtml(date(a.endAt))}</td><td>${escapeHtml(a.passengerCount??'—')} / ${escapeHtml(a.capacity??'—')}</td><td>${escapeHtml(a.status)}</td><td>${editable?`<button class="btn" data-transport-service="${escapeHtml(a.id)}">Edit</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty-state">No bus services available.</td></tr>';
+      const vehicleBody=document.getElementById('transportVehicleBody');
+      vehicleBody.innerHTML=asArray(t.vehicles).map(v=>`<tr><td><b>${escapeHtml(v.name)}</b></td><td>${escapeHtml(v.registration)} · ${escapeHtml(v.countryCode)}</td><td>${escapeHtml(v.baseCode)}</td><td>${escapeHtml(suppliers.get(v.supplierId)||'—')}</td><td>${escapeHtml(v.capacity)}</td><td>${escapeHtml(due(v.inspectionDue))} / ${escapeHtml(due(v.insuranceDue))}</td><td>${escapeHtml(v.status)}</td><td>${editable?`<button class="btn" data-transport-vehicle="${escapeHtml(v.id)}">Edit</button>`:''}</td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">No vehicles available.</td></tr>';
+    }
+    document.addEventListener('click', event => {
+      const service=event.target.closest('[data-transport-service]');
+      const vehicle=event.target.closest('[data-transport-vehicle]');
+      if(service) openTransportService(service.dataset.transportService);
+      if(vehicle) openTransportVehicle(vehicle.dataset.transportVehicle);
+    });
+    function fillSelect(id, items, selected, empty) {
+      const el=document.getElementById(id);
+      el.innerHTML=`<option value="">${escapeHtml(empty)}</option>`+items.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name||x.id)}</option>`).join('');
+      el.value=selected||'';
+    }
+    function fillForm(form, row) {
+      form.reset();
+      for (const field of form.elements) if (field.name && row[field.name] != null) field.value=String(row[field.name]);
+      form.querySelector('.transport-error').textContent='';
+      form.querySelector('[type="submit"]').disabled=false;
+    }
+    function localInput(value) { const d=new Date(value); if(!Number.isFinite(d.getTime()))return ''; const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+    function openTransportVehicle(id='') {
+      if (!STATE.transport.canEdit) return;
+      const row=asArray(STATE.transport.vehicles).find(v=>v.id===id)||{}; if(id&&!row.id)return;
+      STATE.transportEdit={id:row.id||'',updatedAt:row.updatedAt||''};
+      const form=document.getElementById('transportVehicleModal'); fillForm(form,row);
+      fillSelect('tvSupplier',asArray(STATE.transport.suppliers).map(s=>({...s,name:s.name+(s.active===false?' (inactive — choose an active supplier)':'')})),row.supplierId,'No supplier selected');
+      document.getElementById('transportVehicleTitle').textContent=id?'Edit vehicle':'Add vehicle'; showModal('transportVehicleModal');
+    }
+    function openTransportService(id='') {
+      if (!STATE.transport.canEdit) return;
+      const row=asArray(STATE.transport.assignments).find(a=>a.id===id)||{}; if(id&&!row.id)return;
+      STATE.transportEdit={id:row.id||'',updatedAt:row.updatedAt||''};
+      const form=document.getElementById('transportServiceModal'); fillForm(form,{...row,stops:asArray(row.stops).join('\n'),startAt:localInput(row.startAt),endAt:localInput(row.endAt)});
+      fillSelect('tsVehicle',asArray(STATE.transport.vehicles),row.vehicleId,'Choose a vehicle');
+      fillSelect('tsStaff',asArray(STATE.transport.staff),row.employeeId,'Unassigned · draft only');
+      document.getElementById('transportServiceTitle').textContent=id?'Edit bus service':'Add bus service'; showModal('transportServiceModal');
+    }
+    function saveTransportVehicle(event) {
+      event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
+      const values=Object.fromEntries(new FormData(form)); values.capacity=Number(values.capacity);
+      values.id=STATE.transportEdit?.id||''; values.expectedUpdatedAt=STATE.transportEdit?.updatedAt||'';
+      form.querySelector('.transport-error').textContent=''; form.querySelector('[type="submit"]').disabled=true;
+      dispatchAction('SAVE_TRANSPORT_VEHICLE',values);
+    }
+    function saveTransportService(event) {
+      event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
+      const values=Object.fromEntries(new FormData(form)); const start=new Date(values.startAt), end=new Date(values.endAt);
+      if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start>=end){transportError('SAVE_TRANSPORT_ASSIGNMENT','End must be after start.');return;}
+      values.startAt=start.toISOString(); values.endAt=end.toISOString(); values.passengerCount=Number(values.passengerCount); values.stops=values.stops.split('\n').map(x=>x.trim()).filter(Boolean);
+      values.id=STATE.transportEdit?.id||''; values.expectedUpdatedAt=STATE.transportEdit?.updatedAt||'';
+      form.querySelector('.transport-error').textContent=''; form.querySelector('[type="submit"]').disabled=true;
+      dispatchAction('SAVE_TRANSPORT_ASSIGNMENT',values);
     }
 
     function renderMessages() {

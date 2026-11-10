@@ -17,3 +17,16 @@ EOS reads the same staff assignment sources as MyRoster and OPS Control under
 the existing staff authorization boundary. It refreshes every minute while open
 and online, and when the app returns to the foreground or reconnects. Wix
 Bookings availability is independent of the SKANDI staff roster.
+
+## Transport services (2026-11-10 source change)
+
+The active EOS embed keeps its existing shell, roster, clock, support and settings.
+The former flight home/search/detail content now displays the signed-in employee's
+published bus assignments from `vehicle_assignments`. Vehicle, stop and manual
+passenger-count details are recorded by OPS. Draft services are excluded from
+both EOS and MyRoster. The old flight-search backend methods remain for message
+contract compatibility but are not used by the updated EOS screen.
+
+This source has not been published to Wix or checked with a live staff session.
+The transport registry migration and backend publication must be reviewed and
+approved separately; see `docs/ops-transport-workforce.md`.
