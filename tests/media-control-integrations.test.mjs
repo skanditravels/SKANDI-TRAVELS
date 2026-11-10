@@ -26,6 +26,7 @@ test('image service tests call the real discovery path and surface provider fail
  const calls=[];const {api}=make({search:async input=>{calls.push(input);if(input.provider==='openverse')throw new Error('MEDIA_SOURCE_HTTP_403');return {items:[{}]}}});
  assert.equal((await api.testMediaConnectorCore({provider:'wikimedia'})).count,1);
  assert.equal(calls[0].provider,'wikimedia');assert.equal(calls[0].query,'Stockholm');
+ assert.equal((await api.testMediaConnectorCore({provider:'fontsource'})).count,1);assert.equal(calls[1].query,'Inter');
  await assert.rejects(api.testMediaConnectorCore({provider:'openverse'}),/403/);
  await assert.rejects(api.testMediaConnectorCore({provider:'unlisted'}),/not available/);
 });
