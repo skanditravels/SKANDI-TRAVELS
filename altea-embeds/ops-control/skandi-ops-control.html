@@ -183,9 +183,9 @@
             <div class="filter-section">
               <div class="filter-title" onclick="toggleSection(this)">Compliance Status <span>▼</span></div>
               <div class="filter-content">
-                <label class="checkbox-row"><input type="checkbox" value="Legal" class="filter-comp" checked onchange="handleFilterChange()"> <span>Legal</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="Legal" class="filter-comp" checked onchange="handleFilterChange()"> <span>Not assessed / within reference</span></label>
                 <label class="checkbox-row"><input type="checkbox" value="Warning" class="filter-comp" checked onchange="handleFilterChange()"> <span>Warning</span></label>
-                <label class="checkbox-row"><input type="checkbox" value="Violation" class="filter-comp" checked onchange="handleFilterChange()"> <span>Violation</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="Violation" class="filter-comp" checked onchange="handleFilterChange()"> <span>Above reference</span></label>
               </div>
             </div>
 
@@ -214,7 +214,7 @@
           <button class="btn primary" onclick="openVacationModal()">+ Request Vacation Block</button>
         </div>
       </div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Entitlements automatically calculated based on employee base jurisdiction.</div></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Review leave requests and recorded balances. Verify entitlements using the applicable employment rules.</div></div>
       <div class="data-table-container">
         <h3 style="color: var(--j-text-main); margin-bottom: 12px; font-size: 13px;">Submitted Vacation Requests & Awards</h3>
         <table class="j-table">
@@ -234,7 +234,7 @@
 
     <main class="view-container" id="view-ftl">
       <div class="view-toolbar"><h1 class="view-title">Labor Laws & Compliance Monitor</h1></div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted);" id="ftlSubtext">Dynamic limits continuously enforced based on each employee's base region.</div></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);" id="ftlSubtext">Validated limits are not configured. Review applicable rules before operational decisions; this screen does not establish legal compliance.</div></div>
       <div class="data-table-container">
         <table class="j-table">
           <thead><tr><th>Staff Name</th><th>Base / Region</th><th>Role</th><th>7-Day Work Limit</th><th>28-Day Work Limit</th><th>Annual Work Limit</th><th>Active Jurisdiction Rule</th><th>Status</th></tr></thead>
@@ -248,7 +248,7 @@
       <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Pending crew-to-crew exchange requests requiring OCC approval.</div></div>
       <div class="data-table-container">
         <table class="j-table">
-          <thead><tr><th>Request ID</th><th>Staff A</th><th>Staff B</th><th>Exchange Details</th><th>Jurisdiction Check</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Request ID</th><th>Staff A</th><th>Staff B</th><th>Exchange Details</th><th>Rule context</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="tradeTableBody"></tbody>
         </table>
       </div>
@@ -256,12 +256,13 @@
 
     <main class="view-container" id="view-logistics">
       <div class="view-toolbar"><h1 class="view-title">Accommodations & Logistics</h1></div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Manage layover hotels and ground transportation suppliers.</div></div>
-      <div class="data-table-container">
-        <table class="j-table">
-          <thead><tr><th>Ref ID</th><th>Staff Name</th><th>Location</th><th>Supplier</th><th>Service Dates</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="logisticsTableBody"></tbody>
-        </table>
+      <div class="sub-toolbar"><div style="color:var(--j-text-muted)">Manage transport services and vehicles. Suppliers remain in Inventory Control.</div><div class="toolbar-actions"><button class="btn" id="addTransportVehicle" onclick="openTransportVehicle()">Add vehicle</button><button class="btn primary" id="addTransportService" onclick="openTransportService()">Add bus service</button></div></div>
+      <div class="data-table-container transport-workspace">
+        <p id="transportStatus" role="status"></p>
+        <h2>Bus services</h2><p class="transport-note">Published services appear in the assigned employee’s roster. Bus-to-bus conflicts are checked; review other duty types in the roster.</p>
+        <div class="transport-table"><table class="j-table"><thead><tr><th>Service</th><th>Vehicle</th><th>Staff</th><th>Start / end (device time)</th><th>Passengers / seats</th><th>Status</th><th></th></tr></thead><tbody id="transportServiceBody"></tbody></table></div>
+        <h2>Vehicles</h2><div class="transport-table"><table class="j-table"><thead><tr><th>Vehicle</th><th>Registration</th><th>Base</th><th>Supplier</th><th>Seats</th><th>Inspection / insurance</th><th>Status</th><th></th></tr></thead><tbody id="transportVehicleBody"></tbody></table></div>
+        <h2>Other logistics</h2><div class="transport-table"><table class="j-table"><thead><tr><th>Ref ID</th><th>Staff Name</th><th>Location</th><th>Supplier</th><th>Service Dates</th><th>Status</th><th>Actions</th></tr></thead><tbody id="logisticsTableBody"></tbody></table></div>
       </div>
     </main>
 
@@ -281,7 +282,7 @@
 
     <main class="view-container" id="view-audit">
       <div class="view-toolbar"><h1 class="view-title">System Reports & Audit Log</h1></div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Immutable record of all operational modifications and approvals.</div></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Recent audit events from the connected operations sources.</div></div>
       <div class="data-table-container">
         <table class="j-table">
           <thead><tr><th>Timestamp (ZULU)</th><th>Action</th><th>Details</th><th>Status</th></tr></thead>
@@ -349,6 +350,38 @@
   </div>
 
   <div class="overlay" id="modalOverlay" onclick="closeModalOnBgClick(event)">
+    <form class="modal transport-modal" id="transportVehicleModal" onsubmit="saveTransportVehicle(event)">
+      <div class="modal-header"><span id="transportVehicleTitle">Add vehicle</span><button class="icon-btn" type="button" aria-label="Close" onclick="closeModal()">✕</button></div>
+      <div class="modal-body transport-fields">
+        <div class="form-group"><label for="tvName">Vehicle name</label><input id="tvName" name="name" required maxlength="160"></div>
+        <div class="form-group"><label for="tvRegistration">Registration</label><input id="tvRegistration" name="registration" required maxlength="40"></div>
+        <div class="form-group"><label for="tvCountry">Country code</label><input id="tvCountry" name="countryCode" required pattern="[A-Za-z]{2}" maxlength="2" placeholder="SE"></div>
+        <div class="form-group"><label for="tvBase">Base code</label><input id="tvBase" name="baseCode" required maxlength="80"></div>
+        <div class="form-group"><label for="tvSupplier">Supplier</label><select id="tvSupplier" name="supplierId"></select></div>
+        <div class="form-group"><label for="tvCapacity">Passenger seats</label><input id="tvCapacity" name="capacity" type="number" min="1" max="150" required></div>
+        <div class="form-group"><label for="tvClass">Vehicle class</label><select id="tvClass" name="serviceClass"><option value="STANDARD">Standard</option><option value="COMFORT">Comfort</option><option value="PREMIUM">Premium</option><option value="ACCESSIBLE">Accessible</option></select></div>
+        <div class="form-group"><label for="tvStatus">Status</label><select id="tvStatus" name="status"><option value="AVAILABLE">Available</option><option value="MAINTENANCE">Maintenance</option><option value="OUT_OF_SERVICE">Out of service</option><option value="RETIRED">Retired</option></select></div>
+        <div class="form-group"><label for="tvInspection">Inspection due</label><input id="tvInspection" name="inspectionDue" type="date"></div>
+        <div class="form-group"><label for="tvInsurance">Insurance due</label><input id="tvInsurance" name="insuranceDue" type="date"></div>
+      </div><p class="transport-note">Due dates are reminders and do not establish legal compliance.</p><div class="modal-footer transport-actions"><p id="transportVehicleError" class="transport-error" role="alert"></p><button class="btn" type="button" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save vehicle</button></div>
+    </form>
+    <form class="modal transport-modal" id="transportServiceModal" onsubmit="saveTransportService(event)">
+      <div class="modal-header"><span id="transportServiceTitle">Add bus service</span><button class="icon-btn" type="button" aria-label="Close" onclick="closeModal()">✕</button></div>
+      <div class="modal-body transport-fields">
+        <div class="form-group"><label for="tsLabel">Service name</label><input id="tsLabel" name="label" required maxlength="160"></div>
+        <div class="form-group"><label for="tsVehicle">Vehicle</label><select id="tsVehicle" name="vehicleId" required></select></div>
+        <div class="form-group"><label for="tsStaff">Assigned employee</label><select id="tsStaff" name="employeeId"></select></div>
+        <div class="form-group"><label for="tsStatus">Status</label><select id="tsStatus" name="status"><option value="DRAFT">Draft</option><option value="SCHEDULED">Scheduled · publish</option><option value="CONFIRMED">Confirmed · publish</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select></div>
+        <div class="form-group"><label for="tsStart">Start · device time zone</label><input id="tsStart" name="startAt" type="datetime-local" required></div>
+        <div class="form-group"><label for="tsEnd">End · device time zone</label><input id="tsEnd" name="endAt" type="datetime-local" required></div>
+        <div class="form-group"><label for="tsPassengers">Passengers · manual count</label><input id="tsPassengers" name="passengerCount" type="number" min="0" max="10000" required></div>
+        <div class="form-group"><label for="tsRoute">Route reference (optional)</label><input id="tsRoute" name="routeId" maxlength="120"></div>
+        <div class="form-group"><label for="tsBooking">Booking reference (optional)</label><input id="tsBooking" name="bookingReference" maxlength="120"></div>
+        <div class="form-group"><label for="tsStops">Stops · one per line, in order</label><textarea id="tsStops" name="stops" rows="3"></textarea></div>
+        <div class="form-group"><label for="tsNotes">Notes for assigned employee</label><textarea id="tsNotes" name="notes" maxlength="500" rows="3"></textarea></div>
+      </div><div class="modal-footer transport-actions"><p id="transportServiceError" class="transport-error" role="alert"></p><button class="btn" type="button" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save service</button></div>
+    </form>
+
     <div class="modal" id="editModal">
       <div class="modal-header">
         <span>Edit Operation</span>
@@ -442,7 +475,7 @@
     <div class="modal" id="optimizerModal">
       <div class="modal-header"><span>Travchant Optimizer Engine</span></div>
       <div class="modal-body">
-        <div style="font-size: 12px; color: var(--j-text-muted); margin-bottom: 10px;" id="optJurisdictionNote">Resolving network disruptions using Multi-Jurisdictional legality matrices...</div>
+        <div style="font-size: 12px; color: var(--j-text-muted); margin-bottom: 10px;" id="optJurisdictionNote">Reviewing disruption candidates against configured reference values...</div>
         <div class="console-box" id="optConsole"><div class="console-line info">> Initializing optimization core...</div></div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">

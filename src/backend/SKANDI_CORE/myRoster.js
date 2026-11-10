@@ -2,7 +2,7 @@
 // Each read/write is scoped to the authenticated staff identity from staffAuth.
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
-import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes } from "backend/SKANDI_CORE/rosterAssignments";
+import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes, rosterAssignmentVisible, rosterTransportDetails } from "backend/SKANDI_CORE/rosterAssignments";
 
 const ASSIGNMENT_TABLES = Object.keys(ROSTER_ASSIGNMENT_SOURCES);
 const OWNER_COLUMNS = Object.freeze({
@@ -143,7 +143,7 @@ async function queryOwned(table, select, options = {}) {
       if (options.order) query.order = options.order;
       const result = await restRequest({ table, method: "GET", query });
       for (const row of rowsOf(result)) {
-        if (owns(row, ids)) collected.push(row);
+        if (owns(row, ids) && rosterAssignmentVisible(row, table)) collected.push(row);
       }
     }
   }
@@ -161,6 +161,7 @@ function normalizeAssignment(row, table) {
   return {
     id: clean(row.id, 160),
     sourceTable: table,
+    transport: rosterTransportDetails(row, payload),
     startAt: clean(start, 100),
     endAt: clean(end, 100),
     status: clean(row.status || payload.status || "SCHEDULED", 60),

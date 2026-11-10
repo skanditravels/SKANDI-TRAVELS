@@ -1,11 +1,11 @@
 // EOS is the authenticated mobile/tablet operations surface for ALTEA.
-// All roster rows are scoped to the signed-in staff identity; flight data comes
-// from the live ALTEA FIDS and inventory schedule, never embedded examples.
+// All roster rows, including bus services, are scoped to the signed-in staff
+// identity. Legacy flight search methods retain their existing provider sources.
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
-import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes } from "backend/SKANDI_CORE/rosterAssignments";
+import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes, rosterAssignmentVisible, rosterTransportDetails } from "backend/SKANDI_CORE/rosterAssignments";
 
-const ACTIONS = new Set(["SAFETY_REPORT", "FLIGHT_ISSUE", "STATION_UPDATE", "CREW_SUPPORT", "DUTY_NOTE"]);
+const ACTIONS = new Set(["SAFETY_REPORT", "FLIGHT_ISSUE", "VEHICLE_ISSUE", "STATION_UPDATE", "CREW_SUPPORT", "DUTY_NOTE"]);
 const MAX_ROWS = "300";
 
 function clean(value, max=500) { return String(value == null ? "" : value).replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0,max); }
@@ -52,7 +52,7 @@ async function queryOwned(table, context) {
   const found=[];
   for (const column of definition.ownerColumns) for (const identifier of context.identifiers) {
     const result=await restRequest({table,method:"GET",query:{select:definition.select,[column]:"eq."+identifier,limit:MAX_ROWS}});
-    for (const row of rowsOf(result)) if (owns(row,context.identifiers)) found.push(row);
+    for (const row of rowsOf(result)) if (owns(row,context.identifiers) && rosterAssignmentVisible(row,table)) found.push(row);
   }
   const seen=new Set();
   return found.filter(row=>row.id&&!seen.has(String(row.id))&&seen.add(String(row.id)));
@@ -61,7 +61,7 @@ function normalizeAssignment(row,table) {
   const p=obj(row.payload);
   const {start,end}=rosterAssignmentTimes(row,p);
   return {
-    id:clean(row.id,160), sourceTable:table,
+    id:clean(row.id,160), sourceTable:table, transport:rosterTransportDetails(row,p),
     label:clean(rosterAssignmentLabel(row,p)||"Operational duty",180),
     type:clean(p.activityType||row.assignment_type||p.assignmentType||p.type||"duty",80),
     route:clean(row.route||p.route||"",120), routeId:clean(row.route_id||p.routeId||"",120),
@@ -146,18 +146,11 @@ async function clockRows(context) {
 }
 export async function getEosBootstrapCore(input={}) {
   const context=await authorizedSession();
-  const from=validDate(input.from)?input.from:new Date().toISOString().slice(0,10);
-  const to=validDate(input.to)?input.to:new Date(Date.now()+2*86400000).toISOString().slice(0,10);
   const tables=Object.keys(ROSTER_ASSIGNMENT_SOURCES);
   const code=stationCode(context);
-  const [sets,clockEvents,flights,stationResult]=await Promise.all([
-    Promise.all(tables.map(table=>queryOwned(table,context))),clockRows(context),flightsForStation(context,{from,to}),
-    code?restRequest({table:"travel_info_airports",method:"GET",query:{select:"ID,iata,icao,title,locationCity,country,timezone,summary",iata:"eq."+code,altea_visible:"eq.true",limit:"1"}}):Promise.resolve([])
-  ]);
+  const [sets,clockEvents]=await Promise.all([Promise.all(tables.map(table=>queryOwned(table,context))),clockRows(context)]);
   const assignments=sets.flatMap((rows,index)=>rows.map(row=>normalizeAssignment(row,tables[index]))).sort((a,b)=>(Date.parse(a.startAt)||0)-(Date.parse(b.startAt)||0));
-  const stationRow=rowsOf(stationResult)[0]||{};
-  const station=code?{code,name:clean(stationRow.title||stationRow.name||stationRow.airport_name||stationRow.locationCity||context.profile.baseName||context.profile.station||code,180),city:clean(stationRow.locationCity||stationRow.city||"",120),country:clean(stationRow.country||stationRow.country_name||"",100),timezone:clean(stationRow.timezone||"",80),summary:clean(stationRow.summary||"",400)}:null;
-  return {ok:true,profile:publicProfile(context),base:{code:clean(context.profile.baseCode||"",80),name:clean(context.profile.baseName||context.profile.station||context.profile.base||"",160),airportIata:code,destinationCode:code},station,stations:station?[station]:[],assignments,clockEvents,flights,requests:[],syncedAt:new Date().toISOString()};
+  return {ok:true,profile:publicProfile(context),base:{code:clean(context.profile.baseCode||"",80),name:clean(context.profile.baseName||context.profile.station||context.profile.base||"",160),airportIata:code,destinationCode:code},station:null,stations:[],assignments,clockEvents,flights:[],requests:[],syncedAt:new Date().toISOString()};
 }
 export async function searchEosFlightsCore(input={}) {
   const context=await authorizedSession();

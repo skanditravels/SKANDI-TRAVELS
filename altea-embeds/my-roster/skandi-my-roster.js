@@ -110,6 +110,16 @@
     }).join("");
   }
   function renderBriefing(flight = {}, assignment = null) {
+    const title = $("#briefingDialogTitle");
+    if (title) title.textContent = assignment?.transport ? "Bus service details" : "CARI briefing card";
+    if (assignment?.transport) {
+      const bus = assignment.transport;
+      const paper = $("#briefingPaper");
+      if (!paper) return;
+      paper.innerHTML = `<h2>${escapeHtml(assignmentTitle(assignment))}</h2><p class="mr-cari-subtitle">Published bus service assigned to your staff profile.</p><div class="mr-cari-rule"></div><h3>VEHICLE AND SERVICE</h3><div class="mr-cari-grid"><div><span>VEHICLE</span><strong>${escapeHtml(bus.vehicleName || "Not supplied")}</strong></div><div><span>REGISTRATION</span><strong>${escapeHtml(bus.registration || "Not supplied")}</strong></div><div><span>START</span><strong>${escapeHtml(formatDateTime(assignment.startAt))}</strong></div><div><span>END</span><strong>${escapeHtml(formatDateTime(assignment.endAt))}</strong></div><div><span>SEATS</span><strong>${escapeHtml(bus.seatCapacity ?? "Not supplied")}</strong></div><div><span>PASSENGERS ENTERED BY OPS</span><strong>${escapeHtml(bus.passengerCount ?? "Not supplied")}</strong></div><div><span>STATUS</span><strong>${escapeHtml(assignment.status || "Not supplied")}</strong></div></div><div class="mr-cari-rule"></div><h3>STOPS</h3><p>${escapeHtml(bus.stops?.join(" → ") || "Not supplied")}</p>${assignment.notes ? `<h3>OPS NOTES</h3><p>${escapeHtml(assignment.notes)}</p>` : ""}`;
+      openDialog($("#briefingDialog"));
+      return;
+    }
     const profile = state.boot?.profile || {};
     const staffName = profile.displayName || profile.fullName || profile.preferredName || "Authenticated SKANDI staff member";
     const staffId = profile.agentId || profile.skId || "—";
@@ -294,8 +304,8 @@
     return `<span class="mr-status ${statusClass(value)}">${escapeHtml(label)}</span>`;
   }
   function rowAction(assignment) {
-    const canBrief = assignment.flightNumber || assignment.origin || assignment.destination || assignment.routeId || assignment.reference;
-    const briefing = canBrief ? `<button class="mr-row-action" type="button" data-brief-assignment="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">CARI / Print</button>` : "";
+    const canBrief = assignment.transport || assignment.flightNumber || assignment.origin || assignment.destination || assignment.routeId || assignment.reference;
+    const briefing = canBrief ? `<button class="mr-row-action" type="button" data-brief-assignment="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">${assignment.transport ? "Bus details" : "CARI / Print"}</button>` : "";
     return `<div class="mr-row-actions">${briefing}<button class="mr-row-action" type="button" data-change="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">Request change</button></div>`;
   }
   function assignmentRow(assignment) {

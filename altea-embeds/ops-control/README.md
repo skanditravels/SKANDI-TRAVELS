@@ -26,6 +26,8 @@
 
 ## Change log
 
+- 2026-11-10 — Prepared vehicle registration and bus-service editing in the existing logistics workspace. Uses the shared `vehicle_assignments` staff roster, a new vehicle registry and transactional audit events; drafts remain OPS-only. Vehicle/staff bus overlaps and capacity are checked when publishing. Existing hardcoded labor limits were removed because the jurisdiction source does not contain validated limits. Source and isolated database tests only; migration and Wix publication are pending approval. See `docs/ops-transport-workforce.md`.
+
 - 2026-10-14 — Established the complete OPS Control HTML_REF from the supplied embed and current GitHub route/controller evidence.
 - 2026-10-14 — Replaced the incorrect `opsControl.web.js` content (which contained the customer-profile facade) with the canonical OPS web-method boundary.
 - 2026-10-14 — Repaired `opsControl.js` bootstrap so every referenced workforce/roster/assignment/compliance source is actually loaded before projection; preserved existing action names and server-side write authorization.

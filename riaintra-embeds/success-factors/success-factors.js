@@ -1453,6 +1453,13 @@
           ["Base Airport IATA", ["baseAirportIata", "stationIata"]],
           ["Current Base Seniority Date", ["currentBaseSeniorityDate", "baseSeniorityDate"]],
           ["Date of Hire", ["hireDate", "startDate", "employmentStartDate"]],
+          ["Home Base", ["homeBase"]],
+          ["Deployment Destination", ["deploymentDestination"]],
+          ["Deployment Start Date", ["deploymentStartDate"]],
+          ["Deployment End Date", ["deploymentEndDate"]],
+          ["Accommodation Location", ["accommodationLocation"]],
+          ["Contract Type", ["contractType"]],
+          ["Season", ["deploymentSeason"]],
           ["Employment Status", ["employmentStatus", "status", "activeStatus"]],
           ["Classification Status", ["classificationStatus"]],
           ["Manager Name", ["managerName", "reportsToName"]],
@@ -3887,7 +3894,7 @@
                 ["Document", ["title", "documentType", "document_type"]],
                 ["ID", ["documentId", "id"]],
                 ["Status", ["verificationStatus", "status"], "status"],
-                ["File", record => record.fileUrl || record.url ? "Available" : "—"]
+                ["File", record => record.fileUrl || record.file_url || record.url ? "Available" : "—"]
               ], {
                 action: "careers-verify-document",
                 id: record => String(record.documentId || record.id || record._id || ""),
@@ -4335,6 +4342,7 @@
                 ? `<label class="hr-field wide"><span>${label}</span><textarea class="hr-textarea" name="${name}"></textarea></label>`
                 : `<label class="hr-field"><span>${label}</span><input class="hr-input" type="${type}" name="${name}"></label>`
               ).join("")}
+              ${kind === "onboarding" ? `<label class="hr-field"><span>Assigned to</span><select class="hr-select" name="assignee"><option value="RECRUITING">Recruiting team</option><option value="EMPLOYEE">Linked hired employee</option></select><small>The employee sees their task after staff access is granted. Recruiting must complete required pre-access tasks.</small></label>` : ""}
             </div>
           </form>
         `,
@@ -5203,7 +5211,11 @@
         post("CAREERS_DOCUMENT_UPLOAD_REQUEST", { candidateId: id || hrSelectedCandidateId });
       } else if (action === "careers-verify-document") {
         if (!hasRecruitingAccess()) return;
-        post("CAREERS_VERIFY_DOCUMENT", { documentId: id, candidateId: hrSelectedCandidateId });
+        openDialog({
+          id:"career-verify-document", title:"Verify document", subtitle:"Record the evidence you reviewed",
+          body:`<form id="careerVerifyDocumentForm"><input type="hidden" name="documentId" value="${escapeHtml(id)}"><input type="hidden" name="candidateId" value="${escapeHtml(hrSelectedCandidateId)}"><p>If no file is attached, enter the location or reference for the document you reviewed. Do not enter document numbers.</p><label class="hr-field"><span>Evidence reference</span><input class="hr-input" name="evidenceReference" maxlength="300" placeholder="For example, secure personnel file reference"></label></form>`,
+          footer:'<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerVerifyDocumentForm">Verify</button>'
+        });
       } else if (action === "careers-create-packet") {
         if (!hasRecruitingAccess()) return;
         const candidate = selectedRecruitingCandidate();
@@ -5270,6 +5282,7 @@
           body: `<form id="careerOnboardingForm">
             <input type="hidden" name="id" value="${escapeHtml(task.id)}">
             <label class="hr-field"><span>Status</span><select class="hr-select" name="status">${statuses.map(status => `<option value="${escapeHtml(status)}">${escapeHtml(status.replaceAll("_", " "))}</option>`).join("")}</select></label>
+            <label class="hr-field"><span>Assigned to</span><select class="hr-select" name="assignee"><option value="KEEP">Keep current owner</option><option value="RECRUITING">Recruiting team</option><option value="EMPLOYEE">Linked hired employee</option></select><small>The employee sees their task after staff access is granted. Recruiting must complete required pre-access tasks.</small></label>
           </form>`,
           footer: '<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerOnboardingForm">Save</button>'
         });
@@ -5468,6 +5481,9 @@
       } else if (form.id === "careerOnboardingForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_ONBOARDING_TASK", { item: serializeForm(form) });
+      } else if (form.id === "careerVerifyDocumentForm") {
+        if (!hasRecruitingAccess()) return;
+        post("CAREERS_VERIFY_DOCUMENT", serializeForm(form));
       } else if (form.id === "careerSettingsForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_SETTINGS", { item: serializeForm(form) });
