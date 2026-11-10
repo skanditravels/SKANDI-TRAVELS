@@ -90,20 +90,21 @@
 </div>
 
 <header class="mm-appbar" aria-label="Media Control">
-  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>Your content workspace</span></div></div>
-  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span> Menu</button>
+  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span class="mc-menu-button-label">Menu</span></button>
+  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>SKANDI · Digital content</span></div></div>
   <div class="mm-account"><div class="mm-account-badge" id="mmUserInitials">SK</div><div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div></div>
 </header>
 <div class="app">
   <header class="header" hidden><button id="moduleHeaderMobileMenuBtn" type="button">Menu</button><span id="sessionLine"><span id="clock">--:--</span></span></header>
   <div class="shell mc-shell">
-    <aside class="sidebar mc-sidebar" id="mcSidebar" aria-label="Media Control navigation">
-      <div class="mc-menu-heading"><span>WORKSPACES</span><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+    <aside class="sidebar mc-sidebar" id="mcSidebar" role="dialog" aria-modal="true" aria-labelledby="mcMenuTitle" aria-hidden="true" inert>
+      <div class="mc-menu-heading"><div><span class="mc-menu-kicker">SKANDI</span><strong id="mcMenuTitle">Media Control</strong><small>Content workspace</small></div><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+      <label class="mc-menu-search"><span>Find a workspace</span><input id="mcMenuSearch" type="search" placeholder="Search workspaces" autocomplete="off"></label>
       <nav class="mm-modules" id="mmModules" aria-label="Workspaces"></nav>
       <nav id="nav" class="mc-subnav" aria-label="Workspace sections"></nav>
     </aside>
     <main class="workspace mc-workspace">
-      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle">Overview</h1></div></section>
+      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle" tabindex="-1">Overview</h1></div></section>
       <div class="toolbar mc-toolbar">
         <label class="mc-search-label" for="globalQuery">Search this section</label><input class="input search" id="globalQuery" type="search" placeholder="Search" />
         <button class="btn primary" data-action="save-current" hidden>Save current</button>
@@ -114,7 +115,7 @@
     </main>
   </div>
 </div>
-<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer-overlay" id="mcDrawerOverlay" aria-hidden="true"></div>
 <div class="toast" id="toast"></div>
 <div class="modalOverlay" id="modalOverlay">
   <div class="modal">

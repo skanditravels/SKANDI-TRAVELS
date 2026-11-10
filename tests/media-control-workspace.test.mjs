@@ -26,6 +26,35 @@ test('overview has task-oriented navigation and stores only interface preference
  d.getElementById('mobileMenuBtn').click();assert.equal(d.getElementById('mobileMenuBtn').getAttribute('aria-expanded'),'true');d.getElementById('mcCloseMenu').click();assert.equal(d.getElementById('mobileMenuBtn').getAttribute('aria-expanded'),'false');
 });
 
+test('workspace drawer searches every section and closes accessibly after navigation',t=>{
+ const {w,d,dom}=setup();t.after(()=>dom.window.close());
+ const menu=d.getElementById('mcSidebar'),toggle=d.getElementById('mobileMenuBtn'),search=d.getElementById('mcMenuSearch');
+ assert.equal(menu.getAttribute('aria-hidden'),'true');assert(menu.hasAttribute('inert'));
+ toggle.click();assert.equal(toggle.getAttribute('aria-expanded'),'true');assert.equal(menu.getAttribute('aria-hidden'),'false');assert(!menu.hasAttribute('inert'));assert.equal(d.activeElement,search);
+ search.value='destination research';search.dispatchEvent(new w.Event('input',{bubbles:true}));
+ assert(d.getElementById('mmModules').hidden);const result=d.querySelector('#nav [data-panel="research"]');assert(result);assert.match(result.textContent,/Destination Research/);
+ result.click();assert.equal(d.getElementById('mmPageTitle').textContent,'Destination Research');assert.equal(menu.getAttribute('aria-hidden'),'true');assert(menu.hasAttribute('inert'));assert.equal(toggle.getAttribute('aria-expanded'),'false');assert.equal(d.activeElement,d.getElementById('mmPageTitle'));
+ toggle.click();const close=d.getElementById('mcCloseMenu');close.focus();const tab=new w.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true});close.dispatchEvent(tab);assert(tab.defaultPrevented);assert(menu.contains(d.activeElement));
+ d.activeElement.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert.equal(toggle.getAttribute('aria-expanded'),'false');assert.equal(d.activeElement,toggle);
+ toggle.click();d.getElementById('mcDrawerOverlay').click();assert.equal(toggle.getAttribute('aria-expanded'),'false');
+});
+
+test('overview counts distinguish loaded records from unavailable data',t=>{
+ const {d,dom,receive}=setup();t.after(()=>dom.window.close());
+ assert.equal(d.querySelector('[data-mc-count="assets"]').textContent,'—');assert.equal(d.querySelector('[data-mc-count="pressreleases"]').textContent,'—');
+ receive('MEDIA_CONTROL_LIBRARY',{assets:[{id:'one'},{id:'two'}]});assert.equal(d.querySelector('[data-mc-count="assets"]').textContent,'2');
+ receive('NEWSROOM_ADMIN_DATA',{data:{posts:[{id:'one'}]}});assert.equal(d.querySelector('[data-mc-count="pressreleases"]').textContent,'1');assert.equal(d.querySelector('[data-mc-count="assets"]').textContent,'2');
+});
+
+test('all content workspaces remain reachable from the slide-out menu',t=>{
+ const {d,dom}=setup();t.after(()=>dom.window.close());const toggle=d.getElementById('mobileMenuBtn');
+ for(const [module,panel] of [['website','websiteeditor'],['assets','assets'],['voy','dashboard'],['newsroom','pressreleases'],['marketing','campaign'],['review','presentationmatrix']]){
+  if(toggle.getAttribute('aria-expanded')!=='true')toggle.click();
+  const button=d.querySelector(`#mmModules [data-module="${module}"]`);assert(button);button.click();assert(d.getElementById(`panel-${panel}`).classList.contains('active'));
+  if(toggle.getAttribute('aria-expanded')==='true')d.getElementById('mcCloseMenu').click();
+ }
+});
+
 test('background updates and workspace navigation do not erase unsaved page copy',t=>{
  const {w,d,dom,receive}=setup();t.after(()=>dom.window.close());d.querySelector('[data-panel="websiteeditor"]').click();d.querySelector('[data-panel="webcontent"]').click();const field=d.getElementById('webContentValue');assert(field);field.value='Unfinished copy';field.dispatchEvent(new w.Event('input',{bubbles:true}));
  receive('VOY_ADMIN_BOOTSTRAP_RESULT',{issues:[],pages:[],articles:[],assets:[]});assert.equal(d.getElementById('webContentValue'),field);assert.equal(field.value,'Unfinished copy');
@@ -79,6 +108,7 @@ test('library errors are shown by the action and stale responses are ignored',as
 
 test('connection tests use the approved bridge and show actual success or failure',async t=>{
  const {d,dom,sent,receive}=setup();t.after(()=>dom.window.close());d.querySelector('[data-module="review"]').click();d.querySelector('[data-panel="api"]').click();await new Promise(resolve=>setTimeout(resolve,40));
+ assert(d.querySelector('[data-mi-test="research"]'));const unverified=d.querySelector('[data-mi-card="travelbriefing"]');assert.match(unverified.textContent,/Not connected/);assert(!unverified.querySelector('[data-mi-test]'));
  const testButton=d.querySelector('[data-mi-test="wikimedia"]');assert(testButton);assert.equal(testButton.closest('.mi-card').querySelector('[data-mi-state]').textContent,'Not tested');testButton.click();
  const request=sent.filter(x=>x.type==='MEDIA_CONTROL_WEBSITE_ACTION'&&x.payload.action==='TEST_MEDIA_CONNECTOR').at(-1);assert.equal(request.payload.input.provider,'wikimedia');receive('MEDIA_CONTROL_WEBSITE_RESULT',{requestId:request.payload.requestId,result:{ok:true,count:3}});await tick();assert.match(testButton.closest('.mi-card').querySelector('[data-mi-state]').textContent,/Responded · 3 results/);
  testButton.click();const failed=sent.filter(x=>x.type==='MEDIA_CONTROL_WEBSITE_ACTION'&&x.payload.action==='TEST_MEDIA_CONNECTOR').at(-1);receive('MEDIA_CONTROL_ERROR',{requestId:failed.payload.requestId,message:'Service is unavailable.'});await tick();assert.equal(testButton.nextElementSibling.textContent,'Service is unavailable.');assert.equal(testButton.closest('.mi-card').querySelector('[data-mi-state]').textContent,'Could not verify');
