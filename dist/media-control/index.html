@@ -4326,7 +4326,18 @@ body.mobile-drawer-open #skandi-shell-root #skandi-app-root .drawer-overlay{opac
 @media(max-width:1020px){
  #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-desktop-menu{display:none!important}
  #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-bottom-menu{display:flex;min-height:44px;padding:4px 9px;border:1px solid #b8cad5;border-radius:6px;background:#fff;color:#244b68}
- #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn{font-size:max(13px, clamp(9px,2.7vw,11px));letter-spacing:0}
+ /* Keep both menu controls tappable: the shared drawer and its backdrop would
+    otherwise cover the bottom bar, including the adjacent sign-out action. */
+ body.mobile-drawer-open #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-container{z-index:12001}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root{position:relative;z-index:7;display:flex}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-container #drawer{bottom:calc(var(--sk-shell-nav,68px) + env(safe-area-inset-bottom,0px));height:auto!important;max-height:none}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-app-root .mc-sidebar{bottom:calc(var(--sk-shell-nav,68px) + env(safe-area-inset-bottom,0px))!important;height:auto!important}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn{flex:1 1 0;min-width:0;font-size:max(13px, clamp(9px,2.7vw,11px));letter-spacing:0}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn:first-child{flex-grow:1.4}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn:nth-child(2),#skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn:last-child{flex-grow:.9}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn:nth-child(3){flex-grow:1.12}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn:nth-child(4){flex-grow:.95}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .mc-bottom-menu{display:flex;min-width:0;color:#d0e5f2}
  #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .mc-bottom-menu[aria-expanded="true"]{background:#ffffff1f;color:#fff}
 }
