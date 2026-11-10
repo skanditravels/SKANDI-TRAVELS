@@ -88,9 +88,10 @@ export const handleMediaControlAssetAction = webMethod(
     try { return await handler(object(request.payload)); }
     catch (error) {
       const code = String(error?.code || '');
+      const approved = Object.prototype.hasOwnProperty.call(INTEGRATION_ERRORS, code);
       return { ok:false, error:{
-        code:INTEGRATION_ERRORS[code] ? code : 'MEDIA_CONTROL_INTEGRATION_FAILED',
-        message:INTEGRATION_ERRORS[code] || 'The request could not be completed. Check your access and service configuration, then try again.'
+        code:approved ? code : 'MEDIA_CONTROL_INTEGRATION_FAILED',
+        message:approved ? INTEGRATION_ERRORS[code] : 'The request could not be completed. Check your access and service configuration, then try again.'
       } };
     }
   }

@@ -73,11 +73,18 @@ export async function destinationResearchCore(input = {}) {
   const query = clean(input.destination, 120), lang = clean(input.language || 'en', 5).toLowerCase();
   if (query.length < 2) return fail('DESTINATION_REQUIRED', 'Enter a destination to research.');
   if (!['en','sv','no','da','fi'].includes(lang)) return fail('RESEARCH_LANGUAGE_INVALID', 'Choose a supported language.');
-  const params = new URLSearchParams({ action:'query', format:'json', formatversion:'2', generator:'search', gsrsearch:query, gsrnamespace:'0', gsrlimit:'3', prop:'extracts|info', exintro:'1', explaintext:'1', inprop:'url' });
+  const params = new URLSearchParams({ action:'query', format:'json', formatversion:'2', generator:'search', gsrsearch:query, gsrnamespace:'0', gsrlimit:'3', prop:'extracts|info|coordinates|pageprops', ppprop:'disambiguation', exintro:'1', explaintext:'1', inprop:'url' });
   const data = await json(`https://${lang}.wikipedia.org/w/api.php?`+params.toString(), { headers:{ 'User-Agent':USER_AGENT, 'Api-User-Agent':USER_AGENT } }, 'Wikipedia');
   if (data.error) return fail('RESEARCH_PROVIDER_ERROR', 'Wikipedia could not complete the search.');
   const pages = Array.isArray(data.query?.pages) ? data.query.pages : [];
-  const sources = pages.map(page => ({ title:clean(page.title,200), summary:clean(page.extract,4000), url:clean(page.fullurl,1000) })).filter(page=>page.title && page.url.startsWith(`https://${lang}.wikipedia.org/`));
+  const candidates = pages.filter(page=>!Object.prototype.hasOwnProperty.call(page.pageprops || {}, 'disambiguation') && !/\(disambiguation\)$/i.test(String(page.title || '')))
+    .map(page => ({ title:clean(page.title,200), summary:clean(page.extract,4000), url:clean(page.fullurl,1000), isPlace:Array.isArray(page.coordinates) && page.coordinates.length>0 }))
+    .filter(page=>page.title && page.url.startsWith(`https://${lang}.wikipedia.org/`));
+  // Search results can include unrelated phrases that contain a city name.
+  // Prefer the exact title and geographically located pages; if Wikipedia
+  // has no coordinates, offer only its best remaining result for review.
+  const preferred = candidates.filter(page=>page.title.toLocaleLowerCase()===query.toLocaleLowerCase() || page.isPlace);
+  const sources = (preferred.length ? preferred : candidates.slice(0,1)).map(({isPlace,...page})=>page);
   return { ok:true, destination:query, language:lang, sources, reviewRequired:true };
 }
 async function googleToken() {

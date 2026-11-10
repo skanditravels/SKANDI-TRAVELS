@@ -48,8 +48,8 @@ test('editorial AI sends only requested copy and returns a reviewable suggestion
  await assert.rejects(api.mediaCopyCore({text:'Example',language:'xx'}),/supported language/);
 });
 
-test('research only returns verified Wikipedia links and validates language',async()=>{
- const {api,sent}=make({fetch:async()=>ok({query:{pages:[{title:'Stockholm',extract:'A city.',fullurl:'https://en.wikipedia.org/wiki/Stockholm'},{title:'Bad',extract:'Bad',fullurl:'https://evil.example/'}]}})});
+test('research favors places and omits unrelated or untrusted Wikipedia results',async()=>{
+ const {api,sent}=make({fetch:async()=>ok({query:{pages:[{title:'Stockholm',extract:'A city.',fullurl:'https://en.wikipedia.org/wiki/Stockholm',coordinates:[{lat:59.3,lon:18.1}]},{title:'Stockholm syndrome',extract:'Unrelated.',fullurl:'https://en.wikipedia.org/wiki/Stockholm_syndrome'},{title:'Stockholm (disambiguation)',fullurl:'https://en.wikipedia.org/wiki/Stockholm_(disambiguation)',pageprops:{disambiguation:''}},{title:'Bad',extract:'Bad',fullurl:'https://evil.example/'}]}})});
  const result=await api.destinationResearchCore({destination:'Stockholm',language:'en'});assert.equal(result.sources.length,1);assert.equal(result.sources[0].title,'Stockholm');assert(result.reviewRequired);assert.match(sent[0].url,/^https:\/\/en\.wikipedia\.org\/w\/api\.php/);
  await assert.rejects(api.destinationResearchCore({destination:'Stockholm',language:'../../example'}),/supported language/);
 });
