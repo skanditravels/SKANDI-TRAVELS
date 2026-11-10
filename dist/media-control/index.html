@@ -2350,51 +2350,27 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </nav>
 </div>
 
-<header class="mm-appbar" aria-label="Magazine Manager navigation">
-  <div class="mm-brand">
-    <div class="mm-brand-mark" aria-hidden="true">MM</div>
-    <div class="mm-brand-copy"><b>MEDIA MANAGER</b><span>VOY · Newsroom · Website planning · Media control</span></div>
-  </div>
-  <nav class="mm-modules" id="mmModules" aria-label="Primary modules"></nav>
-  <div class="mm-account">
-    <div class="mm-account-badge" id="mmUserInitials">SK</div>
-    <div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div>
-  </div>
+<header class="mm-appbar" aria-label="Media Control">
+  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>Your content workspace</span></div></div>
+  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span> Menu</button>
+  <div class="mm-account"><div class="mm-account-badge" id="mmUserInitials">SK</div><div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div></div>
 </header>
-<section class="mm-contextbar" aria-label="Current workspace">
-  <div>
-    <p class="mm-breadcrumb" id="mmBreadcrumb">Management / Studio Overview</p>
-    <h1 id="mmPageTitle">VOY Magazine &amp; Newsroom Control</h1>
-  </div>
-
-</section>
-
 <div class="app">
-  <header class="header">
-    <div class="brand">
-      <button class="mobile-menu-btn" id="moduleHeaderMobileMenuBtn" aria-label="Open menu">☰</button>
-      <div class="logo" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</div>
-      <div style="min-width:0">
-        <div class="title">VOY Atelier · Editorial Desk</div>
-        <div class="subtitle">Premium travel magazine editing · PR campaigns · destination catalogues · print and digital publishing</div>
+  <header class="header" hidden><button id="moduleHeaderMobileMenuBtn" type="button">Menu</button><span id="sessionLine"><span id="clock">--:--</span></span></header>
+  <div class="shell mc-shell">
+    <aside class="sidebar mc-sidebar" id="mcSidebar" aria-label="Media Control navigation">
+      <div class="mc-menu-heading"><span>WORKSPACES</span><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+      <nav class="mm-modules" id="mmModules" aria-label="Workspaces"></nav>
+      <nav id="nav" class="mc-subnav" aria-label="Workspace sections"></nav>
+    </aside>
+    <main class="workspace mc-workspace">
+      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle">Overview</h1></div></section>
+      <div class="toolbar mc-toolbar">
+        <label class="mc-search-label" for="globalQuery">Search this section</label><input class="input search" id="globalQuery" type="search" placeholder="Search" />
+        <button class="btn primary" data-action="save-current" hidden>Save current</button>
+        <button class="btn dark" data-action="public-preview" hidden>Preview VOY</button>
       </div>
-    </div>
-    <div class="session" id="sessionLine"><span id="clock">--:--</span></div>
-  </header>
-  <div class="shell">
-    <aside class="sidebar" id="nav"></aside>
-      <div class="toolbar">
-        <button class="btn dark mobile-menu-btn toolbar-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open VOY menu">☰ Menu</button>
-
-
-
-
-
-        <input class="input search" id="globalQuery" placeholder="Search issue, article, destination, campaign, asset..." />
-        <button class="btn primary" data-action="save-current">Save</button>
-        <button class="btn dark" data-action="public-preview">Public preview</button>
-      </div>
-      <div id="statusLine" class="notice">Loading VOY Control...</div>
+      <div id="statusLine" class="notice" role="alert" hidden></div>
       <div class="content" id="content"></div>
     </main>
   </div>
@@ -2415,14 +2391,22 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 "use strict";
 const SOURCE="SKANDI_MEDIA_CONTROL";
 const PARENT="SKANDI_WIX_PARENT";
-const STORAGE_KEY="SKANDI_MM_VOY_MAGAZINE_STUDIO_V2";
+const LEGACY_STORAGE_KEY="SKANDI_MM_VOY_MAGAZINE_STUDIO_V2";
+const STORAGE_KEY="SKANDI_MEDIA_CONTROL_UI_V1";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
 const logoAssetValue=value=>{const source=String(value||"").trim();return source==="[LEAVE_PLACEHOLDER]"?"":source};
 const arr=v=>Array.isArray(v)?v:String(v||"").split(",").map(x=>x.trim()).filter(Boolean);
 const uid=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
 function today(){return new Date().toISOString().slice(0,10)}
-function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+function post(type,payload={}){
+  if(/^(?:VOY_ADMIN_SAVE_|VOY_BRAND_KIT_SAVE|VOY_DISTRIBUTION_KIT_SAVE|NEWSROOM_SAVE_|NEWSROOM_PUBLISH_POST)/.test(type)){
+    const requestId=`mc-save-${Date.now()}-${++saveSequence}`,panel=state.activePanel,key=actionKey(lastActionOrigin);
+    payload={...payload,requestId};pendingActions.set(requestId,{type,panel,key,version:editVersions.get(panel)||0});
+    if(lastActionOrigin?.isConnected){let slot=lastActionOrigin.parentElement?.querySelector(":scope > .mc-action-state");if(!slot){slot=document.createElement("span");slot.className="mc-action-state";slot.setAttribute("role","status");lastActionOrigin.insertAdjacentElement("afterend",slot)}slot.textContent="Saving…"}
+  }
+  window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+}
 const LIVE_REFRESH_MS=300000;
 const EXPECTED_COLLECTIONS=["VoyIssues","VoyPages","VoyArticles","VoyAssets","VoyCampaigns","VoyApprovals","VoyCategories","VoyBanners","VoyTravelCards","VoyBrandKits","VoyQualityReports","VoyDistributionKits","VoyPrintPackages","VoyApiAttributions"];
 let lastLiveRefreshAt=0;
@@ -2434,13 +2418,20 @@ function refreshAfterSave(reason="save"){
   window.setTimeout(()=>requestLiveRefresh(reason),900);
   window.setTimeout(()=>requestLiveRefresh(reason+"-confirm"),2600);
 }
-function toast(msg,mode=""){const el=$("toast");el.textContent=msg;el.style.background=mode==="bad"?"#b91c1c":mode==="ok"?"#15803d":"#020617";el.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.display="none",2600)}
-function status(msg,mode=""){const el=$("statusLine");el.textContent=msg||"";el.style.display=msg?"block":"none";el.style.borderLeftColor=mode==="bad"?"#b91c1c":mode==="ok"?"#15803d":mode==="warn"?"#b45309":"#022e64"}
-function loadLocal(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
-function saveLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(_error){/* Wix iframe storage can be restricted. Canonical server remains the persistence authority. */}}
+let lastActionOrigin=null;
+const pendingActions=new Map();
+const dirtyPanels=new Set(),editVersions=new Map();
+let saveSequence=0;
+function actionKey(button){if(!button)return "";for(const attr of ["data-action","data-save-web-plan","data-save-web-content","data-save-web-media","data-release-status"]){if(button.hasAttribute(attr))return attr+"="+button.getAttribute(attr)}return ""}
+function findAction(key){if(!key)return null;const [attr,...parts]=key.split("=");const value=parts.join("=");return [...document.querySelectorAll("button["+attr+"]")].find(node=>node.getAttribute(attr)===value&&node.closest(".panel-view.active, .toolbar"))||null}
+function actionError(message,key=""){const origin=(key?findAction(key):null)||(lastActionOrigin?.isConnected?lastActionOrigin:null);if(!origin||(origin.closest(".panel-view")&&!origin.closest(".panel-view.active"))){status(message,"bad");return}origin.parentElement?.querySelectorAll(":scope > .mc-action-state").forEach(el=>el.remove());let slot=origin.parentElement?.querySelector(":scope > .mc-inline-error");if(!slot){slot=document.createElement("span");slot.className="mc-inline-error";slot.setAttribute("role","alert");origin.insertAdjacentElement("afterend",slot)}slot.textContent=message}
+function toast(msg,mode=""){if(mode==="bad")actionError(msg)}
+function status(msg,mode=""){const el=$("statusLine");if(!el)return;const show=Boolean(msg)&&(mode==="bad"||mode==="warn");el.textContent=show?msg:"";el.hidden=!show;el.style.display=show?"block":"none";el.dataset.severity=mode||""}
+function loadLocal(){try{const raw=localStorage.getItem(STORAGE_KEY)||localStorage.getItem(LEGACY_STORAGE_KEY)||"{}";const saved=JSON.parse(raw);return {activeModule:String(saved.activeModule||""),activePanel:String(saved.activePanel||""),selectedIssueId:String(saved.selectedIssueId||""),selectedPageId:String(saved.selectedPageId||""),selectedArticleId:String(saved.selectedArticleId||"")}}catch(_){return {}}}
+function saveLocal(){try{const {activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}=state;localStorage.setItem(STORAGE_KEY,JSON.stringify({activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}))}catch(_){/* Preferences are optional; server data remains authoritative. */}}
 const baseState={
-  session:{}, activeModule:"management", activePanel:"dashboard", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
-  issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], assetResults:[],
+  session:{}, voyLoaded:false, libraryLoaded:false, activeModule:"overview", activePanel:"controlhome", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
+  issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], libraryAssets:[], assetResults:[],
   campaigns:[], approvals:[], connectors:{}, destinationResearch:null, seoResult:null, apiStatus:[],
   newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], editingPostId:"", editingContactId:"",
   brandKit:{name:"SKANDI VOY",tone:"Premium, warm, practical and commercially sharp",fonts:"Montserrat / Tahoma",colors:"#022e64, #0b3a7a, #5FC7CF, #ffffff",requiredWords:"SKANDI Travels, curated, destination, experience",blockedWords:"cheap, guaranteed, best in the world",defaultCta:"Explore destination"},
@@ -2450,21 +2441,16 @@ const baseState={
 };
 let state={...baseState,...loadLocal()};
 const modules=[
-  {id:"website",title:"Website",panels:["websiteeditor","siteplan","webcontent","webmedia","assets","pressreleases"]},
-  {id:"management",title:"Management",panels:["dashboard","issues","workflow"]},
-  {id:"contacts",title:"Contacts",panels:["presscontacts","articles"]},
-  {id:"reports",title:"Reports",panels:["quality","printqa","distribution"]},
-  {id:"marketing",title:"Marketing",panels:["pressreleases","campaign","banners","travelcards"]},
-  {id:"circulation",title:"Circulation",panels:["distribution","issues"]},
-  {id:"production",title:"Production",panels:["builder","articles","assets","printqa"]},
-  {id:"tools",title:"Tools",panels:["research","quality","brandkit","api"]},
-  {id:"nonadmin",title:"NonAdmin Setup",panels:["categories","brandkit"]},
-  {id:"chargebrite",title:"ChargeBrite",panels:["campaign","banners"]},
-  {id:"governance",title:"Governance",panels:["presentationmatrix","contentaudit","releasecenter","quality","brandkit"]},
-  {id:"communications",title:"Communications",panels:["emailstudio"]}
+  {id:"overview",title:"Overview",icon:"⌂",panels:["controlhome"]},
+  {id:"website",title:"Website",icon:"▣",panels:["websiteeditor","webcontent","webmedia","siteplan"]},
+  {id:"assets",title:"Asset Library",icon:"▧",panels:["assets"]},
+  {id:"voy",title:"VOY Magazine",icon:"▤",panels:["dashboard","issues","builder","articles","workflow","categories"]},
+  {id:"newsroom",title:"Newsroom",icon:"✎",panels:["pressreleases","presscontacts"]},
+  {id:"marketing",title:"Marketing",icon:"◇",panels:["campaign","banners","travelcards","emailstudio","brandkit"]},
+  {id:"review",title:"Review & tools",icon:"✓",panels:["presentationmatrix","contentaudit","releasecenter","quality","printqa","distribution","research","api"]}
 ];
 const panels=[
-  ["websiteeditor","Visual Website Editor","EDIT"],["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
+  ["controlhome","Overview","HOME"],["websiteeditor","Visual Website Editor","EDIT"],["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
   ["research","Destination Research","F6"],["campaign","Campaigns","F7"],["quality","Quality Lab","QA"],["brandkit","Brand Kit","BK"],["printqa","Print QA","PQ"],["distribution","Distribution","DS"],["workflow","Workflow","F8"],["categories","Categories","F9"],["banners","Banners","F10"],["travelcards","Travel Cards","F11"],["api","API Connectors","F12"],
   ["pressreleases","Press Releases","PR"],["presscontacts","Press Contacts","PC"],["siteplan","Website Planner","WEB"],["webcontent","Page Copy","TXT"],["webmedia","Hero / Card Media","IMG"],
   ["presentationmatrix","Presentation Matrix","PM"],["contentaudit","Content Audit","CA"],["releasecenter","Release Center","RC"],["emailstudio","Email Template Studio","EM"]
@@ -2605,7 +2591,9 @@ function makeTemplatePage(template,index,issueId){
   return {pageId:uid("PAGE"),issueId,pageNo:index+1,template:template.id,status:"DRAFT",category:"VOY Magazine",kicker:"VOY by SKANDI",title:copy[0],deck:copy[1],body:copy[2],imageUrl:"",secondaryImageUrl:"",imageCredit:"",imageFit:"cover",imagePosition:"center center",destination:"",ctaLabel:template.id==="back-cover"?"Explore SKANDI":"Explore more",ctaPath:"/",backgroundColor:dark?"#07162c":"#ffffff",textColor:dark?"#ffffff":"#103154",accentColor:"#4dcad6",headingFont:"Montserrat",bodyFont:"Inter",footerText:"VOY by SKANDI · skanditravels.com",blocks:defaultBlocksForTemplate(template.id),seoNotes:"",updatedAt:new Date().toISOString()};
 }
 function init(){
-  if(!modules.some(m=>m.id===state.activeModule))state.activeModule="management";
+  const legacy={management:"voy",production:"voy",contacts:"newsroom",reports:"review",tools:"review",nonadmin:"voy",chargebrite:"marketing",governance:"review",communications:"marketing",circulation:"review"};
+  state.activeModule=legacy[state.activeModule]||state.activeModule;
+  if(!modules.some(m=>m.id===state.activeModule))state.activeModule="overview";
   const activeModule=modules.find(m=>m.id===state.activeModule)||modules[0];
   if(!activeModule.panels.includes(state.activePanel))state.activePanel=activeModule.panels[0];
   renderModules(); renderNav(); renderShell(); setInterval(()=>{const c=$("clock");if(c)c.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})},1000);
@@ -2617,19 +2605,21 @@ function init(){
   setInterval(()=>requestLiveRefresh("auto-5-minute-field-refresh"),LIVE_REFRESH_MS);
   window.addEventListener("pageshow",()=>requestLiveRefresh("page-show"));
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now()-lastLiveRefreshAt>LIVE_REFRESH_MS)requestLiveRefresh("visible-after-idle")});
-  status("Magazine Manager ready. Waiting for live data sync or use the local editorial draft.");
+  status("");
 }
 function renderModules(){
   const host=$("mmModules");if(!host)return;
-  host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}">${esc(m.title)}</button>`).join("");
+  host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}" ${state.activeModule===m.id?'aria-current="page"':""}><span class="mc-module-icon" aria-hidden="true">${esc(m.icon)}</span><span>${esc(m.title)}</span></button>`).join("");
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
   const panel=panels.find(p=>p[0]===state.activePanel);
-  if($("mmBreadcrumb"))$("mmBreadcrumb").textContent=`${module.title} / ${panel?.[1]||"Overview"}`;
-  if($("mmPageTitle"))$("mmPageTitle").textContent=state.activePanel==="builder"?"VOY Magazine Page Builder":state.activePanel==="pressreleases"?"Newsroom & Press Releases":state.activePanel==="emailstudio"?"Email Template Studio":"VOY Magazine & Newsroom Control";
+  if($("mmBreadcrumb"))$("mmBreadcrumb").textContent=module.id==="overview"?"MEDIA CONTROL":`MEDIA CONTROL / ${module.title.toUpperCase()}`;
+  if($("mmPageTitle"))$("mmPageTitle").textContent=panel?.[1]||"Overview";
+  const search=$("globalQuery"),toolbar=document.querySelector(".mc-toolbar"),preview=toolbar?.querySelector('[data-action="public-preview"]');
+  const searchable=["issues","articles"].includes(state.activePanel);if(toolbar)toolbar.hidden=!searchable&&module.id!=="voy";if(search){search.hidden=!searchable;search.placeholder=state.activePanel==="issues"?"Search issues":"Search articles";search.setAttribute("aria-label",search.placeholder)}const label=toolbar?.querySelector(".mc-search-label");if(label)label.hidden=!searchable;if(preview)preview.hidden=module.id!=="voy";
 }
 function renderNav(){
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
-  $("nav").innerHTML=`<div class="nav-title">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}"><span>${esc(p[1])}</span><span class="nav-key">${esc(p[2])}</span></button>`).join("");
+  $("nav").innerHTML=module.panels.length>1?`<div class="mc-subnav-heading">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button type="button" class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}" ${state.activePanel===p[0]?'aria-current="page"':""}><span>${esc(p[1])}</span></button>`).join(""):"";
   renderModules();
 }
 function renderShell(){
@@ -2639,41 +2629,18 @@ function renderShell(){
 }
 function renderAll(){
   renderNav();
-  renderDashboard();
-  renderIssues();
-  renderBuilder();
-  renderArticles();
-  renderAssets();
-  renderResearch();
-  renderCampaign();
-  renderQualityLab();
-  renderBrandKit();
-  renderPrintQa();
-  renderDistribution();
-  renderWorkflow();
-  renderCategories();
-  renderBanners();
-  renderTravelCards();
-  renderApi();
-  renderPressReleases();
-  renderPressContacts();
-  renderSitePlanner();
-  renderWebContent();
-  renderWebMedia();
-  renderPresentationMatrix();
-  renderContentAudit();
-  renderReleaseCenter();
-  saveLocal();window.SKANDIEmailStudioHostMount?.();window.SKANDIWebsiteStudioMount?.({pages:state.catalog,assets:state.assets});
+  const views={controlhome:renderControlHome,dashboard:renderDashboard,issues:renderIssues,builder:renderBuilder,articles:renderArticles,assets:renderAssets,research:renderResearch,campaign:renderCampaign,quality:renderQualityLab,brandkit:renderBrandKit,printqa:renderPrintQa,distribution:renderDistribution,workflow:renderWorkflow,categories:renderCategories,banners:renderBanners,travelcards:renderTravelCards,api:renderApi,pressreleases:renderPressReleases,presscontacts:renderPressContacts,siteplan:renderSitePlanner,webcontent:renderWebContent,webmedia:renderWebMedia,presentationmatrix:renderPresentationMatrix,contentaudit:renderContentAudit,releasecenter:renderReleaseCenter};
+  Object.entries(views).forEach(([id,render])=>{if(!dirtyPanels.has(id))render()});
+  saveLocal();window.SKANDIEmailStudioHostMount?.();window.SKANDIWebsiteStudioMount?.({pages:state.catalog,assets:state.libraryAssets});
 }
 function setPanel(panel){
   if(!panels.some(p=>p[0]===panel))return;
   const current=modules.find(m=>m.id===state.activeModule);
   if(!current?.panels.includes(panel)){
-    const preferred={siteplan:"website",webcontent:"website",webmedia:"website",presentationmatrix:"governance",contentaudit:"governance",releasecenter:"governance",builder:"production",assets:"production",articles:"production",pressreleases:"marketing",presscontacts:"contacts",distribution:"circulation",quality:"reports",printqa:"reports",research:"tools",api:"tools",brandkit:"tools",categories:"nonadmin",banners:"marketing",travelcards:"marketing",campaign:"marketing"};
-    state.activeModule=preferred[panel]||modules.find(m=>m.panels.includes(panel))?.id||"management";
+    state.activeModule=modules.find(m=>m.panels.includes(panel))?.id||"overview";
   }
   state.activePanel=panel;
-  document.body.classList.remove("mobile-drawer-open");
+  closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${panel}`));
   renderAll();
   post("VOY_ADMIN_PANEL_CHANGED",{panel});
@@ -2682,6 +2649,7 @@ function setModule(moduleId){
   const module=modules.find(m=>m.id===moduleId);if(!module)return;
   state.activeModule=module.id;
   if(!module.panels.includes(state.activePanel))state.activePanel=module.panels[0];
+  if(module.panels.length===1)closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
   renderAll();
   post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
@@ -2772,6 +2740,18 @@ function saveWebsiteRecordWithStatus(record,status){const published=status==="PU
 function releasePageTo(status){const page=currentCatalogPage("release");if(!page)return;const records=pageRecordSet(page.path),all=[...records.plans,...records.copy,...records.media];if(status==="PUBLISHED"&&!confirm(`Publish ${all.length} presentation record(s) for ${page.label}?`))return;if(!all.length){toast("No presentation records exist for this page.","bad");return}all.forEach(r=>saveWebsiteRecordWithStatus(r,status));toast(`${all.length} records queued for ${status}.`,status==="PUBLISHED"?"ok":"");refreshAfterSave(`release-${status.toLowerCase()}`)}
 function exportEditorialSnapshot(){const payload={exportedAt:new Date().toISOString(),catalog:catalogPages(),pagePlans:websiteRecords("campaign","PAGE_PLAN"),contentBlocks:websiteRecords("article","CONTENT_BLOCK"),mediaSlots:websiteRecords("banner","MEDIA_SLOT"),audit:editorialAudit()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`skandi-media-control-editorial-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200)}
 
+function renderControlHome(){
+  const host=$("panel-controlhome");if(!host)return;
+  const cards=[
+    ["websiteeditor","Website editor","Edit page layouts, text, links and presentation images.","Edit website"],
+    ["assets","Asset Library","Find, upload and organize approved media for your content.","Open library"],
+    ["issues","VOY Magazine","Create issues, arrange pages and prepare your next edition.","Manage VOY"],
+    ["pressreleases","Newsroom","Create and manage published company announcements.","Open newsroom"],
+    ["campaign","Marketing","Manage campaigns, banners and travel cards.","View marketing"],
+    ["contentaudit","Content review","Check presentation records and identify issues before release.","Review content"]
+  ];
+  host.innerHTML=`<section class="mc-welcome"><div><p class="mc-eyebrow">SKANDI CONTENT WORKSPACE</p><h2>Everything you need to manage your content.</h2><p>Choose a workspace to edit the website, manage your media, or create and review publications.</p></div></section><div class="mc-card-grid">${cards.map(([id,title,description,cta])=>`<article class="mc-card"><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information continues to come from its existing source.</p>`;
+}
 function renderDashboard(){
   const issue=currentIssue();
   const due=state.articles.filter(a=>["DRAFT","IN PROGRESS","REVIEW"].includes(String(a.status||"").toUpperCase())).length;
@@ -2780,23 +2760,23 @@ function renderDashboard(){
   $("panel-dashboard").innerHTML=`
     <div class="hero">
       <div>
-        <div class="eyebrow">SKANDI SKANDI publishing & website studio</div>
-        <h2>Magazine & website control room</h2>
-        <p>Plan and publish VOY, Newsroom and public-site presentation from one controlled workspace. Website copy, hero/card/ad presentation slots and shared assets are managed here; Inventory-owned facts and Inventory-owned media remain read-only and outside this editor.</p>
+        <div class="eyebrow">VOY MAGAZINE</div>
+        <h2>VOY production desk</h2>
+        <p>Plan issues, arrange pages, review articles and prepare a magazine for publication.</p>
       </div>
       <div class="status-card">
         <span class="status-pill">Active issue</span>
-        <div class="status-number">${esc(issue?.edition || "No issue")}</div>
-        <div class="status-sub">${esc(issue?.title || "Create or select an issue to start building the magazine.")}</div>
+        <div class="status-number">${esc(issue?.edition || (state.voyLoaded?"No issue":"Loading…"))}</div>
+        <div class="status-sub">${esc(issue?.title || (state.voyLoaded?"Create or select an issue to start building the magazine.":"Loading your magazine workspace."))}</div>
       </div>
     </div>
     <div class="kpi-row">
-      <div class="kpi"><small>Issues</small><b>${state.issues.length}</b><div class="help">VOY publications</div></div>
-      <div class="kpi"><small>Pages</small><b>${state.pages.length}</b><div class="help">Magazine layouts</div></div>
-      <div class="kpi"><small>Article tasks</small><b>${state.articles.length}</b><div class="help">Editorial pipeline</div></div>
-      <div class="kpi"><small>Open editorial</small><b>${due}</b><div class="help">Draft/review work</div></div>
-      <div class="kpi"><small>Assets</small><b>${state.assets.length}</b><div class="help">Media library</div></div>
-      <div class="kpi"><small>Ad slots</small><b>${adSlots}</b><div class="help">Active banners/campaigns</div></div>
+      <div class="kpi"><small>Issues</small><b>${state.voyLoaded?state.issues.length:"—"}</b><div class="help">VOY publications</div></div>
+      <div class="kpi"><small>Pages</small><b>${state.voyLoaded?state.pages.length:"—"}</b><div class="help">Magazine layouts</div></div>
+      <div class="kpi"><small>Article tasks</small><b>${state.voyLoaded?state.articles.length:"—"}</b><div class="help">Editorial pipeline</div></div>
+      <div class="kpi"><small>Open editorial</small><b>${state.voyLoaded?due:"—"}</b><div class="help">Draft/review work</div></div>
+      <div class="kpi"><small>VOY assets</small><b>${state.voyLoaded?state.assets.length:"—"}</b><div class="help">Editorial asset records</div></div>
+      <div class="kpi"><small>Ad slots</small><b>${state.voyLoaded?adSlots:"—"}</b><div class="help">Active banners/campaigns</div></div>
     </div>
     <div class="split">
       <div class="panel scroll"><h3>Current issue page plan</h3>${pages.length?pages.map(pageRow).join(""):`<div class="empty">No pages yet. Open Magazine Builder and add cover/feature/catalogue pages.</div>`}</div>
@@ -3014,25 +2994,22 @@ function collectArticle(){
   return {articleId:a.articleId||a._id||state.selectedArticleId||uid("ARTICLE"),issueId:currentIssueId(),title:$("articleTitle").value.trim(),contentType:$("articleType").value,status:$("articleStatus").value,writer:$("articleWriter").value.trim(),deadline:$("articleDeadline").value,destination:$("articleDestination").value.trim(),targetWords:Number($("articleTargetWords").value||0),tags:arr($("articleTags").value),brief:$("articleBrief").value.trim(),seo:$("articleSeo").value.trim(),socialCopy:$("articleSocial").value.trim(),updatedAt:new Date().toISOString()};
 }
 function renderAssets(){
-  $("panel-assets").innerHTML=`
-  <div class="split">
-    <div class="panel scroll"><h3>External media references</h3>
-      <div class="admin-grid">
-        <div class="field"><label class="label">Provider</label><select id="assetProvider"><option>openverse</option><option>unsplash</option><option>pexels</option><option>pixabay</option><option>wikimedia_commons</option></select></div>
-        <div class="field wide"><label class="label">Search</label><input id="assetQuery" class="input" placeholder="Mallorca beach aerial, Crete village, Nordic cabin"></div>
-        <div class="field"><label class="label">License</label><select id="assetLicense"><option>commercial-safe</option><option>cc0</option><option>cc-by</option><option>public-domain</option><option>provider-standard</option></select></div>
-        <div class="field"><label class="label">Orientation</label><select id="assetOrientation"><option>any</option><option>landscape</option><option>portrait</option><option>square</option></select></div>
-      </div>
-      <div class="row" style="margin:8px 0"><button class="btn primary" data-action="search-assets">Search assets</button><button class="btn" data-action="clear-asset-results">Clear results</button></div>
-      <div class="asset-grid">${state.assetResults.length?state.assetResults.map(assetCard).join(""):`<div class="empty">No external reference results yet. External results are references only; upload an approved copy to Supabase Storage before using it in VOY.</div>`}</div>
-    </div>
-    <div class="panel scroll"><h3>Legacy VOY media references</h3>
-      <div class="row" style="margin-bottom:8px"><button class="btn" data-action="open-asset-upload">Upload to Supabase</button><button class="btn" data-action="audit-asset-licenses">License audit</button><button class="btn primary" data-action="image-enhance">Enhance / optimize</button></div>
-      <div class="asset-grid">${state.assets.length?state.assets.map(assetCard).join(""):`<div class="empty">No legacy media references. New production assets are stored in Supabase Storage above.</div>`}</div>
-    </div>
+  const panel=$("panel-assets");
+  const references=state.assets.length?state.assets.map(assetCard).join(""):`<div class="empty">No VOY editorial references.</div>`;
+  const results=state.assetResults.length?state.assetResults.map(assetCard).join(""):`<div class="empty">No external references loaded.</div>`;
+  if(panel.querySelector("[data-mc-library-host]")){
+    const voy=panel.querySelector("[data-mc-voy-references]"),external=panel.querySelector("[data-mc-external-results]");
+    if(voy&&voy.innerHTML!==references)voy.innerHTML=references;
+    if(external&&external.innerHTML!==results)external.innerHTML=results;
+    return;
+  }
+  panel.innerHTML=`<div class="mc-assets-layout">
+    <section class="panel scroll mc-assets-primary" data-mc-library-host><h3>Asset Library</h3><p class="mc-assets-help">Search your available media, preview files, or upload an image for use in SKANDI content.</p></section>
+    <details class="mc-asset-detail"><summary>VOY editorial references</summary><div class="panel scroll"><p class="help">Older magazine reference records are listed here separately from the shared library.</p><div class="row"><button class="btn" data-action="audit-asset-licenses">Review asset information</button><button class="btn" type="button" disabled title="Image enhancement service is not connected">Image enhancement unavailable</button></div><div class="asset-grid" data-mc-voy-references>${references}</div></div></details>
+    <details class="mc-asset-detail"><summary>External media references</summary><div class="panel scroll"><p class="help">External reference search needs a connected service. The page editor also offers its configured media discovery tools.</p><div class="admin-grid"><div class="field"><label class="label">Provider</label><select id="assetProvider"><option>openverse</option><option>unsplash</option><option>pexels</option><option>pixabay</option><option>wikimedia_commons</option></select></div><div class="field wide"><label class="label">Search</label><input id="assetQuery" class="input" placeholder="Search media references"></div><div class="field"><label class="label">License</label><select id="assetLicense"><option>commercial-safe</option><option>cc0</option><option>cc-by</option><option>public-domain</option><option>provider-standard</option></select></div><div class="field"><label class="label">Orientation</label><select id="assetOrientation"><option>any</option><option>landscape</option><option>portrait</option><option>square</option></select></div></div><div class="row" style="margin:8px 0"><button class="btn" type="button" disabled>Search unavailable</button><button class="btn" data-action="clear-asset-results">Clear results</button><button class="btn" data-panel="websiteeditor">Open page editor</button></div><div class="asset-grid" data-mc-external-results>${results}</div></div></details>
   </div>`;
 }
-function assetCard(a){return `<div class="asset-card"><div class="asset-img" style="${a.thumbUrl||a.imageUrl?`background-image:url('${esc(a.thumbUrl||a.imageUrl)}')`:""}">${a.thumbUrl||a.imageUrl?"":"IMAGE"}</div><div class="asset-body"><div class="asset-title">${esc(a.title||a.provider||"Media reference")}</div><div class="asset-meta">${esc(a.creator||"")} · ${esc(a.license||"license")}<br>${esc(a.provider||"")}<br><b>Reference only · upload to Supabase before use</b></div><div class="row" style="margin-top:7px"><button class="btn" data-import-asset="${esc(a.assetId||a.id||a.url||"")}">Save reference</button></div></div></div>`}
+function assetCard(a){return `<div class="asset-card"><div class="asset-img" style="${a.thumbUrl||a.imageUrl?`background-image:url('${esc(a.thumbUrl||a.imageUrl)}')`:""}">${a.thumbUrl||a.imageUrl?"":"IMAGE"}</div><div class="asset-body"><div class="asset-title">${esc(a.title||a.provider||"Media reference")}</div><div class="asset-meta">${esc(a.creator||"")} · ${esc(a.license||"license")}<br>${esc(a.provider||"")}<br><b>Reference only · add an approved image to the library before use</b></div><div class="row" style="margin-top:7px"><button class="btn" data-import-asset="${esc(a.assetId||a.id||a.url||"")}">Save reference</button></div></div></div>`}
 function renderResearch(){
   const r=state.destinationResearch||{};
   $("panel-research").innerHTML=`
@@ -3079,7 +3056,8 @@ function collectCampaign(){
 function readinessStats(){
   const issue=currentIssue();
   const pages=issuePages();
-  const articleDrafts=state.articles.filter(a=>String(a.status||"").toUpperCase().includes("DRAFT")||String(a.status||"").toUpperCase().includes("REVIEW")).length;
+  const selectedIssueId=currentIssueId();
+  const articleDrafts=state.articles.filter(a=>String(a.issueId||a.issueRef||"")===String(selectedIssueId)&&["DRAFT","REVIEW"].some(status=>String(a.status||"").toUpperCase().includes(status))).length;
   const pageWarnings=pages.reduce((n,p)=>n+[
     !p.title,
     !p.deck,
@@ -3106,46 +3084,60 @@ function printQaData(){
   return {issueId:currentIssueId(),generatedAt:new Date().toISOString(),readinessScore:r.score,pageWarnings:r.pageWarnings,assetWarnings:r.assetWarnings,articleDrafts:r.articleDrafts,pages};
 }
 function qualityChecklist(){
-  const page=currentPage()||{};
-  const article=currentArticle()||{};
+  const page=currentPage()||{},article=currentArticle()||{},title=String(page.title||article.title||"").trim(),body=String(page.body||article.body||"").trim();
+  const image=page.imageUrl||article.imageUrl,alt=page.imageAlt||article.imageAlt;
   return [
-    ["Editorial voice",page.title||article.title?"Ready for tone check":"Missing page/article title",page.title||article.title?"ok":"warn"],
-    ["Destination facts",page.destination||article.destination?"Destination present":"Destination missing",page.destination||article.destination?"ok":"warn"],
-    ["SEO headline",String(page.title||article.title||"").length>=28?"Strong length":"Headline may be too short","warn"],
-    ["Image licensing",(state.assets||[]).every(a=>a.license&&a.creator)?"Attribution fields present":"Run license audit before publishing",(state.assets||[]).every(a=>a.license&&a.creator)?"ok":"warn"],
-    ["Print body length",String(page.body||"").length>500?"Feature depth available":"Body may need more editorial depth",String(page.body||"").length>500?"ok":"warn"],
-    ["Accessibility",page.imageAlt||article.imageAlt?"Alt text present":"Alt text should be added","warn"]
+    ["Title",title?"Title is present.":"Add a title before review.",title?"ok":"warn"],
+    ["Destination",page.destination||article.destination?"Destination is recorded; verify factual claims with sources.":"No destination is recorded.",page.destination||article.destination?"ok":"warn"],
+    ["Headline length",title?`${title.length} characters. Check the length in context.`:"No title to check.",title?"ok":"warn"],
+    ["Image description",!image?"No image selected for this item.":alt?"Image description is present.":"Add an image description.",!image||alt?"ok":"warn"],
+    ["Body",body?`${body.split(/\s+/).length} words available for review.`:"No body text to review.",body?"ok":"warn"]
   ];
 }
+function makeQualityReport(kind){
+  const page=currentPage(),article=currentArticle(),item=page||article,assets=Array.isArray(state.assets)?state.assets:[];
+  if(["copy","accessibility","facts"].includes(kind)&&!item){actionError("Select a magazine page or article first.");return}
+  const title=String(item?.title||"").trim(),body=String(item?.body||item?.summary||"").trim(),findings=[];
+  if(kind==="copy"){
+    if(!title)findings.push("Add a title.");
+    if(!body)findings.push("Add body text before a copy review.");
+    if(/ {2,}/.test(title+" "+body))findings.push("Repeated spaces found; review the copy.");
+    if(/\b(\w+)\s+\1\b/i.test(body))findings.push("A repeated adjacent word was found; review it in context.");
+    if(body.split(/[.!?]+/).some(sentence=>sentence.trim().split(/\s+/).length>35))findings.push("A sentence contains more than 35 words; consider whether it can be clearer.");
+    if(!findings.length)findings.push("No basic spacing, repetition or sentence-length flags were found.");
+    state.qualityResult={summary:"Basic copy checks",note:"These checks do not assess grammar, brand voice or factual accuracy.",findings};
+  }else if(kind==="accessibility"){
+    const img=item.imageUrl||"",alt=item.imageAlt||"",description=String(item.seo||item.deck||item.summary||"").trim();
+    findings.push(title?`Title: ${title.length} characters.`:"Title is missing.");
+    findings.push(description?`Description: ${description.length} characters.`:"No description is recorded.");
+    findings.push(!img?"No image is selected.":alt?"An image description is recorded.":"The selected image has no recorded description.");
+    state.qualityResult={summary:"Accessibility and search checks",note:"Review the actual published page, links and assistive-technology behavior separately.",findings};
+  }else if(kind==="facts"){
+    findings.push("Check prices, dates, hours, locations and travel requirements against current primary sources.");
+    findings.push("Record the source and the date reviewed before publication.");
+    state.qualityResult={summary:"Fact review guide",note:"This guide does not verify claims automatically.",findings};
+  }else if(kind==="licenses"){
+    if(!assets.length)findings.push("No asset records are loaded.");
+    else {const missing=assets.filter(asset=>!(asset.license||asset.licenseName)||!(asset.creator||asset.credit)||!(asset.sourceUrl||asset.source_url));findings.push(`${assets.length} loaded asset record(s) reviewed for recorded source, credit and license fields.`);findings.push(`${missing.length} record(s) have one or more fields missing or not supplied in this view.`);}
+    state.qualityResult={summary:"Asset information review",note:"Missing metadata does not establish that an asset is unlicensed; confirm rights with the source.",findings};
+  }else{
+    state.qualityResult={summary:"Editorial checklist",note:"A local review of the loaded information; it does not verify factual claims or usage rights.",findings:qualityChecklist().map(row=>row[0]+": "+row[1])};
+  }
+  renderQualityLab();
+}
 function renderQualityLab(){
-  const r=readinessStats();
-  const qr=state.qualityResult||{};
+  const r=readinessStats(),qr=state.qualityResult||{},hasIssue=Boolean(r.issue&&r.pages.length);
   $("panel-quality").innerHTML=`
-  <div class="split">
-    <div class="stack">
-      <div class="voy-score">
-        <div class="qa-card"><small>Readiness</small><b>${r.score}%</b><span>Computed from draft, asset and page warnings.</span></div>
-        <div class="qa-card"><small>Page warnings</small><b>${r.pageWarnings}</b><span>Missing images, credits, decks or body depth.</span></div>
-        <div class="qa-card"><small>Asset warnings</small><b>${r.assetWarnings}</b><span>License, creator or source gaps.</span></div>
-        <div class="qa-card"><small>Open editorial</small><b>${r.articleDrafts}</b><span>Draft/review article tasks.</span></div>
-      </div>
-      <div class="panel scroll"><h3>Quality lab</h3>
-        <div class="voy-tool-grid">
-          <div class="voy-tool-card"><b>Copy Chief</b><div class="help">Tone, grammar, line edit, headline alternatives and deck polish.</div><button class="btn primary" data-action="copy-chief-review">Run copy chief review</button></div>
-          <div class="voy-tool-card"><b>Fact & Claim Check</b><div class="help">Flags destination claims, prices, opening times, distances and source gaps.</div><button class="btn" data-action="fact-check-claims">Check claims</button></div>
-          <div class="voy-tool-card"><b>Accessibility / SEO</b><div class="help">Alt text, reading level, metadata, OpenGraph and search snippets.</div><button class="btn" data-action="accessibility-seo-check">Run accessibility + SEO</button></div>
-          <div class="voy-tool-card"><b>Translation Desk</b><div class="help">Create market versions while preserving brand voice and legal disclaimers.</div><div class="row"><input id="qualityLangs" class="input" value="sv,no,da,fi,de" style="min-width:130px"><button class="btn" data-action="translate-package">Translate</button></div></div>
-          <div class="voy-tool-card"><b>License Audit</b><div class="help">Validate provider, license, source URL, creator credit and usage rights.</div><button class="btn warn" data-action="audit-asset-licenses">Audit assets</button></div>
-          <div class="voy-tool-card"><b>Full Quality Run</b><div class="help">Sends issue, pages, assets and brand kit to backend QA worker.</div><button class="btn ok" data-action="run-quality-lab">Run full quality lab</button></div>
-        </div>
-      </div>
-    </div>
-    <div class="panel scroll"><h3>Current checks</h3>
-      <div class="qa-list">${qualityChecklist().map(c=>`<div class="qa-card"><b>${esc(c[0])} ${pill(c[2])}</b><span>${esc(c[1])}</span></div>`).join("")}</div>
-      <h3 style="margin-top:12px">Backend result</h3>
-      ${qr.summary?`<div class="notice">${esc(qr.summary)}</div><div class="kv" style="margin-top:8px"><div class="k">Score</div><div class="v">${esc(qr.score||"—")}</div><div class="k">Priority</div><div class="v">${esc(qr.priority||"—")}</div><div class="k">Updated</div><div class="v">${esc(qr.generatedAt||"—")}</div></div>`:`<div class="empty">No backend quality result yet.</div>`}
-    </div>
-  </div>`;
+  <div class="mc-quality-intro"><h2>Review your content</h2><p>Run practical checks on the selected VOY page or article. Confirm facts and image rights with their original sources.</p></div>
+  <div class="voy-score"><div class="qa-card"><small>Issue checklist</small><b>${hasIssue?esc(r.score)+"%":"—"}</b><span>${hasIssue?"Based on the loaded issue and current checks.":"Select an issue with pages to calculate."}</span></div><div class="qa-card"><small>Page notes</small><b>${hasIssue?esc(r.pageWarnings):"—"}</b><span>Items to review in the selected issue.</span></div><div class="qa-card"><small>Assets to review</small><b>${state.voyLoaded?esc(r.assetWarnings):"—"}</b><span>Source or credit fields not recorded here.</span></div><div class="qa-card"><small>Open editorial</small><b>${state.voyLoaded?esc(r.articleDrafts):"—"}</b><span>Articles in draft or review.</span></div></div>
+  <div class="split"><div class="panel scroll"><h3>Checks</h3><div class="voy-tool-grid">
+   <div class="voy-tool-card"><b>Copy checks</b><div class="help">Find repeated spaces, repeated words and unusually long sentences.</div><button class="btn primary" data-action="copy-chief-review">Review copy</button></div>
+   <div class="voy-tool-card"><b>Fact review</b><div class="help">Use a source-review checklist for destination and travel claims.</div><button class="btn" data-action="fact-check-claims">Open checklist</button></div>
+   <div class="voy-tool-card"><b>Accessibility &amp; search</b><div class="help">Check the recorded title, description and image description.</div><button class="btn" data-action="accessibility-seo-check">Run checks</button></div>
+   <div class="voy-tool-card"><b>Asset information</b><div class="help">Review available source, credit and license fields.</div><button class="btn" data-action="audit-asset-licenses">Review asset information</button></div>
+   <div class="voy-tool-card"><b>Editorial checklist</b><div class="help">Review the loaded page and article information together.</div><button class="btn" data-action="run-quality-lab">Run checklist</button></div>
+   <div class="voy-tool-card"><b>Translation</b><div class="help">Translation requires a configured translation service.</div><button class="btn" type="button" disabled>Unavailable</button></div>
+  </div></div><div class="panel scroll"><h3>Results</h3>${qr.summary?`<div class="mc-quality-result"><b>${esc(qr.summary)}</b><p>${esc(qr.note||"")}</p><ul>${(qr.findings||[]).map(item=>`<li>${esc(item)}</li>`).join("")}</ul></div>`:'<div class="empty">Choose a check to see its results here.</div>'}</div></div>`;
 }
 function renderBrandKit(){
   const b=state.brandKit||{};
@@ -3442,7 +3434,7 @@ function handleAction(action){
   if(action==="search-assets"){post("VOY_ASSET_SEARCH_REQUEST",{provider:$("assetProvider").value,query:$("assetQuery").value,license:$("assetLicense").value,orientation:$("assetOrientation").value});toast("Asset search requested.");return}
   if(action==="clear-asset-results"){state.assetResults=[];renderAssets();return}
   if(action==="open-asset-upload"){post("VOY_ASSET_UPLOAD_OPEN_REQUEST",{issueId:currentIssueId()});toast("Upload hook requested.");return}
-  if(action==="audit-asset-licenses"){post("VOY_ASSET_LICENSE_AUDIT_REQUEST",{issueId:currentIssueId(),assets:state.assets});toast("License audit requested.");return}
+  if(action==="audit-asset-licenses"){makeQualityReport("licenses");setPanel("quality");return}
   if(action==="research-destination"){post("VOY_DESTINATION_RESEARCH_REQUEST",{destination:$("researchDestination").value,tone:$("researchTone").value,language:$("researchLang").value,providers:["mediawiki","wikidata","restcountries","opentripmap","openverse"]});toast("Destination research requested.");return}
   if(action==="insert-research-page"){if(!state.destinationResearch){toast("Run research first.","bad");return}if(!currentPage()){handleAction("new-page")}const p=currentPage();p.destination=state.destinationResearch.destination;p.kicker="Destination guide";p.title=state.destinationResearch.headline||p.title;p.deck=state.destinationResearch.summary||p.deck;p.body=[state.destinationResearch.summary,arr(state.destinationResearch.pois).join("\\n")].filter(Boolean).join("\\n\\n");state.selectedPageId=p.pageId;setPanel("builder");return}
   if(action==="make-travel-card-from-research"){const r=state.destinationResearch;if(!r){toast("Run research first.","bad");return}const c={cardId:uid("CARD"),title:r.destination,path:`/destinations/${String(r.destination).toLowerCase().replace(/[^a-z0-9]+/g,"-")}`,imageUrl:"",active:true,tags:arr(r.bestFor),summary:r.summary};state.travelCards.unshift(c);post("VOY_ADMIN_SAVE_TRAVEL_CARD",{card:c});refreshAfterSave("save-travel-card");setPanel("travelcards");return}
@@ -3455,12 +3447,10 @@ function handleAction(action){
   if(action==="clear-banner"){state.editingBannerId="";renderBanners();return}
   if(action==="save-card"){const c=collectCard();if(!c.title){toast("Travel card title is required.","bad");return}upsert("travelCards","cardId",c);post("VOY_ADMIN_SAVE_TRAVEL_CARD",{card:c});refreshAfterSave("save-travel-card");renderAll();return}
   if(action==="clear-card"){state.editingCardId="";renderTravelCards();return}
-  if(action==="run-quality-lab"){
-    const payload={issue:currentIssue(),pages:issuePages(),assets:state.assets,articles:state.articles.filter(a=>String(a.issueId||"")===String(currentIssueId())),brandKit:state.brandKit,localChecks:qualityChecklist(),readiness:readinessStats()};
-    post("VOY_QUALITY_LAB_REQUEST",payload);toast("Quality lab request sent.");return}
-  if(action==="copy-chief-review"){post("VOY_COPY_CHIEF_REVIEW_REQUEST",{page:currentPage(),article:currentArticle(),brandKit:state.brandKit});toast("Copy chief review requested.");return}
-  if(action==="fact-check-claims"){post("VOY_FACT_CHECK_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle(),destination:currentPage()?.destination||currentArticle()?.destination||""});toast("Fact check requested.");return}
-  if(action==="accessibility-seo-check"){post("VOY_ACCESSIBILITY_SEO_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle()});toast("Accessibility and SEO check requested.");return}
+  if(action==="run-quality-lab"){makeQualityReport("all");return}
+  if(action==="copy-chief-review"){makeQualityReport("copy");return}
+  if(action==="fact-check-claims"){makeQualityReport("facts");return}
+  if(action==="accessibility-seo-check"){makeQualityReport("accessibility");return}
   if(action==="translate-package"){post("VOY_TRANSLATION_PACKAGE_REQUEST",{issue:currentIssue(),pages:issuePages(),languages:arr($("qualityLangs")?.value||"sv,no,da,fi,de"),brandKit:state.brandKit});toast("Translation package requested.");return}
   if(action==="save-brand-kit"){state.brandKit=collectBrandKit();post("VOY_BRAND_KIT_SAVE",{brandKit:state.brandKit});toast("Brand kit saved locally and sent to backend.","ok");refreshAfterSave("save-brand-kit");renderAll();return}
   if(action==="run-brand-guard"){const kit=document.getElementById("brandName")?collectBrandKit():state.brandKit;post("VOY_BRAND_GUARD_REQUEST",{brandKit:kit,issue:currentIssue(),pages:issuePages(),articles:state.articles.filter(a=>String(a.issueId||a.issueRef||"")===String(currentIssueId()))});toast("Brand guard requested.");return}
@@ -3489,6 +3479,26 @@ function handleAction(action){
     const item=collectPressContact();if(!item.name||!item.email){toast("Contact name and email are required.","bad");return}upsert("pressContacts","contactId",item);state.editingContactId=item.contactId;post("NEWSROOM_SAVE_CONTACT",{item});toast("Press contact saved.","ok");return;
   }
 }
+// Preserve in-progress editor inputs when background data arrives or a different
+// workspace is opened. Switching the record itself may discard those inputs.
+document.addEventListener("click",event=>{
+  const button=event.target.closest("button");if(button){lastActionOrigin=button;button.parentElement?.querySelectorAll(":scope > .mc-inline-error").forEach(el=>el.remove())}
+  const changingRecord=event.target.closest("[data-edit-page],[data-select-issue],[data-edit-article],[data-edit-web-content],[data-edit-web-media],[data-web-plan-page],[data-edit-press-contact],[data-edit-news-post]");
+  const fresh=button?.dataset.action&&["new-issue","new-page","new-article","clear-issue","clear-news-post","clear-press-contact"].includes(button.dataset.action);
+  if((changingRecord||fresh)&&dirtyPanels.has(state.activePanel)){
+    if(!confirm("Discard the unsaved changes in this editor and open another record?")){event.preventDefault();event.stopImmediatePropagation();return}
+    dirtyPanels.delete(state.activePanel);
+  }
+},true);
+const editablePanels=new Set(["siteplan","webcontent","webmedia","issues","builder","articles","pressreleases","presscontacts","brandkit","categories","banners","travelcards","campaign"]);
+const selectionIds=new Set(["builderIssueSelect","pageTemplate","webPlanPage","webContentPage","webContentSection","webContentField","webMediaPage","webMediaSection","webMediaSlotSelect","releasePage"]);
+const originalSelections=new WeakMap();
+document.addEventListener("focusin",event=>{if(selectionIds.has(event.target.id))originalSelections.set(event.target,event.target.value)},true);
+document.addEventListener("change",event=>{if(selectionIds.has(event.target.id)&&dirtyPanels.has(state.activePanel)){if(!confirm("Discard unsaved changes before changing this selection?")){event.target.value=originalSelections.get(event.target)??event.target.value;event.stopImmediatePropagation()}else dirtyPanels.delete(state.activePanel)}},true);
+function markEditorDirty(event){const field=event.target;if(!field?.matches?.("input,textarea,select,[contenteditable=true]")||selectionIds.has(field.id))return;const panel=field.closest(".panel-view");if(!panel||!editablePanels.has(panel.id.replace(/^panel-/,""))||field.type==="search"||/query|search|filter/i.test(field.id||""))return;const id=panel.id.replace(/^panel-/,"");dirtyPanels.add(id);editVersions.set(id,(editVersions.get(id)||0)+1)}
+document.addEventListener("input",markEditorDirty,true);document.addEventListener("change",markEditorDirty,true);
+window.addEventListener("beforeunload",event=>{if(dirtyPanels.size){event.preventDefault();event.returnValue=""}});
+function settleSave(prefix,payload={}){const matching=[...pendingActions.entries()].filter(([,item])=>item.type.startsWith(prefix));const entry=payload.requestId?matching.find(([id])=>id===payload.requestId):null;if(!entry)return;const [id,item]=entry;pendingActions.delete(id);const button=findAction(item.key);button?.parentElement?.querySelectorAll(":scope > .mc-action-state").forEach(el=>el.remove());if((editVersions.get(item.panel)||0)===item.version&&![...pendingActions.values()].some(other=>other.panel===item.panel))dirtyPanels.delete(item.panel)}
 document.addEventListener("click",e=>{
   const openKit=e.target.closest("[data-open-distribution-kit]");if(openKit){const kit=state.distributionKits.find(x=>String(x.kitId||x._id||"")===openKit.dataset.openDistributionKit);if(kit){state.distributionKit=JSON.parse(JSON.stringify(kit));renderDistribution()}return}
   const module=e.target.closest("[data-module]");if(module){setModule(module.dataset.module);return}
@@ -3554,18 +3564,22 @@ document.addEventListener("input",e=>{
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
 $("globalQuery").addEventListener("input",()=>renderAll());
-$("mobileMenuBtn").addEventListener("click",()=>document.body.classList.add("mobile-drawer-open"));
-$("drawerOverlay").addEventListener("click",()=>document.body.classList.remove("mobile-drawer-open"));
+function closeMobileMenu(){document.body.classList.remove("mobile-drawer-open");$("mobileMenuBtn")?.setAttribute("aria-expanded","false")}
+$("mobileMenuBtn").addEventListener("click",()=>{const open=!document.body.classList.contains("mobile-drawer-open");document.body.classList.toggle("mobile-drawer-open",open);$("mobileMenuBtn").setAttribute("aria-expanded",String(open))});
+$("mcCloseMenu").addEventListener("click",closeMobileMenu);
+$("drawerOverlay").addEventListener("click",closeMobileMenu);
+document.addEventListener("SKANDI_MEDIA_SHOW_ASSETS",()=>setPanel("assets"));
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeMobileMenu()});
 window.addEventListener("message",e=>{
-  const m=e.data||{};if(m.source&&m.source!==PARENT)return;const p=m.payload||{};
+  const m=e.data||{};if(e.source!==window.parent||m.source!==PARENT)return;const p=m.payload||{};
   if(m.type==="INTERNAL_CHROME_BOOTSTRAP"){
     const profile=p.profile||{};const name=profile.name||profile.fullName||[profile.firstName,profile.lastName].filter(Boolean).join(" ")||profile.email||"SKANDI Editor";
     if($("mmUserName"))$("mmUserName").textContent=name;if($("mmUserRole"))$("mmUserRole").textContent=profile.position||profile.jobTitle||profile.role||"Editorial access";if($("mmUserInitials"))$("mmUserInitials").textContent=name.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"SK";return;
   }
   if(m.type==="MEDIA_CONTROL_EDITORIAL_CATALOG"){state.catalog=Array.isArray(p.pages)?p.pages:[];ensureCatalogSelections();if($("mmSyncState"))$("mmSyncState").textContent="Catalog";renderAll();return}
-  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.assets=p.assets||state.assets;renderAssets();return}
-  if(m.type==="MEDIA_CONTROL_ERROR"){status(p.message||"Media Control action failed.","bad");return}
-  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
+  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.libraryAssets=Array.isArray(p.assets)?p.assets:state.libraryAssets;state.libraryLoaded=true;return}
+  if(m.type==="MEDIA_CONTROL_ERROR"){if(!p.requestId)actionError(p.message||"Media Control action failed.");return}
+  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p,voyLoaded:true};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
   if(m.type==="NEWSROOM_ADMIN_BOOTSTRAP"||m.type==="NEWSROOM_ADMIN_DATA"){
     const d=p.data||p;
     state.newsroomPosts=d.posts||d.newsroomPosts||state.newsroomPosts;
@@ -3574,15 +3588,15 @@ window.addEventListener("message",e=>{
     state.pressContacts=d.pressContacts||d.contacts||state.pressContacts;
     if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return;
   }
-  if(m.type==="VOY_ADMIN_SAVED"){status("Saved. Refreshing live data.","ok");requestLiveRefresh("backend-saved");return}
+  if(m.type==="VOY_ADMIN_SAVED"){settleSave("VOY_",p);status("");requestLiveRefresh("backend-saved");return}
   if(m.type==="VOY_ADMIN_PUBLISHED"){
     const result=p.result||p;const issue=state.issues.find(i=>String(i.issueId||i._id)===String(result.issueId||result.issue_id||currentIssueId()));if(issue){issue.publishStatus="PUBLISHED";issue.publicUrl=result.publicUrl||result.public_url||issue.publicUrl;issue.publishedAt=result.publishedAt||result.published_at||new Date().toISOString()}
     status("Published. This issue is now available on the public VOY Magazine page.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Published";renderAll();return;
   }
   if(m.type==="VOY_ADMIN_ARCHIVED"){const issue=state.issues.find(i=>String(i.issueId||i._id)===String(p.issueId||p.issue_id||currentIssueId()));if(issue)issue.publishStatus="ARCHIVED";status("Issue archived and removed from the public reader.","ok");renderAll();return}
-  if(m.type==="NEWSROOM_ADMIN_SAVED"){status("Newsroom record saved.","ok");post("NEWSROOM_ADMIN_REFRESH",{});return}
-  if(m.type==="VOY_ADMIN_ERROR"){status(m.message||p.message||"VOY backend error.","bad");return}
-  if(m.type==="NEWSROOM_ADMIN_ERROR"){status(m.message||p.message||"Newsroom action failed.","bad");return}
+  if(m.type==="NEWSROOM_ADMIN_SAVED"){settleSave("NEWSROOM_",p);status("");post("NEWSROOM_ADMIN_REFRESH",{});return}
+  if(m.type==="VOY_ADMIN_ERROR"){const match=p.requestId?[p.requestId,pendingActions.get(p.requestId)]:[...pendingActions.entries()].find(([,item])=>item.type===p.action)||[];const pending=match[1];if(match[0])pendingActions.delete(match[0]);actionError(m.message||p.message||"The action could not be completed.",pending?.key);return}
+  if(m.type==="NEWSROOM_ADMIN_ERROR"){const match=p.requestId?[p.requestId,pendingActions.get(p.requestId)]:[...pendingActions.entries()].find(([,item])=>item.type===p.action)||[];const pending=match[1];if(match[0])pendingActions.delete(match[0]);actionError(m.message||p.message||"The newsroom action could not be completed.",pending?.key);return}
   if(m.type==="VOY_ASSET_SEARCH_RESULT"){state.assetResults=p.results||p.assets||[];status(`${state.assetResults.length} asset results loaded.`,"ok");setPanel("assets");return}
   if(m.type==="VOY_DESTINATION_RESEARCH_RESULT"){state.destinationResearch=p.result||p;status("Destination research loaded.","ok");setPanel("research");return}
   if(m.type==="VOY_COPY_ASSIST_RESULT"){const text=p.text||p.copy||"";if(currentPage()&&text){currentPage().body=text;setPanel("builder")}toast("Copy assist result received.");return}
@@ -3637,17 +3651,17 @@ init();
 <style id="skandi-supabase-media-integration-style">
 .sk-media-field-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:5px}.sk-media-field-actions .btn{min-height:27px!important}.sk-media-locked{background:#f8fafc!important;color:#475569!important}.sk-media-mini{width:46px;height:30px;object-fit:cover;border:1px solid #cbd5e1;background:#e5e7eb}.sk-media-storage-panel{margin-bottom:10px;border-top:2px solid #022e64!important}.sk-media-buckets{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0}.sk-media-bucket{border:1px solid #cbd5e1;background:#fff;padding:4px 7px;font-size:13px;cursor:pointer}.sk-media-bucket.active{background:#022e64;color:#fff;border-color:#022e64}.sk-media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}.sk-media-card{border:1px solid #d1d5db;background:#fff;min-width:0}.sk-media-thumb{height:92px;display:grid;place-items:center;background:#e5e7eb;color:#64748b;font-size:13px;font-weight:800;overflow:hidden}.sk-media-thumb img{width:100%;height:100%;object-fit:cover}.sk-media-card-body{padding:7px}.sk-media-card-title{font-size:13px;font-weight:800;color:#022e64;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sk-media-card-meta{font-size:13px;color:#64748b;line-height:1.35;margin-top:3px;word-break:break-word}.sk-media-private,.sk-media-public{display:inline-flex;padding:1px 4px;border:1px solid #fbbf24;color:#92400e;font-size:13px;text-transform:uppercase}.sk-media-public{border-color:#86efac;color:#166534}.sk-media-picker{position:fixed;inset:0;z-index:9900;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(15,23,42,.58)}.sk-media-picker.show{display:flex}.sk-media-dialog{width:min(1080px,96vw);max-height:92vh;display:flex;flex-direction:column;background:#fff;border:1px solid #94a3b8}.sk-media-dialog-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px;border-bottom:1px solid #d1d5db}.sk-media-dialog-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px;border-bottom:1px solid #e2e8f0;background:#f8fafc}.sk-media-dialog-body{padding:9px;overflow:auto}.sk-media-dialog .input{min-width:170px}.sk-media-toast{position:fixed;right:12px;bottom:12px;z-index:10000;background:#020617;color:#fff;padding:9px 11px;font-size:13px;display:none}.sk-media-uploading{opacity:.55;pointer-events:none}@media(max-width:600px){.sk-media-grid{grid-template-columns:1fr 1fr}.sk-media-dialog{width:100%;max-height:96vh}.sk-media-dialog-tools{align-items:stretch}.sk-media-dialog-tools .input{min-width:0;flex:1}}
 </style>
-<div class="sk-media-picker" id="skMediaPicker" aria-hidden="true">
+<div class="sk-media-picker" id="skMediaPicker" role="dialog" aria-modal="true" aria-labelledby="skMediaPickerTitle" aria-hidden="true">
   <div class="sk-media-dialog">
-    <div class="sk-media-dialog-head"><div><b>Supabase Media Library</b><div class="help">Browse every Storage bucket. Public image assets can be selected for VOY; private assets remain view-only.</div></div><button class="btn" id="skMediaClose" type="button">Close</button></div>
+    <div class="sk-media-dialog-head"><div><b id="skMediaPickerTitle">Asset Library</b><div class="help">Browse available media. Public images can be used in content; private files remain view-only.</div></div><button class="btn" id="skMediaClose" type="button">Close</button></div>
     <div class="sk-media-dialog-tools">
       <select class="input" id="skMediaBucketFilter"><option value="">All buckets</option></select>
       <input class="input" id="skMediaQuery" placeholder="Search assets">
       <button class="btn" id="skMediaRefresh" type="button">Refresh</button>
       <button class="btn primary" id="skMediaUpload" type="button">Upload image</button>
-      <button class="btn dark" id="skMediaOpenControl" type="button">Open Media Control</button>
+      <button class="btn dark" id="skMediaOpenControl" type="button">View asset library</button>
     </div>
-    <div class="sk-media-dialog-body"><div class="sk-media-grid" id="skMediaPickerGrid"></div></div>
+    <div class="sk-media-dialog-body"><div class="sk-media-grid" id="skMediaPickerGrid"></div></div><div class="sk-media-paging"><button class="btn" id="skMediaPickerPrev" type="button">Previous</button><span id="skMediaPickerCount" aria-live="polite"></span><button class="btn" id="skMediaPickerNext" type="button">Next</button></div>
   </div>
 </div>
 <input id="skVoyMediaFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" hidden>
@@ -3657,10 +3671,16 @@ init();
 const SOURCE="SKANDI_MEDIA_CONTROL",PARENT="SKANDI_WIX_PARENT";
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
-const media={assets:[],buckets:[],target:null,pending:null,pendingAccess:null,bucket:"",query:"",requested:false};
+const media={assets:[],buckets:[],target:null,pending:null,pendingAccess:null,bucket:"",query:"",requested:false,loading:false,failed:false,requestId:"",requestNumber:0,lastAction:null,libraryPage:0,pickerPage:0};
 
 function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
-function toast(t){const e=$("skMediaToast");if(!e)return;e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2300)}
+function clearError(){document.querySelectorAll("[data-sk-media-error]").forEach(el=>el.remove())}
+function toast(t){
+  clearError();const error=document.createElement("span");error.dataset.skMediaError="";error.className="mc-inline-error";error.setAttribute("role","alert");error.textContent=t;
+  const anchor=media.lastAction;
+  if(anchor?.isConnected)anchor.insertAdjacentElement("afterend",error);
+  else (document.querySelector("#panel-assets [data-mc-library-host]")||$("skMediaPicker"))?.appendChild(error);
+}
 function bytes(n){n=Number(n||0);if(!n)return"0 B";const u=["B","KB","MB","GB"];let i=0;while(n>=1024&&i<u.length-1){n/=1024;i++}return`${n.toFixed(i?1:0)} ${u[i]}`}
 function isPublicAsset(a){return a?.public===true||String(a?.visibility||"").toUpperCase()==="PUBLIC"}
 function isImageAsset(a){return a?.isImage===true||String(a?.assetType||"").toUpperCase()==="IMAGE"||String(a?.mimeType||"").toLowerCase().startsWith("image/")}
@@ -3692,13 +3712,13 @@ function deriveBuckets(assets){
   });
   return[...map.values()].sort((a,b)=>a.name.localeCompare(b.name))
 }
-function requestMedia(){media.requested=true;post("VOY_MEDIA_LIBRARY_REQUEST",{search:media.query||""})}
+function requestMedia(){media.requested=true;media.loading=true;media.failed=false;media.requestId=`media-library-${Date.now()}-${++media.requestNumber}`;clearError();renderEmbeddedLibrary();renderPicker();post("VOY_MEDIA_LIBRARY_REQUEST",{requestId:media.requestId})}
 function fieldTargetFor(input){if(input.id==="issueCoverImage")return"issue:cover";if(input.id==="pageImageUrl")return"page:imageUrl";if(input.id==="pageSecondaryImageUrl")return"page:secondaryImageUrl";if(input.id==="cardImageUrl")return"travelCard:imageUrl";if(input.id==="newsPostImage")return"newsPost:heroImage";if(input.id==="webMediaUrl")return"website:media";if(input.dataset.blockField&&input.dataset.blockIndex!==undefined)return`block:${input.dataset.blockIndex}:${input.dataset.blockField}`;return""}
 function changeLabel(field){const label=field?.querySelector(".label");if(!label)return;label.textContent=label.textContent.replace(/\s*URL\s*$/i," asset").replace(/image url/ig,"image asset").replace(/logo url/ig,"logo asset")}
 function enhanceInput(input){
   if(!input||input.dataset.supabaseAsset==="1")return;
   const target=fieldTargetFor(input);if(!target)return;
-  input.dataset.supabaseAsset="1";input.readOnly=true;input.classList.add("sk-media-locked");input.placeholder="Select or upload a Supabase asset";
+  input.dataset.supabaseAsset="1";input.readOnly=true;input.classList.add("sk-media-locked");input.placeholder="Choose or upload an image";
   const field=input.closest(".field");changeLabel(field);
   const row=document.createElement("div");row.className="sk-media-field-actions";
   row.innerHTML=`${input.value?`<img class="sk-media-mini" src="${esc(input.value)}" alt="">`:""}<button type="button" class="btn" data-sk-media-choose="${esc(target)}">Choose asset</button><button type="button" class="btn" data-sk-media-upload="${esc(target)}">Upload</button>`;
@@ -3707,11 +3727,11 @@ function enhanceInput(input){
 function enhanceFields(){
   ["issueCoverImage","pageImageUrl","pageSecondaryImageUrl","cardImageUrl","newsPostImage"].forEach(id=>enhanceInput($(id)));
   document.querySelectorAll("[data-block-field='imageUrl'],[data-block-field='logoUrl'],[data-block-field='secondaryLogoUrl']").forEach(enhanceInput);
-  const assetsPanel=document.querySelector("#panel-assets .panel.scroll:last-child");
+  const assetsPanel=document.querySelector("#panel-assets [data-mc-library-host]");
   if(assetsPanel&&!assetsPanel.querySelector("[data-sk-media-library]")){
     const box=document.createElement("div");box.dataset.skMediaLibrary="1";
-    box.innerHTML=`<div class="row" style="margin-bottom:8px"><button class="btn" type="button" data-sk-media-refresh>Refresh Supabase assets</button><button class="btn primary" type="button" data-sk-media-upload="library">Upload image</button><button class="btn dark" type="button" data-sk-media-open-control>Open Media Control</button></div><div class="sk-media-buckets" data-sk-media-buckets></div><div class="sk-media-grid" data-sk-media-assets></div>`;
-    assetsPanel.prepend(box);requestMedia()
+    box.innerHTML=`<div class="sk-media-library-tools"><label>Search library<input type="search" class="input" data-sk-media-library-query value="${esc(media.query)}" placeholder="Search by name, folder or tag"></label><button class="btn" type="button" data-sk-media-refresh>Refresh</button><button class="btn primary" type="button" data-sk-media-upload="library">Upload image</button></div><div class="sk-media-buckets" data-sk-media-buckets></div><div class="sk-media-grid" data-sk-media-assets></div><div class="sk-media-paging"><button class="btn" type="button" data-sk-media-prev>Previous</button><span data-sk-media-count aria-live="polite"></span><button class="btn" type="button" data-sk-media-next>Next</button></div>`;
+    assetsPanel.appendChild(box);requestMedia()
   }
 }
 function usable(a){return a&&isPublicAsset(a)&&isImageAsset(a)&&!!(a.imageUrl||a.url||a.readUrl)}
@@ -3720,15 +3740,30 @@ function card(a,selectable=false){
   return `<article class="sk-media-card"><div class="sk-media-thumb">${a.isImage&&url?`<img src="${esc(url)}" alt="${esc(a.name||"Asset")}">`:`<span>${esc((a.mimeType||"FILE").split("/").pop().toUpperCase())}</span>`}</div><div class="sk-media-card-body"><div class="sk-media-card-title" title="${esc(a.path||"")}">${esc(a.name||a.path||"Asset")}</div><div class="sk-media-card-meta"><span class="${a.public?"sk-media-public":"sk-media-private"}">${a.public?"Public":"Private"}</span> · ${esc(a.bucket||"")}<br>${esc(a.path||"")}<br>${esc(a.mimeType||"")} · ${bytes(a.size)}</div><div class="row" style="margin-top:5px">${a.assetId?`<button type="button" class="btn" data-sk-media-preview="${esc(a.assetId)}">Preview</button>`:""}${selectable&&usable(a)?`<button type="button" class="btn primary" data-sk-media-use="${esc(a.assetId)}">Use asset</button>`:""}${selectable&&!usable(a)?`<span class="help">${a.public?"Not an image":"Private · view only"}</span>`:""}</div></div></article>`
 }
 function filteredAssets(){const q=(media.query||"").toLowerCase();return media.assets.filter(a=>(!media.bucket||a.bucket===media.bucket)&&(!q||[a.bucket,a.path,a.name,a.mimeType,a.libraryRoot,a.libraryFolder,a.category,a.brand,a.system,...(Array.isArray(a.tags)?a.tags:[])].join(" ").toLowerCase().includes(q)))}
-function renderEmbeddedLibrary(){const bhost=document.querySelector("[data-sk-media-buckets]");const ahost=document.querySelector("[data-sk-media-assets]");if(bhost)bhost.innerHTML=`<button type="button" class="sk-media-bucket ${!media.bucket?"active":""}" data-sk-media-bucket="">All</button>`+media.buckets.map(b=>`<button type="button" class="sk-media-bucket ${media.bucket===b.id?"active":""}" data-sk-media-bucket="${esc(b.id)}">${esc(b.name||b.id)} · ${b.public?"public":"private"}</button>`).join("");if(ahost){const rows=filteredAssets().slice(0,80);ahost.innerHTML=rows.length?rows.map(a=>card(a,true)).join(""):`<div class="empty">${media.requested?"No Supabase assets match this view.":"Loading Supabase assets…"}</div>`}}
-function renderPicker(){const sel=$("skMediaBucketFilter");if(sel){const val=sel.value||media.bucket;sel.innerHTML=`<option value="">All buckets</option>`+media.buckets.map(b=>`<option value="${esc(b.id)}">${esc(b.name||b.id)} · ${b.public?"public":"private"}</option>`).join("");sel.value=media.bucket||val||""}const grid=$("skMediaPickerGrid");if(grid){const rows=filteredAssets();grid.innerHTML=rows.length?rows.map(a=>card(a,true)).join(""):`<div class="empty">No assets found.</div>`}}
+function pageRows(rows,page){const size=24,last=Math.max(0,Math.ceil(rows.length/size)-1),index=Math.min(Math.max(0,page),last),start=index*size;return{items:rows.slice(start,start+size),index,start,total:rows.length,last}}
+function renderEmbeddedLibrary(){
+  const bhost=document.querySelector("[data-sk-media-buckets]"),ahost=document.querySelector("[data-sk-media-assets]"),count=document.querySelector("[data-sk-media-count]");
+  if(bhost)bhost.innerHTML=`<button type="button" class="sk-media-bucket ${!media.bucket?"active":""}" data-sk-media-bucket="">All</button>`+media.buckets.map(b=>`<button type="button" class="sk-media-bucket ${media.bucket===b.id?"active":""}" data-sk-media-bucket="${esc(b.id)}">${esc(b.name||b.id)} · ${b.public?"public":"private"}</button>`).join("");
+  const page=pageRows(filteredAssets(),media.libraryPage);media.libraryPage=page.index;
+  if(ahost)ahost.innerHTML=page.items.length?page.items.map(a=>card(a,false)).join(""):`<div class="empty">${media.loading||!media.requested?"Loading assets…":media.failed?"Assets could not be loaded.":"No assets match this view."}</div>`;
+  if(count)count.textContent=page.total?`${page.start+1}–${page.start+page.items.length} of ${page.total}${media.assets.length>=1000?" · first 1,000 loaded":""}`:"0 assets";
+  const prev=document.querySelector("[data-sk-media-prev]"),next=document.querySelector("[data-sk-media-next]");if(prev)prev.disabled=page.index===0;if(next)next.disabled=page.index>=page.last;
+}
+function renderPicker(){
+  const sel=$("skMediaBucketFilter");if(sel){sel.innerHTML=`<option value="">All folders</option>`+media.buckets.map(b=>`<option value="${esc(b.id)}">${esc(b.name||b.id)} · ${b.public?"public":"private"}</option>`).join("");sel.value=media.bucket||""}
+  const grid=$("skMediaPickerGrid"),page=pageRows(filteredAssets(),media.pickerPage);media.pickerPage=page.index;
+  if(grid)grid.innerHTML=page.items.length?page.items.map(a=>card(a,true)).join(""):`<div class="empty">${media.loading||!media.requested?"Loading assets…":media.failed?"Assets could not be loaded.":"No assets found."}</div>`;
+  if($("skMediaPickerCount"))$("skMediaPickerCount").textContent=page.total?`${page.start+1}–${page.start+page.items.length} of ${page.total}`:"0 assets";
+  if($("skMediaPickerPrev"))$("skMediaPickerPrev").disabled=page.index===0;if($("skMediaPickerNext"))$("skMediaPickerNext").disabled=page.index>=page.last;
+}
 function openPicker(target){media.target=target||null;$("skMediaPicker")?.classList.add("show");$("skMediaPicker")?.setAttribute("aria-hidden","false");requestMedia()}
 function closePicker(){$("skMediaPicker")?.classList.remove("show");$("skMediaPicker")?.setAttribute("aria-hidden","true")}
+function showAssetLibrary(){closePicker();document.dispatchEvent(new CustomEvent("SKANDI_MEDIA_SHOW_ASSETS"))}
 function targetInput(target){if(!target)return null;if(target==="issue:cover")return $("issueCoverImage");if(target==="page:imageUrl")return $("pageImageUrl");if(target==="page:secondaryImageUrl")return $("pageSecondaryImageUrl");if(target==="travelCard:imageUrl")return $("cardImageUrl");if(target==="newsPost:heroImage")return $("newsPostImage");if(target==="website:media")return $("webMediaUrl");const m=target.match(/^block:(\d+):(imageUrl|logoUrl|secondaryLogoUrl)$/);if(m)return document.querySelector(`[data-block-index="${m[1]}"][data-block-field="${m[2]}"]`);return null}
-function applyAsset(raw){const asset=normalizeAsset(raw);if(!usable(asset)){toast(asset?.public?"Only image assets can be used here.":"Private bucket assets are view-only for public VOY content.");return}const input=targetInput(media.target);if(!input&&media.target!=="library"){toast("The target field is no longer open.");return}if(input){input.value=asset.imageUrl||asset.url||asset.readUrl||"";input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));const actions=input.parentElement?.querySelector(".sk-media-field-actions");const img=actions?.querySelector(".sk-media-mini");if(img)img.src=input.value;else if(actions&&input.value){const pic=document.createElement("img");pic.className="sk-media-mini";pic.src=input.value;actions.prepend(pic)}}toast("Supabase asset selected.");closePicker()}
+function applyAsset(raw){const asset=normalizeAsset(raw);if(!usable(asset)){toast(asset?.public?"Only image assets can be used here.":"Private bucket assets are view-only for public content.");return}const input=targetInput(media.target);if(!input&&media.target!=="library"){toast("The target field is no longer open.");return}if(input){input.value=asset.imageUrl||asset.url||asset.readUrl||"";input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));const actions=input.parentElement?.querySelector(".sk-media-field-actions");const img=actions?.querySelector(".sk-media-mini");if(img)img.src=input.value;else if(actions&&input.value){const pic=document.createElement("img");pic.className="sk-media-mini";pic.src=input.value;actions.prepend(pic)}}clearError();closePicker()}
 function chooseUpload(target){media.target=target||"library";$("skVoyMediaFile").value="";$("skVoyMediaFile").click()}
 async function sha256(file){const hash=await crypto.subtle.digest("SHA-256",await file.arrayBuffer());return[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("")}
-function uploadPayload(file,hash,allowPossibleDuplicate=false){return{clientRequestId:media.pending?.clientRequestId||"",file:{name:file.name,type:file.type||"application/octet-stream",size:file.size},originalName:file.name,mimeType:file.type||"application/octet-stream",sizeBytes:file.size,sha256:hash,visibility:"PUBLIC",assetType:"IMAGE",libraryRoot:"VOY",libraryFolder:"Magazine",librarySubfolder:"Uploads",displayName:file.name,category:"IMAGE",brand:"SKANDI",system:"VOY",tags:["VOY","Magazine"],contextSystem:"VOY",contextRecordType:"MAGAZINE_MEDIA",fieldName:media.target||"library",allowPossibleDuplicate}}
+function uploadPayload(file,hash,allowPossibleDuplicate=false){const central=media.target==="library";return{clientRequestId:media.pending?.clientRequestId||"",file:{name:file.name,type:file.type||"application/octet-stream",size:file.size},originalName:file.name,mimeType:file.type||"application/octet-stream",sizeBytes:file.size,sha256:hash,visibility:"PUBLIC",assetType:"IMAGE",libraryRoot:central?"SKANDI":"VOY",libraryFolder:central?"Media Control":"Magazine",librarySubfolder:"Uploads",displayName:file.name,category:"IMAGE",brand:"SKANDI",system:central?"MEDIA_CONTROL":"VOY",tags:central?["SKANDI","Media Control"]:["VOY","Magazine"],contextSystem:central?"MEDIA_CONTROL":"VOY",contextRecordType:central?"MEDIA_LIBRARY":"MAGAZINE_MEDIA",fieldName:media.target||"library",allowPossibleDuplicate}}
 async function startUpload(file){
   if(!file)return;
   const clientRequestId=`voy-media-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
@@ -3750,12 +3785,15 @@ async function uploadSigned(p){
 function requestPreview(raw){const asset=normalizeAsset(raw);const url=asset.readUrl||asset.imageUrl||asset.url||"";if(url){window.open(url,"_blank","noopener,noreferrer");return}if(!asset.assetId)return;media.pendingAccess={assetId:asset.assetId,purpose:"preview"};post("VOY_MEDIA_REFRESH_URL",{assetId:asset.assetId,expiresIn:600,purpose:"preview"})}
 
 document.addEventListener("click",e=>{
+  const action=e.target.closest("button");if(action&&(action.closest("#skMediaPicker")||action.closest("[data-mc-library-host]")||action.matches("[data-sk-media-choose],[data-sk-media-upload]"))){media.lastAction=action;clearError()}
   const old=e.target.closest('[data-action="open-asset-upload"]');if(old){e.preventDefault();e.stopImmediatePropagation();chooseUpload("library");return}
   const choose=e.target.closest("[data-sk-media-choose]");if(choose){e.preventDefault();e.stopImmediatePropagation();openPicker(choose.dataset.skMediaChoose);return}
   const upload=e.target.closest("[data-sk-media-upload]");if(upload){e.preventDefault();e.stopImmediatePropagation();chooseUpload(upload.dataset.skMediaUpload);return}
+  const prev=e.target.closest("[data-sk-media-prev]");if(prev){media.libraryPage--;renderEmbeddedLibrary();return}
+  const next=e.target.closest("[data-sk-media-next]");if(next){media.libraryPage++;renderEmbeddedLibrary();return}
   const refresh=e.target.closest("[data-sk-media-refresh]");if(refresh){e.preventDefault();e.stopImmediatePropagation();requestMedia();return}
-  const open=e.target.closest("[data-sk-media-open-control]");if(open){e.preventDefault();e.stopImmediatePropagation();post("VOY_OPEN_MEDIA_CONTROL",{});return}
-  const b=e.target.closest("[data-sk-media-bucket]");if(b){media.bucket=b.dataset.skMediaBucket||"";renderEmbeddedLibrary();renderPicker();return}
+  const open=e.target.closest("[data-sk-media-open-control]");if(open){e.preventDefault();e.stopImmediatePropagation();showAssetLibrary();return}
+  const b=e.target.closest("[data-sk-media-bucket]");if(b){media.bucket=b.dataset.skMediaBucket||"";media.libraryPage=0;media.pickerPage=0;renderEmbeddedLibrary();renderPicker();return}
   const use=e.target.closest("[data-sk-media-use]");if(use){applyAsset(media.assets.find(a=>String(a.assetId)===String(use.dataset.skMediaUse)));return}
   const pre=e.target.closest("[data-sk-media-preview]");if(pre){requestPreview(media.assets.find(a=>String(a.assetId)===String(pre.dataset.skMediaPreview)));return}
 },true);
@@ -3763,25 +3801,29 @@ document.addEventListener("click",e=>{
 $("skMediaClose")?.addEventListener("click",closePicker);
 $("skMediaRefresh")?.addEventListener("click",requestMedia);
 $("skMediaUpload")?.addEventListener("click",()=>chooseUpload(media.target||"library"));
-$("skMediaOpenControl")?.addEventListener("click",()=>post("VOY_OPEN_MEDIA_CONTROL",{}));
-$("skMediaBucketFilter")?.addEventListener("change",e=>{media.bucket=e.target.value||"";renderEmbeddedLibrary();renderPicker()});
-$("skMediaQuery")?.addEventListener("input",e=>{media.query=e.target.value||"";renderPicker();renderEmbeddedLibrary()});
+$("skMediaOpenControl")?.addEventListener("click",showAssetLibrary);
+$("skMediaBucketFilter")?.addEventListener("change",e=>{media.bucket=e.target.value||"";media.libraryPage=0;media.pickerPage=0;renderEmbeddedLibrary();renderPicker()});
+$("skMediaQuery")?.addEventListener("input",e=>{media.query=e.target.value||"";media.libraryPage=0;media.pickerPage=0;const other=document.querySelector("[data-sk-media-library-query]");if(other)other.value=media.query;renderPicker();renderEmbeddedLibrary()});
+document.addEventListener("input",e=>{if(!e.target.matches("[data-sk-media-library-query]"))return;media.query=e.target.value||"";media.libraryPage=0;media.pickerPage=0;if($("skMediaQuery"))$("skMediaQuery").value=media.query;renderEmbeddedLibrary();renderPicker()});
+$("skMediaPickerPrev")?.addEventListener("click",()=>{media.pickerPage--;renderPicker()});
+$("skMediaPickerNext")?.addEventListener("click",()=>{media.pickerPage++;renderPicker()});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"&&$("skMediaPicker")?.classList.contains("show"))closePicker()});
 $("skVoyMediaFile")?.addEventListener("change",e=>startUpload(e.target.files?.[0]));
 $("skMediaPicker")?.addEventListener("click",e=>{if(e.target===$("skMediaPicker"))closePicker()});
 
 window.addEventListener("message",async e=>{
-  const m=e.data||{};if(m.source&&m.source!==PARENT)return;const p=m.payload||{};
+  const m=e.data||{};if(e.source!==window.parent||m.source!==PARENT)return;const p=m.payload||{};
   try{
-    if(m.type==="VOY_MEDIA_LIBRARY_RESULT"){media.assets=(p.assets||[]).map(normalizeAsset);media.buckets=deriveBuckets(media.assets);media.requested=true;renderEmbeddedLibrary();renderPicker();return}
+    if(m.type==="VOY_MEDIA_LIBRARY_RESULT"){if(p.requestId&&p.requestId!==media.requestId)return;media.assets=(p.assets||[]).map(normalizeAsset);media.buckets=deriveBuckets(media.assets);media.requested=true;media.loading=false;media.failed=false;renderEmbeddedLibrary();renderPicker();return}
     if(m.type==="VOY_MEDIA_UPLOAD_READY"){
       if(!media.pending)return;
-      if(p.duplicate){const existing=(p.exactDuplicates||[]).map(normalizeAsset)[0];document.body.classList.remove("sk-media-uploading");const target=media.pending.target;media.pending=null;if(existing){media.target=target;if(target==="library")toast("Existing identical asset reused.");else applyAsset(existing)}requestMedia();return}
+      if(p.duplicate){const existing=(p.exactDuplicates||[]).map(normalizeAsset)[0];document.body.classList.remove("sk-media-uploading");const target=media.pending.target;media.pending=null;if(existing&&target!=="library"){media.target=target;applyAsset(existing)}requestMedia();return}
       if(p.needsReview){const proceed=confirm("A possible existing legacy asset has the same file size/type. Upload another physical copy anyway?");if(!proceed){document.body.classList.remove("sk-media-uploading");media.pending=null;return}media.pending.preparePayload={...media.pending.preparePayload,allowPossibleDuplicate:true};post("VOY_MEDIA_UPLOAD_CREATE",media.pending.preparePayload);return}
       await uploadSigned(p);return
     }
-    if(m.type==="VOY_MEDIA_UPLOAD_COMPLETE"){document.body.classList.remove("sk-media-uploading");const target=media.pending?.target;media.pending=null;if(p.asset){const asset=normalizeAsset(p.asset);media.target=target;if(target==="library")toast(p.duplicate?"Existing identical asset reused.":"Upload complete.");else applyAsset(asset)}requestMedia();return}
+    if(m.type==="VOY_MEDIA_UPLOAD_COMPLETE"){document.body.classList.remove("sk-media-uploading");const target=media.pending?.target;media.pending=null;if(p.asset&&target!=="library"){media.target=target;applyAsset(normalizeAsset(p.asset))}requestMedia();return}
     if(m.type==="VOY_MEDIA_REFRESH_URL_RESULT"){const id=p.assetId||media.pendingAccess?.assetId||"";const a=media.assets.find(x=>String(x.assetId)===String(id));if(a&&p.url){a.readUrl=p.url;a.url=p.url;if(media.pendingAccess?.purpose==="preview")window.open(p.url,"_blank","noopener,noreferrer");renderEmbeddedLibrary();renderPicker()}media.pendingAccess=null;return}
-    if(m.type==="VOY_ADMIN_ERROR"&&(["VOY_MEDIA_","VOY_ASSET_UPLOAD_"].some(prefix=>String(p.action||"").startsWith(prefix)))){document.body.classList.remove("sk-media-uploading");media.pending=null;toast(p.message||"Media Control error.");return}
+    if(m.type==="VOY_ADMIN_ERROR"&&(["VOY_MEDIA_","VOY_ASSET_UPLOAD_"].some(prefix=>String(p.action||"").startsWith(prefix)))){if(p.action==="VOY_MEDIA_LIBRARY_REQUEST"){if(p.requestId&&p.requestId!==media.requestId)return;media.loading=false;media.failed=true;renderEmbeddedLibrary();renderPicker()}document.body.classList.remove("sk-media-uploading");media.pending=null;toast(p.message||"Media Control error.");return}
   }catch(err){document.body.classList.remove("sk-media-uploading");media.pending=null;toast(err.message||"Media Control error.")}
 });
 
@@ -3856,6 +3898,157 @@ window.SKANDIEmailStudioHostMount();
 .hc-empty{padding:20px;border:1px dashed #cbd5e1;border-radius:6px;color:#667085;background:#fff}
 @media(max-width:1050px){.hc-layout{grid-template-columns:1fr}.hc-list{position:static;max-height:280px}.hc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.hc-grid{grid-template-columns:1fr}.hc-addon{grid-template-columns:1fr 1fr}.hc-addon label:first-child{grid-column:1/-1}.hc-photo{grid-template-columns:1fr}.hc-photo-preview img{height:210px}}
+
+/* Media Control workspace: one navigation model on desktop and mobile. */
+#skandi-shell-root #skandi-app-root{background:#f4f7fb}
+#skandi-shell-root #skandi-app-root .mm-appbar{position:sticky;top:0;z-index:80;min-height:60px;padding:0 24px;gap:12px;overflow:visible;background:#fff;border-bottom:1px solid #dde7f0}
+#skandi-shell-root #skandi-app-root .mm-brand{flex:1;min-width:0;padding:0;border:0;gap:11px}
+#skandi-shell-root #skandi-app-root .mm-brand-mark{width:34px;height:34px;border-radius:9px;background:#022e64;font-size:16px}
+#skandi-shell-root #skandi-app-root .mm-brand-copy b{font-size:13px;letter-spacing:.08em}
+#skandi-shell-root #skandi-app-root .mm-brand-copy span{font-size:13px;letter-spacing:0;color:#63758a}
+#skandi-shell-root #skandi-app-root .mm-account{min-width:0;border:0;padding:0;gap:10px}
+#skandi-shell-root #skandi-app-root .mm-account-badge{width:34px;height:34px;border-radius:50%;font-size:13px}
+#skandi-shell-root #skandi-app-root .mm-account b{font-size:13px}
+#skandi-shell-root #skandi-app-root .mc-mobile-menu,#skandi-shell-root #skandi-app-root .mc-close-menu{display:none}
+#skandi-shell-root #skandi-app-root .app{min-height:0!important;height:auto!important;background:#f4f7fb!important}
+#skandi-shell-root #skandi-app-root .mc-shell{display:grid!important;grid-template-columns:245px minmax(0,1fr)!important;align-items:start;min-height:calc(100vh - 60px)!important;overflow:visible!important;background:#f4f7fb!important}
+#skandi-shell-root #skandi-app-root .mc-sidebar{display:block!important;position:sticky!important;top:60px!important;z-index:60!important;width:auto!important;min-width:0!important;min-height:calc(100vh - 60px)!important;height:auto!important;max-height:calc(100vh - 60px)!important;overflow-y:auto!important;overflow-x:hidden!important;padding:22px 14px!important;transform:none!important;background:#fff!important;border:0!important;border-right:1px solid #dde7f0!important;color:#223d55!important}
+#skandi-shell-root #skandi-app-root .mc-menu-heading,#skandi-shell-root #skandi-app-root .mc-subnav-heading{padding:6px 10px 9px;color:#708399;font-size:13px;font-weight:800;letter-spacing:.12em}
+#skandi-shell-root #skandi-app-root .mm-modules{display:grid!important;gap:3px;align-items:stretch;min-width:0}
+#skandi-shell-root #skandi-app-root .mm-module{display:flex;align-items:center;gap:12px;text-align:left;width:100%;min-height:44px;padding:7px 10px;border:0;border-radius:8px!important;background:transparent;color:#365168;font-size:13px;white-space:normal}
+#skandi-shell-root #skandi-app-root .mm-module:hover{background:#f1f7fb;color:#022e64}
+#skandi-shell-root #skandi-app-root .mm-module.active{background:#eaf5f8;color:#022e64}
+#skandi-shell-root #skandi-app-root .mm-module.active:after{display:none}
+#skandi-shell-root #skandi-app-root .mc-module-icon{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:6px;background:#edf4f8;color:#0a6281;font-size:17px}
+#skandi-shell-root #skandi-app-root .mc-subnav{display:grid;gap:2px;margin:14px 0 0;padding:12px 0 0;border-top:1px solid #e5edf3}
+#skandi-shell-root #skandi-app-root .mc-subnav:empty{display:none}
+#skandi-shell-root #skandi-app-root .nav-btn{position:relative;display:flex!important;align-items:center;width:100%!important;min-height:42px!important;padding:8px 10px!important;margin:0!important;border:0!important;border-radius:7px!important;color:#51697c!important;font-size:13px!important;white-space:normal;text-transform:none!important}
+#skandi-shell-root #skandi-app-root .nav-btn.active{background:#f2f7fa!important;color:#022e64!important}
+#skandi-shell-root #skandi-app-root .nav-btn.active:after{display:none}
+#skandi-shell-root #skandi-app-root .mc-workspace{display:flex!important;min-width:0!important;min-height:0!important;height:auto!important;overflow:visible!important;gap:0!important;padding:0!important;background:#f4f7fb!important}
+#skandi-shell-root #skandi-app-root .mm-contextbar{min-height:84px;padding:18px 28px;background:#fff;border-bottom:1px solid #dde7f0}
+#skandi-shell-root #skandi-app-root .mm-breadcrumb{margin-bottom:5px;color:#73879a;font-size:13px;letter-spacing:.09em}
+#skandi-shell-root #skandi-app-root .mm-contextbar h1{font-size:23px;letter-spacing:-.025em}
+#skandi-shell-root #skandi-app-root .mc-toolbar{display:flex!important;flex-wrap:wrap!important;gap:8px!important;align-items:center!important;padding:12px 28px!important;background:#fff!important}
+#skandi-shell-root #skandi-app-root .mc-toolbar[hidden],#skandi-shell-root #skandi-app-root .mc-toolbar [hidden],#skandi-shell-root #skandi-app-root #statusLine[hidden]{display:none!important}
+#skandi-shell-root #skandi-app-root .mc-search-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#skandi-shell-root #skandi-app-root .mc-toolbar .search{flex:1;min-width:0!important;max-width:420px;margin:0!important;min-height:44px!important;border-radius:8px!important;font-size:14px!important}
+#skandi-shell-root #skandi-app-root .mc-toolbar .btn{min-height:44px!important;border-radius:8px!important}
+#skandi-shell-root #skandi-app-root #statusLine.notice{margin:12px 28px 0!important;padding:10px 12px!important;border-left:3px solid #b42318!important;border-radius:8px!important;background:#fff2f0!important;color:#8f1f17!important;font-size:13px!important}
+#skandi-shell-root #skandi-app-root .content{background:transparent!important}
+#skandi-shell-root #skandi-app-root .panel-view.active{padding:22px 28px 32px!important;background:transparent!important}
+#skandi-shell-root #skandi-app-root .mc-welcome{padding:30px;border-radius:16px;background:linear-gradient(120deg,#022e64,#075c85);color:white}
+#skandi-shell-root #skandi-app-root .mc-eyebrow{margin:0 0 10px;color:#a7dfe6;font-size:13px;font-weight:800;letter-spacing:.14em}
+#skandi-shell-root #skandi-app-root .mc-welcome h2{max-width:650px;margin:0;color:#fff;font-size:max(13px, clamp(24px,3vw,36px));line-height:1.12;letter-spacing:-.035em}
+#skandi-shell-root #skandi-app-root .mc-welcome p:last-child{max-width:620px;margin:12px 0 0;color:#e1f1f4;font-size:14px;line-height:1.6}
+#skandi-shell-root #skandi-app-root .mc-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#skandi-shell-root #skandi-app-root .mc-card{display:flex;flex-direction:column;min-width:0;min-height:165px;padding:19px;border:1px solid #dce7ef;border-radius:13px;background:#fff}
+#skandi-shell-root #skandi-app-root .mc-card h3{margin:0 0 8px;color:#022e64;font-size:16px}
+#skandi-shell-root #skandi-app-root .mc-card p{flex:1;margin:0 0 14px;color:#5b6f81;font-size:13px;line-height:1.55}
+#skandi-shell-root #skandi-app-root .mc-card button{align-self:flex-start;min-height:42px;padding:0;border:0;background:transparent;color:#006486;font-size:13px;font-weight:750;text-align:left}
+#skandi-shell-root #skandi-app-root .mc-ownership{margin:3px 0;color:#627489;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .mc-inline-error{display:block;flex-basis:100%;margin:5px 0;color:#aa261c;font-size:13px;line-height:1.4}
+#skandi-shell-root #skandi-app-root .mc-sidebar button:focus-visible,#skandi-shell-root #skandi-app-root .mc-mobile-menu:focus-visible,#skandi-shell-root #skandi-app-root .mc-card button:focus-visible{outline:3px solid #23a2bd;outline-offset:2px}
+@media(max-width:1050px){#skandi-shell-root #skandi-app-root .mc-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ #skandi-shell-root #skandi-app-root .mm-appbar{padding:0 15px;min-height:58px}
+ #skandi-shell-root #skandi-app-root .mm-brand{min-height:0;border:0}
+ #skandi-shell-root #skandi-app-root .mm-brand-copy span{white-space:normal}
+ #skandi-shell-root #skandi-app-root .mc-mobile-menu{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px;border:1px solid #cfdee8;border-radius:8px;background:#fff;color:#022e64;font-weight:700}
+ #skandi-shell-root #skandi-app-root .mc-close-menu{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:0;background:transparent;color:#022e64;font-size:24px}
+ #skandi-shell-root #skandi-app-root .mc-shell{display:block!important;min-height:0!important}
+ #skandi-shell-root #skandi-app-root .mc-sidebar{position:fixed!important;top:0!important;bottom:0!important;left:0!important;right:auto!important;width:min(320px,88vw)!important;max-height:none!important;min-height:0!important;height:auto!important;z-index:1000!important;padding:12px 14px 30px!important;transform:translateX(-105%)!important;transition:transform .2s ease;box-shadow:8px 0 30px #001b3440!important}
+ #skandi-shell-root #skandi-app-root .mc-menu-heading{display:flex;align-items:center;justify-content:space-between;padding:0 4px 5px 10px}
+ body.mobile-drawer-open #skandi-shell-root #skandi-app-root .mc-sidebar{transform:translateX(0)!important}
+ #skandi-shell-root #skandi-app-root .drawer-overlay{display:none!important;position:fixed;inset:0;z-index:999;background:#001a34a0}
+ body.mobile-drawer-open #skandi-shell-root #skandi-app-root .drawer-overlay{display:block!important}
+ #skandi-shell-root #skandi-app-root .mm-contextbar{min-height:76px;padding:16px}
+ #skandi-shell-root #skandi-app-root .mm-contextbar h1{font-size:21px}
+ #skandi-shell-root #skandi-app-root .mc-toolbar{padding:10px 16px!important}
+ #skandi-shell-root #skandi-app-root #statusLine.notice{margin:10px 16px 0!important}
+ #skandi-shell-root #skandi-app-root .panel-view.active{padding:14px 14px 24px!important}
+ #skandi-shell-root #skandi-app-root .mc-welcome{padding:22px 19px;border-radius:13px}
+ #skandi-shell-root #skandi-app-root .mc-welcome p:last-child{font-size:13px}
+ #skandi-shell-root #skandi-app-root .mc-card-grid{grid-template-columns:1fr;gap:9px}
+ #skandi-shell-root #skandi-app-root .mc-card{min-height:0;padding:16px}
+ #skandi-shell-root #skandi-app-root .mc-card p{margin-bottom:6px}
+}
+@media(prefers-reduced-motion:reduce){#skandi-shell-root #skandi-app-root .mc-sidebar{transition:none}}
+
+#skandi-shell-root #skandi-app-root .we-intro{margin:0 0 12px}
+#skandi-shell-root #skandi-app-root .we-intro h2{margin:0 0 5px;color:#022e64;font-size:21px;letter-spacing:-.02em}
+#skandi-shell-root #skandi-app-root .we-intro p{margin:0;color:#5c7081;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .we-modebar,#skandi-shell-root #skandi-app-root .we-toolbar{gap:8px;border:1px solid #dce7ef;border-radius:10px;background:#fff}
+#skandi-shell-root #skandi-app-root .we-modebar button,#skandi-shell-root #skandi-app-root .we-toolbar .btn{min-height:44px!important;border-radius:7px!important;font-size:13px!important}
+#skandi-shell-root #skandi-app-root .we-page-picker,#skandi-shell-root #skandi-app-root .we-viewport-picker{display:grid;gap:3px;min-width:170px;color:#4f6578;font-size:13px;font-weight:700}
+#skandi-shell-root #skandi-app-root .we-page-picker select,#skandi-shell-root #skandi-app-root .we-viewport-picker select{min-height:40px!important;border-radius:6px!important}
+#skandi-shell-root #skandi-app-root .we-more summary{min-height:44px;display:flex;align-items:center;padding:0 10px;color:#075c7d;font-weight:700;cursor:pointer}
+#skandi-shell-root #skandi-app-root .we-more>div{display:flex;flex-wrap:wrap;gap:6px;padding:6px}
+#skandi-shell-root #skandi-app-root .we-workspace{grid-template-columns:minmax(0,1fr) minmax(270px,330px);gap:12px;align-items:start}
+#skandi-shell-root #skandi-app-root .we-canvas,#skandi-shell-root #skandi-app-root .we-inspector{border:1px solid #dce7ef;border-radius:10px}
+#skandi-shell-root #skandi-app-root .we-inspector{padding:16px;font:13px/1.5 Inter,system-ui,sans-serif}
+#skandi-shell-root #skandi-app-root .we-inspector h3{font:700 16px/1.4 Inter,system-ui,sans-serif}
+#skandi-shell-root #skandi-app-root .we-inspector input,#skandi-shell-root #skandi-app-root .we-inspector select{min-height:40px;border-radius:6px!important}
+#skandi-shell-root #skandi-app-root .we-inspector summary{padding:10px 0;color:#022e64}
+#skandi-shell-root #skandi-app-root .we-block-add,#skandi-shell-root #skandi-app-root .we-block-actions{display:flex;flex-wrap:wrap;gap:5px}
+#skandi-shell-root #skandi-app-root .we-block-add .btn,#skandi-shell-root #skandi-app-root .we-block-actions .btn{min-height:40px!important;border-radius:6px!important}
+#skandi-shell-root #skandi-app-root .we-block-row{margin:10px 0;padding:11px;border:1px solid #dce7ef;border-radius:8px;background:#f9fbfd}
+#skandi-shell-root #skandi-app-root .we-block-row strong{color:#022e64;text-transform:capitalize}
+#skandi-shell-root #skandi-app-root .we-block-row textarea{min-height:70px}
+#skandi-shell-root #skandi-app-root .we-mobile-switch{display:none}
+#skandi-shell-root #skandi-app-root .mc-quality-intro h2{margin:0 0 5px;color:#022e64;font-size:22px}
+#skandi-shell-root #skandi-app-root .mc-quality-intro p,#skandi-shell-root #skandi-app-root .mc-quality-result p{color:#5b6f81;font-size:13px;line-height:1.55}
+#skandi-shell-root #skandi-app-root .mc-quality-result li{margin:7px 0;color:#263e50;line-height:1.5}
+@media(max-width:760px){
+ #skandi-shell-root #skandi-app-root .we-toolbar{align-items:stretch;gap:7px}
+ #skandi-shell-root #skandi-app-root .we-page-picker{flex:1 1 100%}
+ #skandi-shell-root #skandi-app-root .we-viewport-picker{flex:1 1 140px}
+ #skandi-shell-root #skandi-app-root .we-toolbar .btn{flex:1 1 auto}
+ #skandi-shell-root #skandi-app-root .we-workspace{grid-template-columns:minmax(0,1fr);min-height:0}
+ #skandi-shell-root #skandi-app-root .we-mobile-switch{display:flex;gap:4px;margin:12px 0 0;padding:4px;border-radius:9px;background:#e8f0f5}
+ #skandi-shell-root #skandi-app-root .we-mobile-switch button{flex:1;min-height:42px;border:0;border-radius:7px;background:transparent;color:#34536a;font-weight:700}
+ #skandi-shell-root #skandi-app-root .we-mobile-switch button[aria-pressed=true]{background:#fff;color:#022e64}
+ #skandi-shell-root #skandi-app-root .we-workspace[data-mobile-view=preview] .we-inspector,#skandi-shell-root #skandi-app-root .we-workspace[data-mobile-view=inspector] .we-canvas{display:none}
+ #skandi-shell-root #skandi-app-root .we-canvas{padding:6px}
+ #skandi-shell-root #skandi-app-root .we-canvas iframe{height:650px}
+ #skandi-shell-root #skandi-app-root .we-inspector{max-height:none}
+}
+
+#skandi-shell-root #skandi-app-root .mc-action-state{display:inline-block;margin:5px 8px;color:#506b7d;font-size:13px}
+
+#skandi-shell-root #skandi-app-root .we-page-search{display:grid;gap:3px;min-width:170px;color:#4f6578;font-size:13px;font-weight:700}
+#skandi-shell-root #skandi-app-root .we-page-search input{min-height:40px!important;border-radius:6px!important}
+@media(max-width:760px){#skandi-shell-root #skandi-app-root .we-page-search{flex:1 1 100%}}
+
+#skandi-shell-root #skandi-app-root .mc-assets-layout{display:grid;gap:12px}
+#skandi-shell-root #skandi-app-root .mc-assets-primary{padding:20px;border:1px solid #dce7ef;border-radius:12px;background:#fff}
+#skandi-shell-root #skandi-app-root .mc-assets-primary h3{margin:0 0 5px;color:#022e64;font-size:20px}
+#skandi-shell-root #skandi-app-root .mc-assets-help{margin:0 0 16px;color:#5b6f81;font-size:13px;line-height:1.55}
+#skandi-shell-root #skandi-app-root .mc-asset-detail{border:1px solid #dce7ef;border-radius:10px;background:#fff;overflow:hidden}
+#skandi-shell-root #skandi-app-root .mc-asset-detail>summary{padding:16px;color:#022e64;font-weight:700;cursor:pointer}
+#skandi-shell-root #skandi-app-root .mc-asset-detail>.panel{border:0;border-top:1px solid #e5edf3}
+#skandi-shell-root #skandi-app-root .sk-media-library-tools{display:flex;flex-wrap:wrap;align-items:end;gap:8px}
+#skandi-shell-root #skandi-app-root .sk-media-library-tools label{display:grid;gap:5px;flex:1 1 230px;color:#4f6578;font-size:13px;font-weight:700}
+#skandi-shell-root #skandi-app-root .sk-media-library-tools .input,#skandi-shell-root #skandi-app-root .sk-media-library-tools .btn,#skandi-shell-root #skandi-app-root .sk-media-paging .btn{min-height:44px!important;border-radius:7px!important}
+#skandi-shell-root #skandi-app-root .sk-media-buckets{gap:7px;margin:16px 0}
+#skandi-shell-root #skandi-app-root .sk-media-bucket{min-height:36px;padding:6px 10px;border-radius:6px;font-size:13px}
+#skandi-shell-root #skandi-app-root .sk-media-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+#skandi-shell-root #skandi-app-root .sk-media-card{border:1px solid #dce7ef;border-radius:9px;overflow:hidden}
+#skandi-shell-root #skandi-app-root .sk-media-thumb{height:130px}
+#skandi-shell-root #skandi-app-root .sk-media-card-body{padding:12px}
+#skandi-shell-root #skandi-app-root .sk-media-card-title{font-size:13px}
+#skandi-shell-root #skandi-app-root .sk-media-card-meta{font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .sk-media-card .btn{min-height:40px!important}
+#skandi-shell-root #skandi-app-root .sk-media-paging{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px;color:#526a7d;font-size:13px}
+#skandi-shell-root #skandi-app-root .sk-media-paging .btn:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:760px){
+ #skandi-shell-root #skandi-app-root .mc-assets-primary{padding:15px}
+ #skandi-shell-root #skandi-app-root .sk-media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #skandi-shell-root #skandi-app-root .sk-media-thumb{height:100px}
+ #skandi-shell-root #skandi-app-root .sk-media-card-body{padding:9px}
+ #skandi-shell-root #skandi-app-root .sk-media-library-tools .btn{flex:1}
+}
+@media(max-width:340px){#skandi-shell-root #skandi-app-root .sk-media-grid{grid-template-columns:1fr}}
 </style>
 <script>window.SKANDIWebsiteDesignRuntime = function () {
   'use strict';
@@ -3866,10 +4059,10 @@ window.SKANDIEmailStudioHostMount();
   if(shell&&shell.dataset.skandiFamily!=='public')return;
   const preview=config.preview===true,nonce=config.nonce;
   let design={elements:[]},selected=null,scheduled=false,stopped=false,refreshTimer;
-  const originals=new Map();
+  const originals=new Map(),addedHosts=new Set();
   const css=document.createElement('style');css.dataset.websiteDesign='published';document.head.append(css);
   let credits;
-  const blocked='script,style,iframe,object,embed,head,meta,link,input,textarea,select,option';
+  const blocked='script,style,iframe,object,embed,head,meta,link,select,option,input[type=password],input[type=hidden],input[type=file]';
   const send=(type,payload)=>parent.postMessage({source:preview?'SKANDI_WEBSITE_PREVIEW':'SKANDI_PRESENTATION',type,nonce,payload},'*');
   function selectorFor(el) {
     const parts=[];
@@ -3892,12 +4085,26 @@ window.SKANDIEmailStudioHostMount();
   }
   function textNode(el) {return [...el.childNodes].find(n=>n.nodeType===3&&n.nodeValue.trim())||(!el.children.length?[...el.childNodes].find(n=>n.nodeType===3):null);}
   function remember(el) {
-    if(!originals.has(el)) originals.set(el,{text:textNode(el),value:textNode(el)?.nodeValue,src:el.getAttribute('src'),srcset:el.getAttribute('srcset'),alt:el.getAttribute('alt'),href:el.getAttribute('href'),background:el.style.getPropertyValue('background-image')});
+    if(!originals.has(el)) originals.set(el,{text:textNode(el),value:textNode(el)?.nodeValue,src:el.getAttribute('src'),srcset:el.getAttribute('srcset'),alt:el.getAttribute('alt'),href:el.getAttribute('href'),placeholder:el.getAttribute('placeholder'),background:el.style.getPropertyValue('background-image')});
     return originals.get(el);
   }
   function restore() {
-    for(const [el,old] of originals){if(old.text&&old.text.parentNode===el)old.text.nodeValue=old.value;for(const name of ['src','srcset','alt','href'])old[name]===null?el.removeAttribute(name):el.setAttribute(name,old[name]);old.background?el.style.setProperty('background-image',old.background):el.style.removeProperty('background-image');}
+    for(const [el,old] of originals){if(old.text&&old.text.parentNode===el)old.text.nodeValue=old.value;for(const name of ['src','srcset','alt','href','placeholder'])old[name]===null?el.removeAttribute(name):el.setAttribute(name,old[name]);old.background?el.style.setProperty('background-image',old.background):el.style.removeProperty('background-image');}
     originals.clear();
+    for(const host of addedHosts)host.remove();addedHosts.clear();
+  }
+  function renderBlocks(el,blocks) {
+    if(!blocks?.length||!el.closest('#skandi-app-root')||!el.matches('main,section,article,div,aside,header,footer')||el.closest('form,nav,button,a,[data-website-design-protected]'))return;
+    let host=[...el.children].find(child=>addedHosts.has(child));
+    if(!host){host=document.createElement('div');host.setAttribute('data-website-design-added','');el.append(host);addedHosts.add(host)}
+    const signature=JSON.stringify(blocks);if(host.dataset.signature===signature)return;host.dataset.signature=signature;host.replaceChildren();
+    for(const block of blocks){
+      let node;if(block.type==='heading'){node=document.createElement('h3');node.textContent=block.text||'';}
+      else if(block.type==='text'){node=document.createElement('p');node.textContent=block.text||'';}
+      else if(block.type==='button'){node=document.createElement('a');node.textContent=block.text||'';const href=String(block.href||'');if(/^(?:\/(?!\/)|#[\w-]|https:\/\/|mailto:|tel:)/.test(href)&&!/[<>\u0000-\u0020]/.test(href))node.setAttribute('href',href);}
+      else if(block.type==='image'&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/(?:skandi-public-assets|inventory-media|aircraft-assets|uniform-assets)\//i.test(block.assetUrl||'')){node=document.createElement('img');node.src=block.assetUrl;node.alt=block.alt||'';}
+      if(node){node.setAttribute('data-website-design-block',block.id);host.append(node)}
+    }
   }
   function apply() {
     if(stopped)return;
@@ -3909,8 +4116,10 @@ window.SKANDIEmailStudioHostMount();
       for(const el of elements) {
         if(el.matches(blocked)||el.closest('[data-website-design-protected]'))continue;
         const old=remember(el);
-        if(Object.hasOwn(item,'text')){const node=textNode(el);if(node&&node.nodeValue!==item.text)node.nodeValue=item.text;}
+        if(Object.hasOwn(item,'text')&&el.tagName!=='INPUT'&&el.tagName!=='TEXTAREA'){const node=textNode(el);if(node&&node.nodeValue!==item.text)node.nodeValue=item.text;}
         if(Object.hasOwn(item,'href')&&el.tagName==='A')el.setAttribute('href',item.href);
+        if(Object.hasOwn(item,'placeholder')&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))el.setAttribute('placeholder',item.placeholder);
+        renderBlocks(el,item.blocks);
         if(Object.hasOwn(item,'alt')&&el.tagName==='IMG')el.setAttribute('alt',item.alt);
         if(item.assetUrl&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/(?:skandi-public-assets|inventory-media|aircraft-assets|uniform-assets)\//i.test(item.assetUrl)) {
           if(item.imageMode==='background')el.style.setProperty('background-image','url("'+item.assetUrl.replace(/["\\\n\r]/g,'')+'")','important');
@@ -3923,10 +4132,11 @@ window.SKANDIEmailStudioHostMount();
       }
     }
     const fonts=(design.fonts||[]).filter(font=>/^[a-zA-Z0-9 _-]+$/.test(font.family)&&/^https:\/\/cdn\.jsdelivr\.net\/fontsource\/fonts\/[a-z0-9-]+@[\w.-]+\/[a-z0-9-]+\.woff2$/.test(font.url)).map(font=>'@font-face{font-family:"'+font.family+'";font-weight:'+Number(font.weight)+';font-style:normal;font-display:swap;src:url("'+font.url+'") format("woff2")}');
-    const text=fonts.join('\n')+'\n'+rules.all.join('\n')+'\n@media(max-width:1023px){'+rules.tablet.join('\n')+'}\n@media(max-width:767px){'+rules.mobile.join('\n')+'}';
+    const addedCss='[data-website-design-added]{display:grid;gap:12px;margin:16px 0}[data-website-design-added] h3,[data-website-design-added] p{margin:0;white-space:pre-wrap}[data-website-design-added] img{display:block;max-width:100%;height:auto}[data-website-design-added] a{display:inline-block;justify-self:start;padding:11px 16px;border-radius:7px;background:#022e64;color:#fff;text-decoration:none;font-weight:700}';
+    const text=addedCss+'\n'+fonts.join('\n')+'\n'+rules.all.join('\n')+'\n@media(max-width:1023px){'+rules.tablet.join('\n')+'}\n@media(max-width:767px){'+rules.mobile.join('\n')+'}';
     if(css.textContent!==text)css.textContent=text;
     if(!preview){
-      const values=[...new Set((design.elements||[]).map(item=>item.credit).filter(Boolean))];
+      const values=[...new Set((design.elements||[]).flatMap(item=>[item.credit,...(item.blocks||[]).map(block=>block.credit)]).filter(Boolean))];
       if(values.length){
         if(!credits){credits=document.createElement('details');credits.setAttribute('data-website-design-protected','');credits.style.cssText='padding:12px 24px;font:12px/1.5 sans-serif;background:#fff;color:#526274';document.body.append(credits);}
         const signature=JSON.stringify(values);
@@ -3942,7 +4152,7 @@ window.SKANDIEmailStudioHostMount();
   function describe(el){
     const computed=getComputedStyle(el),styles={};
     for(const key of config.properties||[])styles[key]=computed.getPropertyValue(key);
-    return {selector:selectorFor(el),tag:el.tagName.toLowerCase(),text:textNode(el)?.nodeValue??null,alt:el.getAttribute('alt')||'',href:el.getAttribute('href')||'',image:el.tagName==='IMG',currentImage:el.tagName==='IMG'?el.src:(computed.backgroundImage.match(/^url\(["']?(.*?)["']?\)$/)?.[1]||''),styles};
+    return {selector:selectorFor(el),tag:el.tagName.toLowerCase(),text:textNode(el)?.nodeValue??null,alt:el.getAttribute('alt')||'',href:el.getAttribute('href')||'',placeholder:el.getAttribute('placeholder')||'',canAddBlocks:Boolean(el.closest('#skandi-app-root')&&el.matches('main,section,article,div,aside,header,footer')&&!el.closest('form,nav,button,a,[data-website-design-protected]')),image:el.tagName==='IMG',currentImage:el.tagName==='IMG'?el.src:(computed.backgroundImage.match(/^url\(["']?(.*?)["']?\)$/)?.[1]||''),styles};
   }
   window.addEventListener('message',event=>{
     if(event.source!==parent)return;
@@ -3958,7 +4168,7 @@ window.SKANDIEmailStudioHostMount();
     let lastPreviewActivity=0;
     const reportActivity=event=>{if(!event.isTrusted||Date.now()-lastPreviewActivity<5000)return;lastPreviewActivity=Date.now();send('WEBSITE_PREVIEW_ACTIVITY',{});};
     for(const type of ['pointerdown','pointermove','keydown','wheel','touchstart'])document.addEventListener(type,reportActivity,{passive:true});
-    document.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();const el=event.target;if(el.matches(blocked))return;if(selected)selected.style.outline='';selected=el;selected.style.outline='2px solid #285ca8';send('WEBSITE_PREVIEW_SELECTED',describe(el));},true);
+    document.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();const el=event.target;if(el.matches(blocked)||el.closest('[data-website-design-added],[data-website-design-protected]'))return;if(selected)selected.style.outline='';selected=el;selected.style.outline='2px solid #285ca8';send('WEBSITE_PREVIEW_SELECTED',describe(el));},true);
     document.addEventListener('submit',event=>{event.preventDefault();event.stopImmediatePropagation();},true);
     send('WEBSITE_PREVIEW_READY',{});
   }else{
@@ -3974,7 +4184,9 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
   const requests=new Map(),clone=v=>JSON.parse(JSON.stringify(v)),arr=v=>Array.isArray(v)?v:[];
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let pages=[],assets=[],properties=[],root,frame,selected,previewHTML='',pageKey='',nonce='',revision=0,dirty=false,design={version:1,elements:[]},history=[],future=[];
-  let homeCards=[],homeCardAssets=[],homeCardId='',homeCardsLoaded=false,homeCardDirty=false,activeMode='visual';
+  let homeCards=[],homeCardAssets=[],homeCardId='',homeCardsLoaded=false,homeCardDirty=false,activeMode='visual',busy=false;
+  const busyControls=new Map();
+  function setBusy(value){busy=value;if(value){root.querySelectorAll('button,input,select,textarea').forEach(control=>{busyControls.set(control,control.disabled);control.disabled=true})}else{busyControls.forEach((disabled,control)=>{if(control.isConnected)control.disabled=disabled});busyControls.clear()}}
   const el=id=>root?.querySelector('[data-we="'+id+'"]');
   const homeEl=id=>root?.querySelector('[data-home="'+id+'"]');
   function status(message,error=false){if(el('status')){el('status').textContent=message;el('status').dataset.error=String(error);}}
@@ -4000,18 +4212,26 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
     if(['opacity','order','flex-grow','flex-shrink'].includes(property))return '<label>'+esc(label)+'<input type="number" step="any"'+data+' value="'+esc(value)+'" placeholder="'+esc(computed)+'"></label>';
     return '<label>'+esc(label)+'<input'+data+' value="'+esc(value)+'" placeholder="'+esc(computed||'Keep original')+'"></label>';
   }
+  function publicImageAssets(){return assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket));}
+  function blocksEditor(item){
+    if(!selected?.canAddBlocks)return '';
+    const blocks=arr(item.blocks);
+    return '<details class="we-block-editor"><summary>Added content ('+blocks.length+')</summary><p class="we-note">Add content inside this selected section. Existing page elements and operational data stay in place.</p><div class="we-block-add"><button class="btn" type="button" data-we-add-block="heading">+ Heading</button><button class="btn" type="button" data-we-add-block="text">+ Text</button><button class="btn" type="button" data-we-add-block="button">+ Button</button><button class="btn" type="button" data-we-add-block="image">+ Image</button></div>'+blocks.map((block,index)=>'<div class="we-block-row"><strong>'+esc(block.type)+'</strong>'+(['heading','text','button'].includes(block.type)?'<label>Text<textarea data-we-block-id="'+esc(block.id)+'" data-we-block-field="text">'+esc(block.text||'')+'</textarea></label>':'')+(block.type==='button'?'<label>Destination link<input data-we-block-id="'+esc(block.id)+'" data-we-block-field="href" value="'+esc(block.href||'')+'" placeholder="/destinations"></label>':'')+(block.type==='image'?'<label>Image<select data-we-block-id="'+esc(block.id)+'" data-we-block-field="assetId"><option value="">Choose an image</option>'+publicImageAssets().map(a=>'<option value="'+esc(a.id)+'" '+(a.id===block.assetId?'selected':'')+'>'+esc(a.name||a.id)+'</option>').join('')+'</select></label><label>Image description<input data-we-block-id="'+esc(block.id)+'" data-we-block-field="alt" value="'+esc(block.alt||'')+'"></label>':'')+'<div class="we-block-actions"><button type="button" class="btn" data-we-block-move="up" data-we-block-id="'+esc(block.id)+'" '+(index===0?'disabled':'')+'>Move up</button><button type="button" class="btn" data-we-block-move="down" data-we-block-id="'+esc(block.id)+'" '+(index===blocks.length-1?'disabled':'')+'>Move down</button><button type="button" class="btn" data-we-block-remove="'+esc(block.id)+'">Remove</button></div></div>').join('')+'</details>';
+  }
+  function setMobileView(view){const workspace=el('workspace');if(!workspace)return;workspace.dataset.mobileView=view;root.querySelectorAll('[data-we-mobile-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.weMobileView===view)));}
   function inspector(){
     if(!selected){el('inspector').innerHTML='<h3>Select an element</h3><p class="we-note">Click text, an image, a card or a section in the preview. Select its parent to style the surrounding layout.</p>';return;}
     const item=current()||{},viewport=el('viewport').value;
     const names={h1:'Heading',h2:'Heading',h3:'Heading',p:'Paragraph',article:'Card',section:'Section',div:'Container',a:'Link',img:'Image',button:'Button'};
     el('inspector').innerHTML='<h3>'+esc(names[selected.tag]||'Element')+'</h3><button class="btn" data-we-action="parent">Select parent</button><button class="btn" data-we-action="reset">Reset element</button>'+
-      (selected.text!==null?'<label>Text<textarea data-we="text">'+esc(Object.hasOwn(item,'text')?item.text:selected.text)+'</textarea></label>':'')+
+      (selected.text!==null&&!['input','textarea'].includes(selected.tag)?'<label>Text<textarea data-we="text">'+esc(Object.hasOwn(item,'text')?item.text:selected.text)+'</textarea></label>':'')+
       (selected.tag==='a'?'<label>Link<input data-we="href" value="'+esc(item.href??selected.href)+'"></label>':'')+
-      '<label>Image from Supabase<select data-we="asset"><option value="">Keep existing image</option>'+assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket)).map(a=>'<option value="'+esc(a.id)+'" '+(a.id===item.assetId?'selected':'')+'>'+esc(a.displayName||a.originalName)+'</option>').join('')+'</select></label>'+
+      (['input','textarea'].includes(selected.tag)?'<label>Placeholder text<input data-we="placeholder" value="'+esc(item.placeholder??selected.placeholder)+'"></label>':'')+
+      '<label>Choose an image<select data-we="asset"><option value="">Keep existing image</option>'+assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket)).map(a=>'<option value="'+esc(a.id)+'" '+(a.id===item.assetId?'selected':'')+'>'+esc(a.displayName||a.originalName)+'</option>').join('')+'</select></label>'+
       '<label>Image placement<select data-we="imageMode"><option value="image" '+(selected.image?'selected':'')+'>Image element</option><option value="background" '+(!selected.image?'selected':'')+'>Background</option></select></label>'+
-      '<label>Image description<input data-we="alt" value="'+esc(item.alt??selected.alt)+'"></label><p class="we-note">Upload images in Assets / Media, then reload this page’s assets. Existing images stay unchanged until you select a replacement.</p>'+
-      (selected.currentImage?'<button class="btn" data-we-action="import-existing">Copy current image to Supabase</button>':'')+
-      '<details open><summary>Appearance — '+esc(viewport)+'</summary>'+properties.filter(p=>p!=='background-image').map(p=>styleControl(p,item.styles?.[viewport]?.[p]||'',selected.styles?.[p]||'')).join('')+'</details>';
+      '<label>Image description<input data-we="alt" value="'+esc(item.alt??selected.alt)+'"></label><p class="we-note">Upload images in Asset Library, then reload this page’s assets. Existing images stay unchanged until you select a replacement.</p>'+
+      (selected.currentImage?'<button class="btn" data-we-action="import-existing">Add current image to library</button>':'')+
+      blocksEditor(item)+'<details><summary>Appearance — '+esc(viewport)+'</summary>'+properties.filter(p=>p!=='background-image').map(p=>styleControl(p,item.styles?.[viewport]?.[p]||'',selected.styles?.[p]||'')).join('')+'</details>';
   }
   function preview(html){
     nonce=crypto.randomUUID();
@@ -4024,6 +4244,7 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
     frame.srcdoc='<!doctype html>'+doc.documentElement.outerHTML;
   }
   async function load(key){
+    if(!key)throw new Error('Choose a page first.');
     if(dirty&&!confirm('Discard unsaved changes and open another page?')){el('page').value=pageKey;return;}
     status('Loading page and draft…');
     const result=await rpc('GET_WEBSITE_DESIGN',{pageKey:key});
@@ -4032,6 +4253,7 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
   }
   async function save(action){
     if(!pageKey)throw new Error('Open a page first.');
+    if(el('page').value!==pageKey)throw new Error('Load the selected page before saving.');
     if(action==='PUBLISH'&&!confirm('Publish this page’s presentation changes?'))return;
     status(action==='PUBLISH'?'Publishing…':'Saving…');
     const result=await rpc('SAVE_WEBSITE_DESIGN',{pageKey,action,expectedRevision:revision,design});
@@ -4108,25 +4330,35 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
     pages=data.pages||pages;assets=data.assets||assets;
     const section=document.getElementById('panel-websiteeditor');if(!section)return;
     if(root===section){if(el('page').options.length<=1)pageOptions();return;}
-    root=section;root.innerHTML='<div class="we-modebar"><button type="button" class="active" data-we-mode="visual">Visual Website Editor</button><button type="button" data-we-mode="homecards">Home Cards &amp; Pricing</button></div><div data-we="visual-panel"><div class="we-toolbar"><select data-we="page"><option value="">Select a public page</option></select><button class="btn" data-we-action="load">Load page</button><select data-we="viewport"><option value="all">Desktop / all sizes</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select><button class="btn" data-we-action="undo">Undo</button><button class="btn" data-we-action="redo">Redo</button><button class="btn" data-we-action="save">Save draft</button><button class="btn primary" data-we-action="publish">Publish</button><button class="btn" data-we-action="restore">Discard draft</button><button class="btn" data-we-action="rollback">Roll back publication</button></div><div class="we-status" data-we="status" role="status"></div><p class="we-note">Layout preview. Live inventory, account and booking data run on the public site. Pages without a successful published build cannot be previewed yet.</p><div class="we-workspace"><div class="we-canvas"><iframe data-we="preview" title="Public website layout preview" sandbox="allow-scripts"></iframe></div><aside class="we-inspector" data-we="inspector"></aside></div><details><summary>Discover media and fonts</summary><div class="we-toolbar"><select data-we="provider"><option value="wikimedia">Wikimedia Commons</option><option value="openverse">Openverse</option><option value="fontsource">Fontsource</option></select><input data-we="query" placeholder="Search by subject or font family"><button class="btn" data-we-action="search">Search</button></div><div class="we-media-results" data-we="results"></div></details></div><section data-we="homecards-panel" hidden><div class="hc-status" data-home="status" role="status"></div><div data-home="content"></div></section>';
+    root=section;root.innerHTML='<div class="we-intro"><h2>Make your website yours</h2><p>Choose a page, select an element in the preview, then save and publish your changes.</p></div><div class="we-modebar"><button type="button" class="active" data-we-mode="visual">Page editor</button><button type="button" data-we-mode="homecards">Home cards &amp; pricing</button></div><div data-we="visual-panel"><div class="we-toolbar"><label class="we-page-search">Find page<input type="search" data-we="pageQuery" placeholder="Search pages"></label><label class="we-page-picker">Page<select data-we="page"><option value="">Select a public page</option></select></label><button class="btn" data-we-action="load">Open page</button><label class="we-viewport-picker">Preview<select data-we="viewport"><option value="all">Desktop / all sizes</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select></label><button class="btn" data-we-action="save">Save draft</button><button class="btn primary" data-we-action="publish">Publish</button><details class="we-more"><summary>More actions</summary><div><button class="btn" data-we-action="undo">Undo</button><button class="btn" data-we-action="redo">Redo</button><button class="btn" data-we-action="restore">Discard draft</button><button class="btn" data-we-action="rollback">Roll back publication</button></div></details></div><div class="we-status" data-we="status" role="status"></div><p class="we-note">Layout preview. Live inventory, account and booking data run on the public site. Pages without a successful published build cannot be previewed yet.</p><div class="we-mobile-switch"><button type="button" data-we-mobile-view="preview" aria-pressed="true">Page preview</button><button type="button" data-we-mobile-view="inspector" aria-pressed="false">Edit selection</button></div><div class="we-workspace" data-we="workspace" data-mobile-view="preview"><div class="we-canvas"><iframe data-we="preview" title="Public website layout preview" sandbox="allow-scripts"></iframe></div><aside class="we-inspector" data-we="inspector"></aside></div><details><summary>Discover media and fonts</summary><div class="we-toolbar"><select data-we="provider"><option value="wikimedia">Wikimedia Commons</option><option value="openverse">Openverse</option><option value="fontsource">Fontsource</option></select><input data-we="query" placeholder="Search by subject or font family"><button class="btn" data-we-action="search">Search</button></div><div class="we-media-results" data-we="results"></div></details></div><section data-we="homecards-panel" hidden><div class="hc-status" data-home="status" role="status"></div><div data-home="content"></div></section>';
     frame=el('preview');pageOptions();inspector();
     root.addEventListener('click',async event=>{try{
+      if(busy)return;
+      const mobile=event.target.closest('[data-we-mobile-view]')?.dataset.weMobileView;if(mobile){setMobileView(mobile);return;}
+      const addBlock=event.target.closest('[data-we-add-block]')?.dataset.weAddBlock;
+      if(addBlock&&selected?.canAddBlocks){const id='block-'+crypto.randomUUID();edit(item=>{item.blocks||=[];if(item.blocks.length>=30)throw new Error('This section has reached its content limit.');item.blocks.push({id,type:addBlock,...(addBlock==='image'?{alt:''}:{text:''})});});inspector();return;}
+      const removeBlock=event.target.closest('[data-we-block-remove]')?.dataset.weBlockRemove;if(removeBlock){edit(item=>{item.blocks=arr(item.blocks).filter(block=>block.id!==removeBlock)});inspector();return;}
+      const moveButton=event.target.closest('[data-we-block-move]');if(moveButton){edit(item=>{const blocks=arr(item.blocks),index=blocks.findIndex(block=>block.id===moveButton.dataset.weBlockId),target=index+(moveButton.dataset.weBlockMove==='up'?-1:1);if(index>=0&&target>=0&&target<blocks.length)[blocks[index],blocks[target]]=[blocks[target],blocks[index]];item.blocks=blocks});inspector();return;}
       const mode=event.target.closest('[data-we-mode]')?.dataset.weMode;
       if(mode==='visual'||mode==='homecards'){await setMode(mode);return;}
       const cardButton=event.target.closest('[data-home-card]');
       if(cardButton){const next=cardButton.dataset.homeCard;if(next!==homeCardId&&homeCardDirty&&!confirm('Discard unsaved changes to this Home card?'))return;homeCardId=next;homeCardDirty=false;renderHomeCards();homeCardStatus('Editing '+(currentHomeCard()?.title||homeCardId)+'.');return;}
       const homeAction=event.target.closest('[data-home-action]')?.dataset.homeAction;
       if(homeAction==='refresh'){if(homeCardDirty&&!confirm('Discard unsaved Home card changes and refresh?'))return;await loadHomeCards();return;}
-      if(homeAction==='save'){await saveHomeCard();return;}
+      if(homeAction==='save'){setBusy(true);try{await saveHomeCard()}finally{setBusy(false)}return;}
       if(homeAction==='add-addon'){syncHomeFormToCard();homeCards.find(card=>card.publicId===homeCardId).homePrice.packageAddOns.push({name:'',retailAmount:'',quantity:1});homeCardDirty=true;renderHomeCards();homeCardStatus('Unsaved changes');return;}
       if(homeAction==='remove-addon'){syncHomeFormToCard();const item=homeCards.find(card=>card.publicId===homeCardId);item.homePrice.packageAddOns.splice(Number(event.target.closest('[data-home-action]').dataset.addonIndex),1);homeCardDirty=true;renderHomeCards();homeCardStatus('Unsaved changes');return;}
       const action=event.target.closest('[data-we-action]')?.dataset.weAction;
+      if(['load','save','publish','restore','rollback'].includes(action)&&busy)return;
+      if(['load','save','publish','restore','rollback'].includes(action))setBusy(true);
+      try{
       if(action==='load')await load(el('page').value);
       if(action==='save')await save('SAVE');if(action==='publish')await save('PUBLISH');
       if(action==='restore'&&confirm('Replace this draft with the currently published version?'))await save('RESTORE_PUBLISHED');
       if(action==='rollback'&&confirm('Restore the previous published version?'))await save('ROLLBACK');
+      }finally{if(busy)setBusy(false)}
       if(action==='search')await search();
-      if(action==='import-existing'&&selected?.currentImage){status('Copying the existing image into Supabase…');const target=selected.selector,result=await rpc('IMPORT_WEBSITE_IMAGE',{pageKey,url:selected.currentImage});if(!result.asset)throw new Error('The image needs duplicate review in Assets / Media.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];if(selected?.selector!==target){status('Image imported. Select it from the library to apply it.');return;}edit(item=>{item.assetId=result.asset.id;item.assetUrl=result.asset.publicUrl;item.imageMode=selected.image?'image':'background';});inspector();status('Image copied to Supabase and applied to the draft.');}
+      if(action==='import-existing'&&selected?.currentImage){status('Adding the existing image to the library…');const target=selected.selector,result=await rpc('IMPORT_WEBSITE_IMAGE',{pageKey,url:selected.currentImage});if(!result.asset)throw new Error('The image needs duplicate review in Assets / Media.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];if(selected?.selector!==target){status('Image imported. Select it from the library to apply it.');return;}edit(item=>{item.assetId=result.asset.id;item.assetUrl=result.asset.publicUrl;item.imageMode=selected.image?'image':'background';});inspector();status('Image added to the library and applied to the draft.');}
       if(action==='parent'&&selected)frame.contentWindow.postMessage({source:'SKANDI_MEDIA_CONTROL',type:'WEBSITE_PREVIEW_PARENT',nonce,payload:{selector:selected.selector}},'*');
       if(action==='reset'&&selected){snapshot();design.elements=design.elements.filter(x=>x.selector!==selected.selector);sendPreview();inspector();}
       if(action==='undo'&&history.length){future.push(clone(design));design=history.pop();dirty=true;sendPreview();inspector();}
@@ -4134,8 +4366,9 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
       const fontButton=event.target.closest('[data-font-index]');
       if(fontButton){if(!selected)throw new Error('Select an element in the preview first.');const choice=el('results')._items[Number(fontButton.dataset.fontIndex)],target=selected.selector;const result=await rpc('GET_WEBSITE_FONT',{id:choice.id,weight:choice.weights?.includes(400)?400:choice.weights?.[0]||400});if(selected?.selector!==target)throw new Error('Selection changed; choose the font again.');edit(item=>{design.fonts=[...(design.fonts||[]).filter(f=>f.id!==result.font.id),result.font];item.styles.all['font-family']=result.font.family;item.styles.all['font-weight']=String(result.font.weight);});inspector();status('Font applied to the draft.');}
       const importButton=event.target.closest('[data-import-index]');
-      if(importButton){const item=el('results')._items[Number(importButton.dataset.importIndex)];if(!confirm('Have you reviewed the license and source for this image and confirmed it can be used on SKANDI?'))return;status('Importing into Supabase…');const result=await rpc('IMPORT_MEDIA_SOURCE',{provider:item.provider,id:item.id,licenseReviewed:true});if(!result.asset)throw new Error(result.needsReview?'A possible duplicate needs review in Assets / Media.':'Import did not return an asset.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];inspector();status('Imported into the Supabase Asset Library. Select the image in the inspector.');}
+      if(importButton){const item=el('results')._items[Number(importButton.dataset.importIndex)];if(!confirm('Have you reviewed the license and source for this image and confirmed it can be used on SKANDI?'))return;status('Adding image to the library…');const result=await rpc('IMPORT_MEDIA_SOURCE',{provider:item.provider,id:item.id,licenseReviewed:true});if(!result.asset)throw new Error(result.needsReview?'A possible duplicate needs review in Assets / Media.':'Import did not return an asset.');assets=[result.asset,...assets.filter(a=>a.id!==result.asset.id)];inspector();status('Imported into the Asset Library. Select the image in the inspector.');}
     }catch(error){activeMode==='homecards'?homeCardStatus(error.message,true):status(error.message,true);}});
+    root.addEventListener('input',event=>{if(event.target.dataset.we==='pageQuery'){pageOptions();return}if(event.target.dataset.homeField){homeCardDirty=true;homeCardStatus('Unsaved Home card changes')}else if(event.target.dataset.weBlockField||['text','alt','href','placeholder'].includes(event.target.dataset.we)){dirty=true;status('Unsaved changes')} });
     root.addEventListener('change',event=>{try{
       const target=event.target,name=target.dataset.we;
       if(target.dataset.homeCard){const next=target.dataset.homeCard;if(next!==homeCardId&&homeCardDirty&&!confirm('Discard unsaved changes to this Home card?')){renderHomeCards();return;}homeCardId=next;homeCardDirty=false;renderHomeCards();return;}
@@ -4143,12 +4376,13 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
       if(name==='viewport'){frame.style.width=target.value==='mobile'?'390px':target.value==='tablet'?'820px':'100%';inspector();return;}
       if(!selected)return;
       if(target.dataset.weStyle||target.dataset.weUnit){const property=target.dataset.weStyle||target.dataset.weUnit,input=root.querySelector('[data-we-style="'+property+'"]'),unit=root.querySelector('[data-we-unit="'+property+'"]');const value=input.value.trim()+(input.value.trim()&&unit?unit.value:'');if(value&&!CSS.supports(property,value))throw new Error('Invalid '+property+' value.');edit(item=>{const mode=el('viewport').value;item.styles[mode]||={};if(value)item.styles[mode][property]=value;else delete item.styles[mode][property];});}
-      if(['text','alt','href'].includes(name))edit(item=>item[name]=target.value);
+      if(['text','alt','href','placeholder'].includes(name))edit(item=>item[name]=target.value);
+      if(target.dataset.weBlockField){const id=target.dataset.weBlockId,field=target.dataset.weBlockField;edit(item=>{const block=arr(item.blocks).find(entry=>entry.id===id);if(!block)return;if(field==='assetId'){const asset=publicImageAssets().find(entry=>entry.id===target.value);if(asset){block.assetId=asset.id;block.assetUrl=asset.publicUrl}else{delete block.assetId;delete block.assetUrl}}else block[field]=target.value;});}
       if(name==='asset'){const asset=assets.find(a=>a.id===target.value);edit(item=>{if(asset){item.assetId=asset.id;item.assetUrl=asset.publicUrl;item.imageMode=el('imageMode').value;item.alt=el('alt').value;}else {delete item.assetId;delete item.assetUrl;}});}
       if(name==='imageMode'&&current()?.assetId)edit(item=>item.imageMode=target.value);
     }catch(error){status(error.message,true);}});
   };
-  function pageOptions(){const value=el('page').value;el('page').innerHTML='<option value="">Select a public page</option>'+pages.filter(p=>p.path&&!/^\/(riaintra|altea)(\/|$)/.test(p.path)).map(p=>'<option value="'+esc(p.key)+'">'+esc(p.label)+'</option>').join('');el('page').value=value;}
+  function pageOptions(){const value=el('page').value||pageKey,query=String(el('pageQuery')?.value||'').trim().toLowerCase();const available=pages.filter(p=>p.path&&!/^\/(riaintra|altea)(\/|$)/.test(p.path)&&(String(p.key)===value||!query||[p.label,p.path,p.key].some(part=>String(part||'').toLowerCase().includes(query))));el('page').innerHTML='<option value="">Select a public page</option>'+available.map(p=>'<option value="'+esc(p.key)+'">'+esc(p.label)+'</option>').join('');el('page').value=value;}
   window.addEventListener('message',event=>{
     const m=event.data||{};
     if(event.source===parent&&m.source==='SKANDI_WIX_PARENT'){
@@ -4156,9 +4390,9 @@ if(window.SKANDI_WEBSITE_DESIGN_CONFIG)window.SKANDIWebsiteDesignRuntime();
       if(m.type==='MEDIA_CONTROL_LIBRARY'){assets=m.payload?.assets||assets;if(root)inspector();}
       if(m.type==='MEDIA_CONTROL_WEBSITE_RESULT'||m.type==='MEDIA_CONTROL_ERROR'){const pending=requests.get(m.payload?.requestId);if(pending){clearTimeout(pending.timer);requests.delete(m.payload.requestId);m.type==='MEDIA_CONTROL_ERROR'?pending.reject(new Error(m.payload.message)):pending.resolve(m.payload.result);}}
     }
-    if(event.source===frame?.contentWindow&&m.source==='SKANDI_WEBSITE_PREVIEW'&&m.nonce===nonce){if(m.type==='WEBSITE_PREVIEW_READY')sendPreview();if(m.type==='WEBSITE_PREVIEW_ACTIVITY')parent.postMessage({source:'SKANDI_SHELL',type:'SKANDI_STAFF_ACTIVITY',payload:{key:'mediaControl'}},'*');if(m.type==='WEBSITE_PREVIEW_SELECTED'){selected=m.payload;inspector();}}
+    if(event.source===frame?.contentWindow&&m.source==='SKANDI_WEBSITE_PREVIEW'&&m.nonce===nonce){if(m.type==='WEBSITE_PREVIEW_READY')sendPreview();if(m.type==='WEBSITE_PREVIEW_ACTIVITY')parent.postMessage({source:'SKANDI_SHELL',type:'SKANDI_STAFF_ACTIVITY',payload:{key:'mediaControl'}},'*');if(m.type==='WEBSITE_PREVIEW_SELECTED'){selected=m.payload;inspector();if(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches)setMobileView('inspector');}}
   });
-  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(dirty||homeCardDirty){event.preventDefault();event.returnValue='';}});
   window.SKANDIWebsiteStudioMount();
   parent.postMessage({source:'SKANDI_MEDIA_CONTROL',type:'MEDIA_CONTROL_CATALOG_REQUEST',payload:{}},'*');
 })();
