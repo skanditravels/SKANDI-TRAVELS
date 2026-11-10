@@ -94,6 +94,33 @@
     <div class="partners" id="partners"></div>
   </section>
 
+  <section class="section about-network" id="about-network" data-section-id="about-network" aria-labelledby="aboutNetworkHeading">
+    <div class="about-network-heading">
+      <div>
+        <div class="eyebrow" data-i18n="network.kicker" data-content-id="about-network-kicker">Our network</div>
+        <h2 id="aboutNetworkHeading" data-i18n="network.title" data-content-id="about-network-title">The places and partners that connect us.</h2>
+      </div>
+      <a class="about-network-map-link" href="/destinations" data-route-key="destinations" data-fallback-path="/destinations" data-i18n="network.map" data-content-id="about-network-map-link">Explore the map →</a>
+    </div>
+    <div class="about-network-grid">
+      <section class="about-network-card" aria-labelledby="aboutAirlinesHeading">
+        <div class="about-network-card-head"><div><h3 id="aboutAirlinesHeading" data-i18n="network.airlines" data-content-id="about-network-airlines-title">Trusted connections</h3><p data-i18n="network.airlinesCopy" data-content-id="about-network-airlines-copy">Meet the airlines in our published network.</p></div></div>
+        <div id="aboutNetworkAirlines" class="about-airlines"></div>
+      </section>
+      <section class="about-network-card" aria-labelledby="aboutDestinationsHeading">
+        <div class="about-network-card-head"><div><h3 id="aboutDestinationsHeading" data-i18n="network.destinations" data-content-id="about-network-destinations-title">Our destinations</h3><p data-i18n="network.destinationsCopy" data-content-id="about-network-destinations-copy">Find a place by country and open it on the map.</p></div></div>
+        <details class="about-destination-browser" id="aboutDestinationBrowser">
+          <summary><span data-i18n="network.browse">Browse destinations</span><span id="aboutDestinationCount"></span></summary>
+          <label for="aboutDestinationSearch" data-i18n="network.search">Search destinations</label>
+          <input type="search" id="aboutDestinationSearch" autocomplete="off" placeholder="City or country" />
+          <div id="aboutNetworkDestinations" class="about-network-countries"></div>
+        </details>
+      </section>
+    </div>
+    <div class="about-network-status" role="status" id="aboutNetworkStatus" aria-live="polite">Loading our network…</div>
+    <button class="about-network-retry" type="button" id="aboutNetworkRetry" hidden>Try again</button>
+  </section>
+
   <section class="section" data-section-id="about-links">
     <div class="section-head">
       <div>

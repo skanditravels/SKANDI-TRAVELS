@@ -1,5 +1,9 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+## 2026-11-10 — Map controls and network overview
+
+The map title, view modes, search, region filters and optional map key now sit in a single responsive control panel instead of overlapping independent overlays. All four map modes remain available on mobile. The large destination-list overlay and the Trusted Connections chapter moved to the compact network overview on `/about`; the existing accessible map directory and booking handoff remain. This supersedes the older in-page directory and airline-chapter descriptions below. Map records and the existing Wix bridge remain owned by the canonical public network projection. The About page controller supplies that same projection to its new overview.
+
 ## 2026-11-06 — Current atlas and public links
 
 The live catalog includes airports and airlines in addition to destinations, hotels and routes. The Wix facade now passes all five collections through. The map uses a lighter OpenFreeMap base, retains readable geographic labels and resolves overlapping map features in one click handler. Desktop detail actions retain their handlers and hotel clusters expand with the current MapLibre API.
