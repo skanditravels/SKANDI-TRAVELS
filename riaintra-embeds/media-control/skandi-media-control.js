@@ -42,10 +42,10 @@ function status(msg,mode=""){const el=$("statusLine");if(!el)return;const show=B
 function loadLocal(){try{const raw=localStorage.getItem(STORAGE_KEY)||localStorage.getItem(LEGACY_STORAGE_KEY)||"{}";const saved=JSON.parse(raw);return {activeModule:String(saved.activeModule||""),activePanel:String(saved.activePanel||""),selectedIssueId:String(saved.selectedIssueId||""),selectedPageId:String(saved.selectedPageId||""),selectedArticleId:String(saved.selectedArticleId||"")}}catch(_){return {}}}
 function saveLocal(){try{const {activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}=state;localStorage.setItem(STORAGE_KEY,JSON.stringify({activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}))}catch(_){/* Preferences are optional; server data remains authoritative. */}}
 const baseState={
-  session:{}, voyLoaded:false, libraryLoaded:false, activeModule:"overview", activePanel:"controlhome", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
+  session:{}, voyLoaded:false, voyIssuesLoaded:false, voyArticlesLoaded:false, libraryLoaded:false, activeModule:"overview", activePanel:"controlhome", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
   issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], libraryAssets:[], assetResults:[],
   campaigns:[], approvals:[], connectors:{}, destinationResearch:null, seoResult:null, apiStatus:[],
-  newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], editingPostId:"", editingContactId:"",
+  newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], newsroomLoaded:false, editingPostId:"", editingContactId:"",
   brandKit:{name:"SKANDI VOY",tone:"Premium, warm, practical and commercially sharp",fonts:"Montserrat / Tahoma",colors:"#022e64, #0b3a7a, #5FC7CF, #ffffff",requiredWords:"SKANDI Travels, curated, destination, experience",blockedWords:"cheap, guaranteed, best in the world",defaultCta:"Explore destination"},
   qualityResult:null, brandGuardResult:null, printQa:null, distributionKit:null, distributionKits:[],
   catalog:[], editorialSelection:{planPageKey:"",copyPageKey:"",copySectionId:"",copyFieldId:"",mediaPageKey:"",mediaSectionId:"",mediaSlotId:"",releasePageKey:""},
@@ -221,6 +221,7 @@ function init(){
 }
 function renderModules(){
   const host=$("mmModules");if(!host)return;
+  host.hidden=Boolean($("mcMenuSearch")?.value.trim());
   host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}" ${state.activeModule===m.id?'aria-current="page"':""}><span class="mc-module-icon" aria-hidden="true">${esc(m.icon)}</span><span>${esc(m.title)}</span></button>`).join("");
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
   const panel=panels.find(p=>p[0]===state.activePanel);
@@ -230,6 +231,12 @@ function renderModules(){
   const searchable=["issues","articles"].includes(state.activePanel);if(toolbar)toolbar.hidden=!searchable&&module.id!=="voy";if(search){search.hidden=!searchable;search.placeholder=state.activePanel==="issues"?"Search issues":"Search articles";search.setAttribute("aria-label",search.placeholder)}const label=toolbar?.querySelector(".mc-search-label");if(label)label.hidden=!searchable;if(preview)preview.hidden=module.id!=="voy";
 }
 function renderNav(){
+  const query=String($("mcMenuSearch")?.value||"").trim().toLocaleLowerCase();
+  if(query){
+    const results=modules.flatMap(module=>module.panels.map(id=>({module,panel:panels.find(p=>p[0]===id)}))).filter(({module,panel})=>panel&&`${module.title} ${panel[1]}`.toLocaleLowerCase().includes(query));
+    $("nav").innerHTML=`<div class="mc-subnav-heading">SEARCH RESULTS</div>`+(results.length?results.map(({module,panel})=>`<button type="button" class="nav-btn" data-panel="${esc(panel[0])}"><span>${esc(panel[1])}<small>${esc(module.title)}</small></span></button>`).join(""):'<p class="mc-menu-empty">No workspaces match your search.</p>');
+    renderModules();return;
+  }
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
   $("nav").innerHTML=module.panels.length>1?`<div class="mc-subnav-heading">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button type="button" class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}" ${state.activePanel===p[0]?'aria-current="page"':""}><span>${esc(p[1])}</span></button>`).join(""):"";
   renderModules();
@@ -247,6 +254,7 @@ function renderAll(){
 }
 function setPanel(panel){
   if(!panels.some(p=>p[0]===panel))return;
+  const menuWasOpen=document.body.classList.contains("mobile-drawer-open");
   const current=modules.find(m=>m.id===state.activeModule);
   if(!current?.panels.includes(panel)){
     state.activeModule=modules.find(m=>m.panels.includes(panel))?.id||"overview";
@@ -255,15 +263,18 @@ function setPanel(panel){
   closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${panel}`));
   renderAll();
+  if(menuWasOpen)$("mmPageTitle")?.focus();
   post("VOY_ADMIN_PANEL_CHANGED",{panel});
 }
 function setModule(moduleId){
   const module=modules.find(m=>m.id===moduleId);if(!module)return;
+  const menuWasOpen=document.body.classList.contains("mobile-drawer-open");
   state.activeModule=module.id;
   if(!module.panels.includes(state.activePanel))state.activePanel=module.panels[0];
   if(module.panels.length===1)closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
   renderAll();
+  if(menuWasOpen){if(module.panels.length>1)$("nav")?.querySelector("button")?.focus();else $("mmPageTitle")?.focus()}
   post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
 }
 function currentIssue(){
@@ -355,14 +366,21 @@ function exportEditorialSnapshot(){const payload={exportedAt:new Date().toISOStr
 function renderControlHome(){
   const host=$("panel-controlhome");if(!host)return;
   const cards=[
-    ["websiteeditor","Website editor","Edit page layouts, text, links and presentation images.","Edit website"],
-    ["assets","Asset Library","Find, upload and organize approved media for your content.","Open library"],
-    ["issues","VOY Magazine","Create issues, arrange pages and prepare your next edition.","Manage VOY"],
-    ["pressreleases","Newsroom","Create and manage published company announcements.","Open newsroom"],
-    ["campaign","Marketing","Manage campaigns, banners and travel cards.","View marketing"],
-    ["contentaudit","Content review","Check presentation records and identify issues before release.","Review content"]
+    ["websiteeditor","01","Website","Page layouts, copy and presentation media.","Open editor"],
+    ["assets","02","Asset Library","Find and manage the media used across your content.","Open library"],
+    ["issues","03","VOY Magazine","Plan editions, pages and editorial assignments.","Manage VOY"],
+    ["pressreleases","04","Newsroom","Prepare and manage company announcements.","Open newsroom"],
+    ["campaign","05","Marketing","Manage campaigns, banners and travel cards.","View campaigns"],
+    ["contentaudit","06","Review & release","Review content and presentation before publication.","Review content"]
   ];
-  host.innerHTML=`<section class="mc-welcome"><div><p class="mc-eyebrow">SKANDI CONTENT WORKSPACE</p><h2>Everything you need to manage your content.</h2><p>Choose a workspace to edit the website, manage your media, or create and review publications.</p></div></section><div class="mc-card-grid">${cards.map(([id,title,description,cta])=>`<article class="mc-card"><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information continues to come from its existing source.</p>`;
+  const issue=currentIssue();
+  const metrics=[
+    ["issues","VOY issues",state.voyIssuesLoaded?state.issues.length:"—"],
+    ["articles","Article briefs",state.voyArticlesLoaded?state.articles.length:"—"],
+    ["assets","Loaded assets",state.libraryLoaded?state.libraryAssets.length:"—"],
+    ["pressreleases","Newsroom posts",state.newsroomLoaded?state.newsroomPosts.length:"—"]
+  ];
+  host.innerHTML=`<section class="mc-overview-head"><div><p class="mc-eyebrow">SKANDI DIGITAL CONTENT</p><h2>Your content, in one workspace.</h2><p>Manage website presentation, media, VOY, newsroom and marketing from one place.</p></div><button class="btn" type="button" data-panel="api">Connections <span aria-hidden="true">↗</span></button></section><div class="mc-overview-metrics" aria-label="Workspace overview">${metrics.map(([id,label,value])=>`<button type="button" class="mc-overview-metric" data-panel="${id}"><span>${esc(label)}</span><strong data-mc-count="${id}">${esc(value)}</strong><small>Open workspace <span aria-hidden="true">→</span></small></button>`).join("")}</div><div class="mc-overview-layout"><section class="mc-workspaces"><div class="mc-section-head"><div><p class="mc-section-kicker">WORKSPACES</p><h3>Manage content</h3></div><span>Choose where to work</span></div><div class="mc-card-grid">${cards.map(([id,number,title,description,cta])=>`<article class="mc-card"><span class="mc-card-number">${number}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div></section><aside class="mc-production-summary"><p class="mc-section-kicker">VOY PRODUCTION</p><h3>${esc(issue?.edition||issue?.title||"No issue selected")}</h3><p>${issue?esc(issue.title||"Continue working on this edition."):"Create or select an issue to start planning your magazine."}</p><div class="mc-production-links"><button type="button" data-panel="issues">Issues <span aria-hidden="true">→</span></button><button type="button" data-panel="builder">Magazine builder <span aria-hidden="true">→</span></button><button type="button" data-panel="articles">Article briefs <span aria-hidden="true">→</span></button></div><div class="mc-production-divider"></div><p class="mc-section-kicker">EDITORIAL TOOLS</p><div class="mc-production-links"><button type="button" data-panel="research">Destination research <span aria-hidden="true">→</span></button><button type="button" data-panel="emailstudio">Email studio <span aria-hidden="true">→</span></button><button type="button" data-panel="api">Connections <span aria-hidden="true">→</span></button></div></aside></div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information remains with its existing owner.</p>`;
 }
 function renderDashboard(){
   const issue=currentIssue();
@@ -1152,12 +1170,35 @@ document.addEventListener("input",e=>{
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
 $("globalQuery").addEventListener("input",()=>renderAll());
-function closeMobileMenu(){document.body.classList.remove("mobile-drawer-open");$("mobileMenuBtn")?.setAttribute("aria-expanded","false")}
-$("mobileMenuBtn").addEventListener("click",()=>{const open=!document.body.classList.contains("mobile-drawer-open");document.body.classList.toggle("mobile-drawer-open",open);$("mobileMenuBtn").setAttribute("aria-expanded",String(open))});
-$("mcCloseMenu").addEventListener("click",closeMobileMenu);
-$("drawerOverlay").addEventListener("click",closeMobileMenu);
+function closeMobileMenu(restoreFocus=false){
+  document.body.classList.remove("mobile-drawer-open");
+  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn"),search=$("mcMenuSearch");
+  sidebar?.setAttribute("aria-hidden","true");sidebar?.setAttribute("inert","");
+  toggle?.setAttribute("aria-expanded","false");toggle?.setAttribute("aria-label","Open workspace menu");
+  if(search?.value){search.value="";renderNav()}
+  if(restoreFocus)toggle?.focus();
+}
+function openWorkspaceMenu(){
+  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn");
+  document.body.classList.add("mobile-drawer-open");sidebar?.removeAttribute("inert");sidebar?.setAttribute("aria-hidden","false");
+  toggle?.setAttribute("aria-expanded","true");toggle?.setAttribute("aria-label","Close workspace menu");
+  $("mcMenuSearch")?.focus();
+}
+$("mobileMenuBtn").addEventListener("click",()=>{if(document.body.classList.contains("mobile-drawer-open"))closeMobileMenu(true);else openWorkspaceMenu()});
+$("mcCloseMenu").addEventListener("click",()=>closeMobileMenu(true));
+$("mcDrawerOverlay").addEventListener("click",()=>closeMobileMenu(true));
+$("mcMenuSearch").addEventListener("input",renderNav);
 document.addEventListener("SKANDI_MEDIA_SHOW_ASSETS",()=>setPanel("assets"));
-document.addEventListener("keydown",event=>{if(event.key==="Escape")closeMobileMenu()});
+document.addEventListener("keydown",event=>{
+  if(!document.body.classList.contains("mobile-drawer-open"))return;
+  if(event.key==="Escape"){event.preventDefault();closeMobileMenu(true);return}
+  if(event.key!=="Tab")return;
+  const menu=$("mcSidebar"),focusable=[...menu.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')].filter(el=>!el.closest('[hidden]'));
+  if(!focusable.length)return;
+  const first=focusable[0],last=focusable[focusable.length-1],active=document.activeElement;
+  if(event.shiftKey&&(active===first||!menu.contains(active))){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&(active===last||!menu.contains(active))){event.preventDefault();first.focus()}
+});
 window.addEventListener("message",e=>{
   const m=e.data||{};if(e.source!==window.parent||m.source!==PARENT)return;const p=m.payload||{};
   if(m.type==="INTERNAL_CHROME_BOOTSTRAP"){
@@ -1165,11 +1206,12 @@ window.addEventListener("message",e=>{
     if($("mmUserName"))$("mmUserName").textContent=name;if($("mmUserRole"))$("mmUserRole").textContent=profile.position||profile.jobTitle||profile.role||"Editorial access";if($("mmUserInitials"))$("mmUserInitials").textContent=name.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"SK";return;
   }
   if(m.type==="MEDIA_CONTROL_EDITORIAL_CATALOG"){state.catalog=Array.isArray(p.pages)?p.pages:[];ensureCatalogSelections();if($("mmSyncState"))$("mmSyncState").textContent="Catalog";renderAll();return}
-  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.libraryAssets=Array.isArray(p.assets)?p.assets:state.libraryAssets;state.libraryLoaded=true;return}
+  if(m.type==="MEDIA_CONTROL_LIBRARY"){if(Array.isArray(p.assets)){state.libraryAssets=p.assets;state.libraryLoaded=true;const count=$("panel-controlhome")?.querySelector('[data-mc-count="assets"]');if(count)count.textContent=String(state.libraryAssets.length)}return}
   if(m.type==="MEDIA_CONTROL_ERROR"){if(!p.requestId)actionError(p.message||"Media Control action failed.");return}
-  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p,voyLoaded:true};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
+  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p,voyLoaded:true,voyIssuesLoaded:Array.isArray(p.issues),voyArticlesLoaded:Array.isArray(p.articles)};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
   if(m.type==="NEWSROOM_ADMIN_BOOTSTRAP"||m.type==="NEWSROOM_ADMIN_DATA"){
     const d=p.data||p;
+    if(Array.isArray(d.posts)||Array.isArray(d.newsroomPosts))state.newsroomLoaded=true;
     state.newsroomPosts=d.posts||d.newsroomPosts||state.newsroomPosts;
     state.newsroomCategories=d.categories||d.newsroomCategories||state.newsroomCategories;
     state.newsroomMedia=d.mediaAssets||d.media||d.assets||state.newsroomMedia;
