@@ -5,7 +5,7 @@
 
 ## INFO / LOG
 
-- 2026-11-10 — Kept the mobile navigation above both slide-out drawers and ended the drawers above the safe-area-aware bottom bar. This prevents the global drawer, including its sign-out control, from covering the Media Control menu button; the adjustment is scoped to Media Control.
+- 2026-11-10 — Kept the mobile navigation above both slide-out drawers and ended the drawers above the safe-area-aware bottom bar. This prevents the global drawer, including its sign-out control, from covering the Media Control menu button. The six mobile items share space responsively, with full accessible labels even where visual labels need truncation. The adjustment is scoped to Media Control.
 
 - 2026-11-10 — Supersedes the separate Media Control app bar: the active source mounts its menu button in the RIAINTRA desktop header and adds a Content action to the RIAINTRA mobile bar, preserving the separate global staff menu. The workspace drawer and overview now identify RIAINTRA. The historical HTML below remains unchanged; no shared navigation source or Wix message contract changed. Verify the compiled shell and live Wix runtime separately.
 
