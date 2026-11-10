@@ -146,7 +146,7 @@ $w.onReady(function () {
       if (type === "MEDIA_CONTROL_READY") { sendEditorialCatalog(); await bootstrap(); return; }
       if (type === "MEDIA_CONTROL_CATALOG_REQUEST") { sendEditorialCatalog(); return; }
       if (type === 'MEDIA_CONTROL_WEBSITE_ACTION') {
-        const allowed = ['GET_WEBSITE_DESIGN','SAVE_WEBSITE_DESIGN','GET_WEBSITE_PREVIEW','SEARCH_MEDIA_SOURCES','IMPORT_MEDIA_SOURCE','IMPORT_WEBSITE_IMAGE','GET_WEBSITE_FONT','GET_HOME_CARD_MANAGER','SAVE_HOME_CARD_MANAGER'];
+        const allowed = ['GET_WEBSITE_DESIGN','SAVE_WEBSITE_DESIGN','GET_WEBSITE_PREVIEW','SEARCH_MEDIA_SOURCES','IMPORT_MEDIA_SOURCE','IMPORT_WEBSITE_IMAGE','GET_WEBSITE_FONT','GET_HOME_CARD_MANAGER','SAVE_HOME_CARD_MANAGER','TEST_MEDIA_CONNECTOR','LIST_CANVA_TEMPLATES','CREATE_EDITORIAL_SUGGESTION','RESEARCH_DESTINATION','GET_SEARCH_CONSOLE_REPORT'];
         if (!allowed.includes(payload.action)) throw new Error('WEBSITE_ACTION_INVALID');
         const result = await assetAction(payload.action, payload.input || {});
         send('MEDIA_CONTROL_WEBSITE_RESULT', { requestId:payload.requestId, action:payload.action, result });

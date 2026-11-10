@@ -6,6 +6,7 @@ import { Permissions, webMethod } from "@wix/web-methods";
 import { getWebsiteDesignCore, saveWebsiteDesignCore } from 'backend/SKANDI_CORE/websiteDesign';
 import { getWebsitePreviewCore, searchMediaSourcesCore, importMediaSourceCore, importWebsiteImageCore, getWebsiteFontCore } from 'backend/SKANDI_CORE/mediaControlSources';
 import { getHomeCardManagerCore, saveHomeCardManagerCore } from "backend/SKANDI_CORE/homeContent";
+import { testMediaConnectorCore, listCanvaTemplatesCore, mediaCopyCore, destinationResearchCore, searchConsoleReportCore } from "backend/SKANDI_CORE/mediaControlIntegrations";
 import {
   listAssetsCore,
   checkAssetDuplicateCore,
@@ -27,6 +28,11 @@ const ACTIONS = Object.freeze({
   IMPORT_MEDIA_SOURCE: importMediaSourceCore,
   IMPORT_WEBSITE_IMAGE: importWebsiteImageCore,
   GET_WEBSITE_FONT: getWebsiteFontCore,
+  TEST_MEDIA_CONNECTOR: testMediaConnectorCore,
+  LIST_CANVA_TEMPLATES: listCanvaTemplatesCore,
+  CREATE_EDITORIAL_SUGGESTION: mediaCopyCore,
+  RESEARCH_DESTINATION: destinationResearchCore,
+  GET_SEARCH_CONSOLE_REPORT: searchConsoleReportCore,
   GET_HOME_CARD_MANAGER: getHomeCardManagerCore,
   SAVE_HOME_CARD_MANAGER: saveHomeCardManagerCore,
   LIST_ASSETS: listAssetsCore,

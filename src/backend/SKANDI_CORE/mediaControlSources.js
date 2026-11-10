@@ -23,7 +23,9 @@ export async function resolveWebsiteFont(input={}) {
 }
 export async function getWebsiteFontCore(input={}) {await ensureEditorialContext();return {ok:true,font:await resolveWebsiteFont(input)};}
 async function json(url) {
-  const response=await fetch(url,{method:'GET',headers:{Accept:'application/json'}});
+  const headers={Accept:'application/json'};
+  if(url.startsWith('https://commons.wikimedia.org/'))headers['Api-User-Agent']='SKANDI-Media-Control/1.0 (https://www.skanditravels.com; contact@skanditravels.com)';
+  const response=await fetch(url,{method:'GET',headers});
   if(!response.ok)throw new Error('MEDIA_SOURCE_HTTP_'+response.status);
   return response.json();
 }

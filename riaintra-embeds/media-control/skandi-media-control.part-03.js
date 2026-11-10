@@ -159,5 +159,5 @@ window.addEventListener("message",async e=>{
   }catch(err){document.body.classList.remove("sk-media-uploading");media.pending=null;toast(err.message||"Media Control error.")}
 });
 
-let queued=false;const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;enhanceFields()})});observer.observe(document.body,{childList:true,subtree:true});enhanceFields();
+let queued=false;const observer=new MutationObserver(()=>{if(queued||!document.body?.isConnected)return;queued=true;requestAnimationFrame(()=>{queued=false;enhanceFields()})});observer.observe(document.body,{childList:true,subtree:true});enhanceFields();
 })();
