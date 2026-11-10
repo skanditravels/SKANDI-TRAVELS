@@ -228,7 +228,6 @@ const MASTER_CONFIG = Object.freeze({
             { label:"About SKANDI", path:SITE_MAP.about },
             { label:"Careers", path:SITE_MAP.careers },
             { label:"Newsroom", path:SITE_MAP.newsroom },
-            { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
         })
       ]),
@@ -241,8 +240,6 @@ const MASTER_CONFIG = Object.freeze({
       socialLinks:Object.freeze([
         Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconAssetKey:"instagram" }),
         Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconAssetKey:"facebook" }),
-        Object.freeze({ label:"TikTok", url:"https://www.tiktok.com/@skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
-        Object.freeze({ label:"Snapchat", url:"https://www.snapchat.com/@skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
         Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconAssetKey:"linkedin" })
       ]),
       bottomLinks:Object.freeze([
