@@ -2350,22 +2350,17 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </nav>
 </div>
 
-<header class="mm-appbar" aria-label="Media Control">
-  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span class="mc-menu-button-label">Menu</span></button>
-  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>SKANDI · Digital content</span></div></div>
-  <div class="mm-account"><div class="mm-account-badge" id="mmUserInitials">SK</div><div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div></div>
-</header>
 <div class="app">
   <header class="header" hidden><button id="moduleHeaderMobileMenuBtn" type="button">Menu</button><span id="sessionLine"><span id="clock">--:--</span></span></header>
   <div class="shell mc-shell">
     <aside class="sidebar mc-sidebar" id="mcSidebar" role="dialog" aria-modal="true" aria-labelledby="mcMenuTitle" aria-hidden="true" inert>
-      <div class="mc-menu-heading"><div><span class="mc-menu-kicker">SKANDI</span><strong id="mcMenuTitle">Media Control</strong><small>Content workspace</small></div><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+      <div class="mc-menu-heading"><div><span class="mc-menu-kicker">RIAINTRA</span><strong id="mcMenuTitle">Media Control</strong><small>Digital content workspace</small></div><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
       <label class="mc-menu-search"><span>Find a workspace</span><input id="mcMenuSearch" type="search" placeholder="Search workspaces" autocomplete="off"></label>
       <nav class="mm-modules" id="mmModules" aria-label="Workspaces"></nav>
       <nav id="nav" class="mc-subnav" aria-label="Workspace sections"></nav>
     </aside>
     <main class="workspace mc-workspace">
-      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle" tabindex="-1">Overview</h1></div></section>
+      <section class="mm-contextbar" aria-label="Current workspace"><div id="mcNavigationFallback" class="mc-navigation-fallback"><button id="desktopMenuBtn" class="mc-desktop-menu" type="button" aria-label="Open Media Control menu" aria-controls="mcSidebar" aria-expanded="false" aria-haspopup="dialog"><span aria-hidden="true">☰</span><span>Content</span></button><button id="mobileMenuBtn" class="skmn-btn mc-bottom-menu" type="button" aria-label="Open Media Control menu" aria-controls="mcSidebar" aria-expanded="false" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg><span>Content</span></button></div><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle" tabindex="-1">Overview</h1></div></section>
       <div class="toolbar mc-toolbar">
         <label class="mc-search-label" for="globalQuery">Search this section</label><input class="input search" id="globalQuery" type="search" placeholder="Search" />
         <button class="btn primary" data-action="save-current" hidden>Save current</button>
@@ -2769,7 +2764,7 @@ function renderControlHome(){
     ["assets","Loaded assets",state.libraryLoaded?state.libraryAssets.length:"—"],
     ["pressreleases","Newsroom posts",state.newsroomLoaded?state.newsroomPosts.length:"—"]
   ];
-  host.innerHTML=`<section class="mc-overview-head"><div><p class="mc-eyebrow">SKANDI DIGITAL CONTENT</p><h2>Your content, in one workspace.</h2><p>Manage website presentation, media, VOY, newsroom and marketing from one place.</p></div><button class="btn" type="button" data-panel="api">Connections <span aria-hidden="true">↗</span></button></section><div class="mc-overview-metrics" aria-label="Workspace overview">${metrics.map(([id,label,value])=>`<button type="button" class="mc-overview-metric" data-panel="${id}"><span>${esc(label)}</span><strong data-mc-count="${id}">${esc(value)}</strong><small>Open workspace <span aria-hidden="true">→</span></small></button>`).join("")}</div><div class="mc-overview-layout"><section class="mc-workspaces"><div class="mc-section-head"><div><p class="mc-section-kicker">WORKSPACES</p><h3>Manage content</h3></div><span>Choose where to work</span></div><div class="mc-card-grid">${cards.map(([id,number,title,description,cta])=>`<article class="mc-card"><span class="mc-card-number">${number}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div></section><aside class="mc-production-summary"><p class="mc-section-kicker">VOY PRODUCTION</p><h3>${esc(issue?.edition||issue?.title||"No issue selected")}</h3><p>${issue?esc(issue.title||"Continue working on this edition."):"Create or select an issue to start planning your magazine."}</p><div class="mc-production-links"><button type="button" data-panel="issues">Issues <span aria-hidden="true">→</span></button><button type="button" data-panel="builder">Magazine builder <span aria-hidden="true">→</span></button><button type="button" data-panel="articles">Article briefs <span aria-hidden="true">→</span></button></div><div class="mc-production-divider"></div><p class="mc-section-kicker">EDITORIAL TOOLS</p><div class="mc-production-links"><button type="button" data-panel="research">Destination research <span aria-hidden="true">→</span></button><button type="button" data-panel="emailstudio">Email studio <span aria-hidden="true">→</span></button><button type="button" data-panel="api">Connections <span aria-hidden="true">→</span></button></div></aside></div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information remains with its existing owner.</p>`;
+  host.innerHTML=`<section class="mc-overview-head"><div><p class="mc-eyebrow">RIAINTRA · MEDIA CONTROL</p><h2>Your content, in one workspace.</h2><p>Manage website presentation, media, VOY, newsroom and marketing from one place.</p></div><button class="btn" type="button" data-panel="api">Connections <span aria-hidden="true">↗</span></button></section><div class="mc-overview-metrics" aria-label="Workspace overview">${metrics.map(([id,label,value])=>`<button type="button" class="mc-overview-metric" data-panel="${id}"><span>${esc(label)}</span><strong data-mc-count="${id}">${esc(value)}</strong><small>Open workspace <span aria-hidden="true">→</span></small></button>`).join("")}</div><div class="mc-overview-layout"><section class="mc-workspaces"><div class="mc-section-head"><div><p class="mc-section-kicker">WORKSPACES</p><h3>Manage content</h3></div><span>Choose where to work</span></div><div class="mc-card-grid">${cards.map(([id,number,title,description,cta])=>`<article class="mc-card"><span class="mc-card-number">${number}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div></section><aside class="mc-production-summary"><p class="mc-section-kicker">VOY PRODUCTION</p><h3>${esc(issue?.edition||issue?.title||"No issue selected")}</h3><p>${issue?esc(issue.title||"Continue working on this edition."):"Create or select an issue to start planning your magazine."}</p><div class="mc-production-links"><button type="button" data-panel="issues">Issues <span aria-hidden="true">→</span></button><button type="button" data-panel="builder">Magazine builder <span aria-hidden="true">→</span></button><button type="button" data-panel="articles">Article briefs <span aria-hidden="true">→</span></button></div><div class="mc-production-divider"></div><p class="mc-section-kicker">EDITORIAL TOOLS</p><div class="mc-production-links"><button type="button" data-panel="research">Destination research <span aria-hidden="true">→</span></button><button type="button" data-panel="emailstudio">Email studio <span aria-hidden="true">→</span></button><button type="button" data-panel="api">Connections <span aria-hidden="true">→</span></button></div></aside></div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information remains with its existing owner.</p>`;
 }
 function renderDashboard(){
   const issue=currentIssue();
@@ -3559,21 +3554,44 @@ document.addEventListener("input",e=>{
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
 $("globalQuery").addEventListener("input",()=>renderAll());
+let workspaceMenuTrigger=null;
+function workspaceMenuToggles(){return [$("desktopMenuBtn"),$("mobileMenuBtn")].filter(Boolean)}
+function mountRiaintraNavigation(){
+  const shell=document.querySelector('#skandi-shell-root[data-skandi-key="mediaControl"]');
+  if(!shell)return; // The standalone source keeps the controls beside the page title.
+  const desktop=shell.querySelector('#riaintra-global-header-root .shell-left');
+  const mobile=shell.querySelector('#skandi-mobile-nav-root');
+  const globalMenu=mobile?.querySelector('[data-skandi-mobile-route="menu"]');
+  const desktopToggle=$("desktopMenuBtn"),mobileToggle=$("mobileMenuBtn");
+  if(desktop&&desktopToggle&&desktopToggle.parentElement!==desktop)desktop.appendChild(desktopToggle);
+  if(mobile&&globalMenu&&mobileToggle&&mobileToggle.parentElement!==mobile)mobile.insertBefore(mobileToggle,globalMenu);
+  if(globalMenu&&!globalMenu.hasAttribute('data-mc-drawer-aware')){
+    globalMenu.setAttribute('data-mc-drawer-aware','');
+    globalMenu.addEventListener('click',()=>{if(document.body.classList.contains('mobile-drawer-open'))closeMobileMenu()},true);
+  }
+}
 function closeMobileMenu(restoreFocus=false){
   document.body.classList.remove("mobile-drawer-open");
-  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn"),search=$("mcMenuSearch");
+  const sidebar=$("mcSidebar"),search=$("mcMenuSearch");
   sidebar?.setAttribute("aria-hidden","true");sidebar?.setAttribute("inert","");
-  toggle?.setAttribute("aria-expanded","false");toggle?.setAttribute("aria-label","Open workspace menu");
+  workspaceMenuToggles().forEach(toggle=>{toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-label","Open Media Control menu")});
   if(search?.value){search.value="";renderNav()}
-  if(restoreFocus)toggle?.focus();
+  if(restoreFocus)workspaceMenuTrigger?.focus();
 }
-function openWorkspaceMenu(){
-  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn");
+function openWorkspaceMenu(trigger){
+  const globalMenu=document.querySelector('#skandi-mobile-nav-root [data-skandi-mobile-route="menu"]');
+  if(document.body.classList.contains("drawer-open"))globalMenu?.click();
+  workspaceMenuTrigger=trigger;
+  const sidebar=$("mcSidebar");
   document.body.classList.add("mobile-drawer-open");sidebar?.removeAttribute("inert");sidebar?.setAttribute("aria-hidden","false");
-  toggle?.setAttribute("aria-expanded","true");toggle?.setAttribute("aria-label","Close workspace menu");
+  workspaceMenuToggles().forEach(toggle=>{toggle.setAttribute("aria-expanded","true");toggle.setAttribute("aria-label","Close Media Control menu")});
   $("mcMenuSearch")?.focus();
+  const focusSearch=()=>{if(document.body.classList.contains("mobile-drawer-open")&&!sidebar?.contains(document.activeElement))$("mcMenuSearch")?.focus()};
+  window.requestAnimationFrame?.(focusSearch);window.setTimeout(focusSearch,220);
 }
-$("mobileMenuBtn").addEventListener("click",()=>{if(document.body.classList.contains("mobile-drawer-open"))closeMobileMenu(true);else openWorkspaceMenu()});
+workspaceMenuToggles().forEach(toggle=>toggle.addEventListener("click",()=>{if(document.body.classList.contains("mobile-drawer-open"))closeMobileMenu(true);else openWorkspaceMenu(toggle)}));
+mountRiaintraNavigation();
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mountRiaintraNavigation,{once:true});
 $("mcCloseMenu").addEventListener("click",()=>closeMobileMenu(true));
 $("mcDrawerOverlay").addEventListener("click",()=>closeMobileMenu(true));
 $("mcMenuSearch").addEventListener("input",renderNav);
@@ -4287,6 +4305,30 @@ body.mobile-drawer-open #skandi-shell-root #skandi-app-root .drawer-overlay{opac
  #skandi-shell-root #skandi-app-root .mc-overview-metric{padding:13px;min-height:100px}
  #skandi-shell-root #skandi-app-root .mc-workspaces,#skandi-shell-root #skandi-app-root .mc-production-summary{padding:16px}
  #skandi-shell-root #skandi-app-root .mc-card{min-height:165px;padding:14px}
+}
+
+/* Media Control uses the shared RIAINTRA chrome. Its workspace controls are
+   mounted in that header and mobile bar; the inline location is a fallback
+   for the standalone source before the shared shell is available. */
+#skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback:empty{display:none}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-navigation-fallback{display:flex;align-items:center;margin-right:14px}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-desktop-menu{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 11px;border:1px solid #a7bdcc;border-radius:6px;background:#fff;color:#244b68;font:600 13px/1 Inter,system-ui,sans-serif;white-space:nowrap}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-desktop-menu:focus-visible,#skandi-shell-root[data-skandi-key="mediaControl"] .mc-bottom-menu:focus-visible{outline:2px solid #76d5db;outline-offset:2px}
+#skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .mc-desktop-menu{margin-left:8px;border-color:#87a5b9;background:#ffffff12;color:#fff}
+#skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .mc-desktop-menu:hover,#skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .mc-desktop-menu[aria-expanded="true"]{background:#ffffff24}
+#skandi-shell-root[data-skandi-key="mediaControl"] .mc-menu-kicker{color:#57758a}
+@media(min-width:1021px){
+ #skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root{position:sticky!important;top:0;z-index:3000}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #riaintra-global-header-root .shell-nav{min-width:0;overflow-x:auto;scrollbar-width:none}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-bottom-menu{display:none!important}
+ #skandi-shell-root[data-skandi-key="mediaControl"] .mc-shell{min-height:calc(100dvh - 52px)!important}
+}
+@media(max-width:1020px){
+ #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-desktop-menu{display:none!important}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #mcNavigationFallback .mc-bottom-menu{display:flex;min-height:44px;padding:4px 9px;border:1px solid #b8cad5;border-radius:6px;background:#fff;color:#244b68}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .skmn-btn{font-size:max(13px, clamp(9px,2.7vw,11px));letter-spacing:0}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .mc-bottom-menu{display:flex;min-width:0;color:#d0e5f2}
+ #skandi-shell-root[data-skandi-key="mediaControl"] #skandi-mobile-nav-root .mc-bottom-menu[aria-expanded="true"]{background:#ffffff1f;color:#fff}
 }
 </style>
 <script>window.SKANDIWebsiteDesignRuntime = function () {
