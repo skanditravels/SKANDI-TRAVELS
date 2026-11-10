@@ -108,7 +108,7 @@ export async function testMediaConnectorCore(input = {}) {
   await ensureEditorialContext();
   const provider = clean(input.provider,40).toLowerCase();
   if (['wikimedia','openverse','fontsource'].includes(provider)) {
-    const result = await searchMediaSourcesCore({ provider, query:provider === 'fontsource' ? 'inter' : 'Stockholm' });
+    const result = await searchMediaSourcesCore({ provider, query:provider === 'fontsource' ? 'Inter' : 'Stockholm' });
     if (!Array.isArray(result.items)) return fail('CONNECTOR_RESPONSE_INVALID', 'The service returned an unexpected result.');
     return { ok:true, provider, count:result.items.length, checkedAt:new Date().toISOString() };
   }
