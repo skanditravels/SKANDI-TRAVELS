@@ -19,33 +19,40 @@
     <div class="map-loading" id="mapLoading" aria-hidden="true"></div>
     <div class="map-atmosphere" aria-hidden="true"></div>
 
-    <header class="hero-copy">
-      <div class="hero-eyebrow">SKANDI Travels</div>
-      <h1 id="networkTitle">Our Network</h1>
-      <p>Where the SKANDI world comes together. Explore destinations, handpicked Collection stays and trusted airline connections.</p>
-      <div class="network-meta" id="networkMeta" aria-live="polite"></div>
-      <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
-    </header>
+    <div class="map-interface">
+      <header class="hero-copy">
+        <div class="hero-eyebrow">SKANDI Travels</div>
+        <h1 id="networkTitle">Our Network</h1>
+        <p>Explore our destinations, Collection stays and airline connections on the map.</p>
+        <div class="network-meta" id="networkMeta" aria-live="polite"></div>
+        <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
+      </header>
 
-    <div class="map-toolbar" aria-label="Network map modes">
-      <div class="mode-rail" id="modeRail">
-        <button class="mode-btn active" type="button" data-mode="explore" aria-pressed="true">Explore</button>
-        <button class="mode-btn" type="button" data-mode="destinations" aria-pressed="false">Destinations</button>
-        <button class="mode-btn" type="button" data-mode="collection" aria-pressed="false">Collection</button>
-        <button class="mode-btn" type="button" data-mode="airlines" aria-pressed="false">Airlines</button>
+      <div class="map-control-dock">
+        <div class="map-toolbar" aria-label="Network map modes">
+          <div class="mode-rail" id="modeRail">
+            <button class="mode-btn active" type="button" data-mode="explore" aria-pressed="true">Explore</button>
+            <button class="mode-btn" type="button" data-mode="destinations" aria-pressed="false">Destinations</button>
+            <button class="mode-btn" type="button" data-mode="collection" aria-pressed="false">Collection</button>
+            <button class="mode-btn" type="button" data-mode="airlines" aria-pressed="false">Airlines</button>
+          </div>
+          <button class="icon-btn" id="searchOpen" type="button" aria-label="Search the SKANDI network">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></svg>
+          </button>
+        </div>
+
+        <div class="region-strip" id="regionStrip" aria-label="Filter network by region"></div>
+
+        <details class="map-key">
+          <summary>Map key</summary>
+          <div class="map-legend" aria-label="Map legend">
+            <div class="legend-chip"><span class="legend-dot destination" aria-hidden="true"></span><span>Destination</span></div>
+            <div class="legend-chip"><span class="legend-dot hotel" aria-hidden="true"></span><span>SKANDI Collection</span></div>
+            <div class="legend-chip"><span class="legend-dot airport" aria-hidden="true"></span><span>Airport</span></div>
+            <div class="legend-chip"><span class="legend-line" aria-hidden="true"></span><span>Partner route</span></div>
+          </div>
+        </details>
       </div>
-      <button class="icon-btn" id="searchOpen" type="button" aria-label="Search the SKANDI network">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></svg>
-      </button>
-    </div>
-
-    <div class="region-strip" id="regionStrip" aria-label="Filter network by region"></div>
-
-    <div class="map-legend" aria-label="Map legend">
-      <div class="legend-chip"><span class="legend-dot destination" aria-hidden="true"></span><span>Destination</span></div>
-      <div class="legend-chip"><span class="legend-dot hotel" aria-hidden="true"></span><span>SKANDI Collection</span></div>
-      <div class="legend-chip"><span class="legend-dot airport" aria-hidden="true"></span><span>Airport</span></div>
-      <div class="legend-chip"><span class="legend-line" aria-hidden="true"></span><span>Partner route</span></div>
     </div>
 
     <div class="map-utilities" aria-label="Map controls">

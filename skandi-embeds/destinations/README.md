@@ -1,5 +1,9 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+## 2026-11-10 — Responsive map controls
+
+The map title, view modes, search, country filters and optional map key are grouped in one responsive control panel. All four view modes remain available on small screens, and region buttons report their selected state to assistive technology. The existing full destination list and partner-airline section stay in place until their coordinated About-page release is ready.
+
 ## 2026-11-06 — Current atlas and public links
 
 The live catalog includes airports and airlines in addition to destinations, hotels and routes. The Wix facade now passes all five collections through. The map uses a lighter OpenFreeMap base, retains readable geographic labels and resolves overlapping map features in one click handler. Desktop detail actions retain their handlers and hotel clusters expand with the current MapLibre API.

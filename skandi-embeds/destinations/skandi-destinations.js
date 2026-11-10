@@ -508,7 +508,7 @@ function renderRegions(){
   const all=createRegionButton("All",null);el.regionStrip.append(all);
   state.model.regions.forEach(region=>el.regionStrip.append(createRegionButton(region,region)));
 }
-function createRegionButton(label,value){const b=document.createElement("button");b.type="button";b.className="region-btn"+(state.selectedRegion===value?" active":"");b.textContent=label;b.addEventListener("click",()=>setRegion(value));return b}
+function createRegionButton(label,value){const b=document.createElement("button");b.type="button";b.className="region-btn"+(state.selectedRegion===value?" active":"");b.textContent=label;b.setAttribute("aria-pressed",String(state.selectedRegion===value));b.addEventListener("click",()=>setRegion(value));return b}
 function renderModes(){
   const hasHotels=state.model.hotels.length>0;const hasAirlines=state.model.airlines.length>0&&state.model.routes.some(r=>r.airlineIds.length);
   el.modeRail.querySelector('[data-mode="collection"]').hidden=!hasHotels;
