@@ -82,3 +82,35 @@ test('website images resolve only through public storage and render allowed publ
   deliver(result.elements[0].assetUrl);assert.equal(w.document.getElementById('photo').src,result.elements[0].assetUrl);
   deliver('https://untrusted.example/storage/v1/object/public/inventory-media/a.jpg');assert.notEqual(w.document.getElementById('photo').src,'https://untrusted.example/storage/v1/object/public/inventory-media/a.jpg');
 });
+
+test('structured additions reject unsafe links, markup types and duplicate identifiers',()=>{
+  const cases=[
+    {id:'x',type:'script',text:'x'},
+    {id:'x',type:'button',text:'Click',href:'javascript:alert(1)'},
+    {id:'x',type:'image',assetId:'not-a-uuid'},
+    {id:'x',type:'text',text:'x'.repeat(4001)}
+  ];
+  for(const block of cases)assert.throws(()=>validateWebsiteDesign({elements:[{selector:'#section',blocks:[block]}]}));
+  assert.throws(()=>validateWebsiteDesign({elements:[{selector:'#section',blocks:[{id:'same',type:'text',text:'a'},{id:'same',type:'text',text:'b'}]}]}),/DUPLICATE_BLOCK/);
+  const result=validateWebsiteDesign({elements:[{selector:'#search',placeholder:'Find a trip'},{selector:'#section',blocks:[{id:'text-1',type:'text',text:'<img src=x onerror=alert(1)>'}]}]});
+  assert.equal(result.elements[0].placeholder,'Find a trip');assert.equal(result.elements[1].blocks[0].text,'<img src=x onerror=alert(1)>');
+});
+
+test('added content and placeholders preserve existing controls and are removed on reset',async t=>{
+ const dom=new JSDOM('<div id="skandi-shell-root" data-skandi-family="public"><main id="skandi-app-root"><section id="content"><button id="existing">Original control</button></section><form id="form"><input id="search" placeholder="Old" value="customer value"><input type="password" id="secret" placeholder="Private"></form><nav id="menu"></nav><div id="locked" data-website-design-protected></div></main></div>',{runScripts:'dangerously',pretendToBeVisual:true,beforeParse:w=>{w.postMessage=()=>{}}});
+ const w=dom.window;t.after(()=>{w.__skandiWebsiteDesign?.destroy?.();w.close()});w.SKANDI_WEBSITE_DESIGN_CONFIG={path:'/'};w.eval(runtime);
+ const deliver=websiteDesign=>w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type:'SKANDI_PRESENTATION_DATA',payload:{path:'/',websiteDesign}}}));
+ let clicked=false;w.document.getElementById('existing').onclick=()=>clicked=true;
+ const payload={elements:[{selector:'#content',blocks:[{id:'one',type:'heading',text:'Welcome'},{id:'two',type:'text',text:'<img src=x onerror=alert(1)>'},{id:'three',type:'button',text:'Explore',href:'/destinations'}]},{selector:'#search',placeholder:'Where to?'},{selector:'#secret',placeholder:'Changed'},{selector:'#form',blocks:[{id:'forbidden',type:'text',text:'Injected'}]},{selector:'#menu',blocks:[{id:'nav',type:'text',text:'Injected'}]},{selector:'#locked',blocks:[{id:'locked',type:'text',text:'Injected'}]}]};
+ deliver(payload);const d=w.document;assert.equal(d.querySelector('#search').placeholder,'Where to?');assert.equal(d.querySelector('#search').value,'customer value');assert.equal(d.querySelector('#secret').placeholder,'Private');assert.equal(d.querySelector('#content [data-website-design-block="two"]').textContent,'<img src=x onerror=alert(1)>');assert.equal(d.querySelector('#content [data-website-design-block="two"] img'),null);assert.equal(d.querySelector('#content a').getAttribute('href'),'/destinations');assert.equal(d.querySelector('#form [data-website-design-added]'),null);assert.equal(d.querySelector('#menu [data-website-design-added]'),null);assert.equal(d.querySelector('#locked [data-website-design-added]'),null);d.querySelector('#existing').click();assert(clicked);
+ deliver({elements:[]});assert.equal(d.querySelector('#search').placeholder,'Old');assert.equal(d.querySelector('#search').value,'customer value');assert.equal(d.querySelector('#content [data-website-design-added]'),null);
+});
+
+test('added images resolve through the authorized asset library rather than browser-supplied URLs',async()=>{
+ const id='00000000-0000-0000-0000-000000000001';let requests=0;
+ let source=await fs.readFile(new URL('../src/backend/SKANDI_CORE/websiteDesign.js',import.meta.url),'utf8');source=source.replace(/^import .*;\n/gm,'').replace(/export /g,'');
+ const factory=vm.runInNewContext('(function(restRequest,validateWebsiteDesign,storageGetPublicUrl,resolveWebsiteFont){'+source+';return resolveWebsiteAssets;})');
+ const resolve=factory(async req=>{requests++;assert.equal(req.query.visibility,'eq.PUBLIC');return [{id,bucket:'skandi-public-assets',storage_path:'approved/photo.jpg',credit:'Photographer'}]},validateWebsiteDesign,async()=>({publicUrl:'https://example.supabase.co/storage/v1/object/public/skandi-public-assets/approved/photo.jpg'}),()=>{});
+ const result=await resolve({elements:[{selector:'#content',blocks:[{id:'image-one',type:'image',assetId:id,assetUrl:'https://evil.example/image.png',alt:'A landscape'}]}]});
+ assert.equal(requests,1);assert.equal(result.elements[0].blocks[0].assetUrl,'https://example.supabase.co/storage/v1/object/public/skandi-public-assets/approved/photo.jpg');assert.equal(result.elements[0].blocks[0].credit,'Photographer');
+});

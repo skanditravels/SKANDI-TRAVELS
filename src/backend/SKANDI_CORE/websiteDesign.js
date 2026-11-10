@@ -13,12 +13,12 @@ async function read(context,page) {
   return Array.isArray(result)?result[0]:null;
 }
 export async function resolveWebsiteAssets(design,{published=false}={}) {
-  const safe=validateWebsiteDesign(design),ids=[...new Set(safe.elements.map(e=>e.assetId).filter(Boolean))],assets=new Map();
+  const safe=validateWebsiteDesign(design),targets=safe.elements.flatMap(e=>[e,...(e.blocks||[])]),ids=[...new Set(targets.map(e=>e.assetId).filter(Boolean))],assets=new Map();
   for(let i=0;i<ids.length;i+=50) {
     const rows=await restRequest({table:'platform_assets',method:'GET',query:{select:'id,bucket,storage_path,alt_text,credit',id:`in.(${ids.slice(i,i+50).join(',')})`,status:'eq.ACTIVE',visibility:'eq.PUBLIC',asset_type:'eq.IMAGE',limit:'50'}});
     for(const asset of rows||[]) assets.set(asset.id,asset);
   }
-  for(const element of safe.elements) if(element.assetId) {
+  for(const element of targets) if(element.assetId) {
     const asset=assets.get(element.assetId);if(!asset)throw new Error('WEBSITE_PUBLIC_ASSET_REQUIRED');
     try { element.assetUrl=(await storageGetPublicUrl({bucket:asset.bucket,path:asset.storage_path})).publicUrl; }
     catch (_) { throw new Error('WEBSITE_PUBLIC_ASSET_REQUIRED'); }

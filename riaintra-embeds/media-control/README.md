@@ -2,6 +2,8 @@
 
 ## INFO / LOG
 
+- 2026-11-10 — Reorganized the workspace into Website, Asset Library, VOY, Newsroom, Marketing and review tools, with mobile navigation. Website drafts can include safe structured headings, text, links and library images in eligible containers, plus form placeholders. Background refreshes preserve in-progress forms, save errors appear by their action, and local checks clearly identify manual or unavailable tools. The library separates VOY references from shared assets and paginates the first 1,000 loaded records. Current source and integration details are in `docs/media-control-website-editor.md`. The Wix page controller, public design contract and backend design service must be updated together; source/build checks do not prove a Wix publication.
+
 - 2026-11-08 — Removed the non-interactive summary pills and their unused counters from the toolbar. Search, save and preview remain available. The linked complete reference payloads are historical; active HTML and JavaScript are the implementation. Requires live Wix verification.
 
 ## Reference documents
