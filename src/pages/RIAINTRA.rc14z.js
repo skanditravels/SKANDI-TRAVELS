@@ -1,8 +1,7 @@
-// /src/pages/RIAINTRA Login.rc14.js
+// /src/pages/RIAINTRA Login.js
 // Route: /riaintra
 // HTML Embed ID: #staffLoginEmbed
-// Backend Base 1.0 / B-002 — canonical Wix Members + Supabase staff identity bridge.
-
+// Backend Base 1.0 / B-002 — canonical Wix Members + Supabase staff identity bridge (30-Day Device Trust MFA).
 
 import wixLocationFrontend from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
@@ -10,14 +9,16 @@ import { local } from "wix-storage-frontend";
 import { createStaffActivitySession } from "public/riaintraSession.js";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import {
-  requestStaffOtp,
-  verifyStaffOtp
+  authenticateStaffWithDeviceTrust,
+  verifyStaffOtpAndTrustDevice
 } from "backend/SKANDI_CORE/staffOtp.web";
 
 const EMBED_ID = "#staffLoginEmbed";
 const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
+const DEVICE_TOKEN_STORAGE_KEY = "skandi_device_token_v1";
+
 const staffActivitySession = createStaffActivitySession(local);
 const SK_ID_PATTERN = /^[A-Z]{2}[0-9]{4}$/;
 const OTP_PATTERN = /^[0-9]{6}$/;
@@ -44,14 +45,18 @@ async function handleEmbedMessage(event) {
       return;
     }
 
-    if (msg.type === "STAFF_OTP_REQUEST") {
-      await handleOtpRequest(payload, requestId);
+    if (msg.type === "STAFF_LOGIN_REQUEST") {
+      await handleLoginRequest(payload, requestId);
       return;
     }
 
     if (msg.type === "STAFF_OTP_VERIFY") {
       await handleOtpVerify(payload, requestId);
       return;
+    }
+
+    if (msg.type === "STAFF_FORGOT_PASSWORD") {
+      await handleForgotPassword(requestId);
     }
   } catch (err) {
     actionInProgress = false;
@@ -74,45 +79,75 @@ async function handleReady(requestId) {
   staffActivitySession.clear();
   try { await authentication.logout(); } catch (_) {}
   postToEmbed("STAFF_LOGIN_NOTICE", {
-    message: "Enter your SK-ID to receive a one-time verification code. Your session ends after 30 minutes of inactivity."
+    message: "Enter your SK-ID and password to sign in. Your session ends after 30 minutes of inactivity."
   }, requestId);
 }
 
-// STEP 1: Validate SK-ID in Supabase, verify Wix Member match, and dispatch email OTP
-async function handleOtpRequest(payload, requestId) {
+// STEP 1: Verify SK-ID + Password & check 30-day device trust
+async function handleLoginRequest(payload, requestId) {
   if (actionInProgress) {
     throw new PublicError("A sign-in action is already in progress.");
   }
 
   const skId = cleanSkId(payload.skId);
+  const password = typeof payload.password === "string" ? payload.password : "";
+
   if (!SK_ID_PATTERN.test(skId)) {
     throw new PublicError("Enter a valid SK-ID in the AA0000 format.");
+  }
+
+  if (!password.trim()) {
+    throw new PublicError("Enter your password.");
+  }
+
+  if (password.length > 256) {
+    throw new PublicError("The password is too long.");
   }
 
   actionInProgress = true;
 
   try {
     postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Validating SK-ID and sending verification code..."
+      message: "Validating SK-ID and device trust..."
     }, requestId);
 
-    const result = unwrapResult(await requestStaffOtp(skId));
+    const deviceToken = getOrCreateDeviceToken();
+    const result = unwrapResult(await authenticateStaffWithDeviceTrust({
+      skId,
+      password,
+      deviceToken,
+      userAgent: getSafeUserAgent()
+    }));
 
     if (!result?.ok) {
-      throw new PublicError(result?.message || "Unable to send verification code.");
+      throw new PublicError(result?.message || "The SK-ID or password is incorrect.");
     }
 
-    postToEmbed("STAFF_OTP_SENT", {
-      ok: true,
-      skId,
-      maskedEmail: String(result.maskedEmail || "")
-    }, requestId);
-  } finally {
+    // New or expired (> 30 days) device: require 6-digit email OTP
+    if (result.mfaRequired) {
+      actionInProgress = false;
+      postToEmbed("STAFF_OTP_REQUIRED", {
+        ok: true,
+        skId,
+        maskedEmail: String(result.maskedEmail || "")
+      }, requestId);
+      return;
+    }
+
+    // Known trusted device (< 30 days): complete Wix Member login immediately
+    const sessionToken = String(result?.sessionToken || "").trim();
+    if (!sessionToken) {
+      throw new Error("The authentication service did not return a session token.");
+    }
+
+    await finalizeWixSession(sessionToken, requestId);
+  } catch (error) {
     actionInProgress = false;
+    throw error;
   }
 }
 
-// STEP 2: Verify 6-digit OTP, apply Wix session token, and start RIAINTRA activity session
+// STEP 2: Verify 6-digit OTP on a new/expired device & trust for 30 days
 async function handleOtpVerify(payload, requestId) {
   if (actionInProgress) {
     throw new PublicError("A sign-in action is already in progress.");
@@ -133,10 +168,17 @@ async function handleOtpVerify(payload, requestId) {
 
   try {
     postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Verifying security code..."
+      message: "Verifying code and registering trusted device..."
     }, requestId);
 
-    const result = unwrapResult(await verifyStaffOtp(skId, code));
+    const deviceToken = getOrCreateDeviceToken();
+    const result = unwrapResult(await verifyStaffOtpAndTrustDevice({
+      skId,
+      code,
+      deviceToken,
+      userAgent: getSafeUserAgent()
+    }));
+
     if (!result?.ok) {
       throw new PublicError(result?.message || "Invalid or expired verification code.");
     }
@@ -146,39 +188,45 @@ async function handleOtpVerify(payload, requestId) {
       throw new Error("The authentication service did not return a session token.");
     }
 
-    postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Starting secure Wix member session..."
-    }, requestId);
-
-    await authentication.applySessionToken(sessionToken);
-
-    postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Linking your Wix session to the SKANDI staff profile..."
-    }, requestId);
-
-    const session = await waitForAuthorizedSession();
-
-    if (!session?.loggedIn || !session?.authorized) {
-      throw new PublicError(sessionReasonMessage(session?.reason));
-    }
-
-    try { staffActivitySession.start(); }
-    catch (error) {
-      try { await authentication.logout(); } catch (_) {}
-      throw new PublicError("Secure staff session could not be established. Please try signing in again.");
-    }
-
-    postToEmbed("STAFF_LOGIN_OK", {
-      message: "Signed in. Opening RIAINTRA...",
-      profile: publicProfile(session.profile),
-      apps: safeApps(session.apps)
-    }, requestId);
-
-    redirectToDashboard();
+    await finalizeWixSession(sessionToken, requestId);
   } catch (error) {
     actionInProgress = false;
     throw error;
   }
+}
+
+// Shared helper to apply Wix session token, verify authorization, and start activity session
+async function finalizeWixSession(sessionToken, requestId) {
+  postToEmbed("STAFF_LOGIN_PROGRESS", {
+    message: "Starting secure Wix member session..."
+  }, requestId);
+
+  await authentication.applySessionToken(sessionToken);
+
+  postToEmbed("STAFF_LOGIN_PROGRESS", {
+    message: "Linking your Wix session to the SKANDI staff profile..."
+  }, requestId);
+
+  const session = await waitForAuthorizedSession();
+
+  if (!session?.loggedIn || !session?.authorized) {
+    throw new PublicError(sessionReasonMessage(session?.reason));
+  }
+
+  try {
+    staffActivitySession.start();
+  } catch (error) {
+    try { await authentication.logout(); } catch (_) {}
+    throw new PublicError("Secure staff session could not be established. Please try signing in again.");
+  }
+
+  postToEmbed("STAFF_LOGIN_OK", {
+    message: "Signed in. Opening RIAINTRA...",
+    profile: publicProfile(session.profile),
+    apps: safeApps(session.apps)
+  }, requestId);
+
+  redirectToDashboard();
 }
 
 async function waitForAuthorizedSession() {
@@ -192,6 +240,66 @@ async function waitForAuthorizedSession() {
   }
 
   return latest;
+}
+
+async function handleForgotPassword(requestId) {
+  if (actionInProgress) {
+    throw new PublicError("A sign-in action is already in progress.");
+  }
+
+  actionInProgress = true;
+
+  try {
+    postToEmbed("STAFF_LOGIN_PROGRESS", {
+      message: "Opening Wix password reset..."
+    }, requestId);
+
+    try {
+      await authentication.promptForgotPassword();
+    } catch (err) {
+      if (isCancellation(err)) {
+        postToEmbed("STAFF_LOGIN_NOTICE", {
+          message: "Password reset was closed."
+        }, requestId);
+        return;
+      }
+      throw err;
+    }
+
+    postToEmbed("STAFF_LOGIN_NOTICE", {
+      message: "If the account exists, password reset instructions will be sent by Wix."
+    }, requestId);
+  } finally {
+    actionInProgress = false;
+  }
+}
+
+function getOrCreateDeviceToken() {
+  let token = "";
+  try {
+    token = String(local.getItem(DEVICE_TOKEN_STORAGE_KEY) || "").trim();
+  } catch (_) {}
+
+  if (!token || token.length < 24) {
+    const partA = Date.now().toString(36);
+    const partB = Math.random().toString(36).slice(2, 12);
+    const partC = Math.random().toString(36).slice(2, 12);
+    token = `${partA}-${partB}-${partC}`;
+    try {
+      local.setItem(DEVICE_TOKEN_STORAGE_KEY, token);
+    } catch (_) {}
+  }
+  return token;
+}
+
+function getSafeUserAgent() {
+  try {
+    return typeof navigator !== "undefined" && navigator.userAgent
+      ? String(navigator.userAgent).slice(0, 200)
+      : "";
+  } catch (_) {
+    return "";
+  }
 }
 
 function postToEmbed(type, payload = {}, requestId = "") {
@@ -266,7 +374,8 @@ function unwrapResult(value) {
     Object.prototype.hasOwnProperty.call(value, "sessionToken") ||
     Object.prototype.hasOwnProperty.call(value, "loggedIn") ||
     Object.prototype.hasOwnProperty.call(value, "authorized") ||
-    Object.prototype.hasOwnProperty.call(value, "ok")
+    Object.prototype.hasOwnProperty.call(value, "ok") ||
+    Object.prototype.hasOwnProperty.call(value, "mfaRequired")
   ) return value;
 
   for (const key of ["payload", "data", "result"]) {
@@ -279,12 +388,25 @@ function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function isCancellation(err) {
+  const text = String(err?.message || err || "").toLowerCase();
+  return text.includes("cancel") || text.includes("closed");
+}
+
 function cleanError(err) {
   if (err instanceof PublicError) return err.message;
 
   const text = [err?.code, err?.message, err]
     .map((value) => String(value || "").toLowerCase())
     .join(" ");
+
+  if (
+    text.includes("invalid credential") ||
+    text.includes("incorrect password") ||
+    text.includes("wrong password") ||
+    text.includes("member not found") ||
+    text.includes("credentials_invalid")
+  ) return "The SK-ID or password is incorrect.";
 
   if (text.includes("not authorized") || text.includes("access denied") || text.includes("forbidden")) {
     return "This account is not authorized for RIAINTRA.";
