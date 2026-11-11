@@ -28,6 +28,7 @@
     const recruitingOfferDrafts = new Map();
     let activeOfferComposer = null;
     let addressLookupTimer = null;
+    let workspaceConnectionTimer = null;
     let addressLookupSequence = 0;
     let addressLookupInput = null;
     let addressLookupItems = [];
@@ -1988,7 +1989,14 @@
       }
       closeShellPopovers();
       renderPortal();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const workspaceScroller = $("skandi-app-root");
+      const scrollBehavior = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth";
+      if (workspaceScroller && workspaceScroller.scrollHeight > workspaceScroller.clientHeight) {
+        if (typeof workspaceScroller.scrollTo === "function") workspaceScroller.scrollTo({ top: 0, behavior: scrollBehavior });
+        else workspaceScroller.scrollTop = 0;
+      } else {
+        window.scrollTo({ top: 0, behavior: scrollBehavior });
+      }
     }
 
     function parseRoute() {
@@ -2098,23 +2106,24 @@
 
     function renderConnectionState() {
       const failed = portalState.status === "error";
+      const delayed = portalState.status === "timeout";
       return `
         <main class="page" id="mainContent">
           <div class="page-header">
             <div class="page-header-copy">
-              <p class="eyebrow">${icon(failed ? "warning" : "lock", 14)} Secure Employee Portal</p>
-              <h1 class="page-title">${failed ? "Employee portal unavailable" : "Connecting to RIAINTRA"}</h1>
-              <p class="page-subtitle">${failed ? escapeHtml(portalState.error || "The employee session could not be verified.") : "Loading your workspace and employee information."}</p>
+              <p class="eyebrow">${icon(failed || delayed ? "warning" : "lock", 14)} Secure Employee Portal</p>
+              <h1 class="page-title">${failed ? "Employee portal unavailable" : delayed ? "Taking longer than expected" : "Connecting to RIAINTRA"}</h1>
+              <p class="page-subtitle">${failed ? escapeHtml(portalState.error || "The workspace could not be loaded.") : delayed ? "Your workspace has not responded yet. Check your connection and try again." : "Loading your workspace and employee information."}</p>
             </div>
             <div class="page-actions">
-              <span class="role-pill">${icon(failed ? "warning" : "clock", 14)} ${failed ? "Authentication required" : "Waiting for data"}</span>
+              <span class="role-pill">${icon(failed || delayed ? "warning" : "clock", 14)} ${failed ? "Unable to load" : delayed ? "Still waiting" : "Connecting"}</span>
             </div>
           </div>
 
           <div class="empty-card">
-            <span class="empty-icon">${icon(failed ? "warning" : "shield", 24)}</span>
-            <strong>${failed ? "A valid employee profile and role are required" : "No local or sample data is stored in this portal"}</strong>
-            <span>${failed ? "Sign in again to access your workspace." : "Your workspace will appear when your information is ready."}</span>
+            <span class="empty-icon">${icon(failed || delayed ? "warning" : "shield", 24)}</span>
+            <strong>${failed ? "Your workspace could not be loaded" : delayed ? "No response received yet" : "No local or sample data is stored in this portal"}</strong>
+            <span>${failed ? "Try again. If your session has ended, sign in again." : delayed ? "You can request the workspace again below." : "Your workspace will appear when your information is ready."}</span>
             <button class="primary-button" type="button" data-action="request-bootstrap">${icon("clock", 16)} Request data again</button>
           </div>
 
@@ -2245,6 +2254,12 @@
               <div class="profile-line"><span>SK-ID</span><strong>${escapeHtml(role.employeeId)}</strong></div>
               <div class="profile-line"><span>Access profile</span><strong>${escapeHtml(ctx.accessRole||"Assigned access")}</strong></div>
             </aside></details>
+          </section>
+
+          <section class="sf-mobile-shortcuts" aria-label="Quick access">
+            <button class="sf-shortcut" type="button" data-route="tasks"><span class="sf-shortcut-icon">${icon("task",18)}</span><strong>My Work</strong><small>${tasks.length === 1 ? "1 open item" : tasks.length + " open items"}</small></button>
+            <button class="sf-shortcut" type="button" data-route="apps"><span class="sf-shortcut-icon">${icon("apps",18)}</span><strong>Applications</strong><small>Your tools</small></button>
+            <button class="sf-shortcut" type="button" data-route="profile"><span class="sf-shortcut-icon">${icon("profile",18)}</span><strong>My Profile</strong><small>View details</small></button>
           </section>
 
           <div class="intranet-columns">
@@ -2652,11 +2667,11 @@
       }
       return `
         <div class="hr-table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>${columns.map(column => `<th>${escapeHtml(column[0])}</th>`).join("")}</tr>
+          <table class="data-table" data-sf-adaptive role="table">
+            <thead role="rowgroup">
+              <tr role="row">${columns.map(column => `<th scope="col" role="columnheader">${escapeHtml(column[0])}</th>`).join("")}</tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               ${items.map((record, index) => {
                 const id = options.id ? options.id(record, index) : hrRecordId(record) || String(index);
                 const selected = options.selectedId && String(options.selectedId) === String(id);
@@ -2664,7 +2679,7 @@
                   ? `class="hr-table-row ${selected ? "selected" : ""}" tabindex="0" data-action="${escapeHtml(options.action)}" data-id="${escapeHtml(id)}"`
                   : "";
                 return `
-                  <tr ${attributes}>
+                  <tr role="row" ${attributes}>
                     ${columns.map(column => {
                       const value = typeof column[1] === "function"
                         ? column[1](record, index)
@@ -2672,7 +2687,7 @@
                       const rendered = column[2] === "status"
                         ? statusBadge(displayPortalValue(value))
                         : escapeHtml(displayPortalValue(value));
-                      return `<td>${rendered}</td>`;
+                      return `<td role="cell" data-label="${escapeHtml(column[0])}">${rendered}</td>`;
                     }).join("")}
                   </tr>
                 `;
@@ -4725,6 +4740,14 @@
       lastPortalMarkup = markup;
       portal.innerHTML = markup;
       applyHrReadOnlyControls();
+      if (window.matchMedia?.("(max-width: 680px)")?.matches) {
+        const rail = portal.querySelector(".top-nav-inner");
+        const active = rail?.querySelector('.nav-button[aria-current="page"]');
+        if (rail && active) {
+          const difference = active.getBoundingClientRect().left - rail.getBoundingClientRect().left - (rail.clientWidth - active.offsetWidth) / 2;
+          rail.scrollLeft += difference;
+        }
+      }
 
     }
 
@@ -4930,9 +4953,20 @@
       hrEmployeeDrafts.set(key,draft);
     }
 
+    function scheduleWorkspaceTimeout() {
+      if (workspaceConnectionTimer) window.clearTimeout(workspaceConnectionTimer);
+      workspaceConnectionTimer = window.setTimeout(() => {
+        workspaceConnectionTimer = null;
+        if (portalState.connected || portalState.status !== "waiting") return;
+        portalState.status = "timeout";
+        renderPortal();
+      }, 18000);
+    }
+
     function requestPortalBootstrap() {
       portalState.status = "waiting";
       portalState.error = null;
+      scheduleWorkspaceTimeout();
       post("INTRANET_READY", {
         requestedAt: new Date().toISOString(),
         capabilities: ["employee-profile", "directory", "hr-admin", "recruiting", "badge-control", "company-news", "department-news", "base-news", "canonical-role-scope", "department-scope", "base-market-scope", "destination-scope", "permission-scope"]
@@ -5542,6 +5576,7 @@
 
       parseRoute();
       renderPortal();
+      scheduleWorkspaceTimeout();
 
       post("SKANDI_MASTER_CONFIG_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
       post("MASTER_NAVIGATION_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });

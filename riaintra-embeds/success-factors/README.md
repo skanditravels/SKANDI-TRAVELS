@@ -1,5 +1,10 @@
 # success-factors
 
+## 2026-11-11 — Mobile workspace presentation
+
+The active source triplet adds responsive workspace, offer-editor and labeled HR record layouts, plus shortcuts to the existing My Work, Applications and My Profile routes. A delayed bootstrap now offers a retry; a subsequent valid response can still load the workspace. Identity, authorization, data ownership and message contracts are unchanged. Authenticated Wix staff verification remains required.
+
+
 ## Reference documents
 
 - [HTML_REF/riaintra/Success Factors.md](references/riaintra-success-factors-md/README.md)
