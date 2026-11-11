@@ -1,6 +1,7 @@
 // Text preparation only. The calling service must verify authorization,
 // customer/booking association and dispatch idempotency before sending.
 import { evaluateTransportReadiness } from './opsTransportReadiness.js';
+import { SITE_MAP } from '../../public/siteMap.js';
 
 const clean = (value, limit = 180) => String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, limit);
 const html = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -18,7 +19,7 @@ export function prepareNoHostNotice({service, customerName = '', supportUrl, now
   } catch (_) { throw problem('TRANSPORT_NOTICE_TIMEZONE_INVALID'); }
   let url;
   try { url = new URL(String(supportUrl || '')); } catch (_) { throw problem('TRANSPORT_NOTICE_SUPPORT_URL_INVALID'); }
-  if (url.protocol !== 'https:' || !['skanditravels.com','www.skanditravels.com'].includes(url.hostname.toLowerCase()) || url.port || url.username || url.password || url.pathname !== '/about/support' || url.search || url.hash) {
+  if (url.protocol !== 'https:' || !['skanditravels.com','www.skanditravels.com'].includes(url.hostname.toLowerCase()) || url.port || url.username || url.password || url.pathname !== SITE_MAP.support || url.search || url.hash) {
     throw problem('TRANSPORT_NOTICE_SUPPORT_URL_INVALID');
   }
   const name = clean(customerName, 120), greeting = name ? `Hello ${name},` : 'Hello,';
