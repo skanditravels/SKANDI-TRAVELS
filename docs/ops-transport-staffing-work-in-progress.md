@@ -1,4 +1,4 @@
-# Bus staffing and alert integration — work in progress
+# Bus staffing and alert integration
 
 This is not a deployment plan for the existing one-person implementation. The
 previous PR was merged into GitHub, but the initial transport migration was not
@@ -29,15 +29,17 @@ bus-staffing solution.
   time until the issue is resolved or the service is closed. If a service is
   created or changed after a threshold, assess it immediately.
 
-## Implementation status (draft source, 2026-11-11)
+## Implementation and deployment notes
 
-The draft adds unlimited role-based staffing on each shared bus service, an OPS
+The source adds unlimited role-based staffing on each shared bus service, an OPS
 service editor, employee-scoped EOS and MyRoster projections, revision-bound
 no-Host approval, and deduplicated alert records. It also adds a one-minute
 Postgres scheduler migration and exposes an unhealthy-monitor warning in OPS.
 The SQL and authorization behavior have been checked in isolated tests; this
-is not a live deployment. The worker raises alerts inside OPS, not email or SMS.
+do not establish live deployment. The worker raises alerts inside OPS, not email or SMS.
 Worker availability and permissions still need validation in the target database.
+
+The requested email template is `docs/email-templates/no-host-service-update.html`. It is a standalone template for later connection; placeholder replacement, recipient selection and sending are not implemented. Only issue it after a current OPS no-Host approval and after verifying the affected booking.
 
 `opsTransportReadiness.js` calculates the current status for the OPS display.
 `opsTransportNotice.js` prepares wording only; it cannot send an email. The
@@ -49,10 +51,11 @@ recipients from broad route names. Recheck the approval and staffing immediately
 before dispatch; prevent duplicate sends and surface delivery failures. A Host
 being added or the service changing must invalidate pending notices.
 
-The initial registry migration, staffing migration and scheduler migration have
-not been applied to production. New EOS/MyRoster code requires the staffing
+At the initial inspection, the registry migration, staffing migration and scheduler
+migration were absent from production. Verify the target state before deployment.
+New EOS/MyRoster code requires the staffing
 migration, so deployment must be coordinated to avoid breaking staff rosters.
 Wix code and the generated embeds must also be published and checked in an
 authorized OPS account and in employee sessions on desktop and mobile. Do not
-activate the incomplete customer-notification flow or assume a GitHub build is
-a Wix publication.
+assume that the HTML email template sends notifications or that a GitHub build
+is a Wix publication.
