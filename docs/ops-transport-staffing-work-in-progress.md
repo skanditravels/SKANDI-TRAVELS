@@ -29,42 +29,30 @@ bus-staffing solution.
   time until the issue is resolved or the service is closed. If a service is
   created or changed after a threshold, assess it immediately.
 
-## Evidence and implementation gaps
+## Implementation status (draft source, 2026-11-11)
 
-`opsTransportReadiness.js` is a tested, pure decision helper. It has no database
-writes, service endpoints, UI connections, timer or messaging dispatcher. Its
-results are not a live alert or authorization to send an email. Existing OPS,
-EOS and MyRoster screens still use the one-person data model.
+The draft adds unlimited role-based staffing on each shared bus service, an OPS
+service editor, employee-scoped EOS and MyRoster projections, revision-bound
+no-Host approval, and deduplicated alert records. It also adds a one-minute
+Postgres scheduler migration and exposes an unhealthy-monitor warning in OPS.
+The SQL and authorization behavior have been checked in isolated tests; this
+is not a live deployment. The worker raises alerts inside OPS, not email or SMS.
+Worker availability and permissions still need validation in the target database.
 
-`opsTransportNotice.js` prepares the requested customer wording only when
-the decision helper sees an eligible, current own-bus no-host approval. It
-requires an explicit service time zone and the site's support route, and
-escapes service/customer text. It does not authenticate the approval, verify
-booking recipients, dispatch, retry, or prove email delivery.
+`opsTransportReadiness.js` calculates the current status for the OPS display.
+`opsTransportNotice.js` prepares wording only; it cannot send an email. The
+reservation system stores transfer components under bookings, but no current
+production transfer components were available to verify a service-to-booking
+association. A specific service-to-transfer-component link, verified recipient
+resolution, delivery and a durable delivery log are still required. Do not infer
+recipients from broad route names. Recheck the approval and staffing immediately
+before dispatch; prevent duplicate sends and surface delivery failures. A Host
+being added or the service changing must invalidate pending notices.
 
-A many-person service model and transactional assignment updates are needed;
-all assigned staff must see the same service in their own roster, while staff
-who are not assigned must not receive it. Third-party services need a supplier
-and the ability to record vehicle/driver details later without inventing them.
-The service and its assignments must be updated atomically, with capacity,
-conflict checks, audit, stale-update protection and versioned exception approval.
-
-Wix scheduled jobs in the existing site are hourly. An hourly scan cannot
-reliably raise alerts at the requested two-hour or four-hour boundaries. The
-inspected database did not have `pg_cron` or `pg_net` installed; a separate,
-monitored recurring worker and durable, deduplicated OPS alert records must be
-implemented and verified. A screen-only timer is not sufficient. OPS also needs
-an alert when the recurring worker is unhealthy.
-
-The existing reservation system stores transfer components under bookings, but
-no current production transfer components were available to verify a service to
-booking association. A specific service-to-transfer-component link, an
-approved email template, verified recipient resolution and a durable delivery
-log are required. Never select recipients by matching a broad route name or
-send to all customers on a route. Recheck the approval and staffing immediately
-before dispatch; prevent duplicate sends and surface delivery failures. A
-host-added or service-changed event must cancel any pending no-host message.
-
-No customer email has been sent and no production schema, permissions, cron,
-Wix code or roles were changed while preparing these rules. Complete and test
-the integrations above before requesting or performing production deployment.
+The initial registry migration, staffing migration and scheduler migration have
+not been applied to production. New EOS/MyRoster code requires the staffing
+migration, so deployment must be coordinated to avoid breaking staff rosters.
+Wix code and the generated embeds must also be published and checked in an
+authorized OPS account and in employee sessions on desktop and mobile. Do not
+activate the incomplete customer-notification flow or assume a GitHub build is
+a Wix publication.

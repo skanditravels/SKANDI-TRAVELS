@@ -30,3 +30,11 @@ contract compatibility but are not used by the updated EOS screen.
 This source has not been published to Wix or checked with a live staff session.
 The transport registry migration and backend publication must be reviewed and
 approved separately; see `docs/ops-transport-workforce.md`.
+
+## Shared staffing draft (2026-11-11)
+
+An unreleased backend draft projects a shared bus service to every assigned
+employee while keeping other employees' assignments private. The v2 database
+migration is required before activating this code. See
+`docs/ops-transport-staffing-work-in-progress.md` for the incomplete customer
+notice and deployment status. This has not been verified in a live staff session.

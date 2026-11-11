@@ -3,6 +3,7 @@
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes, rosterAssignmentVisible, rosterTransportDetails } from "backend/SKANDI_CORE/rosterAssignments";
+import { loadOwnedBusServices } from "backend/SKANDI_CORE/opsTransportRoster";
 
 const ASSIGNMENT_TABLES = Object.keys(ROSTER_ASSIGNMENT_SOURCES);
 const OWNER_COLUMNS = Object.freeze({
@@ -147,6 +148,7 @@ async function queryOwned(table, select, options = {}) {
       }
     }
   }
+  if (table === "vehicle_assignments") collected.push(...await loadOwnedBusServices({identifiers:ids,restRequest,select,limit:options.limit||MAX_ROWS}));
   const seen = new Set();
   return collected.filter(row => {
     const key = table + ":" + clean(row.id, 160);

@@ -2,6 +2,10 @@
 
 ## Status
 
+The single-person transport design described below is superseded by the
+**unreleased draft** in `docs/ops-transport-staffing-work-in-progress.md`.
+Retained here for the history of the first implementation.
+
 Prepared for review from the current GitHub source. No migration, database
 permission update, Wix code update or Wix publication has been applied by this
 change. The generated HTML, current GitHub code and published Wix code are

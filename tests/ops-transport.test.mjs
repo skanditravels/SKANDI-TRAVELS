@@ -6,6 +6,8 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { compilePage } from '../scripts/lib/compile.mjs';
 import * as definitions from '../src/backend/SKANDI_CORE/rosterAssignments.js';
+import * as transportRoster from '../src/backend/SKANDI_CORE/opsTransportRoster.js';
+import * as transportReadiness from '../src/backend/SKANDI_CORE/opsTransportReadiness.js';
 
 const require=createRequire(new URL('../scripts/package.json',import.meta.url));
 const {JSDOM}=require('jsdom');
@@ -22,7 +24,7 @@ const assignments=[
 
 test('EOS and MyRoster expose only the employee’s published bus service',async()=>{
   for(const [file,method] of [['eos.js','getEosBootstrapCore'],['myRoster.js','getMyRosterBootstrapCore']]){
-    const ctx=vm.createContext({...definitions,requireStaffPortalSessionCore:async()=>staff,restRequest:async({table})=>table==='vehicle_assignments'?assignments:[]});
+    const ctx=vm.createContext({...definitions,...transportRoster,requireStaffPortalSessionCore:async()=>staff,restRequest:async({table})=>table==='vehicle_assignments'?assignments:[]});
     vm.runInContext(strip(await readCore(file)),ctx);
     const result=await ctx[method]({from:'2026-11-06',to:'2026-11-08'});
     assert.deepEqual(Array.from(result.assignments,x=>x.id),['published'],file);
@@ -53,7 +55,7 @@ test('transport compliance is denied before any database read to ordinary staff'
 
 test('only authorized OPS writers can submit a vehicle; actor comes from the session',async()=>{
   let session={permissionGroups:['operations'],profile:{skId:'SK-ADMIN'}},requests=[];
-  const ctx=vm.createContext({...definitions,requireStaffPortalSessionCore:async()=>session,restRequest:async()=>[],rpcRequest:async x=>{requests.push(x);return {id:'saved'}}});
+  const ctx=vm.createContext({...definitions,...transportReadiness,requireStaffPortalSessionCore:async()=>session,restRequest:async()=>[],rpcRequest:async x=>{requests.push(x);return {id:'saved'}}});
   vm.runInContext(strip(await readCore('opsControl.js')),ctx);
   const payload={name:'Coach',registration:'ABC',countryCode:'SE',baseCode:'ARN',capacity:40,status:'AVAILABLE',serviceClass:'STANDARD',actor:'SPOOFED'};
   await assert.rejects(ctx.handleOpsControlActionCore({type:'SAVE_TRANSPORT_VEHICLE',payload}),/OPS_CONTROL_WRITE_DENIED/);
@@ -92,14 +94,14 @@ test('OPS service editor opens, sends a local-time assignment and displays a sav
   const dom=new JSDOM(markup,{url:'https://example.test/ops',runScripts:'outside-only',pretendToBeVisual:true});
   const w=dom.window,sent=[];w.postMessage=message=>sent.push(message);w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});
   w.eval(w.document.querySelector('script[data-skandi-part="ops-control"]').textContent);
-  w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type:'OPS_BOOTSTRAP',payload:{transport:{available:true,canEdit:true,vehicles:[{id:'11111111-1111-4111-8111-111111111111',name:'Coach',registration:'ABC',countryCode:'SE',baseCode:'ARN',capacity:40,status:'AVAILABLE'}],staff:[{id:'SK01',name:'Alex'}],suppliers:[],assignments:[{id:'22222222-2222-4222-8222-222222222222',label:'Transfer',vehicleId:'11111111-1111-4111-8111-111111111111',employeeId:'SK01',startAt:'2030-01-01T10:00:00Z',endAt:'2030-01-01T11:00:00Z',passengerCount:10,capacity:40,status:'SCHEDULED',stops:[],updatedAt:'2026-11-10T00:00:00Z'}]}}}}));
+  w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type:'OPS_BOOTSTRAP',payload:{transport:{available:true,canEdit:true,vehicles:[{id:'11111111-1111-4111-8111-111111111111',name:'Coach',registration:'ABC',countryCode:'SE',baseCode:'ARN',capacity:40,status:'AVAILABLE'}],staff:[{id:'SK01',name:'Alex'}],suppliers:[],assignments:[{id:'22222222-2222-4222-8222-222222222222',label:'Transfer',version:2,operatorType:'OWN',timeZone:'UTC',staff:[{employeeId:'SK01',role:'DRIVER'}],vehicleId:'11111111-1111-4111-8111-111111111111',employeeId:'SK01',startAt:'2030-01-01T10:00:00Z',endAt:'2030-01-01T11:00:00Z',passengerCount:10,capacity:40,status:'SCHEDULED',stops:[],updatedAt:'2026-11-10T00:00:00Z'}]}}}}));
   w.document.querySelector('[data-transport-service]').click();
   assert.equal(w.document.querySelector('#transportServiceTitle').textContent,'Edit bus service');
   const form=w.document.getElementById('transportServiceModal');
   assert.equal(form.elements.label.value,'Transfer');
   form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
-  const action=sent.find(x=>x.type==='OPS_ACTION'&&x.payload.action==='SAVE_TRANSPORT_ASSIGNMENT');assert(action);
-  assert.equal(action.payload.payload.employeeId,'SK01');
+  const action=sent.find(x=>x.type==='OPS_ACTION'&&x.payload.action==='SAVE_TRANSPORT_SERVICE_V2');assert(action);
+  assert.deepEqual(JSON.parse(JSON.stringify(action.payload.payload.staff)),[{employeeId:'SK01',role:'DRIVER'}]);
   assert.equal(action.payload.payload.startAt,new Date(form.elements.startAt.value).toISOString());
   w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type:'OPS_ERROR',payload:{requestId:action.payload.requestId,message:'Vehicle overlaps another service.'}}}));
   assert.equal(w.document.getElementById('transportServiceError').textContent,'Vehicle overlaps another service.');

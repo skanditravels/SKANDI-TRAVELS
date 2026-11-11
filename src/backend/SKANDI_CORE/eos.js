@@ -4,6 +4,7 @@
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes, rosterAssignmentVisible, rosterTransportDetails } from "backend/SKANDI_CORE/rosterAssignments";
+import { loadOwnedBusServices } from "backend/SKANDI_CORE/opsTransportRoster";
 
 const ACTIONS = new Set(["SAFETY_REPORT", "FLIGHT_ISSUE", "VEHICLE_ISSUE", "STATION_UPDATE", "CREW_SUPPORT", "DUTY_NOTE"]);
 const MAX_ROWS = "300";
@@ -54,6 +55,7 @@ async function queryOwned(table, context) {
     const result=await restRequest({table,method:"GET",query:{select:definition.select,[column]:"eq."+identifier,limit:MAX_ROWS}});
     for (const row of rowsOf(result)) if (owns(row,context.identifiers) && rosterAssignmentVisible(row,table)) found.push(row);
   }
+  if (table === "vehicle_assignments") found.push(...await loadOwnedBusServices({identifiers:context.identifiers,restRequest,select:definition.select,limit:MAX_ROWS}));
   const seen=new Set();
   return found.filter(row=>row.id&&!seen.has(String(row.id))&&seen.add(String(row.id)));
 }

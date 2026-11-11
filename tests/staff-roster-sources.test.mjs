@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
 import * as definitions from '../src/backend/SKANDI_CORE/rosterAssignments.js';
+import * as transportRoster from '../src/backend/SKANDI_CORE/opsTransportRoster.js';
+import * as transportReadiness from '../src/backend/SKANDI_CORE/opsTransportReadiness.js';
 
 const source = new URL('../src/backend/SKANDI_CORE/', import.meta.url);
 const from = '2026-11-06';
@@ -30,6 +32,7 @@ async function runBootstrap(file, method) {
   const requestedTables = new Set();
   const context = vm.createContext({
     ...definitions,
+    ...transportRoster,
     requireStaffPortalSessionCore: async () => session,
     restRequest: async ({ table, query }) => {
       if (!Object.hasOwn(definitions.ROSTER_ASSIGNMENT_SOURCES, table)) return [];
@@ -65,6 +68,7 @@ test('OPS Control resolves legacy UUID and SK-ID roster owners to the same emplo
   const context = vm.createContext({
     ...definitions,
     requireStaffPortalSessionCore: async () => ({ permissionGroups: ['occ'], profile: {} }),
+    ...transportReadiness,
     restRequest: async ({ table }) => {
       if (table === 'agent_users') return [{ id: 'staff-uuid', sk_id: 'SK-OWNER' }];
       return fixture[table] ? [fixture[table]] : [];

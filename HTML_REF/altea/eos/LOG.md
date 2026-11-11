@@ -13,3 +13,7 @@
   services while preserving the existing shell and unrelated staff functions.
   Service details follow the shared OPS assignment. Verified with a simulated
   signed-in session; production rollout and device verification are pending.
+
+- 2026-11-11: Added a draft many-person bus roster projection for EOS and
+  MyRoster. Isolated authorization tests pass; the schema and Wix changes have
+  not been deployed or checked with live staff accounts.

@@ -369,8 +369,19 @@
       <div class="modal-header"><span id="transportServiceTitle">Add bus service</span><button class="icon-btn" type="button" aria-label="Close" onclick="closeModal()">✕</button></div>
       <div class="modal-body transport-fields">
         <div class="form-group"><label for="tsLabel">Service name</label><input id="tsLabel" name="label" required maxlength="160"></div>
-        <div class="form-group"><label for="tsVehicle">Vehicle</label><select id="tsVehicle" name="vehicleId" required></select></div>
-        <div class="form-group"><label for="tsStaff">Assigned employee</label><select id="tsStaff" name="employeeId"></select></div>
+        <div class="form-group"><label for="tsOperator">Operator</label><select id="tsOperator" name="operatorType"><option value="OWN">SKANDI-operated</option><option value="THIRD_PARTY">Third-party</option></select></div>
+        <div class="form-group"><label for="tsVehicle">SKANDI vehicle</label><select id="tsVehicle" name="vehicleId"></select></div>
+        <div class="form-group"><label for="tsSupplier">Third-party supplier</label><select id="tsSupplier" name="supplierId"></select></div>
+        <div class="form-group"><label for="tsDrivers">SKANDI drivers</label><select id="tsDrivers" name="drivers" multiple size="5"></select></div>
+        <div class="form-group"><label for="tsHosts">SKANDI Hosts</label><select id="tsHosts" name="hosts" multiple size="5"></select></div>
+        <div class="form-group"><label for="tsOther">Other staff</label><select id="tsOther" name="other" multiple size="5"></select></div>
+        <div class="form-group"><label for="tsExternalVehicle">Supplier vehicle description</label><input id="tsExternalVehicle" name="externalVehicleName" maxlength="160"></div>
+        <div class="form-group"><label for="tsExternalRegistration">Supplier vehicle registration</label><input id="tsExternalRegistration" name="externalRegistration" maxlength="40"></div>
+        <div class="form-group"><label for="tsSupplierDriver">Supplier driver name</label><input id="tsSupplierDriver" name="supplierDriverName" maxlength="160"></div>
+        <div class="form-group"><label for="tsSupplierContact">Supplier driver contact</label><input id="tsSupplierContact" name="supplierDriverContact" maxlength="180"></div>
+        <div class="form-group"><label for="tsBase">Base code</label><input id="tsBase" name="baseCode" maxlength="80"></div>
+        <div class="form-group"><label for="tsZone">Service time zone (IANA)</label><input id="tsZone" name="timeZone" placeholder="Europe/Stockholm" required></div>
+        <div class="form-group"><p id="transportLegacyNote" class="transport-note"></p></div>
         <div class="form-group"><label for="tsStatus">Status</label><select id="tsStatus" name="status"><option value="DRAFT">Draft</option><option value="SCHEDULED">Scheduled · publish</option><option value="CONFIRMED">Confirmed · publish</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select></div>
         <div class="form-group"><label for="tsStart">Start · device time zone</label><input id="tsStart" name="startAt" type="datetime-local" required></div>
         <div class="form-group"><label for="tsEnd">End · device time zone</label><input id="tsEnd" name="endAt" type="datetime-local" required></div>
@@ -382,6 +393,11 @@
       </div><div class="modal-footer transport-actions"><p id="transportServiceError" class="transport-error" role="alert"></p><button class="btn" type="button" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save service</button></div>
     </form>
 
+    <form class="modal transport-modal" id="transportApprovalModal" onsubmit="approveTransportNoHost(event)">
+      <div class="modal-header"><span>Approve service without a SKANDI Host</span><button class="icon-btn" type="button" aria-label="Close" onclick="closeModal()">✕</button></div>
+      <div class="modal-body"><p class="transport-note">Confirm that OPS has reviewed and approved operating this SKANDI bus without a Host. A separate customer notice still requires verified bookings and delivery.</p><div class="form-group"><label for="transportApprovalNote">Reason for approval</label><textarea id="transportApprovalNote" name="note" maxlength="500" required></textarea></div></div>
+      <div class="modal-footer transport-actions"><p class="transport-error" role="alert"></p><button class="btn" type="button" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Confirm approval</button></div>
+    </form>
     <div class="modal" id="editModal">
       <div class="modal-header">
         <span>Edit Operation</span>
