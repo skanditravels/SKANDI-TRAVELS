@@ -4988,3 +4988,7 @@ const pending=window.__SKANDI_ONBOARD_PENDING__;if(pending){const el=document.ge
 </body>
 </html>
 ```
+
+## INFO / LOG — 2026-11-11
+
+2026-11-11 — Active Travel Info source now incorporates the supplied baggage directory, mobile layout and cabin/walkthrough presentation; the historical payload below remains historical. The finder uses the canonical public airline projection and existing bridge. Page-specific Alexandra launcher removed. Source-tested; live Wix and inventory validation remain required.

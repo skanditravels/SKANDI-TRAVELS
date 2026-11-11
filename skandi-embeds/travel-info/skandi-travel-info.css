@@ -3188,3 +3188,176 @@ body{background:#fff;color:var(--hybrid-text)}
   .ti-airport-flight-panel .cell-place,
   .ti-airport-flight-panel .cell-remarks{grid-column:span 2}
 }
+
+
+/* Mobile and responsive update from the supplied page. */
+/* A calmer Travel Info layout, scoped to its existing compiled component. */
+:root { --ti-content: 1220px; }
+:root .ti-atlas, :root .ti-atlas-inner { min-height: 0; }
+:root .ti-atlas-inner { padding: 52px 0 70px; }
+:root .ti-atlas h1 { max-width: 760px; font-size: clamp(38px,5vw,62px); line-height: 1.05; }
+:root .ti-atlas-lede { max-width: 690px; margin-bottom: 22px; font-size: 15px; line-height: 1.6; }
+:root .ti-atlas:after { height: 42px; }
+:root .ti-section { padding: 42px 0; }
+:root .ti-section.ti-section-tight { padding: 34px 0; }
+:root .ti-heading-row { align-items: end; gap: 22px; margin-bottom: 18px; }
+:root .ti-heading-row h2 { font-size: clamp(26px,2.7vw,36px); line-height: 1.14; }
+:root .ti-heading-row p { max-width: 500px; font-size: 14px; line-height: 1.55; }
+:root .ti-journey-track { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+:root .ti-stage-btn { min-height: 135px; padding: 17px; border-radius: 15px; }
+:root .ti-stage-btn h3 { margin: 18px 0 6px; font-size: 16px; }
+:root .ti-stage-btn p { font-size: 13px; line-height: 1.45; }
+:root .ti-featured-main { min-height: 270px; padding: 26px; }
+:root .ti-question-btn { min-height: 70px; }
+:root .ti-gateway-grid { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+:root .ti-gateway { min-height: 155px; padding: 17px; border-radius: 15px; }
+:root .ti-gateway-icon { margin-bottom: 16px; }
+:root .ti-gateway p { font-size: 13px; line-height: 1.45; }
+:root .ti-directory-list { gap: 9px; }
+:root .ti-entity { min-height: 112px; grid-template-columns: 110px minmax(0,1fr) 38px; }
+:root .ti-entity-media { min-height: 112px; }
+:root .ti-entity-copy { padding: 15px; }
+:root .ti-entity-copy h3 { font-size: 17px; }
+:root .ti-entity-copy p { font-size: 13px; line-height: 1.45; }
+:root .ti-filter-btn, :root .ti-section-link { min-height: 44px; }
+:root :is(input:not([type="hidden"]),select,textarea,[role="textbox"][contenteditable="true"]) { font-size: 16px !important; }
+
+/* Searchable baggage directory: only source-supplied airline information is rendered. */
+:root #tiOverlay[data-mode="baggage"] .ti-sheet { width: min(920px,96vw); }
+:root #tiOverlay[data-mode="baggage"] .ti-sheet-body { padding: 20px 24px 36px; }
+:root .ti-bag-intro { padding: 17px 19px; border: 1px solid #d6e6ed; border-radius: 15px; background: #edf6f8; color: #163b57; }
+:root .ti-bag-intro strong { font-size: 16px; }
+:root .ti-bag-intro p { margin: 6px 0 0; color: #4f6679; font-size: 14px; line-height: 1.5; }
+:root .ti-bag-controls { display: grid; grid-template-columns: minmax(0,1.5fr) repeat(2,minmax(0,1fr)); gap: 12px; margin: 18px 0 12px; }
+:root .ti-bag-controls label { display: grid; gap: 6px; color: #36526a; font-size: 13px; font-weight: 700; }
+:root .ti-bag-controls input, :root .ti-bag-controls select { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #cbdde6; border-radius: 10px; background: #fff; color: #122b45; font: inherit; }
+:root .ti-bag-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 12px 0; color: #536c7f; font-size: 13px; }
+:root #tiBagClear { min-height: 44px; padding: 8px; border: 0; background: transparent; color: #075b83; font: inherit; font-weight: 750; text-decoration: underline; }
+:root .ti-bag-results { display: grid; gap: 9px; }
+:root .ti-bag-airline { overflow: hidden; border: 1px solid #dce7ed; border-radius: 14px; background: #fff; }
+:root .ti-bag-airline summary { display: flex; align-items: center; gap: 12px; min-height: 70px; padding: 12px 15px; list-style: none; cursor: pointer; }
+:root .ti-bag-airline summary::-webkit-details-marker { display: none; }
+:root .ti-bag-airline summary::after { content: ""; width: 8px; height: 8px; flex: 0 0 8px; border-right: 2px solid #55778b; border-bottom: 2px solid #55778b; transform: rotate(45deg); }
+:root .ti-bag-airline[open] summary::after { transform: rotate(225deg); }
+:root .ti-bag-airline summary:focus-visible { outline: 3px solid #1f6ba3; outline-offset: -3px; }
+:root .ti-bag-logo { display: grid; place-items: center; width: 48px; height: 42px; flex: 0 0 48px; padding: 4px; border: 1px solid #e4edf1; border-radius: 9px; color: #124b72; font-size: 13px; font-weight: 800; }
+:root .ti-bag-logo img { width: 100%; height: 100%; object-fit: contain; }
+:root .ti-bag-name { display: grid; min-width: 0; gap: 3px; flex: 1; color: #102f4b; }
+:root .ti-bag-name strong { overflow-wrap: anywhere; font-size: 15px; }
+:root .ti-bag-name small, :root .ti-bag-summary-label { color: #647a8d; font-size: 13px; }
+:root .ti-bag-airline-body { display: grid; gap: 10px; padding: 0 15px 16px; border-top: 1px solid #edf2f5; }
+:root .ti-bag-airline-body > :first-child { margin-top: 12px; }
+:root .ti-bag-fare { padding: 14px; border: 1px solid #e0eaf0; border-radius: 12px; background: #f8fbfc; }
+:root .ti-bag-fare-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 7px; color: #092f50; font-size: 14px; }
+:root .ti-bag-fare-head span { color: #536b7e; }
+:root .ti-bag-fare p, :root .ti-bag-narrative, :root .ti-bag-unavailable, :root .ti-bag-footnote { margin: 8px 0 0; color: #536b7e; font-size: 14px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+:root .ti-bag-fare dl { margin: 10px 0 0; }
+:root .ti-bag-result-fact { display: grid; grid-template-columns: minmax(110px,.7fr) minmax(0,1.3fr); gap: 12px; padding: 9px 0; border-top: 1px solid #e0ebf0; font-size: 14px; line-height: 1.45; }
+:root .ti-bag-result-fact dt { color: #36556c; font-weight: 700; }
+:root .ti-bag-result-fact dd { margin: 0; color: #17364e; white-space: pre-line; overflow-wrap: anywhere; }
+:root .ti-bag-official { display: inline-flex; align-items: center; min-height: 44px; color: #075b83; font-size: 14px; font-weight: 700; }
+:root .ti-bag-empty { padding: 28px 16px; border: 1px dashed #c9dce6; border-radius: 12px; color: #536b7e; font-size: 14px; text-align: center; }
+
+/* Existing aircraft imagery and scene controls become easier to use on touch devices. */
+:root .cab-pill, :root .cab-action, :root .cab-walk-stop,
+:root .cab-walk-navigation button, :root .cab-glass-tool,
+:root .cab-feature-rail button { min-height: 44px; font-size: 13px; }
+:root .cab-immersive-frame, :root .cab-smart-media { border-radius: 15px; }
+:root .cab-copy, :root .cab-layout-note, :root .cab-walk-map-footer,
+:root .cab-viewer-instructions, :root .cab-hotspot-label span { font-size: 13px; line-height: 1.5; }
+:root .cab-walk-overview p, :root .cab-empty span { font-size: 14px; line-height: 1.5; }
+:root .cab-hotspot { width: 38px; height: 38px; font-size: 13px; }
+@media (max-width: 900px) {
+  :root .ti-gateway-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  :root .ti-journey-track { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 760px) {
+  :root .ti-atlas-inner { min-height: 0; padding: max(28px,env(safe-area-inset-top,0px)) 0 42px; }
+  :root .ti-atlas h1 { margin-top: 8px; font-size: clamp(36px,10vw,48px); }
+  :root .ti-atlas-lede { font-size: 14px; }
+  :root .ti-wrap { width: calc(100% - 28px); }
+  :root .ti-section, :root .ti-section.ti-section-tight { padding: 28px 0; }
+  :root .ti-heading-row { display: block; }
+  :root .ti-heading-row h2 { font-size: 25px; }
+  :root .ti-heading-row p { margin-top: 8px; }
+  :root .ti-journey-track, :root .ti-gateway-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  :root .ti-stage-btn { min-height: 138px; }
+  :root .ti-gateway { min-height: 145px; }
+  :root .ti-entity { grid-template-columns: 76px minmax(0,1fr); min-height: 94px; }
+  :root .ti-entity-media { min-height: 94px; }
+  :root .ti-entity-copy { padding: 12px; }
+  :root #tiOverlay[data-mode="baggage"] .ti-sheet { width: 100%; top: max(0px,env(safe-area-inset-top,0px)); }
+  :root #tiOverlay[data-mode="baggage"] .ti-sheet-body { padding: 16px 14px calc(24px + env(safe-area-inset-bottom,0px)); }
+  :root .ti-bag-controls { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  :root .ti-bag-controls label:first-child { grid-column: 1 / -1; }
+  :root .ti-bag-summary-label { display: none; }
+  :root .cab-smart-walk-layout { grid-template-columns: 1fr; }
+  :root .cab-walk-map-list { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+@media (max-width: 360px) {
+  :root .ti-journey-track, :root .ti-gateway-grid { grid-template-columns: 1fr; }
+  :root .ti-bag-result-fact { grid-template-columns: 1fr; gap: 3px; }
+}
+
+
+/* Mobile and responsive update from the supplied page. */
+/* Travel Info: prevent flex min-content overflow and keep journey text legible. */
+:root .ti-atlas-inner, :root .ti-atlas-copy,
+:root .ti-journey-shell, :root .ti-directory-shell { min-width: 0; max-width: 100%; }
+:root .ti-atlas-copy { flex: 1 1 0; width: 100%; }
+:root .ti-stage-btn h3 { color: #022e64; }
+:root .ti-stage-btn p { color: #52657b; }
+:root .ti-stage-no, :root .ti-stage-arrow { color: #34617e; }
+:root .ti-stage-btn:hover h3, :root .ti-stage-btn[aria-pressed="true"] h3 { color: #022e64; }
+@media (max-width: 760px) {
+  html, body { max-width: 100%; }
+  :root, :root .ti-home, :root .ti-atlas,
+  :root .ti-atlas-inner, :root .ti-atlas-copy {
+    width: 100%; min-width: 0; max-width: 100%;
+  }
+  :root .ti-atlas-inner { width: calc(100% - 32px); padding: 26px 0 34px; }
+  :root .ti-atlas { min-height: 0; }
+  :root .ti-atlas-copy { animation: none; transform: none; opacity: 1; }
+  :root .ti-atlas h1 { max-width: 100%; font-size: clamp(32px,9.2vw,42px); line-height: 1.08; letter-spacing: -.045em; overflow-wrap: anywhere; }
+  :root .ti-atlas-lede { width: 100%; max-width: 100%; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+  :root .ti-kicker { max-width: 100%; font-size: 12px; letter-spacing: .09em; overflow-wrap: anywhere; }
+  :root .ti-command {
+    width: 100%; max-width: 100%; min-width: 0;
+    grid-template-columns: 20px minmax(0,1fr) 44px;
+    gap: 8px; padding: 6px 6px 6px 12px; border-radius: 14px;
+  }
+  :root .ti-command input { width: 100%; min-width: 0; font-size: 16px !important; }
+  :root .ti-command .ti-btn { width: 44px; min-width: 44px; min-height: 44px; padding: 0; }
+  :root .ti-command .ti-btn > span:first-child { display: none; }
+  :root .ti-command .ti-btn > span:last-child { display: grid; place-items: center; }
+  :root .ti-action-rail {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px;
+    width: 100%; max-width: 100%; margin: 14px 0 0; padding: 0; overflow: visible;
+  }
+  :root .ti-action-chip {
+    display: flex; justify-content: flex-start; min-width: 0; min-height: 48px;
+    padding: 9px 11px; border-radius: 12px; text-align: left; white-space: normal;
+    font-size: 13px; line-height: 1.3; overflow-wrap: anywhere;
+  }
+  :root .ti-action-chip .ti-icon { flex: 0 0 18px; }
+  :root .ti-atlas-status { width: 100%; max-width: 100%; font-size: 13px; line-height: 1.45; white-space: normal; overflow-wrap: anywhere; }
+  :root .ti-journey-track { grid-template-columns: minmax(0,1fr); grid-auto-flow: row; gap: 8px; }
+  :root .ti-stage-btn {
+    display: grid; grid-template-columns: 28px minmax(0,1fr) 20px;
+    grid-template-rows: auto auto; align-items: start; gap: 4px 10px;
+    width: 100%; min-width: 0; min-height: 80px; padding: 16px;
+  }
+  :root .ti-stage-no { grid-column: 1; grid-row: 1 / 3; font-size: 13px; }
+  :root .ti-stage-btn h3 { grid-column: 2; grid-row: 1; margin: 0; font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+  :root .ti-stage-btn p { grid-column: 2; grid-row: 2; margin: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+  :root .ti-stage-arrow { position: static; grid-column: 3; grid-row: 1; transform: none; }
+  :root .ti-heading-row, :root .ti-heading-row > div,
+  :root .ti-gateway, :root .ti-entity-copy { min-width: 0; max-width: 100%; }
+  :root .ti-heading-row :is(h2,p), :root .ti-gateway :is(h3,p),
+  :root .ti-entity-copy :is(h3,p) { white-space: normal; overflow-wrap: anywhere; }
+  :root .ti-motion-reveal { opacity: 1 !important; transform: none !important; }
+  :root .ti-detail-view, :root .ti-story-stack,
+  :root .ti-tab-panel, :root .ti-aircraft-host { min-width: 0; max-width: 100%; }
+  :root .ti-search-shell, :root .ti-sheet { max-width: 100%; }
+  :root .ti-alexandra-launcher { display: none !important; }
+}

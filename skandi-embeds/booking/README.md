@@ -68,3 +68,7 @@ Wix's generic automation validator reported warnings that `customerEmail` and ot
 ### Confirmation follow-up — 2026-11-09
 
 A follow-up formats `bookingDate` as `YYYY-MM-DD` and `confirmationDate` as a UTC timestamp without fractional seconds, matching the formats accepted by the configured trigger; invalid dates are omitted. With those formats, both a direct Wix trigger request and a synthetic backend-only Velo test returned successfully. Trigger acceptance is not proof of email delivery. The separate template test was received, but no delivery of a trigger-generated synthetic confirmation was verified. Wix reported the test recipient's deliverability status as `BOUNCED`; the cause has not been established. The temporary diagnostic was removed after testing. Keep the guest-payment readiness secret unset until a trigger-generated confirmation reaches an approved recipient and the published booking flow is verified.
+
+## INFO / LOG — 2026-11-11
+
+2026-11-11 — Integrated the supplied mobile progress header, responsive layout and collapsible filters/planner into the existing single booking flow. The controls reflect the existing journey and do not own a second cart or alter payment/provider contracts. Source-tested; actual Wix, Stripe, Duffel and confirmation delivery require live verification.
