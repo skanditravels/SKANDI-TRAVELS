@@ -87,13 +87,15 @@ export const requestStaffOtp = webMethod(Permissions.Anyone, async (rawSkId) => 
       }
     });
 
-    // 5. Trigger Wix Automation with flat JSON payload
+    // 5. Trigger Wix ation with flat JSON payload
     await automations.run(OTP_AUTOMATION_TRIGGER_ID, {
-      email: targetEmail,
-      skId: skId,
-      code: otpCode,
-      expiresInMinutes: 5
-    });
+  contactId: wixMember._id,
+  email: targetEmail,
+  skId: skId,
+  code: otpCode,
+  expiresInMinutes: 5
+});
+
 
     await tryWriteStaffLoginAudit?.({ skId, agentId: agent.agent_id, event: "OTP_SENT" });
 
