@@ -768,8 +768,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "d801d94d2159c16f705192ed9306c020829f9b1e6169b7d81bf1e3bd7f8e0d81",
-      "bytes": 312888
+      "sha256": "d7aae2ff9cd8a2c06b5ad396dd834bc300997362b124466dc210c8050e884b4d",
+      "bytes": 321215
     },
     {
       "key": "travelInfo",
@@ -2143,8 +2143,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/success-factors/success-factors.receiver.html",
       "receiverFile": "riaintra-embeds/success-factors/success-factors.receiver.html",
-      "sha256": "54f329071f6d1bbc8484b67e77a14e2e67bb11e8b78c43fce3dd4581fef9a933",
-      "bytes": 521740
+      "sha256": "3b066aecc880d68cd74143fda5a3f5be3b5a5cc20410957404e14a1fc6b50344",
+      "bytes": 534568
     },
     {
       "key": "legalInternal",

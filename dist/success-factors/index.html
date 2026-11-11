@@ -4078,6 +4078,140 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
  #skandi-app-root .intranet-home{padding:12px 12px 24px}#skandi-app-root .welcome-band{gap:4px;padding:19px 17px 10px;border-radius:16px}#skandi-app-root .welcome-band h1{font-size:27px}#skandi-app-root .welcome-band p{font-size:13px;line-height:1.45;margin-top:7px}#skandi-app-root .welcome-kicker{font-size:13px}#skandi-app-root .identity-chips{display:flex;flex-wrap:wrap;gap:5px}#skandi-app-root .identity-chip{font-size:13px}#skandi-app-root .welcome-profile{margin-bottom:8px}#skandi-app-root .welcome-profile-details>summary{padding:10px 0}#skandi-app-root .intranet-columns{gap:14px;margin-top:14px}#skandi-app-root .section-header{gap:8px}#skandi-app-root .section-title-group h2{font-size:18px}#skandi-app-root .tool-section .launchpad-grid,#skandi-app-root .launchpad-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#skandi-app-root .app-tile,#skandi-app-root .tool-section .app-tile{min-height:132px}#skandi-app-root .filter-chip{min-height:40px}#skandi-app-root .top-nav{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}
 }
 @media(max-width:330px){#skandi-app-root .tool-section .launchpad-grid,#skandi-app-root .launchpad-grid{grid-template-columns:1fr}}
+
+
+/* SuccessFactors presentation upgrade. Existing identity, authorization and data remain unchanged. */
+#skandi-app-root .sf-mobile-shortcuts { display: none; }
+#skandi-app-root .page,
+#skandi-app-root .page-header-copy,
+#skandi-app-root .hr-panel,
+#skandi-app-root .hr-panel-body,
+#skandi-app-root .hr-field,
+#skandi-app-root .work-main { min-width: 0; }
+#skandi-app-root .tile-copy p { display: block; overflow: visible; white-space: normal; -webkit-line-clamp: unset; overflow-wrap: anywhere; }
+#skandi-app-root .tile-copy h3,
+#skandi-app-root .hr-panel h2,
+#skandi-app-root .hr-panel h3,
+#skandi-app-root .page-title { overflow-wrap: anywhere; }
+#skandi-app-root .hr-kpi span,
+#skandi-app-root .hr-kpi small { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+#skandi-app-root .sf-inline-error { overflow-wrap: anywhere; }
+
+@media screen and (max-width: 680px) {
+  #skandi-app-root { --nav-height: 58px; }
+  #skandi-app-root .top-nav {
+    height: var(--nav-height); overflow: hidden; background: rgba(250,252,254,.98);
+    border-bottom: 1px solid #d9e3ea; box-shadow: 0 4px 18px rgba(15,44,70,.05);
+  }
+  #skandi-app-root .top-nav-inner { gap: 5px; padding: 6px 12px; scroll-padding-inline: 12px; }
+  #skandi-app-root .nav-button {
+    min-height: 44px; gap: 7px; padding: 0 13px; border-radius: 12px;
+    color: #405b72; font-size: 13px; line-height: 1.2;
+  }
+  #skandi-app-root .nav-button.active { color: #fff; background: #173f67; }
+  #skandi-app-root .nav-button::after { display: none; }
+  #skandi-app-root .page { padding: 16px 14px 32px; min-height: 0; }
+  #skandi-app-root .intranet-home { padding: 14px 14px 32px; }
+  #skandi-app-root .page-header { gap: 12px; margin-bottom: 16px; }
+  #skandi-app-root .page-title { font-size: max(13px, clamp(26px,7vw,32px)); line-height: 1.14; }
+  #skandi-app-root .page-subtitle { font-size: 14px; line-height: 1.5; }
+  #skandi-app-root .page-actions { flex-wrap: wrap; gap: 8px; }
+  #skandi-app-root .welcome-band {
+    gap: 8px; padding: 20px 18px 12px; border-radius: 20px;
+    background: linear-gradient(132deg,#173451,#07547a 68%,#1a8290);
+    box-shadow: 0 12px 28px rgba(14,49,76,.17);
+  }
+  #skandi-app-root .welcome-band h1 { font-size: max(13px, clamp(26px,7.6vw,33px)); line-height: 1.12; }
+  #skandi-app-root .welcome-band p { max-width: 100%; font-size: 14px; line-height: 1.5; }
+  #skandi-app-root .welcome-kicker { font-size: 13px; line-height: 1.35; }
+  #skandi-app-root .identity-chip { font-size: 13px; line-height: 1.3; white-space: normal; }
+  #skandi-app-root .welcome-profile-details > summary { min-height: 44px; font-size: 13px; }
+  #skandi-app-root .sf-mobile-shortcuts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+  #skandi-app-root .sf-shortcut {
+    display: flex; min-width: 0; min-height: 106px; flex-direction: column; align-items: flex-start;
+    gap: 5px; padding: 12px 10px; text-align: left; color: #173451; background: #fff;
+    border: 1px solid #dce6ed; border-radius: 16px; box-shadow: 0 4px 14px rgba(25,54,76,.05);
+  }
+  #skandi-app-root .sf-shortcut-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: #145d7e; background: #eaf4f7; }
+  #skandi-app-root .sf-shortcut strong { max-width: 100%; font-size: 13px; line-height: 1.25; overflow-wrap: anywhere; }
+  #skandi-app-root .sf-shortcut small { max-width: 100%; color: #526b7f; font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
+  #skandi-app-root .intranet-columns { gap: 14px; margin-top: 17px; }
+  #skandi-app-root .section { margin-top: 22px; }
+  #skandi-app-root .section-header { align-items: flex-start; }
+  #skandi-app-root .section-title-group p { display: block; font-size: 13px; line-height: 1.45; }
+  #skandi-app-root .intranet-panel,
+  #skandi-app-root .hr-panel { border-radius: 16px; box-shadow: 0 4px 16px rgba(24,53,76,.05); }
+  #skandi-app-root .intranet-panel-head p,
+  #skandi-app-root .hr-panel-header p { font-size: 13px; line-height: 1.4; }
+  #skandi-app-root .focus-item, #skandi-app-root .side-action { min-height: 54px; }
+  #skandi-app-root .quick-actions-card { gap: 7px; padding: 8px; scroll-snap-type: x proximity; }
+  #skandi-app-root .quick-action { min-width: min(78vw,240px); min-height: 62px; scroll-snap-align: start; }
+  #skandi-app-root .launchpad-grid, #skandi-app-root .tool-section .launchpad-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+  #skandi-app-root .app-tile, #skandi-app-root .tool-section .app-tile { height: auto; min-height: 152px; padding: 11px; border-radius: 16px; }
+  #skandi-app-root .tile-copy h3 { font-size: 14px; line-height: 1.3; }
+  #skandi-app-root .tile-copy p { font-size: 13px; line-height: 1.4; }
+  #skandi-app-root .favorite-button { width: 44px; height: 44px; flex: 0 0 44px; }
+  #skandi-app-root .hero-card { min-height: 280px; }
+  #skandi-app-root .hero-copy { padding: 22px 19px 58px; }
+  #skandi-app-root .hero-copy h2 { font-size: max(13px, clamp(24px,7vw,30px)); line-height: 1.13; }
+  #skandi-app-root .hero-copy p { max-width: 100%; font-size: 14px; line-height: 1.5; }
+  #skandi-app-root .hr-module-nav { position: static; margin: 12px 0 0; padding: 5px; border-radius: 13px; }
+  #skandi-app-root .hr-module-tab, #skandi-app-root .hr-subtab,
+  #skandi-app-root .filter-chip, #skandi-app-root .text-button,
+  #skandi-app-root .primary-button, #skandi-app-root .secondary-button,
+  #skandi-app-root .ghost-button, #skandi-app-root .semantic-button { min-height: 44px; }
+  #skandi-app-root .hr-panel-header { flex-wrap: wrap; }
+  #skandi-app-root .hr-panel-actions, #skandi-app-root .hr-action-row,
+  #skandi-app-root .hr-admin-header-actions, #skandi-app-root .hr-object-actions { justify-content: flex-start; }
+  #skandi-app-root .hr-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+  #skandi-app-root .hr-kpi { padding: 13px; }
+  #skandi-app-root .hr-kpi strong { overflow-wrap: anywhere; }
+  #skandi-app-root .org-derived span { font-size: 13px; }
+  #skandi-app-root .org-derived strong, #skandi-app-root .org-warning { font-size: 13px; line-height: 1.4; }
+  #skandi-app-root .work-row { grid-template-columns: 38px minmax(0,1fr); gap: 9px; }
+  #skandi-app-root .work-row .work-meta, #skandi-app-root .work-row .status-cell { display: block; grid-column: 2; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  #skandi-app-root .work-main span, #skandi-app-root .work-meta { font-size: 13px; line-height: 1.45; }
+  #skandi-app-root .work-actions { grid-column: 1 / -1; }
+  #skandi-app-root :is(input:not([type="hidden"]), select, textarea, [contenteditable="true"]) { font-size: 16px !important; }
+  #skandi-app-root :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea) { min-width: 0; max-width: 100%; min-height: 44px; }
+  #skandi-app-root .icon-button { min-width: 44px; min-height: 44px; }
+  #skandi-app-root .modal-backdrop { top: env(safe-area-inset-top,0px); bottom: calc(var(--sk-shell-nav,68px) + env(safe-area-inset-bottom,0px)); align-items: flex-end; padding: 0; }
+  #skandi-app-root .dialog, #skandi-app-root .dialog.sf-offer-dialog {
+    width: 100%; max-height: calc(100% - 8px); border-radius: 20px 20px 0 0;
+    overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  }
+  #skandi-app-root .dialog-header { position: sticky; z-index: 2; top: 0; background: #fff; padding: 14px 16px; }
+  #skandi-app-root .dialog-header h2 { font-size: 19px; line-height: 1.25; overflow-wrap: anywhere; }
+  #skandi-app-root .dialog-body { padding: 16px; }
+  #skandi-app-root .dialog-footer { justify-content: flex-start; padding: 12px 16px 16px; }
+  #skandi-app-root .dialog-footer button { min-width: 0; flex: 1 1 135px; white-space: normal; }
+
+  /* Keep each HR table record together and label its values on narrow screens. */
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] { display: block; width: 100%; min-width: 0; }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] thead {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] tbody { display: grid; gap: 9px; padding: 10px; }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] tbody tr { display: block; min-width: 0; border: 1px solid #dce6ed; border-radius: 13px; overflow: hidden; }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] td {
+    display: grid; grid-template-columns: minmax(74px,35%) minmax(0,1fr); gap: 10px; min-width: 0;
+    padding: 9px 11px; color: #223b52; font-size: 13px; line-height: 1.4; white-space: normal; overflow-wrap: anywhere;
+  }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] td::before { content: attr(data-label); color: #546b7d; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] td:last-child { border-bottom: 0; }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] td > * { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  #skandi-app-root .hr-table-scroll .data-table[data-sf-adaptive] tr:focus-visible { outline: 3px solid #1f6ba3; outline-offset: -3px; }
+}
+
+@media screen and (max-width: 340px) {
+  #skandi-app-root .sf-mobile-shortcuts { gap: 6px; }
+  #skandi-app-root .sf-shortcut { padding: 10px 8px; }
+  #skandi-app-root .launchpad-grid, #skandi-app-root .tool-section .launchpad-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media screen and (max-width: 680px) and (max-height: 450px) {
+  #skandi-app-root .dialog-header { position: static; }
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -4458,6 +4592,14 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     :host { display:block; color:#1e2e41; font-family: Inter, Avenir, "Segoe UI", Arial, sans-serif; }
     .sfo-surface { background:#eef3f7; min-height:100%; }
     @media print { :host, .sfo-surface { display:block; background:#fff; } }
+    @media screen and (max-width:680px) {
+      input, select, textarea { font-size:16px !important; }
+      input:not([type="checkbox"]):not([type="radio"]), select, textarea { min-height:44px; max-width:100%; }
+      .actions { grid-template-columns:minmax(0,1fr); }
+      .action { min-height:48px; }
+      .editor { border-radius:14px; }
+      .field, .fields { min-width:0; }
+    }
 </style>
 <div class="sfo-surface">
   <header class="app-header">
@@ -5414,6 +5556,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     const recruitingOfferDrafts = new Map();
     let activeOfferComposer = null;
     let addressLookupTimer = null;
+    let workspaceConnectionTimer = null;
     let addressLookupSequence = 0;
     let addressLookupInput = null;
     let addressLookupItems = [];
@@ -7374,7 +7517,14 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       }
       closeShellPopovers();
       renderPortal();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const workspaceScroller = $("skandi-app-root");
+      const scrollBehavior = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth";
+      if (workspaceScroller && workspaceScroller.scrollHeight > workspaceScroller.clientHeight) {
+        if (typeof workspaceScroller.scrollTo === "function") workspaceScroller.scrollTo({ top: 0, behavior: scrollBehavior });
+        else workspaceScroller.scrollTop = 0;
+      } else {
+        window.scrollTo({ top: 0, behavior: scrollBehavior });
+      }
     }
 
     function parseRoute() {
@@ -7484,23 +7634,24 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
     function renderConnectionState() {
       const failed = portalState.status === "error";
+      const delayed = portalState.status === "timeout";
       return `
         <main class="page" id="mainContent">
           <div class="page-header">
             <div class="page-header-copy">
-              <p class="eyebrow">${icon(failed ? "warning" : "lock", 14)} Secure Employee Portal</p>
-              <h1 class="page-title">${failed ? "Employee portal unavailable" : "Connecting to RIAINTRA"}</h1>
-              <p class="page-subtitle">${failed ? escapeHtml(portalState.error || "The employee session could not be verified.") : "Loading your workspace and employee information."}</p>
+              <p class="eyebrow">${icon(failed || delayed ? "warning" : "lock", 14)} Secure Employee Portal</p>
+              <h1 class="page-title">${failed ? "Employee portal unavailable" : delayed ? "Taking longer than expected" : "Connecting to RIAINTRA"}</h1>
+              <p class="page-subtitle">${failed ? escapeHtml(portalState.error || "The workspace could not be loaded.") : delayed ? "Your workspace has not responded yet. Check your connection and try again." : "Loading your workspace and employee information."}</p>
             </div>
             <div class="page-actions">
-              <span class="role-pill">${icon(failed ? "warning" : "clock", 14)} ${failed ? "Authentication required" : "Waiting for data"}</span>
+              <span class="role-pill">${icon(failed || delayed ? "warning" : "clock", 14)} ${failed ? "Unable to load" : delayed ? "Still waiting" : "Connecting"}</span>
             </div>
           </div>
 
           <div class="empty-card">
-            <span class="empty-icon">${icon(failed ? "warning" : "shield", 24)}</span>
-            <strong>${failed ? "A valid employee profile and role are required" : "No local or sample data is stored in this portal"}</strong>
-            <span>${failed ? "Sign in again to access your workspace." : "Your workspace will appear when your information is ready."}</span>
+            <span class="empty-icon">${icon(failed || delayed ? "warning" : "shield", 24)}</span>
+            <strong>${failed ? "Your workspace could not be loaded" : delayed ? "No response received yet" : "No local or sample data is stored in this portal"}</strong>
+            <span>${failed ? "Try again. If your session has ended, sign in again." : delayed ? "You can request the workspace again below." : "Your workspace will appear when your information is ready."}</span>
             <button class="primary-button" type="button" data-action="request-bootstrap">${icon("clock", 16)} Request data again</button>
           </div>
 
@@ -7631,6 +7782,12 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
               <div class="profile-line"><span>SK-ID</span><strong>${escapeHtml(role.employeeId)}</strong></div>
               <div class="profile-line"><span>Access profile</span><strong>${escapeHtml(ctx.accessRole||"Assigned access")}</strong></div>
             </aside></details>
+          </section>
+
+          <section class="sf-mobile-shortcuts" aria-label="Quick access">
+            <button class="sf-shortcut" type="button" data-route="tasks"><span class="sf-shortcut-icon">${icon("task",18)}</span><strong>My Work</strong><small>${tasks.length === 1 ? "1 open item" : tasks.length + " open items"}</small></button>
+            <button class="sf-shortcut" type="button" data-route="apps"><span class="sf-shortcut-icon">${icon("apps",18)}</span><strong>Applications</strong><small>Your tools</small></button>
+            <button class="sf-shortcut" type="button" data-route="profile"><span class="sf-shortcut-icon">${icon("profile",18)}</span><strong>My Profile</strong><small>View details</small></button>
           </section>
 
           <div class="intranet-columns">
@@ -8038,11 +8195,11 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       }
       return `
         <div class="hr-table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>${columns.map(column => `<th>${escapeHtml(column[0])}</th>`).join("")}</tr>
+          <table class="data-table" data-sf-adaptive role="table">
+            <thead role="rowgroup">
+              <tr role="row">${columns.map(column => `<th scope="col" role="columnheader">${escapeHtml(column[0])}</th>`).join("")}</tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               ${items.map((record, index) => {
                 const id = options.id ? options.id(record, index) : hrRecordId(record) || String(index);
                 const selected = options.selectedId && String(options.selectedId) === String(id);
@@ -8050,7 +8207,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
                   ? `class="hr-table-row ${selected ? "selected" : ""}" tabindex="0" data-action="${escapeHtml(options.action)}" data-id="${escapeHtml(id)}"`
                   : "";
                 return `
-                  <tr ${attributes}>
+                  <tr role="row" ${attributes}>
                     ${columns.map(column => {
                       const value = typeof column[1] === "function"
                         ? column[1](record, index)
@@ -8058,7 +8215,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
                       const rendered = column[2] === "status"
                         ? statusBadge(displayPortalValue(value))
                         : escapeHtml(displayPortalValue(value));
-                      return `<td>${rendered}</td>`;
+                      return `<td role="cell" data-label="${escapeHtml(column[0])}">${rendered}</td>`;
                     }).join("")}
                   </tr>
                 `;
@@ -10111,6 +10268,14 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       lastPortalMarkup = markup;
       portal.innerHTML = markup;
       applyHrReadOnlyControls();
+      if (window.matchMedia?.("(max-width: 680px)")?.matches) {
+        const rail = portal.querySelector(".top-nav-inner");
+        const active = rail?.querySelector('.nav-button[aria-current="page"]');
+        if (rail && active) {
+          const difference = active.getBoundingClientRect().left - rail.getBoundingClientRect().left - (rail.clientWidth - active.offsetWidth) / 2;
+          rail.scrollLeft += difference;
+        }
+      }
 
     }
 
@@ -10316,9 +10481,20 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       hrEmployeeDrafts.set(key,draft);
     }
 
+    function scheduleWorkspaceTimeout() {
+      if (workspaceConnectionTimer) window.clearTimeout(workspaceConnectionTimer);
+      workspaceConnectionTimer = window.setTimeout(() => {
+        workspaceConnectionTimer = null;
+        if (portalState.connected || portalState.status !== "waiting") return;
+        portalState.status = "timeout";
+        renderPortal();
+      }, 18000);
+    }
+
     function requestPortalBootstrap() {
       portalState.status = "waiting";
       portalState.error = null;
+      scheduleWorkspaceTimeout();
       post("INTRANET_READY", {
         requestedAt: new Date().toISOString(),
         capabilities: ["employee-profile", "directory", "hr-admin", "recruiting", "badge-control", "company-news", "department-news", "base-news", "canonical-role-scope", "department-scope", "base-market-scope", "destination-scope", "permission-scope"]
@@ -10928,6 +11104,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
       parseRoute();
       renderPortal();
+      scheduleWorkspaceTimeout();
 
       post("SKANDI_MASTER_CONFIG_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
       post("MASTER_NAVIGATION_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });

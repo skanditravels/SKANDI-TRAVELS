@@ -2564,6 +2564,107 @@ body.destinations-directory-open #skandi-app-root{overflow:hidden}
 
 /* Keep the decorative atlas field inside the page without constraining its scrollable rails. */
 #skandi-app-root .editorial { overflow: clip; }
+
+
+/* Destinations presentation: the existing map, data and routing remain authoritative. */
+#skandi-app-root .network-app, #skandi-app-root .network-hero,
+#skandi-app-root .map-interface, #skandi-app-root .map-control-dock { min-width: 0; max-width: 100%; }
+#skandi-app-root .map-interface { width: min(465px,calc(100% - 32px)); gap: 8px; }
+#skandi-app-root .map-interface .hero-copy {
+  min-width: 0; max-width: 100%; padding: 18px 20px;
+  border: 1px solid #dce8ee; border-radius: 16px; background: rgba(255,255,255,.96);
+}
+#skandi-app-root .map-interface .hero-copy h1 { font-size: max(13px, clamp(30px,3.2vw,43px)); line-height: 1.08; overflow-wrap: anywhere; }
+#skandi-app-root .map-interface .hero-copy p { font-size: 14px; line-height: 1.5; color: #405b71; overflow-wrap: anywhere; }
+#skandi-app-root .map-interface .network-meta { color: #49657c; font-size: 13px; line-height: 1.4; }
+#skandi-app-root .map-control-dock { border-radius: 15px; }
+#skandi-app-root .map-interface .mode-btn, #skandi-app-root .map-interface .region-btn { min-height: 44px; font-size: 13px; }
+#skandi-app-root .map-interface .map-key summary { min-height: 44px; font-size: 13px; }
+#skandi-app-root .map-interface .legend-chip { color: #365a73; font-size: 13px; }
+#skandi-app-root .editorial > .chapter:first-child .chapter-intro { color: #435b70; }
+#skandi-app-root .chapter { padding-top: 66px; padding-bottom: 66px; }
+#skandi-app-root .chapter-head h2 { line-height: 1.08; }
+#skandi-app-root .chapter-intro { font-size: 14px; line-height: 1.55; }
+#skandi-app-root .directory-toggle { min-height: 54px; }
+#skandi-app-root .directory-link { min-height: 44px; font-size: 14px; line-height: 1.4; }
+#skandi-app-root .directory-group h3, #skandi-app-root .panel-eyebrow { font-size: 13px; line-height: 1.35; }
+#skandi-app-root .panel-meta { font-size: 13px; line-height: 1.45; }
+#skandi-app-root .fact small { color: #526579; font-size: 13px; line-height: 1.35; }
+#skandi-app-root .fact strong { font-size: 14px; overflow-wrap: anywhere; }
+#skandi-app-root .tag { min-height: 32px; font-size: 13px; }
+#skandi-app-root :is(button,a,summary):focus-visible { outline: 3px solid #1f6ba3; outline-offset: 3px; }
+#skandi-app-root :is(input:not([type="hidden"]),select,textarea,[role="textbox"][contenteditable="true"]) { font-size: 16px !important; }
+
+@media (max-width: 820px) {
+  #skandi-app-root { min-width: 0; }
+  #skandi-app-root .network-app, #skandi-app-root .network-hero,
+  #skandi-app-root .editorial, #skandi-app-root .chapter,
+  #skandi-app-root .map-interface, #skandi-app-root .map-control-dock { width: 100%; min-width: 0; max-width: 100%; }
+  #skandi-app-root .network-hero {
+    height: max(500px,calc(100vh - var(--sk-shell-nav,68px)));
+    height: max(500px,calc(100dvh - var(--sk-shell-nav,68px)));
+    min-height: 0;
+  }
+  #skandi-app-root .map-interface {
+    top: 12px; left: 12px; width: calc(100% - 24px); max-width: 480px; gap: 7px;
+  }
+  #skandi-app-root .map-interface .hero-copy { width: 100%; padding: 12px 14px; border-radius: 16px; box-shadow: 0 8px 25px rgba(2,46,100,.12); }
+  #skandi-app-root .map-interface .hero-eyebrow { margin: 0 0 5px; font-size: 13px; letter-spacing: .1em; }
+  #skandi-app-root .map-interface .hero-copy h1 { margin: 0; font-size: max(13px, clamp(27px,7vw,34px)); line-height: 1.1; }
+  #skandi-app-root .map-interface .hero-copy p { max-width: 100%; margin: 6px 0 0; font-size: 13px; line-height: 1.4; white-space: normal; }
+  #skandi-app-root .map-interface .network-meta { max-width: 100%; margin-top: 7px; gap: 3px 8px; font-size: 13px; white-space: normal; }
+  #skandi-app-root .map-interface .network-meta span+span::before { margin-right: 8px; }
+  #skandi-app-root .map-control-dock { width: 100%; padding: 7px; border-radius: 15px; box-shadow: 0 8px 25px rgba(2,46,100,.12); }
+  #skandi-app-root .map-interface .map-toolbar { display: flex; min-width: 0; gap: 6px; }
+  #skandi-app-root .map-interface .mode-rail { min-width: 0; max-width: 100%; }
+  #skandi-app-root .map-interface #searchOpen { flex: 0 0 46px; width: 46px; min-height: 46px; }
+  #skandi-app-root .map-interface .region-strip { width: 100%; min-width: 0; max-width: 100%; }
+  #skandi-app-root .map-interface .region-btn { min-height: 44px; }
+  #skandi-app-root .map-utilities { top: auto; right: 12px; bottom: 12px; }
+  #skandi-app-root .map-utilities button { min-width: 44px; min-height: 44px; }
+  #skandi-app-root .mobile-sheet { left: 7px; right: 7px; bottom: 7px; height: 60%; border-radius: 20px 20px 16px 16px; transition: height .25s ease, transform .34s var(--ease); }
+  #skandi-app-root .mobile-sheet:not(.open) { visibility: hidden; }
+  #skandi-app-root .mobile-sheet.open { visibility: visible; }
+  #skandi-app-root .mobile-sheet.open[data-snap="peek"] { height: 118px; transform: translateY(0); }
+  #skandi-app-root .mobile-sheet.open[data-snap="medium"] { height: 60%; transform: translateY(0); }
+  #skandi-app-root .mobile-sheet.open[data-snap="full"] { height: calc(100% - 14px); transform: translateY(0); }
+  #skandi-app-root .sheet-snap { top: 9px; right: 60px; min-height: 44px; padding: 8px 12px; }
+  #skandi-app-root .mobile-sheet-close {
+    position: absolute; z-index: 3; top: 9px; right: 10px; display: grid; place-items: center;
+    width: 44px; height: 44px; border: 0; border-radius: 12px;
+    background: #eaf0f4; color: #022e64; font: inherit; font-size: 24px; cursor: pointer;
+  }
+  #skandi-app-root .mobile-sheet-content { padding: 0 16px 24px; }
+  #skandi-app-root .mobile-sheet .panel-media { height: 130px; margin: 0 -16px; }
+  #skandi-app-root .mobile-sheet .panel-body { padding: 16px 0 24px; }
+  #skandi-app-root .mobile-sheet .panel-title { font-size: max(13px, clamp(24px,7vw,30px)); line-height: 1.1; overflow-wrap: anywhere; }
+  #skandi-app-root .mobile-sheet .panel-copy { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+  #skandi-app-root .mobile-sheet .panel-action, #skandi-app-root .mobile-sheet .related-item { min-height: 48px; font-size: 13px; }
+  #skandi-app-root .search-panel { width: 100%; min-width: 0; max-width: 100%; }
+  #skandi-app-root .search-input { min-width: 0; font-size: 16px !important; }
+  #skandi-app-root .search-close { min-width: 44px; min-height: 44px; }
+  #skandi-app-root .chapter { padding: 34px 16px; }
+  #skandi-app-root .chapter-head { display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; margin-bottom: 18px; }
+  #skandi-app-root .chapter h2 { font-size: max(13px, clamp(27px,8vw,36px)); line-height: 1.1; overflow-wrap: anywhere; }
+  #skandi-app-root .chapter-intro { font-size: 14px; line-height: 1.5; }
+  #skandi-app-root .feature-grid { grid-template-columns: minmax(0,1fr); gap: 10px; }
+  #skandi-app-root .feature-card, #skandi-app-root .feature-card:first-child { grid-row: auto; min-height: 230px; }
+  #skandi-app-root .collection-rail { grid-auto-columns: minmax(230px,82%); gap: 10px; }
+  #skandi-app-root .plan-band { padding: 24px 18px; }
+  #skandi-app-root .plan-band button { min-height: 48px; }
+  #skandi-app-root .directory-inner { padding: 26px 16px calc(28px + env(safe-area-inset-bottom,0px)); }
+  #skandi-app-root .directory-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  #skandi-app-root .directory-group { min-width: 0; padding: 14px; overflow-wrap: anywhere; }
+  #skandi-app-root .fx-reveal { opacity: 1 !important; transform: none !important; }
+}
+@media (max-width: 560px) {
+  #skandi-app-root .map-interface .mode-rail { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible; }
+  #skandi-app-root .map-interface .mode-btn { display: block; min-width: 0; min-height: 42px; padding: 4px; white-space: normal; }
+  #skandi-app-root .map-interface .mode-btn[hidden] { display: none !important; }
+}
+@media (max-width: 340px) {
+  #skandi-app-root .directory-grid { grid-template-columns: minmax(0,1fr); }
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -2908,9 +3009,10 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
       <div class="panel-body" id="panelBody"></div>
     </aside>
 
-    <section class="mobile-sheet" id="mobileSheet" data-snap="peek" aria-label="Selected network detail">
+    <section class="mobile-sheet" id="mobileSheet" data-snap="peek" aria-label="Selected network detail" aria-hidden="true" inert="">
       <div class="sheet-handle" aria-hidden="true"></div>
       <button class="sheet-snap" id="sheetSnap" type="button" aria-label="Expand details">Expand</button>
+      <button class="mobile-sheet-close" id="mobileSheetClose" type="button" aria-label="Close details">×</button>
       <div class="mobile-sheet-content" id="mobileSheetContent"></div>
     </section>
 
@@ -5185,7 +5287,7 @@ function selectObject(type,id,options={}){
 }
 function clearSelection({camera=false,history=true}={}){
   stopRouteAnimation();state.selectionType=null;state.selectionId=null;state.panelOpen=false;state.selectedAirlineId=state.mode==="airlines"?state.selectedAirlineId:null;
-  el.detailPanel.classList.remove("open");el.detailPanel.setAttribute("aria-hidden","true");el.mobileSheet.classList.remove("open");
+  el.detailPanel.classList.remove("open");el.detailPanel.setAttribute("aria-hidden","true");el.mobileSheet.classList.remove("open");el.mobileSheet.setAttribute("aria-hidden","true");el.mobileSheet.inert=true;
   applyFeatureStates();if(camera)fitDefaultBounds(true);if(history)clearDeepLink();
 }
 function applyFeatureStates(){
@@ -5260,7 +5362,7 @@ function renderSelection(obj,type){
   const body=document.createElement("div");body.className="panel-body";body.append(buildPanelFragment(obj,type));
   el.mobileSheetContent.append(mobileMedia,body);
   loadImage(image,selectionImage(obj,type));
-  el.mobileSheet.classList.add("open");setSheetSnap("peek");
+  el.mobileSheet.classList.add("open");el.mobileSheet.inert=false;el.mobileSheet.setAttribute("aria-hidden","false");setSheetSnap(IS_MOBILE()?"medium":"peek");
   const announcement=selectionAnnouncement(obj,type);el.selectionLive.textContent=announcement;
 }
 function buildPanelFragment(obj,type){
@@ -5644,6 +5746,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   el.networkSearch.addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch();if(e.key==="ArrowDown"){e.preventDefault();el.searchResults.querySelector(".search-result")?.focus()}});
   el.searchResults.addEventListener("keydown",e=>{const buttons=[...el.searchResults.querySelectorAll(".search-result")];const i=buttons.indexOf(document.activeElement);if(e.key==="ArrowDown"){e.preventDefault();buttons[Math.min(buttons.length-1,i+1)]?.focus()}if(e.key==="ArrowUp"){e.preventDefault();if(i<=0)el.networkSearch.focus();else buttons[i-1]?.focus()}if(e.key==="Escape")closeSearch()});
   el.panelClose.addEventListener("click",()=>clearSelection({camera:false,history:true}));
+  document.getElementById("mobileSheetClose").addEventListener("click",()=>clearSelection({camera:false,history:true}));
   el.sheetSnap.addEventListener("click",cycleSheet);installSheetGestures();
   el.zoomIn.addEventListener("click",()=>state.map?.zoomIn({duration:cameraDuration(250)}));el.zoomOut.addEventListener("click",()=>state.map?.zoomOut({duration:cameraDuration(250)}));el.resetMap.addEventListener("click",()=>{clearSelection({camera:false,history:true});state.selectedRegion=null;state.selectedAirlineId=null;state.mode="explore";syncModeButtons();renderRegions();applyMode();fitDefaultBounds(true)});
   el.mapRetry.addEventListener("click",()=>{
