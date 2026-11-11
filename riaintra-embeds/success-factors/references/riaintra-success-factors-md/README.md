@@ -1,5 +1,8 @@
 # INFO
 
+- 2026-11-11 — The active source triplet adds responsive mobile workspace and offer styling, labeled HR table rows, existing-route shortcuts and a retry state for delayed workspace bootstrap. Staff authorization and the existing controller/facade chain are unchanged. The complete historical HTML below remains superseded by the active builder inputs; authenticated Wix verification is required.
+
+
 > Current document: `riaintra-embeds/success-factors/references/riaintra-success-factors-md/README.md`. Original reference: `HTML_REF/riaintra/Success Factors.md`.
 
 

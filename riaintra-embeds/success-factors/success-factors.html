@@ -194,6 +194,14 @@
     :host { display:block; color:#1e2e41; font-family: Inter, Avenir, "Segoe UI", Arial, sans-serif; }
     .sfo-surface { background:#eef3f7; min-height:100%; }
     @media print { :host, .sfo-surface { display:block; background:#fff; } }
+    @media screen and (max-width:680px) {
+      input, select, textarea { font-size:16px !important; }
+      input:not([type="checkbox"]):not([type="radio"]), select, textarea { min-height:44px; max-width:100%; }
+      .actions { grid-template-columns:minmax(0,1fr); }
+      .action { min-height:48px; }
+      .editor { border-radius:14px; }
+      .field, .fields { min-width:0; }
+    }
 </style>
 <div class="sfo-surface">
   <header class="app-header">

@@ -615,7 +615,7 @@ function selectObject(type,id,options={}){
 }
 function clearSelection({camera=false,history=true}={}){
   stopRouteAnimation();state.selectionType=null;state.selectionId=null;state.panelOpen=false;state.selectedAirlineId=state.mode==="airlines"?state.selectedAirlineId:null;
-  el.detailPanel.classList.remove("open");el.detailPanel.setAttribute("aria-hidden","true");el.mobileSheet.classList.remove("open");
+  el.detailPanel.classList.remove("open");el.detailPanel.setAttribute("aria-hidden","true");el.mobileSheet.classList.remove("open");el.mobileSheet.setAttribute("aria-hidden","true");el.mobileSheet.inert=true;
   applyFeatureStates();if(camera)fitDefaultBounds(true);if(history)clearDeepLink();
 }
 function applyFeatureStates(){
@@ -690,7 +690,7 @@ function renderSelection(obj,type){
   const body=document.createElement("div");body.className="panel-body";body.append(buildPanelFragment(obj,type));
   el.mobileSheetContent.append(mobileMedia,body);
   loadImage(image,selectionImage(obj,type));
-  el.mobileSheet.classList.add("open");setSheetSnap("peek");
+  el.mobileSheet.classList.add("open");el.mobileSheet.inert=false;el.mobileSheet.setAttribute("aria-hidden","false");setSheetSnap(IS_MOBILE()?"medium":"peek");
   const announcement=selectionAnnouncement(obj,type);el.selectionLive.textContent=announcement;
 }
 function buildPanelFragment(obj,type){
@@ -1074,6 +1074,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   el.networkSearch.addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch();if(e.key==="ArrowDown"){e.preventDefault();el.searchResults.querySelector(".search-result")?.focus()}});
   el.searchResults.addEventListener("keydown",e=>{const buttons=[...el.searchResults.querySelectorAll(".search-result")];const i=buttons.indexOf(document.activeElement);if(e.key==="ArrowDown"){e.preventDefault();buttons[Math.min(buttons.length-1,i+1)]?.focus()}if(e.key==="ArrowUp"){e.preventDefault();if(i<=0)el.networkSearch.focus();else buttons[i-1]?.focus()}if(e.key==="Escape")closeSearch()});
   el.panelClose.addEventListener("click",()=>clearSelection({camera:false,history:true}));
+  document.getElementById("mobileSheetClose").addEventListener("click",()=>clearSelection({camera:false,history:true}));
   el.sheetSnap.addEventListener("click",cycleSheet);installSheetGestures();
   el.zoomIn.addEventListener("click",()=>state.map?.zoomIn({duration:cameraDuration(250)}));el.zoomOut.addEventListener("click",()=>state.map?.zoomOut({duration:cameraDuration(250)}));el.resetMap.addEventListener("click",()=>{clearSelection({camera:false,history:true});state.selectedRegion=null;state.selectedAirlineId=null;state.mode="explore";syncModeButtons();renderRegions();applyMode();fitDefaultBounds(true)});
   el.mapRetry.addEventListener("click",()=>{
