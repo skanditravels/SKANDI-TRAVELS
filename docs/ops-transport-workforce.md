@@ -2,6 +2,10 @@
 
 ## Status
 
+The single-person transport design described below is superseded by the
+**unreleased draft** in `docs/ops-transport-staffing-work-in-progress.md`.
+Retained here for the history of the first implementation.
+
 Prepared for review from the current GitHub source. No migration, database
 permission update, Wix code update or Wix publication has been applied by this
 change. The generated HTML, current GitHub code and published Wix code are
@@ -44,7 +48,7 @@ separate deployment states.
 
 ## Release review
 
-1. Review `supabase/migrations/20261110104709_ops_transport_registry.sql`,
+1. Review `supabase/migrations/20261111015433_ops_transport_registry.sql`,
    the database grants, deployment order and the role mapping above. The
    migration adds two tables, two functions and indexes, and grants only the
    service role access; it does not apply itself. Back up and validate the

@@ -95,7 +95,7 @@
         if (!STATE.pendingActions.has(requestId)) return;
         STATE.pendingActions.delete(requestId);
         setSyncState('Error', 'error');
-        if (action.startsWith('SAVE_TRANSPORT_')) transportError(action, 'OPS did not confirm the change. Refresh before retrying.');
+        if ((action.startsWith('SAVE_TRANSPORT_') || action==='APPROVE_TRANSPORT_NO_HOST')) transportError(action, 'OPS did not confirm the change. Refresh before retrying.');
         else showToast('OPS did not confirm the change. Refresh before retrying.', 'error');
       }, 20000);
       return requestId;
@@ -329,7 +329,7 @@
         STATE.pendingActions.delete(payload.requestId);
         if (payload.ok === false) {
           setSyncState('Error', 'error');
-          if (pending?.action?.startsWith('SAVE_TRANSPORT_')) transportError(pending.action, payload.error?.message ?? payload.message ?? 'Operation failed.');
+          if ((pending?.action?.startsWith('SAVE_TRANSPORT_') || pending?.action==='APPROVE_TRANSPORT_NO_HOST')) transportError(pending.action, payload.error?.message ?? payload.message ?? 'Operation failed.');
           else showToast(payload.error?.message ?? payload.message ?? 'Operation failed.', 'error');
           return;
         }
@@ -345,7 +345,7 @@
         if (requestId) STATE.pendingActions.delete(requestId);
         STATE.loading = false;
         setSyncState('Error', 'error');
-        if (pending?.action?.startsWith('SAVE_TRANSPORT_')) transportError(pending.action, message.payload?.message ?? 'Operation failed.');
+        if ((pending?.action?.startsWith('SAVE_TRANSPORT_') || pending?.action==='APPROVE_TRANSPORT_NO_HOST')) transportError(pending.action, message.payload?.message ?? 'Operation failed.');
         else showToast(message.payload?.message ?? 'OPS synchronization failed.', 'error');
       }
     });
@@ -445,7 +445,7 @@
         ganttRowsContainer.appendChild(gRow);
       });
 
-      const hasAlerts = STATE.crewData.some(c => c.acts.some(a => a.type === 'disrupted') || c.alert === 'danger');
+      const hasAlerts = transportMonitorUnavailable() || asArray(STATE.transport.alerts).length>0 || STATE.crewData.some(c => c.acts.some(a => a.type === 'disrupted') || c.alert === 'danger');
       if(alertBadge) alertBadge.style.display = hasAlerts ? 'block' : 'none';
 
       if (STATE.initialized && filteredData.length === 0 && rosterBody) {
@@ -904,11 +904,17 @@
 
 
     function transportError(action, message) {
-      const form = document.getElementById(action === 'SAVE_TRANSPORT_VEHICLE' ? 'transportVehicleModal' : 'transportServiceModal');
+      const form = document.getElementById(action === 'SAVE_TRANSPORT_VEHICLE' ? 'transportVehicleModal' : action === 'APPROVE_TRANSPORT_NO_HOST' ? 'transportApprovalModal' : 'transportServiceModal');
       const error = form?.querySelector('.transport-error');
       if (error) error.textContent = String(message || 'The change could not be saved.');
       const button = form?.querySelector('[type="submit"]');
       if (button) button.disabled = false;
+    }
+    function transportMonitorUnavailable() {
+      if (STATE.transport.available !== true) return false;
+      const lastScan=Date.parse(STATE.transport.monitorLastScan||'');
+      const age=Date.now()-lastScan;
+      return !Number.isFinite(lastScan)||age<0||age>=180000;
     }
     function renderTransport() {
       const t=STATE.transport, ready=t.available===true, editable=ready&&t.canEdit===true;
@@ -921,15 +927,27 @@
       const today=new Date(); const localDay=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
       const due=value=>value?`${value}${value<localDay?' (date passed)':''}`:'Not set';
       const serviceBody=document.getElementById('transportServiceBody');
-      serviceBody.innerHTML=asArray(t.assignments).map(a=>`<tr><td><b>${escapeHtml(a.label)}</b><br>${escapeHtml(asArray(a.stops).join(' → '))}</td><td>${escapeHtml([a.vehicleName,a.registration].filter(Boolean).join(' · '))}</td><td>${escapeHtml(staff.get(a.employeeId)||a.employeeId||'Unassigned')}</td><td>${escapeHtml(date(a.startAt))}<br>${escapeHtml(date(a.endAt))}</td><td>${escapeHtml(a.passengerCount??'—')} / ${escapeHtml(a.capacity??'—')}</td><td>${escapeHtml(a.status)}</td><td>${editable?`<button class="btn" data-transport-service="${escapeHtml(a.id)}">Edit</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty-state">No bus services available.</td></tr>';
+      const alertText={OWN_DRIVER_MISSING_2H:'Urgent: call a standby driver',OWN_HOST_APPROVAL_REQUIRED:'OPS approval required if no Host',SUPPLIER_DETAILS_MISSING_4H:'Urgent: contact the supplier for driver and vehicle details',THIRD_PARTY_HOST_MISSING_2H:'Urgent: call a standby Host'};
+      const serviceAlerts=service=>{
+        const issues=asArray(service.readiness?.issues);
+        const keys=new Set(issues.map(issue=>issue.key));
+        return [...issues.map(issue=>[issue.message,issue.action].filter(Boolean).join(' ')),...asArray(t.alerts).filter(a=>a.serviceId===service.id&&!keys.has(a.code)).map(a=>alertText[a.code]||a.code)].join(' · ');
+      };
+      const lastScan=Date.parse(t.monitorLastScan||'');
+      const scanAge=Date.now()-lastScan;
+      status.textContent+=(status.textContent?' · ':'')+(Number.isFinite(lastScan)&&scanAge>=0&&scanAge<180000?'Alerts last checked '+new Date(lastScan).toLocaleString():'Timed alert monitor is not responding. Review services manually.');
+
+      serviceBody.innerHTML=asArray(t.assignments).map(a=>`<tr><td><b>${escapeHtml(a.label)}</b><br>${escapeHtml(asArray(a.stops).join(' → '))}</td><td>${escapeHtml([a.vehicleName,a.registration].filter(Boolean).join(' · '))}</td><td>${escapeHtml(asArray(a.staff).map(m=>`${staff.get(m.employeeId)||m.employeeId} (${m.role})`).join(', ')||staff.get(a.employeeId)||a.employeeId||'Unassigned')}</td><td>${escapeHtml(date(a.startAt))}<br>${escapeHtml(date(a.endAt))}</td><td>${escapeHtml(a.passengerCount??'—')} / ${escapeHtml(a.capacity??'—')}</td><td>${escapeHtml(a.status)}<br>${escapeHtml(serviceAlerts(a))}${a.noHostApproved?' · No-Host approved':''}</td><td>${editable?`<button class="btn" data-transport-service="${escapeHtml(a.id)}">Edit</button>${a.version===2&&a.operatorType==='OWN'&&!asArray(a.staff).some(m=>m.role==='HOST')?`<button class="btn" data-transport-approve="${escapeHtml(a.id)}">Approve no Host</button>`:''}`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty-state">No bus services available.</td></tr>';
       const vehicleBody=document.getElementById('transportVehicleBody');
       vehicleBody.innerHTML=asArray(t.vehicles).map(v=>`<tr><td><b>${escapeHtml(v.name)}</b></td><td>${escapeHtml(v.registration)} · ${escapeHtml(v.countryCode)}</td><td>${escapeHtml(v.baseCode)}</td><td>${escapeHtml(suppliers.get(v.supplierId)||'—')}</td><td>${escapeHtml(v.capacity)}</td><td>${escapeHtml(due(v.inspectionDue))} / ${escapeHtml(due(v.insuranceDue))}</td><td>${escapeHtml(v.status)}</td><td>${editable?`<button class="btn" data-transport-vehicle="${escapeHtml(v.id)}">Edit</button>`:''}</td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">No vehicles available.</td></tr>';
     }
     document.addEventListener('click', event => {
       const service=event.target.closest('[data-transport-service]');
       const vehicle=event.target.closest('[data-transport-vehicle]');
+      const approval=event.target.closest('[data-transport-approve]');
       if(service) openTransportService(service.dataset.transportService);
       if(vehicle) openTransportVehicle(vehicle.dataset.transportVehicle);
+      if(approval) openTransportApproval(approval.dataset.transportApprove);
     });
     function fillSelect(id, items, selected, empty) {
       const el=document.getElementById(id);
@@ -957,8 +975,36 @@
       STATE.transportEdit={id:row.id||'',updatedAt:row.updatedAt||''};
       const form=document.getElementById('transportServiceModal'); fillForm(form,{...row,stops:asArray(row.stops).join('\n'),startAt:localInput(row.startAt),endAt:localInput(row.endAt)});
       fillSelect('tsVehicle',asArray(STATE.transport.vehicles),row.vehicleId,'Choose a vehicle');
-      fillSelect('tsStaff',asArray(STATE.transport.staff),row.employeeId,'Unassigned · draft only');
+      fillSelect('tsSupplier',asArray(STATE.transport.suppliers).map(s=>({...s,name:s.name+(s.active===false?' (inactive)':'')})),row.supplierId,'Choose a supplier');
+      for(const [element,role] of [['tsDrivers','DRIVER'],['tsHosts','HOST'],['tsOther','OTHER']]) {
+        const el=document.getElementById(element), selected=new Set(asArray(row.staff).filter(m=>m.role===role).map(m=>m.employeeId));
+        el.innerHTML=asArray(STATE.transport.staff).map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name||x.id)} · ${escapeHtml(x.id)}</option>`).join('');
+        for(const option of el.options)option.selected=selected.has(option.value);
+      }
+      if(!row.timeZone)form.elements.timeZone.value=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+      document.getElementById('transportLegacyNote').textContent=row.version===1&&row.employeeId?`Legacy assignment ${row.employeeId}: select this employee's role before saving.`:'';
+      updateTransportOperator();
       document.getElementById('transportServiceTitle').textContent=id?'Edit bus service':'Add bus service'; showModal('transportServiceModal');
+    }
+    function updateTransportOperator() {
+      const third=document.getElementById('tsOperator').value==='THIRD_PARTY';
+      document.getElementById('tsVehicle').disabled=third;
+      document.getElementById('tsSupplier').disabled=!third;
+      document.getElementById('tsDrivers').disabled=third;
+      for(const id of ['tsExternalVehicle','tsExternalRegistration','tsSupplierDriver','tsSupplierContact'])document.getElementById(id).disabled=!third;
+    }
+    document.getElementById('tsOperator').addEventListener('change',updateTransportOperator);
+    function openTransportApproval(id) {
+      if(!STATE.transport.canEdit)return;
+      const row=asArray(STATE.transport.assignments).find(a=>a.id===id&&a.version===2&&a.operatorType==='OWN');if(!row)return;
+      STATE.transportEdit={id:row.id,updatedAt:row.updatedAt};
+      const form=document.getElementById('transportApprovalModal');fillForm(form,{});showModal('transportApprovalModal');
+    }
+    function approveTransportNoHost(event) {
+      event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;
+      const note=String(form.elements.note.value||'').trim();if(!note){transportError('APPROVE_TRANSPORT_NO_HOST','Enter a reason.');return;}
+      form.querySelector('.transport-error').textContent='';form.querySelector('[type="submit"]').disabled=true;
+      dispatchAction('APPROVE_TRANSPORT_NO_HOST',{serviceId:STATE.transportEdit?.id||'',expectedUpdatedAt:STATE.transportEdit?.updatedAt||'',note});
     }
     function saveTransportVehicle(event) {
       event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
@@ -969,12 +1015,13 @@
     }
     function saveTransportService(event) {
       event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
-      const values=Object.fromEntries(new FormData(form)); const start=new Date(values.startAt), end=new Date(values.endAt);
+      const data=new FormData(form), values=Object.fromEntries(data); const start=new Date(values.startAt), end=new Date(values.endAt);
+      values.staff=[...data.getAll('drivers').map(employeeId=>({employeeId,role:'DRIVER'})),...data.getAll('hosts').map(employeeId=>({employeeId,role:'HOST'})),...data.getAll('other').map(employeeId=>({employeeId,role:'OTHER'}))]; delete values.drivers; delete values.hosts; delete values.other;
       if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start>=end){transportError('SAVE_TRANSPORT_ASSIGNMENT','End must be after start.');return;}
       values.startAt=start.toISOString(); values.endAt=end.toISOString(); values.passengerCount=Number(values.passengerCount); values.stops=values.stops.split('\n').map(x=>x.trim()).filter(Boolean);
       values.id=STATE.transportEdit?.id||''; values.expectedUpdatedAt=STATE.transportEdit?.updatedAt||'';
       form.querySelector('.transport-error').textContent=''; form.querySelector('[type="submit"]').disabled=true;
-      dispatchAction('SAVE_TRANSPORT_ASSIGNMENT',values);
+      dispatchAction('SAVE_TRANSPORT_SERVICE_V2',values);
     }
 
     function renderMessages() {
@@ -1040,6 +1087,23 @@
       const list = document.getElementById('alertList');
       if(!list) return;
       list.innerHTML = ''; let hasAlert = false;
+      if (transportMonitorUnavailable()) {
+        hasAlert=true;
+        const card=document.createElement('div');card.className='alert-card warning';
+        const title=document.createElement('div');title.className='alert-title';title.textContent='Bus alert monitor unavailable';
+        const description=document.createElement('div');description.className='alert-desc';description.textContent='Review upcoming services manually until the timed alert monitor is restored.';
+        card.append(title,description);list.appendChild(card);
+      }
+      const descriptions={OWN_DRIVER_MISSING_2H:'Call a standby driver immediately.',OWN_HOST_APPROVAL_REQUIRED:'Schedule a Host or approve operating without one.',SUPPLIER_DETAILS_MISSING_4H:'Contact the supplier for driver and vehicle details.',THIRD_PARTY_HOST_MISSING_2H:'Call a standby Host immediately.'};
+      for(const alert of asArray(STATE.transport.alerts)) {
+        hasAlert=true;
+        const service=asArray(STATE.transport.assignments).find(a=>a.id===alert.serviceId),card=document.createElement('button');
+        card.type='button';card.className='alert-card warning';card.style.textAlign='left';card.style.width='100%';
+        const title=document.createElement('div');title.className='alert-title';title.textContent=service?.label||'Bus service';
+        const description=document.createElement('div');description.className='alert-desc';description.textContent=descriptions[alert.code]||alert.code;
+        card.append(title,description);card.addEventListener('click',()=>{switchView('view-logistics',document.getElementById('navLogistics'));if(service)openTransportService(service.id);});
+        list.appendChild(card);
+      }
       STATE.crewData.forEach(crew => {
         crew.acts.forEach(act => {
           if (act.type === 'disrupted' || (act.type === 'sby' && act.isCalloutCandidate)) {

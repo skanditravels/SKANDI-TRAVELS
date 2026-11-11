@@ -5,6 +5,7 @@
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest, rpcRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes } from "backend/SKANDI_CORE/rosterAssignments";
+import { evaluateTransportReadiness } from "backend/SKANDI_CORE/opsTransportReadiness";
 
 const TABLES = Object.freeze({
   agents: "agent_users",
@@ -63,21 +64,38 @@ function transportVehicleView(row={}){
 function transportAssignmentView(row={}){
   const p=obj(row.payload);
   const count=value=>value!==null && value!==undefined && value!=="" && Number.isInteger(Number(value)) && Number(value)>=0?Number(value):null;
-  return {id:clean(row.id,80),employeeId:clean(row.employee_id,80),routeId:clean(row.route_id,120),bookingReference:clean(row.booking_reference,120),startAt:clean(row.start_time,80),endAt:clean(row.end_time,80),status:upper(row.status,40),notes:clean(row.notes,500),label:clean(p.label,160),vehicleId:clean(p.vehicleId,80),vehicleName:clean(p.vehicleName,160),registration:clean(p.registration,40),capacity:count(p.seatCapacity),passengerCount:count(p.passengerCount),stops:arr(p.stops).map(x=>clean(x,180)).filter(Boolean),updatedAt:clean(row.updated_at,80)};
+  return {id:clean(row.id,80),version:Number(p.opsTransportVersion)||1,operatorType:upper(p.operatorType||"OWN",30),supplierId:clean(p.supplierId,80),supplierDriverName:clean(p.supplierDriverName,160),supplierDriverContact:clean(p.supplierDriverContact,180),externalVehicleName:clean(p.vehicleName,160),externalRegistration:clean(p.registration,40),timeZone:clean(p.timeZone,80),baseCode:clean(p.baseCode,80),employeeId:clean(row.employee_id,80),routeId:clean(row.route_id,120),bookingReference:clean(row.booking_reference,120),startAt:clean(row.start_time,80),endAt:clean(row.end_time,80),status:upper(row.status,40),notes:clean(row.notes,500),label:clean(p.label,160),vehicleId:clean(p.vehicleId,80),vehicleName:clean(p.vehicleName,160),registration:clean(p.registration,40),capacity:count(p.seatCapacity),passengerCount:count(p.passengerCount),stops:arr(p.stops).map(x=>clean(x,180)).filter(Boolean),updatedAt:clean(row.updated_at,80)};
 }
 async function transportBootstrap(agents, vehicleAssignments, session){
   try {
-    const [fleet,suppliers,events]=await Promise.all([
+    const [fleet,suppliers,events,memberships,alerts,approvals,worker]=await Promise.all([
       getRows("ops_transport_vehicles",{order:"display_name.asc"},3000),
       getRows("inventory_master_entities",{select:"id,name,code,active",entity_type:"eq.SUPPLIER",order:"name.asc"},3000),
-      getRows("ops_transport_events",{select:"id,vehicle_id,assignment_id,action,actor_staff_id,occurred_at",order:"occurred_at.desc"},250)
+      getRows("ops_transport_events",{select:"id,vehicle_id,assignment_id,action,actor_staff_id,occurred_at",order:"occurred_at.desc"},250),
+      getAllTransportRows("ops_transport_staff",{select:"service_id,employee_id,role,status",order:"service_id.asc,employee_id.asc,role.asc"}),
+      getAllTransportRows("ops_transport_alerts",{select:"id,service_id,code,status,first_seen_at,updated_at",status:"eq.OPEN",order:"id.asc"}),
+      getAllTransportRows("ops_transport_no_host_approvals",{select:"service_id,service_revision,approved_by,approved_at",order:"service_id.asc,service_revision.asc"}),
+      getRows("ops_transport_worker_state",{select:"worker_name,last_scan_at",worker_name:"eq.transport_alerts"},1)
     ]);
     const canEdit=session.canManage===true || session.isSystemAdmin===true || isWildcard(session) || upper(session.accessRole,80)==="SUPER_ADMIN" || hasGroup(session,"occ") || hasGroup(session,"system-admin");
-    return {available:true,canEdit,vehicles:fleet.map(transportVehicleView),suppliers:suppliers.map(row=>({id:clean(row.id,80),name:clean(row.name,180),active:row.active===true})),staff:agents.map(row=>({id:upper(row.sk_id,80),name:clean(row.display_name||[row.first_name,row.last_name].filter(Boolean).join(" "),180),base:clean(row.base_code||row.base,80)})).filter(row=>row.id),assignments:vehicleAssignments.filter(row=>obj(row.payload).kind==="BUS" && obj(row.payload).opsTransportVersion===1).map(transportAssignmentView),events:events.map(row=>({id:clean(row.id,80),time:clean(row.occurred_at,80),action:clean(row.action,120),details:[clean(row.actor_staff_id,80),clean(row.vehicle_id,80),clean(row.assignment_id,80)].filter(Boolean).join(" · "),status:"RECORDED"}))};
+    const services=vehicleAssignments.filter(row=>obj(row.payload).kind==="BUS" && [1,2].includes(obj(row.payload).opsTransportVersion)).map(row=>{
+      const view=transportAssignmentView(row),staff=memberships.filter(m=>m.service_id===row.id&&["SCHEDULED","CONFIRMED"].includes(upper(m.status,30))).map(m=>({employeeId:upper(m.employee_id,80),role:upper(m.role,30),status:upper(m.status,30)}));
+      const approval=approvals.find(a=>a.service_id===row.id&&a.service_revision===row.updated_at);
+      const readiness=view.version===2?evaluateTransportReadiness({operatorType:view.operatorType,status:view.status,startAt:view.startAt,revision:view.updatedAt,staff:staff.map(m=>({staffId:m.employeeId,role:m.role,status:m.status})),noHostApproval:approval?{approvedBy:approval.approved_by,approvedAt:approval.approved_at,serviceRevision:approval.service_revision}:null,provider:{supplierId:view.supplierId,driverName:view.supplierDriverName,vehicleRegistration:view.registration,vehicleDescription:view.vehicleName}}):null;
+      return {...view,staff,noHostApproved:readiness?.noHostApproved===true,readiness};
+    });
+    return {available:true,canEdit,monitorLastScan:clean(worker[0]?.last_scan_at,80),vehicles:fleet.map(transportVehicleView),suppliers:suppliers.map(row=>({id:clean(row.id,80),name:clean(row.name,180),active:row.active===true})),staff:agents.map(row=>({id:upper(row.sk_id,80),name:clean(row.display_name||[row.first_name,row.last_name].filter(Boolean).join(" "),180),base:clean(row.base_code||row.base,80)})).filter(row=>row.id),assignments:services,alerts:alerts.map(a=>({id:clean(a.id,80),serviceId:clean(a.service_id,80),code:upper(a.code,80),firstSeenAt:clean(a.first_seen_at,80)})),events:events.map(row=>({id:clean(row.id,80),time:clean(row.occurred_at,80),action:clean(row.action,120),details:[clean(row.actor_staff_id,80),clean(row.vehicle_id,80),clean(row.assignment_id,80)].filter(Boolean).join(" · "),status:"RECORDED"}))};
   } catch (error) {
     console.error("[OPS transport bootstrap]", clean(error?.code||"OPS_TRANSPORT_UNAVAILABLE",100));
     return {available:false,vehicles:[],suppliers:[],staff:[],assignments:[],message:"Transport data is unavailable. Check that the approved transport setup is installed and try again."};
   }
+}
+async function saveTransportServiceV2(session,input={}){
+  const p=obj(input),actor=transportActor(session),id=clean(p.id,80),vehicleId=clean(p.vehicleId,80),supplierId=clean(p.supplierId,80),operatorType=upper(p.operatorType,30),label=clean(p.label,160),status=upper(p.status||"DRAFT",30),passengerCount=Number(p.passengerCount),start=new Date(p.startAt),end=new Date(p.endAt),timeZone=clean(p.timeZone,80);
+  const staff=arr(p.staff).map(m=>({employeeId:upper(m?.employeeId,80),role:upper(m?.role,30)})),stops=arr(p.stops).map(x=>clean(x,180)).filter(Boolean);
+  let validZone=true;try{new Intl.DateTimeFormat("en",{timeZone}).format(start);}catch(_){validZone=false;}
+  if(!actor||(id&&!TRANSPORT_ID.test(id))||!["OWN","THIRD_PARTY"].includes(operatorType)||(operatorType==="OWN"&&!TRANSPORT_ID.test(vehicleId))||(operatorType==="THIRD_PARTY"&&(!TRANSPORT_ID.test(supplierId)||vehicleId))||!label||!TRANSPORT_STATUSES.has(status)||p.passengerCount==null||p.passengerCount===""||!Number.isInteger(passengerCount)||passengerCount<0||passengerCount>10000||!p.startAt||!p.endAt||!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start>=end||!validZone||!timeZone||stops.length>20||staff.some(m=>!/^[A-Z0-9_-]{1,80}$/.test(m.employeeId)||!["DRIVER","HOST","OTHER"].includes(m.role)))throw transportError("OPS_TRANSPORT_ASSIGNMENT_INVALID");
+  return transportRpc("ops_transport_save_service_v2",{id,actor,vehicleId,supplierId,operatorType,label,status,passengerCount,startAt:start.toISOString(),endAt:end.toISOString(),timeZone,staff,stops,externalVehicleName:clean(p.externalVehicleName,160),externalRegistration:clean(p.externalRegistration,40),supplierDriverName:clean(p.supplierDriverName,160),supplierDriverContact:clean(p.supplierDriverContact,180),baseCode:clean(p.baseCode,80),routeId:clean(p.routeId,120),bookingReference:clean(p.bookingReference,120),notes:clean(p.notes,500),expectedUpdatedAt:clean(p.expectedUpdatedAt,80)});
 }
 async function saveTransportVehicle(session,input={}){
   const p=obj(input), actor=transportActor(session), id=clean(p.id,80), supplierId=clean(p.supplierId,80);
@@ -135,6 +153,16 @@ async function getRows(table, query={}, maxRows=MAX_ROWS){
     if(!page.length) break;
   }
   return rows;
+}
+
+async function getAllTransportRows(table, query={}){
+  const rows=[]; let offset=0;
+  for (;;) {
+    const page=arr(await restRequest({table,query:{...query,limit:1000,offset}}));
+    rows.push(...page);
+    if(page.length<1000) return rows;
+    offset+=page.length;
+  }
 }
 
 function operationalRole(agent={}){
@@ -306,13 +334,16 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
     getRows(TABLES.alteaSync,{order:"created_at.desc"},500)
   ]);
 
+  const transport=await transportBootstrap(agents,vehicles,session);
+  const membersByService=new Map(arr(transport.assignments).filter(a=>a.version===2).map(a=>[a.id,arr(a.staff)]));
   const assignmentRows=[
     ...shifts.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.shifts})),
     ...crew.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.crew})),
     ...drivers.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.drivers})),
     ...tours.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.tours})),
     ...airport.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.airport})),
-    ...vehicles.filter(r=>shiftWithin(r,startMs,endMs) && !(obj(r.payload).kind==="BUS" && obj(r.payload).opsTransportVersion===1 && ["DRAFT","CANCELLED"].includes(upper(r.status,40)))).map(r=>({row:r,table:TABLES.vehicles}))
+    ...vehicles.filter(r=>shiftWithin(r,startMs,endMs) && !(obj(r.payload).kind==="BUS" && obj(r.payload).opsTransportVersion===2) && !(obj(r.payload).kind==="BUS" && obj(r.payload).opsTransportVersion===1 && ["DRAFT","CANCELLED"].includes(upper(r.status,40)))).map(r=>({row:r,table:TABLES.vehicles})),
+    ...vehicles.filter(r=>shiftWithin(r,startMs,endMs) && obj(r.payload).kind==="BUS" && obj(r.payload).opsTransportVersion===2 && ["SCHEDULED","CONFIRMED"].includes(upper(r.status,40))).flatMap(r=>[...new Set(arr(membersByService.get(r.id)).map(m=>m.employeeId))].map(employeeId=>({row:{...r,employee_id:employeeId},table:TABLES.vehicles})))
   ];
 
   const staffMap=new Map();
@@ -324,7 +355,7 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
   }
   const assignedByEmployee=new Map(), openTime=[], seen=new Set();
   for(const item of assignmentRows){
-    const dedupe=`${item.table}:${item.row.id}`; if(seen.has(dedupe)) continue; seen.add(dedupe);
+    const dedupe=`${item.table}:${item.row.id}:${employeeKey(item.row)}`; if(seen.has(dedupe)) continue; seen.add(dedupe);
     const mapped=mapAssignment(item.row,item.table,windowStart);
     const key=employeeKey(item.row);
     const owner=staffMap.get(key) || staffMap.get(upper(item.row.employee_ref,80));
@@ -396,7 +427,6 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
   const jurisdictions=buildJurisdictions(jurisdictionRows);
   const bases=[...new Set(crewData.map(c=>c.base).filter(v=>v&&v!=="—"))].sort().map(code=>({code}));
   const roles=[...new Set(crewData.map(c=>c.role).filter(Boolean))].sort().map(name=>({name}));
-  const transport=await transportBootstrap(agents,vehicles,session);
   const auditLog=[...alteaSync.slice(0,250).map(mapAlteaAudit),...arr(transport.events)].sort((a,b)=>String(b.time).localeCompare(String(a.time))).slice(0,250);
 
   return {
@@ -428,7 +458,7 @@ async function patchAssignment(table,id,changes={}){
   if(!ASSIGNMENT_TABLES.has(table)) throw new Error("OPS_ASSIGNMENT_SOURCE_INVALID");
   const current=first(await restRequest({table,query:{select:"*",id:`eq.${id}`,limit:1}}));
   if(!current) throw new Error("OPS_ASSIGNMENT_NOT_FOUND");
-  if(table===TABLES.vehicles && obj(current.payload).kind==="BUS" && obj(current.payload).opsTransportVersion===1) throw transportError("OPS_TRANSPORT_USE_TRANSPORT_EDITOR");
+  if(table===TABLES.vehicles && obj(current.payload).kind==="BUS" && [1,2].includes(obj(current.payload).opsTransportVersion)) throw transportError("OPS_TRANSPORT_USE_TRANSPORT_EDITOR");
   const existing=obj(current.payload), body={updated_at:now()};
   if(table===TABLES.shifts){if(changes.type) body.assignment_type=changes.type;if(changes.status) body.status=changes.status;}
   else {if(changes.status) body.status=changes.status;if(changes.routeId) body.route_id=changes.routeId;}
@@ -508,7 +538,7 @@ async function optimizeAssignments(){
     for(const row of rows){
       if(!shiftWithin(row,startMs,endMs) || activityType(row)!=="disrupted") continue;
       const p=obj(row.payload);
-      if(table===TABLES.vehicles && p.kind==="BUS" && p.opsTransportVersion===1) continue;
+      if(table===TABLES.vehicles && p.kind==="BUS" && [1,2].includes(p.opsTransportVersion)) continue;
       await patchAssignment(table,row.id,{status:"RECOVERED",payload:{...p,activityType:p.preDisruptionType||"duty",optimizationStatus:"RECOVERED",optimizedAt:now()}});
       recovered++;
     }
@@ -527,6 +557,12 @@ export async function handleOpsControlActionCore({type="",payload={}}={}){
   if(action==="REFRESH") return loadBootstrap(session,p);
   if(action==="SAVE_TRANSPORT_VEHICLE"){
     await saveTransportVehicle(session,p);
+  }else if(action==="SAVE_TRANSPORT_SERVICE_V2"){
+    await saveTransportServiceV2(session,p);
+  }else if(action==="APPROVE_TRANSPORT_NO_HOST"){
+    const actor=transportActor(session),serviceId=clean(p.serviceId,80),note=clean(p.note,500),expectedUpdatedAt=clean(p.expectedUpdatedAt,80);
+    if(!actor||!TRANSPORT_ID.test(serviceId)||!note||!expectedUpdatedAt)throw transportError("OPS_TRANSPORT_APPROVAL_INVALID");
+    await transportRpc("ops_transport_approve_no_host_v2",{actor,serviceId,note,expectedUpdatedAt});
   }else if(action==="SAVE_TRANSPORT_ASSIGNMENT"){
     await saveTransportAssignment(session,p);
   }else if(action==="UPDATE_ASSIGNMENT"){
@@ -551,7 +587,7 @@ export async function handleOpsControlActionCore({type="",payload={}}={}){
   }else{
     const error=new Error("OPS_CONTROL_ACTION_UNSUPPORTED"); error.code="OPS_CONTROL_ACTION_UNSUPPORTED"; throw error;
   }
-  if(action==="SAVE_TRANSPORT_VEHICLE" || action==="SAVE_TRANSPORT_ASSIGNMENT"){
+  if(["SAVE_TRANSPORT_VEHICLE","SAVE_TRANSPORT_ASSIGNMENT","SAVE_TRANSPORT_SERVICE_V2","APPROVE_TRANSPORT_NO_HOST"].includes(action)){
     // The RPC transaction has committed. A later refresh failure must not be
     // reported as a failed save, which could lead to duplicate retries.
     try { return {ok:true,bootstrap:await loadBootstrap(session,p)}; }

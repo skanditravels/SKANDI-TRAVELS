@@ -42,7 +42,8 @@ const REST_OBJECTS = new Set([
   "roster_shifts", "roster_clock_events", "roster_time_ledger", "schedule_change_requests",
   "time_off_balances", "vacation_sick_leave_ledger", "crew_assignments", "driver_assignments",
   "tour_assignments", "airport_duty_assignments", "vehicle_assignments",
-  "ops_transport_vehicles", "ops_transport_events",
+  "ops_transport_vehicles", "ops_transport_events", "ops_transport_staff",
+  "ops_transport_alerts", "ops_transport_no_host_approvals", "ops_transport_worker_state",
 
   // Inventory
   "inventory_master_entities", "inventory_localized_content", "inventory_media_assets",
@@ -120,6 +121,7 @@ const RPC_FUNCTIONS = new Set([
   "inventory_altea_add_component_v9",
   "inventory_altea_release_component_v9",
   "ops_transport_save_vehicle", "ops_transport_save_assignment",
+  "ops_transport_save_service_v2", "ops_transport_approve_no_host_v2", "ops_transport_scan_alerts_v2",
   "get_public_about_payload",
   "get_public_network_map_payload",
   "publish_voy_issue"

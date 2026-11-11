@@ -32,11 +32,11 @@ export function rosterAssignmentTimes(row, payload) {
 // Draft transport services are visible to OPS only.
 export function rosterAssignmentVisible(row, table) {
   const payload = row?.payload && typeof row.payload === "object" ? row.payload : {};
-  return !(table === "vehicle_assignments" && payload.kind === "BUS" && payload.opsTransportVersion === 1 && String(row.status || "").toUpperCase() === "DRAFT");
+  return !(table === "vehicle_assignments" && payload.kind === "BUS" && [1,2].includes(payload.opsTransportVersion) && String(row.status || "").toUpperCase() === "DRAFT");
 }
 
 export function rosterTransportDetails(row, payload) {
-  if (payload?.kind !== "BUS" || payload?.opsTransportVersion !== 1) return null;
+  if (payload?.kind !== "BUS" || ![1,2].includes(payload?.opsTransportVersion)) return null;
   const clean = (value, max = 180) => String(value ?? "").trim().slice(0, max);
   const number = value => value !== null && value !== undefined && value !== "" && Number.isInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null;
   return {
