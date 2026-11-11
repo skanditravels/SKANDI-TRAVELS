@@ -16,7 +16,7 @@ import { tryWriteStaffLoginAudit } from "backend/SKANDI_CORE/platformAudit";
 
 const AGENT_TABLE = "agent_users";
 const OTP_TABLE = "staff_login_otps";
-const OTP_AUTOMATION_TRIGGER_ID = "1a27f5c5-bc5a-44a5-92c1-38763c35fda6"; // From Wix Automations -> Triggered by Velo
+const OTP_AUTOMATION_TRIGGER_ID = "b73d7256-89db-48fa-aeb7-34ec243e0608"; // From Wix Automations -> Triggered by Velo
 const BLOCKED_EMPLOYMENT = new Set(["TERMINATED", "SUSPENDED", "FURLOUGHED", "INACTIVE"]);
 
 /**
