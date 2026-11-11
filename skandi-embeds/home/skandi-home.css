@@ -1070,3 +1070,203 @@ img,video,svg{max-width:100%}
 .status-card.error{background:#fff0f1;color:#94283a}.status-card.ok{background:#edf8f1;color:#166d43}
 #selectorSummary{color:#657489;margin:9px 0}
 @media(max-width:600px){.flight-meta{grid-template-columns:1fr}.flight-card{padding:16px}.flight-price{font-size:21px}}
+
+
+/* Mobile and responsive update from the supplied page. */
+/* Home mobile presentation. Data and navigation continue to use the existing bridge. */
+@media (max-width: 760px) {
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  :root { background: #f4f7fa; }
+  :root { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+  :root { background: #f4f7fa; color: #132b46; }
+
+  /* An app-like welcome and search surface, using the existing Home image and text. */
+  :root #hero-wrap {
+    align-items: stretch; text-align: left;
+    padding: max(22px, env(safe-area-inset-top, 0px)) 16px 20px;
+  }
+  :root #hero-wrap::before {
+    height: 250px; border-radius: 0 0 28px 28px; opacity: .26;
+    background-position: center; background-size: cover;
+  }
+  :root .hero-kicker {
+    color: #075887; font-size: 12px; letter-spacing: .14em;
+    margin: 0 0 12px; line-height: 1.3;
+  }
+  :root #hero-title {
+    max-width: 16ch; margin: 0 0 8px;
+    font-size: clamp(30px, 8vw, 40px); line-height: 1.08;
+  }
+  :root #hero-sub {
+    max-width: 38ch; margin: 0 0 20px; font-size: 14px; line-height: 1.5;
+    opacity: 1; animation: none;
+  }
+  :root #search-tabs {
+    width: 100%; max-width: none; margin: 0; padding: 8px;
+    background: #fff !important; border: 1px solid #e1eaf1 !important;
+    border-radius: 21px !important;
+    box-shadow: 0 12px 34px rgba(2,46,100,.12) !important;
+    opacity: 1; animation: none; transform: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  :root #tab-header {
+    display: flex; flex-wrap: nowrap; overflow-x: auto;
+    gap: 4px; margin: 0; padding: 4px;
+    border-radius: 14px; background: #edf2f6;
+    scrollbar-width: none; overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  :root #tab-header::-webkit-scrollbar { display: none; }
+  :root .tab-btn {
+    flex: 0 0 auto; min-width: 0; min-height: 44px;
+    padding: 10px 14px !important; white-space: nowrap; font-size: 13px !important;
+  }
+  :root .tab-btn.active { border-radius: 10px !important; }
+  :root #tab-content { padding: 12px 4px 4px !important; }
+  :root .tab-panel.active { animation: none; transform: none; }
+  :root .field-row {
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    gap: 8px !important; margin-bottom: 8px !important;
+  }
+  :root .field {
+    min-height: 66px; min-width: 0; padding: 8px 12px;
+    border-color: #dce5ee; border-radius: 13px; background: #fff;
+  }
+  :root .field label {
+    color: #65788c !important; font-size: 12px !important; letter-spacing: .05em !important;
+  }
+  :root :is(input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"]) {
+    font-size: 16px !important;
+  }
+  :root .field :is(input:not([type="hidden"]), select) {
+    min-height: 36px !important; font-size: 16px !important; line-height: 1.35;
+    scroll-margin-block: 14px;
+  }
+  :root .date-range-button { min-height: 36px !important; font-size: 15px !important; text-align: left; }
+  :root .field:focus-within { border-color: #318eab; box-shadow: 0 0 0 3px rgba(49,142,171,.14); }
+  :root .swap-btn {
+    left: auto; right: 12px; top: 50%; width: 44px; height: 44px;
+    transform: translateY(-50%); border-color: #cfdde8;
+  }
+  :root .swap-btn:active { transform: translateY(-50%) scale(.97); }
+  :root .airport-suggestions {
+    max-height: min(45vh, 270px); border-radius: 13px;
+    box-shadow: 0 12px 32px rgba(2,46,100,.17);
+    overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  }
+  :root .airport-option { min-height: 48px; padding: 11px 12px; }
+  :root .search-submit {
+    min-height: 54px; margin-top: 7px; border-radius: 13px;
+    font-size: 16px !important; letter-spacing: .01em;
+  }
+
+  /* Traveler controls start compact, then expand into thumb-sized rows. */
+  :root .home-travelers { margin: 0 0 8px; }
+  :root .home-travelers > summary {
+    min-height: 60px; display: flex; align-items: center; gap: 11px;
+    padding: 10px 12px; border: 1px solid #dce5ee; border-radius: 13px;
+    background: #fff; color: #022e64; font-size: 14px; font-weight: 700;
+    list-style: none; cursor: pointer; overflow-wrap: anywhere;
+  }
+  :root .home-travelers > summary::-webkit-details-marker { display: none; }
+  :root .home-travelers > summary::after {
+    content: ""; width: 8px; height: 8px; flex: 0 0 8px; margin-left: auto;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+  }
+  :root .home-travelers[open] > summary::after { transform: rotate(225deg) translate(-2px, -1px); }
+  :root .home-travelers[open] > summary { border-color: #b9d9e2; margin-bottom: 8px; }
+  :root .home-travelers > summary:focus-visible { outline: 3px solid #5fc7cf; outline-offset: 2px; }
+  :root .home-travelers-icon { width: 22px; height: 22px; flex: 0 0 22px; fill: none; stroke: #316b85; stroke-width: 1.8; }
+  :root .home-travelers-summary { line-height: 1.35; }
+  :root .pax-row {
+    display: grid !important; grid-template-columns: minmax(0,1fr) !important;
+    gap: 6px !important;
+  }
+  :root .pax-row .field {
+    display: grid; grid-template-columns: minmax(0,1fr) minmax(126px, 38%);
+    grid-template-rows: auto auto; align-items: center; gap: 0 8px;
+    min-height: 65px; padding: 7px 9px 7px 12px !important;
+  }
+  :root .pax-row .field label { grid-column: 1; grid-row: 1; margin: 0 !important; }
+  :root .pax-row .field small { grid-column: 1; grid-row: 2; margin: 0; font-size: 12px !important; }
+  :root .pax-row .counter {
+    grid-column: 2; grid-row: 1 / span 2; display: flex;
+    justify-content: space-between; width: 100%; max-width: none;
+  }
+  :root .pax-row .counter button {
+    width: 44px !important; min-width: 44px; height: 44px !important;
+    border-radius: 11px; font-size: 18px !important;
+  }
+  :root .pax-row .counter span { font-size: 15px !important; }
+  :root .home-travelers #ageFields:empty,
+  :root .home-travelers #holAgeFields:empty { display: none; }
+
+  /* Use the existing calendar as a sheet, within the current HTML component. */
+  body.skandi-home-calendar-open :root #hero-wrap { z-index: 2201; }
+  :root .date-overlay {
+    position: fixed; inset: 0; width: auto; max-width: none; z-index: 2300;
+    padding: 0; background: rgba(4, 22, 42, .48); animation: none;
+  }
+  :root .date-overlay.active { display: flex; align-items: flex-end; }
+  :root .date-modal {
+    width: 100%; max-height: min(90vh, 700px); max-height: min(90dvh, 700px);
+    overflow-y: auto; overscroll-behavior: contain;
+    padding: 20px 18px max(18px, env(safe-area-inset-bottom, 0px));
+    border-radius: 22px 22px 0 0; background: #fff;
+    -webkit-overflow-scrolling: touch;
+  }
+  :root #closeDatePicker,
+  :root .calendar-nav button { width: 44px; height: 44px; min-width: 44px; }
+  :root .calendar-grid { grid-template-columns: 1fr; }
+  :root .day-btn { min-height: 42px; }
+  :root .date-actions { position: sticky; bottom: 0; padding: 12px 0 0; background: #fff; }
+  :root .date-actions button { min-height: 48px; border-radius: 12px; }
+  :root #applyDates { flex: 1; }
+  :root .skandi-toast.show { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); left: 16px; right: 16px; max-width: none; }
+
+  /* Content keeps its existing owner and ordering; cards become swipeable rails. */
+  :root #trust-strip { margin: 0 auto 8px !important; padding: 0 16px !important; }
+  :root .trust-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 9px; }
+  :root .trust-grid:empty { display: none; }
+  :root .trust-box { padding: 10px; }
+  :root .content-section { padding: 30px 16px; }
+  :root .section-title { font-size: 24px; line-height: 1.16; }
+  :root .section-subtitle { font-size: 14px; line-height: 1.5; margin-bottom: 18px; }
+  :root .trip-type-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px;
+    padding: 0; -webkit-mask-image: none; mask-image: none;
+  }
+  :root .destination-editorial-grid,
+  :root .hotel-grid {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px,82%);
+    grid-template-columns: none; gap: 12px; overflow-x: auto;
+    padding-bottom: 10px; scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  }
+  :root .destination-editorial-grid .dest-card,
+  :root .destination-editorial-grid .dest-card:first-child,
+  :root .hotel-grid .hotel-card,
+  :root .hotel-grid .hotel-card:first-child,
+  :root .hotel-grid .hotel-card:nth-child(2) {
+    grid-column: auto; min-width: 0; scroll-snap-align: start;
+  }
+  :root #why { padding: 32px 16px; }
+
+  html[data-skandi-mobile-navigation] body.skandi-home-keyboard {
+    top: var(--skandi-visible-top, 0px) !important; bottom: auto !important;
+    height: var(--skandi-visible-height, 100dvh) !important;
+  }
+  @media (display-mode: standalone) {
+    :root #hero-wrap { padding-top: max(22px, env(safe-area-inset-top, 0px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root *, :root *::before, :root *::after {
+      scroll-behavior: auto !important; animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important; transition-duration: .01ms !important;
+    }
+  }
+}
+@media (min-width: 761px) {
+  :root .home-travelers > summary { display: none; }
+}

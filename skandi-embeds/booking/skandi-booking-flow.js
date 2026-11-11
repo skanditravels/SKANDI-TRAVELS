@@ -287,3 +287,125 @@ function bindDelegated(){document.addEventListener('change',e=>{const x=e.target
 function bindFlightFilters(){document.addEventListener('change',event=>{const x=event.target;if(S.step!=='offer'||S.cart)return;let focus='';if(x.id==='filter-stops'){S.filters.stops=x.value;focus=x.id}else if(x.id==='filter-cabin'){S.filters.cabin=x.value;S.selectedCabins={};focus=x.id}else if(x.id==='filter-sort'){S.filters.sort=x.value;focus=x.id}else if(x.name==='filter-airline'){const value=str(x.value).toUpperCase(),set=new Set(S.filters.airlines);if(x.checked)set.add(value);else set.delete(value);S.filters.airlines=[...set];S.airlineMenuOpen=!!x.closest('details')?.open;focus='airline:'+value}else return;renderOffer();if(focus.startsWith('airline:'))[...document.querySelectorAll('input[name="filter-airline"]')].find(input=>input.value===focus.slice(8))?.focus({preventScroll:true});else el(focus)?.focus({preventScroll:true})})}
 bindFlightFilters();bindDelegated();renderStepper();el('root-offer').innerHTML='<div class="empty">Connecting to your SKANDI next booking…</div>';status('');message('BOOKING_OFFER_READY');
 
+
+
+/* Presentation enhancement for the existing, single-component booking journey. */
+(function () {
+  'use strict';
+  const app = document.getElementById('skandi-app-root');
+  if (!app || !window.matchMedia || !window.MutationObserver) return;
+  const mobile = window.matchMedia('(max-width: 760px)');
+  const state = {filters:false, planner:false};
+  const header = document.createElement('header');
+  header.className = 'booking-app-header';
+  header.hidden = true;
+  header.setAttribute('aria-label', 'Booking progress');
+  header.innerHTML = '<div class="booking-app-headline"><span class="booking-app-brand">SKANDI TRAVELS</span><span class="booking-app-index" aria-hidden="true"></span></div><div class="booking-app-stage"></div><div class="booking-app-progress" role="progressbar" aria-label="Booking progress"><span class="booking-app-progress-fill"></span></div>';
+  app.prepend(header);
+  const stage = header.querySelector('.booking-app-stage');
+  const index = header.querySelector('.booking-app-index');
+  const progress = header.querySelector('.booking-app-progress');
+  const fill = header.querySelector('.booking-app-progress-fill');
+  let previousStage = '';
+  function refreshHeader() {
+    const view = app.querySelector('.flow-view.active-view');
+    const steps = view ? Array.from(view.querySelectorAll('.flow-stepper .flow-step')) : [];
+    const current = steps.findIndex(item => item.classList.contains('active'));
+    if (!view || current < 0) {
+      header.hidden = true;
+      app.classList.remove('booking-app-enhanced');
+      document.body.classList.remove('booking-app-enhanced');
+      return;
+    }
+    const label = steps[current].querySelector('.flow-label')?.textContent?.trim() || '';
+    const key = view.id + ':' + current + ':' + steps.length + ':' + label;
+    header.hidden = false;
+    app.classList.add('booking-app-enhanced');
+    document.body.classList.add('booking-app-enhanced');
+    if (key === previousStage) return;
+    previousStage = key;
+    stage.textContent = label;
+    index.textContent = (current + 1) + ' / ' + steps.length;
+    progress.setAttribute('aria-valuemin', '1');
+    progress.setAttribute('aria-valuemax', String(steps.length));
+    progress.setAttribute('aria-valuenow', String(current + 1));
+    progress.setAttribute('aria-valuetext', label + ', ' + (current + 1) + ' / ' + steps.length);
+    fill.style.width = Math.round(100 * (current + 1) / steps.length) + '%';
+  }
+  function restoreFocus(node) {
+    if (node && node.isConnected && typeof node.focus === 'function') {
+      try { node.focus({preventScroll:true}); } catch (_) { node.focus(); }
+    }
+  }
+  function createDisclosure(content, kind) {
+    const parent = content.parentElement;
+    if (!parent || parent.classList.contains('booking-app-disclosure')) return;
+    const focused = content.contains(document.activeElement) ? document.activeElement : null;
+    const details = document.createElement('details');
+    details.className = 'booking-app-disclosure booking-app-' + kind;
+    details.open = state[kind] || Boolean(focused);
+    const summary = document.createElement('summary');
+    const title = document.createElement('span');
+    title.className = 'booking-app-disclosure-title';
+    if (kind === 'planner') {
+      title.textContent = content.querySelector('.panel-head h2')?.textContent?.trim() || 'Travel Planner';
+    } else {
+      title.textContent = content.getAttribute('aria-label') || 'Flight filters and sorting';
+    }
+    summary.appendChild(title);
+    if (kind === 'planner') {
+      const total = content.querySelector('.planner-total');
+      const totalLabel = total?.querySelector('span')?.textContent?.trim();
+      const totalValue = total?.querySelector('strong')?.textContent?.trim();
+      if (totalLabel && totalValue) {
+        const amount = document.createElement('span');
+        amount.className = 'booking-app-disclosure-total';
+        const small = document.createElement('small');
+        const strong = document.createElement('strong');
+        small.textContent = totalLabel; strong.textContent = totalValue;
+        amount.append(small, strong); summary.appendChild(amount);
+      }
+    }
+    parent.insertBefore(details, content);
+    details.append(summary, content);
+    details.addEventListener('toggle', () => { if (mobile.matches && details.isConnected) state[kind] = details.open; });
+    if (focused) { state[kind] = true; restoreFocus(focused); }
+  }
+  function unwrapDisclosures() {
+    app.querySelectorAll('.booking-app-disclosure').forEach(details => {
+      const content = details.querySelector('.travel-planner, .booking-filters');
+      if (!content || !details.parentElement) return;
+      const focused = content.contains(document.activeElement) ? document.activeElement : null;
+      details.parentElement.replaceChild(content, details);
+      restoreFocus(focused);
+    });
+  }
+  function enhance() {
+    if (mobile.matches) {
+      app.querySelectorAll('.travel-planner').forEach(content => createDisclosure(content, 'planner'));
+      app.querySelectorAll('.booking-filters').forEach(content => createDisclosure(content, 'filters'));
+    } else {
+      unwrapDisclosures();
+    }
+    refreshHeader();
+  }
+  // The booking runtime replaces result and cart markup after host responses.
+  // Capture the open state before those handlers rebuild a filter control.
+  app.addEventListener('change', event => {
+    const details = event.target.closest?.('.booking-app-filters');
+    if (mobile.matches && details) state.filters = details.open;
+  }, true);
+  let scheduled = false;
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; enhance(); });
+  }
+  const observer = new MutationObserver(schedule);
+  app.querySelectorAll('.flow-view').forEach(view => observer.observe(view, {
+    subtree:true, childList:true, attributes:true, attributeFilter:['class']
+  }));
+  if (mobile.addEventListener) mobile.addEventListener('change', schedule);
+  else if (mobile.addListener) mobile.addListener(schedule);
+  enhance();
+})();

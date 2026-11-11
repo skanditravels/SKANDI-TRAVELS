@@ -3947,3 +3947,177 @@ setTimeout(typeWriter, 1000);
 boot();
 initializeBridge();
 
+
+
+/* Mobile-only interaction improvements; all search and navigation messages stay with Home. */
+(function () {
+  'use strict';
+  const root = document.getElementById('skandi-home-content');
+  const app = document.getElementById('skandi-app-root');
+  if (!root || !app || !window.matchMedia) return;
+  const mobile = window.matchMedia('(max-width: 760px)');
+
+  // Keep the original counters and age controls; the summary is derived from them.
+  function setupTravelers(panelId, agesId) {
+    const panel = document.getElementById(panelId);
+    const row = panel && panel.querySelector('.pax-row');
+    const ages = document.getElementById(agesId);
+    if (!row || !ages || row.parentNode !== ages.parentNode) return;
+    const details = document.createElement('details');
+    details.className = 'home-travelers';
+    details.open = !mobile.matches;
+    const summary = document.createElement('summary');
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.classList.add('home-travelers-icon');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 8a3 3 0 0 1 0 6M18 15a4 4 0 0 1 3 4v1');
+    icon.appendChild(path);
+    const text = document.createElement('span');
+    text.className = 'home-travelers-summary';
+    summary.append(icon, text);
+    row.parentNode.insertBefore(details, row);
+    details.append(summary, row, ages);
+    function update() {
+      const parts = [];
+      row.querySelectorAll('.field').forEach(field => {
+        const label = field.querySelector('label');
+        const count = field.querySelector('.counter span');
+        if (!label || !count) return;
+        const labelText = label.textContent.trim();
+        const value = Number(count.textContent.trim()) || 0;
+        if (value || !parts.length) parts.push(value + ' ' + labelText);
+        field.querySelectorAll('.counter button').forEach(button => {
+          button.setAttribute('aria-label', (Number(button.dataset.step) > 0 ? '+ ' : '− ') + labelText);
+        });
+      });
+      text.textContent = parts.join(' · ');
+    }
+    const observer = new MutationObserver(update);
+    observer.observe(row, {subtree:true, childList:true, characterData:true});
+    update();
+    return details;
+  }
+  const travelerPanels = [
+    setupTravelers('panel-flights', 'ageFields'),
+    setupTravelers('panel-holidays', 'holAgeFields')
+  ].filter(Boolean);
+  let syncCalendar = function () {};
+  function updateLayout() {
+    travelerPanels.forEach(details => { details.open = !mobile.matches; });
+    syncCalendar();
+    updateKeyboard();
+  }
+  if (mobile.addEventListener) mobile.addEventListener('change', updateLayout);
+  else if (mobile.addListener) mobile.addListener(updateLayout);
+
+  // Preserve the existing tab click handlers and provide standard tab semantics.
+  const tabList = document.getElementById('tab-header');
+  if (tabList) {
+    const tabs = Array.from(tabList.querySelectorAll('.tab-btn'));
+    function syncTabs() {
+      tabs.forEach(tab => {
+        const selected = tab.classList.contains('active');
+        const panel = document.getElementById('panel-' + tab.dataset.tab);
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        if (panel) {
+          tab.setAttribute('aria-controls', panel.id);
+          panel.setAttribute('role', 'tabpanel');
+        }
+      });
+    }
+    tabList.addEventListener('click', event => {
+      if (event.target.closest('.tab-btn')) syncTabs();
+    });
+    tabList.addEventListener('keydown', event => {
+      const index = tabs.indexOf(event.target);
+      if (index < 0 || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+        (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[next].click();
+      tabs[next].focus({preventScroll:true});
+      tabs[next].scrollIntoView({block:'nearest', inline:'nearest'});
+    });
+    syncTabs();
+  }
+
+  // The existing date picker remains the owner of date state and validation.
+  const overlay = document.getElementById('datePickerOverlay');
+  const modal = overlay && overlay.querySelector('.date-modal');
+  const close = document.getElementById('closeDatePicker');
+  if (overlay && modal && close) {
+    let returnFocus = null;
+    let wasOpen = false;
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-labelledby', 'dateRangeHeading');
+    modal.tabIndex = -1;
+    if (!close.hasAttribute('aria-label')) close.setAttribute('aria-label', 'Close date picker');
+    function calendarState() {
+      const open = overlay.classList.contains('active');
+      const mobileOpen = open && mobile.matches;
+      overlay.setAttribute('aria-hidden', String(!open));
+      if (mobileOpen) modal.setAttribute('aria-modal', 'true');
+      else modal.removeAttribute('aria-modal');
+      document.body.classList.toggle('skandi-home-calendar-open', mobileOpen);
+      if (mobileOpen && !wasOpen) {
+        returnFocus = root.querySelector('[data-date-range][aria-expanded="true"]');
+        requestAnimationFrame(() => { if (overlay.classList.contains('active')) modal.focus({preventScroll:true}); });
+      } else if (!open && wasOpen && returnFocus) {
+        returnFocus.focus({preventScroll:true});
+        returnFocus = null;
+      }
+      wasOpen = mobileOpen;
+    }
+    new MutationObserver(calendarState).observe(overlay, {attributes:true, attributeFilter:['class']});
+    overlay.addEventListener('click', event => { if (mobile.matches && event.target === overlay) close.click(); });
+    overlay.addEventListener('keydown', event => {
+      if (!mobile.matches || event.key !== 'Tab' || !overlay.classList.contains('active')) return;
+      const controls = Array.from(modal.querySelectorAll('button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex="0"]'))
+        .filter(element => element.offsetParent !== null);
+      if (!controls.length) { event.preventDefault(); modal.focus({preventScroll:true}); return; }
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === modal)) {
+        event.preventDefault(); last.focus({preventScroll:true});
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus({preventScroll:true});
+      }
+    });
+    syncCalendar = calendarState;
+    calendarState();
+  }
+
+  // Only a top-level page can observe its own keyboard viewport reliably.
+  // Cross-origin Wix iframes continue to use the host's dimensions.
+  function updateKeyboard() {
+    const viewport = window.visualViewport;
+    const active = document.activeElement;
+    const editable = active && app.contains(active) &&
+      (active.matches('input:not([type="hidden"]), textarea, [contenteditable="true"]'));
+    const canMeasure = window.top === window && mobile.matches && viewport && Math.abs(viewport.scale - 1) < .02;
+    const keyboard = Boolean(canMeasure && editable && window.innerHeight - viewport.height > 120);
+    document.body.classList.toggle('skandi-home-keyboard', keyboard);
+    if (keyboard) {
+      document.documentElement.style.setProperty('--skandi-visible-height', Math.round(viewport.height) + 'px');
+      document.documentElement.style.setProperty('--skandi-visible-top', Math.round(viewport.offsetTop) + 'px');
+      requestAnimationFrame(() => {
+        if (document.activeElement !== active) return;
+        const field = active.getBoundingClientRect();
+        const bounds = app.getBoundingClientRect();
+        if (field.bottom > bounds.bottom - 12) app.scrollBy({top:field.bottom - bounds.bottom + 24, behavior:'auto'});
+        else if (field.top < bounds.top + 12) app.scrollBy({top:field.top - bounds.top - 24, behavior:'auto'});
+      });
+    }
+  }
+  document.addEventListener('focusin', updateKeyboard);
+  document.addEventListener('focusout', () => requestAnimationFrame(updateKeyboard));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateKeyboard, {passive:true});
+    window.visualViewport.addEventListener('scroll', updateKeyboard, {passive:true});
+  }
+  window.addEventListener('resize', updateKeyboard, {passive:true});
+  updateKeyboard();
+})();

@@ -856,12 +856,78 @@ function bindDetailInteractions(x,nav){
   root.querySelectorAll("[data-detail-path]").forEach(btn=>btn.addEventListener("click",()=>{if(safeInternal(btn.dataset.detailPath))post("TRAVEL_INFO_NAVIGATE",{path:btn.dataset.detailPath})}))
 }
 
-function openOverlay(mode,title,subtitle,bodyHtml,focusSelector=""){STATE.overlayMode=mode;STATE.overlayReturnFocus=document.activeElement;$("tiSheetKicker").textContent="Travel Info";$("tiSheetTitle").textContent=title;$("tiSheetSubtitle").textContent=subtitle||"";$("tiSheetBody").innerHTML=bodyHtml;hydrateStaticIcons($("tiSheetBody"));$("tiOverlay").dataset.open="true";$("tiOverlay").setAttribute("aria-hidden","false");document.documentElement.classList.add("ti-lock");bindOverlay(mode);requestAnimationFrame(()=>{const target=focusSelector?$("tiSheetBody").querySelector(focusSelector):$("tiSheetBody").querySelector("input,select,textarea,button");target?.focus()})}
+function openOverlay(mode,title,subtitle,bodyHtml,focusSelector=""){STATE.overlayMode=mode;STATE.overlayReturnFocus=document.activeElement;$("tiSheetKicker").textContent="Travel Info";$("tiSheetTitle").textContent=title;$("tiSheetSubtitle").textContent=subtitle||"";$("tiSheetBody").innerHTML=bodyHtml;hydrateStaticIcons($("tiSheetBody"));$("tiOverlay").dataset.mode=mode;$("tiOverlay").dataset.open="true";$("tiOverlay").setAttribute("aria-hidden","false");document.documentElement.classList.add("ti-lock");bindOverlay(mode);requestAnimationFrame(()=>{const target=focusSelector?$("tiSheetBody").querySelector(focusSelector):$("tiSheetBody").querySelector("input,select,textarea,button");target?.focus()})}
 function closeOverlay(){$("tiOverlay").dataset.open="false";$("tiOverlay").setAttribute("aria-hidden","true");document.documentElement.classList.remove("ti-lock");const target=STATE.overlayReturnFocus;if(target&&target.isConnected)target.focus({preventScroll:true});STATE.overlayMode=""}
 function requirementsPanelHtml(){return`<div class="ti-form-grid"><div class="ti-field"><label for="tiPassportCountry">Passport nationality</label><input id="tiPassportCountry" autocomplete="country-name" placeholder="Country"></div><div class="ti-field"><label for="tiFromCountry">From</label><input id="tiFromCountry" autocomplete="off" placeholder="Country"></div><div class="ti-field"><label for="tiTransitCountry">Transit</label><input id="tiTransitCountry" autocomplete="off" placeholder="Optional"></div><div class="ti-field"><label for="tiToCountry">To</label><input id="tiToCountry" autocomplete="off" placeholder="Country"></div></div><div class="ti-sheet-actions"><button id="tiRequirementSubmit" class="ti-btn ti-btn-primary" type="button">Check requirements ${icon("arrow")}</button></div><div id="tiRequirementResult" class="ti-message-box" aria-live="polite">Enter your passport nationality and destination to check the current travel-requirements information. Always verify final entry rules with official authorities.</div><div class="ti-sheet-actions"><button id="tiPassportGuide" class="ti-btn ti-btn-light" type="button">Passport & visa guide ${icon("arrow")}</button></div>`}
 function supportPanelHtml(){return`<div class="ti-form-grid"><div class="ti-field"><label for="tiSupportName">Name</label><input id="tiSupportName" autocomplete="name"></div><div class="ti-field"><label for="tiSupportEmail">Email</label><input id="tiSupportEmail" type="email" autocomplete="email"></div><div class="ti-field"><label for="tiSupportRef">Booking reference</label><input id="tiSupportRef" autocomplete="off"></div><div class="ti-field"><label for="tiSupportCategory">Category</label><select id="tiSupportCategory"><option>General</option><option>Before travel</option><option>Baggage</option><option>Airport</option><option>Airline</option><option>Hotel</option><option>Transfer</option><option>Tour / Activity</option><option>Ticket / Voucher</option><option>Booking</option></select></div><div class="ti-field ti-full"><label for="tiSupportMessage">Message</label><textarea id="tiSupportMessage"></textarea></div></div><div class="ti-sheet-actions"><button id="tiSupportSend" class="ti-btn ti-btn-primary" type="button">Send request ${icon("message")}</button></div><div id="tiSupportResult" class="ti-message-box" hidden aria-live="polite"></div>`}
+/* Airline baggage finder. Reads only the public airline payload already supplied to Travel Info. */
+function tiBagEntries(airline) {
+  const bag=obj(airline?.baggage);
+  return bag.mode==="structured" ? arr(bag.cabins).flatMap(cabin =>
+    arr(cabin.fares).map(fare => ({
+      cabin:text(cabin.cabinType||cabin.travelClass), name:text(fare.name),
+      description:text(fare.description), underSeatBag:text(fare.underSeatBag),
+      overheadCarryOn:text(fare.overheadCarryOn), checkedBag:text(fare.checkedBag)
+    }))
+  ) : [];
+}
+function tiBagSearchRows(airlines, query, cabin, type) {
+  const term=lower(query), classKey=lower(cabin);
+  return arr(airlines).map(airline=>{
+    const all=tiBagEntries(airline), bag=obj(airline?.baggage);
+    const narrative=bag.mode==="narrative" ? text(bag.text||airline.baggageAllowance) : text(airline.baggageAllowance);
+    const identity=lower([itemTitle(airline),itemCode(airline),airline.icaoCode,airline.shortName].filter(Boolean).join(" "));
+    const matched=all.filter(fare=>{
+      if(classKey && lower(fare.cabin)!==classKey)return false;
+      if(type && !fare[type])return false;
+      const content=lower([fare.cabin,fare.name,fare.description,fare.underSeatBag,fare.overheadCarryOn,fare.checkedBag].join(" "));
+      return !term||identity.includes(term)||content.includes(term)
+    });
+    const narrativeMatches=Boolean(narrative && (!term||identity.includes(term)||lower(narrative).includes(term)));
+    const unknownMatches=!all.length&&!narrative&&!classKey&&!type&&(!term||identity.includes(term));
+    return {airline, matched, narrative:narrativeMatches?narrative:"", unknown:unknownMatches};
+  }).filter(row=>row.matched.length || ((!classKey&&!type)&&row.narrative) || row.unknown)
+    .sort((a,b)=>itemTitle(a.airline).localeCompare(itemTitle(b.airline)));
+}
+function tiBagFareHtml(fare,type) {
+  const fields=[["Under-seat bag",fare.underSeatBag,"underSeatBag"],["Cabin bag",fare.overheadCarryOn,"overheadCarryOn"],["Checked bag",fare.checkedBag,"checkedBag"]];
+  const facts=fields.filter(([,value,key])=>!type||key===type).map(([label,value])=>
+    `<div class="ti-bag-result-fact"><dt>${esc(label)}</dt><dd>${esc(value||"Not published")}</dd></div>`).join("");
+  return `<article class="ti-bag-fare"><div class="ti-bag-fare-head"><strong>${esc(fare.name||"Fare information")}</strong>${fare.cabin?`<span>${esc(fare.cabin)}</span>`:""}</div>${fare.description?`<p>${esc(fare.description)}</p>`:""}<dl>${facts}</dl></article>`;
+}
+function tiRenderBaggageFinder() {
+  const search=$("tiBagSearch"),cabin=$("tiBagCabin"),type=$("tiBagType"),list=$("tiBagResults"),count=$("tiBagCount");
+  if(!search||!cabin||!type||!list||!count)return;
+  const rows=tiBagSearchRows(DATA.airlines,search.value,cabin.value,type.value);
+  const total=arr(DATA.airlines).length;
+  count.textContent=STATE.dataState==="loading"&&!total?"Loading airline information…":STATE.dataState==="error"&&!total?"Airline information could not be loaded. Try again from Travel Info.":`${rows.length} of ${total} published airline records`;
+  if(!rows.length){list.innerHTML=`<div class="ti-bag-empty">${STATE.dataState==="loading"&&!total?"Airline information is loading.":STATE.dataState==="error"&&!total?"Airline information is unavailable.":"No airlines match these filters."}</div>`;return}
+  list.innerHTML=rows.map(({airline,matched,narrative})=>{
+    const name=itemTitle(airline),code=itemCode(airline),website=safeExternal(airline.website),logo=itemLogoUrl(airline);
+    const guidance=matched.length?matched.map(fare=>tiBagFareHtml(fare,type.value)).join(""):narrative?`<p class="ti-bag-narrative">${esc(narrative)}</p>`:'<p class="ti-bag-unavailable">Baggage information has not been published for this airline.</p>';
+    return `<details class="ti-bag-airline"><summary><span class="ti-bag-logo">${logo?`<img src="${esc(logo)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:esc((code||name).slice(0,3).toUpperCase())}</span><span class="ti-bag-name"><strong>${esc(name)}</strong><small>${esc(code)}</small></span><span class="ti-bag-summary-label">${matched.length?"Fare details":narrative?"General guidance":"Not published"}</span></summary><div class="ti-bag-airline-body">${guidance}${website?`<a class="ti-bag-official" href="${esc(website)}" target="_blank" rel="noopener noreferrer">Visit airline website ↗</a>`:""}</div></details>`
+  }).join("");
+}
+function tiUpdateBaggageCabins() {
+  const select=$("tiBagCabin");if(!select)return;const previous=select.value;
+  const cabins=uniq(arr(DATA.airlines).flatMap(tiBagEntries).map(entry=>entry.cabin)).sort((a,b)=>a.localeCompare(b));
+  select.innerHTML='<option value="">All cabin classes</option>'+cabins.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  if(cabins.includes(previous))select.value=previous;
+}
+function tiOpenBaggageFinder() {
+  openOverlay("baggage","Airline baggage information","Browse published guidance by airline, cabin and bag type.",`
+    <div class="ti-bag-intro"><strong>Find the allowance for your trip</strong><p>Allowances can vary by fare, route and operating airline. Check your booking and the airline's current rules before travel.</p></div>
+    <div class="ti-bag-controls"><label>Airline, code or fare<input type="search" id="tiBagSearch" autocomplete="off" placeholder="Search airlines or baggage details"></label><label>Cabin class<select id="tiBagCabin"><option value="">All cabin classes</option></select></label><label>Bag type<select id="tiBagType"><option value="">All bag types</option><option value="underSeatBag">Under-seat bag</option><option value="overheadCarryOn">Cabin bag</option><option value="checkedBag">Checked bag</option></select></label></div>
+    <div class="ti-bag-toolbar"><span id="tiBagCount" role="status" aria-live="polite"></span><button type="button" id="tiBagClear">Clear filters</button></div><div id="tiBagResults" class="ti-bag-results"></div>
+    <p class="ti-bag-footnote">Only published SKANDI airline records are shown. General guidance cannot be filtered by cabin or bag type.</p>`,"#tiBagSearch");
+  tiUpdateBaggageCabins();
+  ["tiBagSearch","tiBagCabin","tiBagType"].forEach(id=>$(id)?.addEventListener(id==="tiBagSearch"?"input":"change",tiRenderBaggageFinder));
+  $("tiBagClear")?.addEventListener("click",()=>{$("tiBagSearch").value="";$("tiBagCabin").value="";$("tiBagType").value="";tiRenderBaggageFinder();$("tiBagSearch").focus()});
+  tiRenderBaggageFinder();
+}
+
 function openAction(action){
-  if(action==="baggage")post("TRAVEL_INFO_OPEN_BAGGAGE",{});
+  if(action==="baggage")tiOpenBaggageFinder();
   else if(action==="assistance")post("TRAVEL_INFO_NAVIGATE",{path:"/travel-info/special-assistance"});
   else if(action==="requirements")openOverlay("requirements","Travel requirements","Check passport and entry guidance before departure.",requirementsPanelHtml(),"#tiPassportCountry");
   else if(action==="support")openOverlay("support","Contact Travel Support","Send an itinerary or travel-information question to SKANDI.",supportPanelHtml(),"#tiSupportName");
@@ -919,7 +985,7 @@ function findUpdatedDetail(current){
   if(!current)return null;const lib=current._library;if(lib==="faq")return arr(DATA.helpCenter?.topics).map(x=>normalizeContentItem(x,"faq")).find(x=>text(x.id||x.topicId)===text(current.id||current.topicId))||null;if(lib==="articles")return arr(DATA.articles).map(x=>normalizeContentItem(x,"articles")).find(x=>text(x.id||x.slug)===text(current.id||current.slug))||null;return arr(DATA[lib]).map(x=>normalizeContentItem(x,lib)).find(x=>text(x.id||x.code||x.iataCode)===text(current.id||current.code||current.iataCode))||null
 }
 function loadData(payload){
-  clearBootstrapWatchdog();DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();
+  clearBootstrapWatchdog();DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();if(STATE.overlayMode==="baggage"){tiUpdateBaggageCabins();tiRenderBaggageFinder()}
   if(!STATE.initialSectionApplied && payload?.initialSection === "transfers") {STATE.initialSectionApplied=true;setLibrary("transfers",true)}
   if(STATE.activeDetail){const updated=findUpdatedDetail(STATE.activeDetail);if(updated){STATE.activeDetail=updated;renderDetail(updated)}else closeDetail()}
 }
@@ -956,7 +1022,7 @@ window.addEventListener("message",event=>{
       const locations=arr(p.locations);locations.forEach(w=>{const key=text(w.id||w.locationId||w.title);if(key){STATE.weatherPending.delete(key);STATE.weatherCache.set(key,w)}});
       if(STATE.activeDetail){const key=weatherKey(STATE.activeDetail);if(!locations.length)STATE.weatherPending.delete(key);renderWeatherForDetail(STATE.weatherCache.get(key)||locations[0]||null)}break
     }
-    case "TRAVEL_INFO_ERROR":clearBootstrapWatchdog();STATE.dataState="error";STATE.requirementsPending=false;STATE.supportPending=false;STATE.aircraftPending.clear();if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;if($("tiSupportSend"))$("tiSupportSend").disabled=false;setStatus(p.message||"Travel information is temporarily unavailable.",true);{const target=STATE.overlayMode==="support"?$("tiSupportResult"):STATE.overlayMode==="requirements"?$("tiRequirementResult"):null;if(target){target.hidden=false;target.dataset.tone="error";target.textContent=p.message||"This service is temporarily unavailable. Please try again."}}break;
+    case "TRAVEL_INFO_ERROR":clearBootstrapWatchdog();STATE.dataState="error";if(STATE.overlayMode==="baggage")tiRenderBaggageFinder();STATE.requirementsPending=false;STATE.supportPending=false;STATE.aircraftPending.clear();if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;if($("tiSupportSend"))$("tiSupportSend").disabled=false;setStatus(p.message||"Travel information is temporarily unavailable.",true);{const target=STATE.overlayMode==="support"?$("tiSupportResult"):STATE.overlayMode==="requirements"?$("tiRequirementResult"):null;if(target){target.hidden=false;target.dataset.tone="error";target.textContent=p.message||"This service is temporarily unavailable. Please try again."}}break;
   }
 });
 
@@ -977,7 +1043,7 @@ document.querySelectorAll("[data-close-overlay]").forEach(b=>b.addEventListener(
 $("tiBack").addEventListener("click",event=>{event.preventDefault();event.stopPropagation();closeDetail()});
 $("tiLoadMore").addEventListener("click",()=>{STATE.visibleCount+=PAGE_SIZE;renderDirectory()});
 document.addEventListener("click",e=>{const action=e.target.closest("[data-action]");if(action)openAction(action.dataset.action)});
-$("tiAlexandraLauncher").addEventListener("click",()=>openAction("alexandra"));
+
 
 hydrateStaticIcons();STATE.dataState="loading";renderAll();setStatus("Loading SKANDI Travel Info…");
 armBootstrapWatchdog(INITIAL_BRIDGE_WATCHDOG_MS);

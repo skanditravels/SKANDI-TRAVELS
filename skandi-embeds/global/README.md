@@ -23,3 +23,7 @@
 - [HTML_REF/GLOBAL/Wix Automations Integration.md](references/global-wix-automations-integration-md/README.md)
 
 - 2026-11-05 — Mobile navigation fallback routes use `/tours-activities` and the Transfer Information section in Travel Info; master-page route configuration remains authoritative. Wix publication and live navigation remain unverified.
+
+## INFO / LOG — 2026-11-11
+
+2026-11-11 — The shared mobile navigation applies the supplied Home-specific sizing only when Home is present; other pages retain their existing navigation. Keyboard hiding is limited to the Home keyboard state. Source-tested; live mobile verification remains required.

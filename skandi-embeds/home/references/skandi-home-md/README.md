@@ -161,3 +161,6 @@ post('HOME_DUFFEL_READY');
 
 ```
 
+## INFO / LOG — 2026-11-11
+
+2026-11-11 — Supplied mobile presentation and traveler/calendar interaction improvements are integrated in the active Home source. The historical payload below is retained for provenance. Existing Home search and page bridge remain authoritative. Source-tested; live Wix verification remains required.
