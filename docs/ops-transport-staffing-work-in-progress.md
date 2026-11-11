@@ -36,6 +36,12 @@ writes, service endpoints, UI connections, timer or messaging dispatcher. Its
 results are not a live alert or authorization to send an email. Existing OPS,
 EOS and MyRoster screens still use the one-person data model.
 
+`opsTransportNotice.js` prepares the requested customer wording only when
+the decision helper sees an eligible, current own-bus no-host approval. It
+requires an explicit service time zone and the site's support route, and
+escapes service/customer text. It does not authenticate the approval, verify
+booking recipients, dispatch, retry, or prove email delivery.
+
 A many-person service model and transactional assignment updates are needed;
 all assigned staff must see the same service in their own roster, while staff
 who are not assigned must not receive it. Third-party services need a supplier

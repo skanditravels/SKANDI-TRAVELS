@@ -24,7 +24,10 @@ export function evaluateTransportReadiness(service, now = Date.now()) {
   const drivers = staff.filter(row => code(row.role)==='DRIVER');
   const hosts = staff.filter(row => code(row.role)==='HOST');
   const approval = s.noHostApproval && typeof s.noHostApproval === 'object' ? s.noHostApproval : {};
-  const approved = type==='OWN' && hosts.length===0 && str(approval.approvedBy) && str(approval.approvedAt) && str(approval.serviceRevision) && str(approval.serviceRevision)===str(s.revision);
+  const approvedAt = Date.parse(approval.approvedAt || '');
+  const approved = type==='OWN' && hosts.length===0 && str(approval.approvedBy) &&
+    Number.isFinite(approvedAt) && approvedAt<=instant && str(approval.serviceRevision) &&
+    str(approval.serviceRevision)===str(s.revision);
   const provider = s.provider && typeof s.provider === 'object' ? s.provider : {};
   const issues = [];
   const msUntilStart = start-instant;

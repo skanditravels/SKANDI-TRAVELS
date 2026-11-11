@@ -22,6 +22,8 @@ test('only an explicit approval for the current revision makes an own-bus no-hos
  assert.equal(evaluateTransportReadiness(own,departure-3600000).noticeEligible,false);
  assert.equal(evaluateTransportReadiness({...own,noHostApproval:approval},departure-3600000).noticeEligible,true);
  assert.equal(evaluateTransportReadiness({...own,revision:'8',noHostApproval:approval},departure-3600000).noticeEligible,false);
+ assert.equal(evaluateTransportReadiness({...own,noHostApproval:{...approval,approvedAt:'invalid'}},departure-3600000).noticeEligible,false);
+ assert.equal(evaluateTransportReadiness({...own,noHostApproval:{...approval,approvedAt:'2030-01-01T11:30:00Z'}},departure-3600000).noticeEligible,false);
  assert.equal(evaluateTransportReadiness({...own,staff:[staff('HOST',1)],noHostApproval:approval},departure-3600000).noticeEligible,false);
  assert.equal(evaluateTransportReadiness({...tp,noHostApproval:approval},departure-3600000).noticeEligible,false);
 });
