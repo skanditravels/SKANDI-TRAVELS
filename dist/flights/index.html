@@ -1119,6 +1119,17 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary::after{content:"+";margin-left:auto;font-size:20px}
 #skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide[open] summary::after{content:"−"}
 #skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
+
+
+/* Home-specific mobile navigation sizing from the approved Home design. */
+@media (max-width: 760px) {
+  body:has(#skandi-home-content) #skandi-mobile-nav-container { height:auto; min-height:0; padding-bottom:env(safe-area-inset-bottom, 0px); background:#022e64; }
+  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn { height:68px; min-height:68px; padding:3px 5px 2px; border-top:1px solid rgba(255,255,255,.14); }
+  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn-btn { min-height:56px; gap:3px; }
+  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn-btn[aria-current="page"] svg { stroke-width:2.3; }
+  body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
+  @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
+}
 </style>
 <style data-skandi-part="flights">#skandi-app-root{--sk-blue:#022e64;--sk-blue-soft:#285ca8;--sk-cyan:#5fc7cf;--sk-border:#dbe3ef;--sk-bg:#f7faff;--sk-muted:#667085}
 #skandi-app-root,#skandi-app-root{width:100%;min-height:100%;margin:0;color:#14283b;background:#fff;font-family:Montserrat,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden}#skandi-app-root *{box-sizing:border-box}#skandi-app-root button,#skandi-app-root input,#skandi-app-root select{font:inherit}#skandi-app-root button{cursor:pointer}#skandi-app-root button:focus-visible,#skandi-app-root input:focus-visible,#skandi-app-root select:focus-visible{outline:3px solid #5fc7cf;outline-offset:2px}#skandi-app-root [hidden]{display:none!important}
