@@ -2143,8 +2143,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/success-factors/success-factors.receiver.html",
       "receiverFile": "riaintra-embeds/success-factors/success-factors.receiver.html",
-      "sha256": "e5a45c04f1b18c79bf58ff54f86356b25ea6e9546a80c1331c1dd02ea685ad46",
-      "bytes": 518690
+      "sha256": "1b9ffae6c562b04ee650fe2492a30c6e86e54416b833c98c68e3b658753e5b06",
+      "bytes": 520807
     },
     {
       "key": "legalInternal",
@@ -2364,8 +2364,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/ops-control/skandi-ops-control.receiver.html",
       "receiverFile": "altea-embeds/ops-control/skandi-ops-control.receiver.html",
-      "sha256": "46ebf28c6622baa0fbbb83b6fba8c25167a3e8d1fac87c6458471f3b1247bd76",
-      "bytes": 195701
+      "sha256": "7086ba6ff7df65387f054e770ff5b43d8dfcfd3d4759af8e5cd77a3777b7bb1c",
+      "bytes": 222275
     },
     {
       "key": "eos",
@@ -2538,8 +2538,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/eos/skandi-eos.receiver.html",
       "receiverFile": "altea-embeds/eos/skandi-eos.receiver.html",
-      "sha256": "1a7a430ca1ce3ce679183e29fa37132c3aa2a618488cab8e3d5786f4f00e9804",
-      "bytes": 121570
+      "sha256": "6497e90acf9fc8fed0924d4437435689577af52678865ff8c5b0194a11a88416",
+      "bytes": 111919
     },
     {
       "key": "inventoryControl",
@@ -3784,8 +3784,8 @@
       "blockers": [],
       "receiver": "altea-embeds/my-roster/skandi-my-roster.receiver.html",
       "receiverFile": "altea-embeds/my-roster/skandi-my-roster.receiver.html",
-      "sha256": "9416e3ac40c1c3a7211eb3139782a772988364305ae4929eda622688d663f309",
-      "bytes": 157837
+      "sha256": "c07c7b82a94fe73c9954dea20a841eed995335f7dd3f8e51a300446c269b69bf",
+      "bytes": 159399
     },
     {
       "key": "groupTalk",

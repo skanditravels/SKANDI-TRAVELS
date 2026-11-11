@@ -903,6 +903,18 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   #skandi-app-root .brand-logo.master-brand-logo{width:auto;max-width:108px;height:28px;object-fit:contain;font-size:0;font-style:normal;letter-spacing:0;filter:none}
 #skandi-app-root .myroster-queue{margin-top:14px}
 #skandi-app-root .myroster-queue-note{margin:-4px 0 12px;color:var(--j-text-muted);font-size:13px;line-height:1.45}
+
+/* Transport uses the existing OPS controls and remains scrollable on narrow screens. */
+#skandi-app-root .transport-workspace { min-height:0; }
+#skandi-app-root .transport-workspace h2 { margin:20px 0 8px; font-size:14px; color:var(--j-text-main); }
+#skandi-app-root .transport-note { color:var(--j-text-muted); font-size:13px; line-height:1.5; margin:8px 16px; }
+#skandi-app-root .transport-table { overflow-x:auto; }
+#skandi-app-root .transport-table .j-table { min-width:760px; }
+#skandi-app-root .transport-modal { width:min(620px, calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow-y:auto; }
+#skandi-app-root .transport-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#skandi-app-root .transport-actions { flex-wrap:wrap; }
+#skandi-app-root .transport-error { flex-basis:100%; margin:0; color:#ef4444; font-size:13px; }
+@media(max-width:560px) { #skandi-app-root .transport-fields { grid-template-columns:1fr; } }
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -1234,9 +1246,9 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
             <div class="filter-section">
               <div class="filter-title" data-skandi-handler-28="">Compliance Status <span>▼</span></div>
               <div class="filter-content">
-                <label class="checkbox-row"><input type="checkbox" value="Legal" class="filter-comp" checked="" data-skandi-handler-29=""> <span>Legal</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="Legal" class="filter-comp" checked="" data-skandi-handler-29=""> <span>Not assessed / within reference</span></label>
                 <label class="checkbox-row"><input type="checkbox" value="Warning" class="filter-comp" checked="" data-skandi-handler-30=""> <span>Warning</span></label>
-                <label class="checkbox-row"><input type="checkbox" value="Violation" class="filter-comp" checked="" data-skandi-handler-31=""> <span>Violation</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="Violation" class="filter-comp" checked="" data-skandi-handler-31=""> <span>Above reference</span></label>
               </div>
             </div>
 
@@ -1265,7 +1277,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
           <button class="btn primary" data-skandi-handler-40="">+ Request Vacation Block</button>
         </div>
       </div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Entitlements automatically calculated based on employee base jurisdiction.</div></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Review leave requests and recorded balances. Verify entitlements using the applicable employment rules.</div></div>
       <div class="data-table-container">
         <h3 style="color: var(--j-text-main);margin-bottom: 12px;font-size: 13px">Submitted Vacation Requests &amp; Awards</h3>
         <table class="j-table">
@@ -1285,7 +1297,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
     <main class="view-container" id="view-ftl">
       <div class="view-toolbar"><h1 class="view-title">Labor Laws &amp; Compliance Monitor</h1></div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted)" id="ftlSubtext">Dynamic limits continuously enforced based on each employee's base region.</div></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted)" id="ftlSubtext">Validated limits are not configured. Review applicable rules before operational decisions; this screen does not establish legal compliance.</div></div>
       <div class="data-table-container">
         <table class="j-table">
           <thead><tr><th>Staff Name</th><th>Base / Region</th><th>Role</th><th>7-Day Work Limit</th><th>28-Day Work Limit</th><th>Annual Work Limit</th><th>Active Jurisdiction Rule</th><th>Status</th></tr></thead>
@@ -1299,7 +1311,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
       <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Pending crew-to-crew exchange requests requiring OCC approval.</div></div>
       <div class="data-table-container">
         <table class="j-table">
-          <thead><tr><th>Request ID</th><th>Staff A</th><th>Staff B</th><th>Exchange Details</th><th>Jurisdiction Check</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Request ID</th><th>Staff A</th><th>Staff B</th><th>Exchange Details</th><th>Rule context</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="tradeTableBody"></tbody>
         </table>
       </div>
@@ -1307,12 +1319,13 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
     <main class="view-container" id="view-logistics">
       <div class="view-toolbar"><h1 class="view-title">Accommodations &amp; Logistics</h1></div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Manage layover hotels and ground transportation suppliers.</div></div>
-      <div class="data-table-container">
-        <table class="j-table">
-          <thead><tr><th>Ref ID</th><th>Staff Name</th><th>Location</th><th>Supplier</th><th>Service Dates</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="logisticsTableBody"></tbody>
-        </table>
+      <div class="sub-toolbar"><div style="color:var(--j-text-muted)">Manage transport services and vehicles. Suppliers remain in Inventory Control.</div><div class="toolbar-actions"><button class="btn" id="addTransportVehicle" data-skandi-handler-41="">Add vehicle</button><button class="btn primary" id="addTransportService" data-skandi-handler-42="">Add bus service</button></div></div>
+      <div class="data-table-container transport-workspace">
+        <p id="transportStatus" role="status"></p>
+        <h2>Bus services</h2><p class="transport-note">Published services appear in the assigned employee’s roster. Bus-to-bus conflicts are checked; review other duty types in the roster.</p>
+        <div class="transport-table"><table class="j-table"><thead><tr><th>Service</th><th>Vehicle</th><th>Staff</th><th>Start / end (device time)</th><th>Passengers / seats</th><th>Status</th><th></th></tr></thead><tbody id="transportServiceBody"></tbody></table></div>
+        <h2>Vehicles</h2><div class="transport-table"><table class="j-table"><thead><tr><th>Vehicle</th><th>Registration</th><th>Base</th><th>Supplier</th><th>Seats</th><th>Inspection / insurance</th><th>Status</th><th></th></tr></thead><tbody id="transportVehicleBody"></tbody></table></div>
+        <h2>Other logistics</h2><div class="transport-table"><table class="j-table"><thead><tr><th>Ref ID</th><th>Staff Name</th><th>Location</th><th>Supplier</th><th>Service Dates</th><th>Status</th><th>Actions</th></tr></thead><tbody id="logisticsTableBody"></tbody></table></div>
       </div>
     </main>
 
@@ -1332,7 +1345,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
     <main class="view-container" id="view-audit">
       <div class="view-toolbar"><h1 class="view-title">System Reports &amp; Audit Log</h1></div>
-      <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Immutable record of all operational modifications and approvals.</div></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Recent audit events from the connected operations sources.</div></div>
       <div class="data-table-container">
         <table class="j-table">
           <thead><tr><th>Timestamp (ZULU)</th><th>Action</th><th>Details</th><th>Status</th></tr></thead>
@@ -1345,7 +1358,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
       <div class="view-toolbar">
         <h1 class="view-title">System Settings &amp; Profile Configuration</h1>
         <div class="toolbar-actions">
-          <button class="btn primary" data-skandi-handler-41="">Apply Display Settings</button>
+          <button class="btn primary" data-skandi-handler-43="">Apply Display Settings</button>
         </div>
       </div>
       <div class="sub-toolbar"><div style="color: var(--j-text-muted)">Manage global platform defaults and your personal user profile.</div></div>
@@ -1364,7 +1377,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
           <div class="settings-grid">
             <div class="form-group">
               <label>Default Timeline Zoom (Gantt)</label>
-              <select id="settingZoom" data-skandi-handler-42="">
+              <select id="settingZoom" data-skandi-handler-44="">
                 <option value="5">Compact (5px/hr)</option>
                 <option value="7.5" selected="">Standard (7.5px/hr)</option>
                 <option value="15">Detailed (15px/hr)</option>
@@ -1393,17 +1406,65 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <div class="alerts-drawer" id="alertsDrawer">
       <div class="drawer-header">
         <span class="drawer-title">Alert Monitor</span>
-        <button class="close-btn" data-skandi-handler-43="">✕</button>
+        <button class="close-btn" data-skandi-handler-45="">✕</button>
       </div>
       <div class="alert-list" id="alertList"></div>
     </div>
   </div>
 
-  <div class="overlay" id="modalOverlay" data-skandi-handler-44="">
+  <div class="overlay" id="modalOverlay" data-skandi-handler-46="">
+    <form class="modal transport-modal" id="transportVehicleModal" data-skandi-handler-47="">
+      <div class="modal-header"><span id="transportVehicleTitle">Add vehicle</span><button class="icon-btn" type="button" aria-label="Close" data-skandi-handler-48="">✕</button></div>
+      <div class="modal-body transport-fields">
+        <div class="form-group"><label for="tvName">Vehicle name</label><input id="tvName" name="name" required="" maxlength="160"></div>
+        <div class="form-group"><label for="tvRegistration">Registration</label><input id="tvRegistration" name="registration" required="" maxlength="40"></div>
+        <div class="form-group"><label for="tvCountry">Country code</label><input id="tvCountry" name="countryCode" required="" pattern="[A-Za-z]{2}" maxlength="2" placeholder="SE"></div>
+        <div class="form-group"><label for="tvBase">Base code</label><input id="tvBase" name="baseCode" required="" maxlength="80"></div>
+        <div class="form-group"><label for="tvSupplier">Supplier</label><select id="tvSupplier" name="supplierId"></select></div>
+        <div class="form-group"><label for="tvCapacity">Passenger seats</label><input id="tvCapacity" name="capacity" type="number" min="1" max="150" required=""></div>
+        <div class="form-group"><label for="tvClass">Vehicle class</label><select id="tvClass" name="serviceClass"><option value="STANDARD">Standard</option><option value="COMFORT">Comfort</option><option value="PREMIUM">Premium</option><option value="ACCESSIBLE">Accessible</option></select></div>
+        <div class="form-group"><label for="tvStatus">Status</label><select id="tvStatus" name="status"><option value="AVAILABLE">Available</option><option value="MAINTENANCE">Maintenance</option><option value="OUT_OF_SERVICE">Out of service</option><option value="RETIRED">Retired</option></select></div>
+        <div class="form-group"><label for="tvInspection">Inspection due</label><input id="tvInspection" name="inspectionDue" type="date"></div>
+        <div class="form-group"><label for="tvInsurance">Insurance due</label><input id="tvInsurance" name="insuranceDue" type="date"></div>
+      </div><p class="transport-note">Due dates are reminders and do not establish legal compliance.</p><div class="modal-footer transport-actions"><p id="transportVehicleError" class="transport-error" role="alert"></p><button class="btn" type="button" data-skandi-handler-49="">Cancel</button><button class="btn primary" type="submit">Save vehicle</button></div>
+    </form>
+    <form class="modal transport-modal" id="transportServiceModal" data-skandi-handler-50="">
+      <div class="modal-header"><span id="transportServiceTitle">Add bus service</span><button class="icon-btn" type="button" aria-label="Close" data-skandi-handler-51="">✕</button></div>
+      <div class="modal-body transport-fields">
+        <div class="form-group"><label for="tsLabel">Service name</label><input id="tsLabel" name="label" required="" maxlength="160"></div>
+        <div class="form-group"><label for="tsOperator">Operator</label><select id="tsOperator" name="operatorType"><option value="OWN">SKANDI-operated</option><option value="THIRD_PARTY">Third-party</option></select></div>
+        <div class="form-group"><label for="tsVehicle">SKANDI vehicle</label><select id="tsVehicle" name="vehicleId"></select></div>
+        <div class="form-group"><label for="tsSupplier">Third-party supplier</label><select id="tsSupplier" name="supplierId"></select></div>
+        <div class="form-group"><label for="tsDrivers">SKANDI drivers</label><select id="tsDrivers" name="drivers" multiple="" size="5"></select></div>
+        <div class="form-group"><label for="tsHosts">SKANDI Hosts</label><select id="tsHosts" name="hosts" multiple="" size="5"></select></div>
+        <div class="form-group"><label for="tsOther">Other staff</label><select id="tsOther" name="other" multiple="" size="5"></select></div>
+        <div class="form-group"><label for="tsExternalVehicle">Supplier vehicle description</label><input id="tsExternalVehicle" name="externalVehicleName" maxlength="160"></div>
+        <div class="form-group"><label for="tsExternalRegistration">Supplier vehicle registration</label><input id="tsExternalRegistration" name="externalRegistration" maxlength="40"></div>
+        <div class="form-group"><label for="tsSupplierDriver">Supplier driver name</label><input id="tsSupplierDriver" name="supplierDriverName" maxlength="160"></div>
+        <div class="form-group"><label for="tsSupplierContact">Supplier driver contact</label><input id="tsSupplierContact" name="supplierDriverContact" maxlength="180"></div>
+        <div class="form-group"><label for="tsBase">Base code</label><input id="tsBase" name="baseCode" maxlength="80"></div>
+        <div class="form-group"><label for="tsZone">Service time zone (IANA)</label><input id="tsZone" name="timeZone" placeholder="Europe/Stockholm" required=""></div>
+        <div class="form-group"><p id="transportLegacyNote" class="transport-note"></p></div>
+        <div class="form-group"><label for="tsStatus">Status</label><select id="tsStatus" name="status"><option value="DRAFT">Draft</option><option value="SCHEDULED">Scheduled · publish</option><option value="CONFIRMED">Confirmed · publish</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select></div>
+        <div class="form-group"><label for="tsStart">Start · device time zone</label><input id="tsStart" name="startAt" type="datetime-local" required=""></div>
+        <div class="form-group"><label for="tsEnd">End · device time zone</label><input id="tsEnd" name="endAt" type="datetime-local" required=""></div>
+        <div class="form-group"><label for="tsPassengers">Passengers · manual count</label><input id="tsPassengers" name="passengerCount" type="number" min="0" max="10000" required=""></div>
+        <div class="form-group"><label for="tsRoute">Route reference (optional)</label><input id="tsRoute" name="routeId" maxlength="120"></div>
+        <div class="form-group"><label for="tsBooking">Booking reference (optional)</label><input id="tsBooking" name="bookingReference" maxlength="120"></div>
+        <div class="form-group"><label for="tsStops">Stops · one per line, in order</label><textarea id="tsStops" name="stops" rows="3"></textarea></div>
+        <div class="form-group"><label for="tsNotes">Notes for assigned employee</label><textarea id="tsNotes" name="notes" maxlength="500" rows="3"></textarea></div>
+      </div><div class="modal-footer transport-actions"><p id="transportServiceError" class="transport-error" role="alert"></p><button class="btn" type="button" data-skandi-handler-52="">Cancel</button><button class="btn primary" type="submit">Save service</button></div>
+    </form>
+
+    <form class="modal transport-modal" id="transportApprovalModal" data-skandi-handler-53="">
+      <div class="modal-header"><span>Approve service without a SKANDI Host</span><button class="icon-btn" type="button" aria-label="Close" data-skandi-handler-54="">✕</button></div>
+      <div class="modal-body"><p class="transport-note">Confirm that OPS has reviewed and approved operating this SKANDI bus without a Host. A separate customer notice still requires verified bookings and delivery.</p><div class="form-group"><label for="transportApprovalNote">Reason for approval</label><textarea id="transportApprovalNote" name="note" maxlength="500" required=""></textarea></div></div>
+      <div class="modal-footer transport-actions"><p class="transport-error" role="alert"></p><button class="btn" type="button" data-skandi-handler-55="">Cancel</button><button class="btn primary" type="submit">Confirm approval</button></div>
+    </form>
     <div class="modal" id="editModal">
       <div class="modal-header">
         <span>Edit Operation</span>
-        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-45="">✕</button>
+        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-56="">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Identifier</label><input type="text" id="editLabel"></div>
@@ -1431,15 +1492,15 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn" data-skandi-handler-46="">Cancel</button>
-        <button class="btn primary" data-skandi-handler-47="">Apply Changes</button>
+        <button class="btn" data-skandi-handler-57="">Cancel</button>
+        <button class="btn primary" data-skandi-handler-58="">Apply Changes</button>
       </div>
     </div>
 
     <div class="modal" id="standbyModal">
       <div class="modal-header">
         <span>Activate Standby / Call Out</span>
-        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-48="">✕</button>
+        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-59="">✕</button>
       </div>
       <div class="modal-body">
         <div style="font-size: 13px;color: var(--j-text-muted)">Assign an open operation to this reserve staff member under their base labor limits.</div>
@@ -1450,15 +1511,15 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn" data-skandi-handler-49="">Cancel</button>
-        <button class="btn primary" data-skandi-handler-50="">Activate &amp; Assign</button>
+        <button class="btn" data-skandi-handler-60="">Cancel</button>
+        <button class="btn primary" data-skandi-handler-61="">Activate &amp; Assign</button>
       </div>
     </div>
 
     <div class="modal" id="vacationModal">
       <div class="modal-header">
         <span>Request Vacation Block</span>
-        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-51="">✕</button>
+        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-62="">✕</button>
       </div>
       <div class="modal-body">
         <div style="font-size: 13px;color: var(--j-text-muted)">Submit dates for annual leave. Entitlements mapped to employee's base jurisdiction.</div>
@@ -1469,15 +1530,15 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <div class="form-group"><label>End Date</label><input type="date" id="vacEnd"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn" data-skandi-handler-52="">Cancel</button>
-        <button class="btn primary" data-skandi-handler-53="">Submit Request</button>
+        <button class="btn" data-skandi-handler-63="">Cancel</button>
+        <button class="btn primary" data-skandi-handler-64="">Submit Request</button>
       </div>
     </div>
 
     <div class="modal" id="messageModal">
       <div class="modal-header">
         <span>Compose Operational Message</span>
-        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-54="">✕</button>
+        <button class="icon-btn" style="width: 24px;height: 24px;font-size: 14px" data-skandi-handler-65="">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Recipient</label><select id="msgRecipientSelect"></select></div>
@@ -1485,20 +1546,20 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <div class="form-group"><label>Message Content</label><textarea id="msgBody" rows="4" placeholder="Enter message details..."></textarea></div>
       </div>
       <div class="modal-footer">
-        <button class="btn" data-skandi-handler-55="">Cancel</button>
-        <button class="btn primary" data-skandi-handler-56="">Dispatch Message</button>
+        <button class="btn" data-skandi-handler-66="">Cancel</button>
+        <button class="btn primary" data-skandi-handler-67="">Dispatch Message</button>
       </div>
     </div>
 
     <div class="modal" id="optimizerModal">
       <div class="modal-header"><span>Travchant Optimizer Engine</span></div>
       <div class="modal-body">
-        <div style="font-size: 13px;color: var(--j-text-muted);margin-bottom: 10px" id="optJurisdictionNote">Resolving network disruptions using Multi-Jurisdictional legality matrices...</div>
+        <div style="font-size: 13px;color: var(--j-text-muted);margin-bottom: 10px" id="optJurisdictionNote">Reviewing disruption candidates against configured reference values...</div>
         <div class="console-box" id="optConsole"><div class="console-line info">&gt; Initializing optimization core...</div></div>
       </div>
       <div class="modal-footer" style="justify-content: space-between">
         <span id="optProgressText" style="font-weight: 600;color: var(--j-text-main);font-size: 13px">0%</span>
-        <button class="btn primary" id="btnOptClose" style="display: none" data-skandi-handler-57="">Close &amp; Apply</button>
+        <button class="btn primary" id="btnOptClose" style="display: none" data-skandi-handler-68="">Close &amp; Apply</button>
       </div>
     </div>
   </div>
@@ -2345,6 +2406,8 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       myRosterRequests: [],
       trades: [],
       logistics: [],
+      transport: { available: false, vehicles: [], assignments: [], suppliers: [], staff: [] },
+      transportEdit: null,
       messages: [],
       jurisdictions: {}
     };
@@ -2404,7 +2467,8 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
         if (!STATE.pendingActions.has(requestId)) return;
         STATE.pendingActions.delete(requestId);
         setSyncState('Error', 'error');
-        showToast('OPS did not confirm the change. Refresh before retrying.', 'error');
+        if ((action.startsWith('SAVE_TRANSPORT_') || action==='APPROVE_TRANSPORT_NO_HOST')) transportError(action, 'OPS did not confirm the change. Refresh before retrying.');
+        else showToast('OPS did not confirm the change. Refresh before retrying.', 'error');
       }, 20000);
       return requestId;
     }
@@ -2565,6 +2629,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       STATE.myRosterRequests = asArray(payload.myRosterRequests).map(row => normalizeMyRosterRequest(asObject(row)));
       STATE.trades = asArray(payload.tripTrades ?? payload.trades).map(row => normalizeTrade(asObject(row)));
       STATE.logistics = asArray(payload.logistics).map(row => normalizeLogistics(asObject(row)));
+      STATE.transport = asObject(payload.transport);
       STATE.messages = asArray(payload.messages).map(row => normalizeMessage(asObject(row)));
       STATE.auditLog = asArray(payload.auditLog ?? payload.audit).map(row => normalizeAudit(asObject(row)));
       STATE.openTime = asArray(payload.openTime ?? payload.open_time);
@@ -2636,7 +2701,8 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
         STATE.pendingActions.delete(payload.requestId);
         if (payload.ok === false) {
           setSyncState('Error', 'error');
-          showToast(payload.error?.message ?? payload.message ?? 'Operation failed.', 'error');
+          if ((pending?.action?.startsWith('SAVE_TRANSPORT_') || pending?.action==='APPROVE_TRANSPORT_NO_HOST')) transportError(pending.action, payload.error?.message ?? payload.message ?? 'Operation failed.');
+          else showToast(payload.error?.message ?? payload.message ?? 'Operation failed.', 'error');
           return;
         }
         closeModal(false);
@@ -2647,10 +2713,12 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       }
       if (message.type === 'OPS_ERROR') {
         const requestId = message.payload?.requestId;
+        const pending = STATE.pendingActions.get(requestId);
         if (requestId) STATE.pendingActions.delete(requestId);
         STATE.loading = false;
         setSyncState('Error', 'error');
-        showToast(message.payload?.message ?? 'OPS synchronization failed.', 'error');
+        if ((pending?.action?.startsWith('SAVE_TRANSPORT_') || pending?.action==='APPROVE_TRANSPORT_NO_HOST')) transportError(pending.action, message.payload?.message ?? 'Operation failed.');
+        else showToast(message.payload?.message ?? 'OPS synchronization failed.', 'error');
       }
     });
 
@@ -2689,8 +2757,8 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
         const p365 = jRules.maxFlight365 ? (crew.ftl.f365 / jRules.maxFlight365) * 100 : 0;
 
         let compStatus = 'Legal';
-        if (p7 > 100 || p28 > 100 || p365 > 100 || crew.acts.some(a => a.type === 'disrupted')) compStatus = 'Violation';
-        else if (p7 > 90 || p28 > 90 || p365 > 90 || crew.alert === 'warn') compStatus = 'Warning';
+        if (p7 > 100 || p28 > 100 || p365 > 100) compStatus = 'Violation';
+        else if (p7 > 90 || p28 > 90 || p365 > 90 || crew.alert === 'warn' || crew.acts.some(a => a.type === 'disrupted')) compStatus = 'Warning';
 
         const matchComp = STATE.filters.compliance.includes(compStatus);
         return matchSearch && matchRole && matchBase && matchComp;
@@ -2749,7 +2817,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
         ganttRowsContainer.appendChild(gRow);
       });
 
-      const hasAlerts = STATE.crewData.some(c => c.acts.some(a => a.type === 'disrupted') || c.alert === 'danger');
+      const hasAlerts = transportMonitorUnavailable() || asArray(STATE.transport.alerts).length>0 || STATE.crewData.some(c => c.acts.some(a => a.type === 'disrupted') || c.alert === 'danger');
       if(alertBadge) alertBadge.style.display = hasAlerts ? 'block' : 'none';
 
       if (STATE.initialized && filteredData.length === 0 && rosterBody) {
@@ -3094,17 +3162,18 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
         const p28 = Math.min(100, rawP28);
         const p365 = Math.min(100, rawP365);
         
-        let status = '<span class="j-badge green">LEGAL</span>';
-        if (rawP7 > 100 || rawP28 > 100 || rawP365 > 100 || c.acts.some(a => a.type === 'disrupted')) {
-            status = '<span class="j-badge red">VIOLATION</span>';
-        } else if (p7 > 90 || p28 > 90 || p365 > 90 || c.alert === 'warn') {
+        let status = '<span class="j-badge yellow">NOT ASSESSED</span>';
+        if (jRules.maxDuty7 && jRules.maxFlight28 && jRules.maxFlight365) status = '<span class="j-badge green">WITHIN REFERENCE</span>';
+        if (rawP7 > 100 || rawP28 > 100 || rawP365 > 100) {
+            status = '<span class="j-badge red">ABOVE REFERENCE</span>';
+        } else if (p7 > 90 || p28 > 90 || p365 > 90) {
             status = '<span class="j-badge yellow">WARNING</span>';
         }
 
         return `<tr><td><b>${escapeHtml(c.name)}</b></td><td>${escapeHtml(c.base)}</td><td>${escapeHtml(c.role)}</td>
-          <td>${c.ftl.d7}h <div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p7}%; background: ${p7>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div></td>
-          <td>${c.ftl.f28}h <div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p28}%; background: ${p28>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div></td>
-          <td>${c.ftl.f365}h <div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p365}%; background: ${p365>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div></td>
+          <td>${c.ftl.d7}h ${jRules.maxDuty7 ? `<div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p7}%; background: ${p7>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div>` : ''}</td>
+          <td>${c.ftl.f28}h ${jRules.maxFlight28 ? `<div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p28}%; background: ${p28>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div>` : ''}</td>
+          <td>${c.ftl.f365}h ${jRules.maxFlight365 ? `<div class="ftl-progress-bg"><div class="ftl-progress-fg" style="width:${p365}%; background: ${p365>90?'var(--bar-disruption)':'var(--j-accent)'}"></div></div>` : ''}</td>
           <td>${escapeHtml(jRules.name ?? 'Not configured')}</td><td>${status}</td></tr>`;
       }).join('');
     }
@@ -3186,13 +3255,14 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       tbody.innerHTML = STATE.trades.map(t => {
         const crewAObj = STATE.crewData.find(c => c.name === t.crewA);
         const jRules = crewAObj ? (STATE.jurisdictions[crewAObj.base]?.name ?? 'Not configured') : 'Checked';
-        return `<tr><td><b>${escapeHtml(t.id)}</b></td><td>${escapeHtml(t.crewA)}</td><td>${escapeHtml(t.crewB)}</td><td>${escapeHtml(t.details)}</td><td><span class="j-badge green">${escapeHtml(jRules)} OK</span></td><td>${escapeHtml(String(t.status ?? '').replace('_', ' '))}</td><td>${t.status === 'AWAITING_OCC' ? `<button class="btn primary" onclick="approveTrade('${escapeHtml(t.id)}')">Approve</button>` : '<span style="color:var(--j-text-muted)">Processed</span>'}</td></tr>`;
+        return `<tr><td><b>${escapeHtml(t.id)}</b></td><td>${escapeHtml(t.crewA)}</td><td>${escapeHtml(t.crewB)}</td><td>${escapeHtml(t.details)}</td><td><span class="j-badge green">${escapeHtml(jRules)} · review required</span></td><td>${escapeHtml(String(t.status ?? '').replace('_', ' '))}</td><td>${t.status === 'AWAITING_OCC' ? `<button class="btn primary" onclick="approveTrade('${escapeHtml(t.id)}')">Approve</button>` : '<span style="color:var(--j-text-muted)">Processed</span>'}</td></tr>`;
       }).join('');
     }
 
     function renderLogistics() {
       const tbody = document.getElementById('logisticsTableBody');
       if(!tbody) return;
+      renderTransport();
       
       window.toggleLogistic = function(id) {
           showToast('Logistics updates are read-only in this OPS backend.', 'error');
@@ -3202,6 +3272,128 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
         return;
       }
       tbody.innerHTML = STATE.logistics.map(l => `<tr><td><b>${escapeHtml(l.id)}</b></td><td>${escapeHtml(l.name)}</td><td>${escapeHtml(l.loc)}</td><td>${escapeHtml(l.supplier)}</td><td>${escapeHtml(l.dates)}</td><td><span class="j-badge ${l.status==='CONFIRMED'?'green':'yellow'}">${escapeHtml(l.status)}</span></td><td><span style="color:var(--j-text-muted)">Read only</span></td></tr>`).join('');
+    }
+
+
+    function transportError(action, message) {
+      const form = document.getElementById(action === 'SAVE_TRANSPORT_VEHICLE' ? 'transportVehicleModal' : action === 'APPROVE_TRANSPORT_NO_HOST' ? 'transportApprovalModal' : 'transportServiceModal');
+      const error = form?.querySelector('.transport-error');
+      if (error) error.textContent = String(message || 'The change could not be saved.');
+      const button = form?.querySelector('[type="submit"]');
+      if (button) button.disabled = false;
+    }
+    function transportMonitorUnavailable() {
+      if (STATE.transport.available !== true) return false;
+      const lastScan=Date.parse(STATE.transport.monitorLastScan||'');
+      const age=Date.now()-lastScan;
+      return !Number.isFinite(lastScan)||age<0||age>=180000;
+    }
+    function renderTransport() {
+      const t=STATE.transport, ready=t.available===true, editable=ready&&t.canEdit===true;
+      const status=document.getElementById('transportStatus');
+      status.textContent=ready?(editable?'':'View only. Contact OPS management to make changes.'):(t.message||'Transport data is unavailable.');
+      for (const id of ['addTransportVehicle','addTransportService']) document.getElementById(id).disabled=!editable;
+      const suppliers=new Map(asArray(t.suppliers).map(x=>[x.id,x.name+(x.active===false?' (inactive)':'')]));
+      const staff=new Map(asArray(t.staff).map(x=>[x.id,x.name||x.id]));
+      const date=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString():'—';
+      const today=new Date(); const localDay=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      const due=value=>value?`${value}${value<localDay?' (date passed)':''}`:'Not set';
+      const serviceBody=document.getElementById('transportServiceBody');
+      const alertText={OWN_DRIVER_MISSING_2H:'Urgent: call a standby driver',OWN_HOST_APPROVAL_REQUIRED:'OPS approval required if no Host',SUPPLIER_DETAILS_MISSING_4H:'Urgent: contact the supplier for driver and vehicle details',THIRD_PARTY_HOST_MISSING_2H:'Urgent: call a standby Host'};
+      const serviceAlerts=service=>{
+        const issues=asArray(service.readiness?.issues);
+        const keys=new Set(issues.map(issue=>issue.key));
+        return [...issues.map(issue=>[issue.message,issue.action].filter(Boolean).join(' ')),...asArray(t.alerts).filter(a=>a.serviceId===service.id&&!keys.has(a.code)).map(a=>alertText[a.code]||a.code)].join(' · ');
+      };
+      const lastScan=Date.parse(t.monitorLastScan||'');
+      const scanAge=Date.now()-lastScan;
+      status.textContent+=(status.textContent?' · ':'')+(Number.isFinite(lastScan)&&scanAge>=0&&scanAge<180000?'Alerts last checked '+new Date(lastScan).toLocaleString():'Timed alert monitor is not responding. Review services manually.');
+
+      serviceBody.innerHTML=asArray(t.assignments).map(a=>`<tr><td><b>${escapeHtml(a.label)}</b><br>${escapeHtml(asArray(a.stops).join(' → '))}</td><td>${escapeHtml([a.vehicleName,a.registration].filter(Boolean).join(' · '))}</td><td>${escapeHtml(asArray(a.staff).map(m=>`${staff.get(m.employeeId)||m.employeeId} (${m.role})`).join(', ')||staff.get(a.employeeId)||a.employeeId||'Unassigned')}</td><td>${escapeHtml(date(a.startAt))}<br>${escapeHtml(date(a.endAt))}</td><td>${escapeHtml(a.passengerCount??'—')} / ${escapeHtml(a.capacity??'—')}</td><td>${escapeHtml(a.status)}<br>${escapeHtml(serviceAlerts(a))}${a.noHostApproved?' · No-Host approved':''}</td><td>${editable?`<button class="btn" data-transport-service="${escapeHtml(a.id)}">Edit</button>${a.version===2&&a.operatorType==='OWN'&&!asArray(a.staff).some(m=>m.role==='HOST')?`<button class="btn" data-transport-approve="${escapeHtml(a.id)}">Approve no Host</button>`:''}`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty-state">No bus services available.</td></tr>';
+      const vehicleBody=document.getElementById('transportVehicleBody');
+      vehicleBody.innerHTML=asArray(t.vehicles).map(v=>`<tr><td><b>${escapeHtml(v.name)}</b></td><td>${escapeHtml(v.registration)} · ${escapeHtml(v.countryCode)}</td><td>${escapeHtml(v.baseCode)}</td><td>${escapeHtml(suppliers.get(v.supplierId)||'—')}</td><td>${escapeHtml(v.capacity)}</td><td>${escapeHtml(due(v.inspectionDue))} / ${escapeHtml(due(v.insuranceDue))}</td><td>${escapeHtml(v.status)}</td><td>${editable?`<button class="btn" data-transport-vehicle="${escapeHtml(v.id)}">Edit</button>`:''}</td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">No vehicles available.</td></tr>';
+    }
+    document.addEventListener('click', event => {
+      const service=event.target.closest('[data-transport-service]');
+      const vehicle=event.target.closest('[data-transport-vehicle]');
+      const approval=event.target.closest('[data-transport-approve]');
+      if(service) openTransportService(service.dataset.transportService);
+      if(vehicle) openTransportVehicle(vehicle.dataset.transportVehicle);
+      if(approval) openTransportApproval(approval.dataset.transportApprove);
+    });
+    function fillSelect(id, items, selected, empty) {
+      const el=document.getElementById(id);
+      el.innerHTML=`<option value="">${escapeHtml(empty)}</option>`+items.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name||x.id)}</option>`).join('');
+      el.value=selected||'';
+    }
+    function fillForm(form, row) {
+      form.reset();
+      for (const field of form.elements) if (field.name && row[field.name] != null) field.value=String(row[field.name]);
+      form.querySelector('.transport-error').textContent='';
+      form.querySelector('[type="submit"]').disabled=false;
+    }
+    function localInput(value) { const d=new Date(value); if(!Number.isFinite(d.getTime()))return ''; const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+    function openTransportVehicle(id='') {
+      if (!STATE.transport.canEdit) return;
+      const row=asArray(STATE.transport.vehicles).find(v=>v.id===id)||{}; if(id&&!row.id)return;
+      STATE.transportEdit={id:row.id||'',updatedAt:row.updatedAt||''};
+      const form=document.getElementById('transportVehicleModal'); fillForm(form,row);
+      fillSelect('tvSupplier',asArray(STATE.transport.suppliers).map(s=>({...s,name:s.name+(s.active===false?' (inactive — choose an active supplier)':'')})),row.supplierId,'No supplier selected');
+      document.getElementById('transportVehicleTitle').textContent=id?'Edit vehicle':'Add vehicle'; showModal('transportVehicleModal');
+    }
+    function openTransportService(id='') {
+      if (!STATE.transport.canEdit) return;
+      const row=asArray(STATE.transport.assignments).find(a=>a.id===id)||{}; if(id&&!row.id)return;
+      STATE.transportEdit={id:row.id||'',updatedAt:row.updatedAt||''};
+      const form=document.getElementById('transportServiceModal'); fillForm(form,{...row,stops:asArray(row.stops).join('\n'),startAt:localInput(row.startAt),endAt:localInput(row.endAt)});
+      fillSelect('tsVehicle',asArray(STATE.transport.vehicles),row.vehicleId,'Choose a vehicle');
+      fillSelect('tsSupplier',asArray(STATE.transport.suppliers).map(s=>({...s,name:s.name+(s.active===false?' (inactive)':'')})),row.supplierId,'Choose a supplier');
+      for(const [element,role] of [['tsDrivers','DRIVER'],['tsHosts','HOST'],['tsOther','OTHER']]) {
+        const el=document.getElementById(element), selected=new Set(asArray(row.staff).filter(m=>m.role===role).map(m=>m.employeeId));
+        el.innerHTML=asArray(STATE.transport.staff).map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name||x.id)} · ${escapeHtml(x.id)}</option>`).join('');
+        for(const option of el.options)option.selected=selected.has(option.value);
+      }
+      if(!row.timeZone)form.elements.timeZone.value=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+      document.getElementById('transportLegacyNote').textContent=row.version===1&&row.employeeId?`Legacy assignment ${row.employeeId}: select this employee's role before saving.`:'';
+      updateTransportOperator();
+      document.getElementById('transportServiceTitle').textContent=id?'Edit bus service':'Add bus service'; showModal('transportServiceModal');
+    }
+    function updateTransportOperator() {
+      const third=document.getElementById('tsOperator').value==='THIRD_PARTY';
+      document.getElementById('tsVehicle').disabled=third;
+      document.getElementById('tsSupplier').disabled=!third;
+      document.getElementById('tsDrivers').disabled=third;
+      for(const id of ['tsExternalVehicle','tsExternalRegistration','tsSupplierDriver','tsSupplierContact'])document.getElementById(id).disabled=!third;
+    }
+    document.getElementById('tsOperator').addEventListener('change',updateTransportOperator);
+    function openTransportApproval(id) {
+      if(!STATE.transport.canEdit)return;
+      const row=asArray(STATE.transport.assignments).find(a=>a.id===id&&a.version===2&&a.operatorType==='OWN');if(!row)return;
+      STATE.transportEdit={id:row.id,updatedAt:row.updatedAt};
+      const form=document.getElementById('transportApprovalModal');fillForm(form,{});showModal('transportApprovalModal');
+    }
+    function approveTransportNoHost(event) {
+      event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;
+      const note=String(form.elements.note.value||'').trim();if(!note){transportError('APPROVE_TRANSPORT_NO_HOST','Enter a reason.');return;}
+      form.querySelector('.transport-error').textContent='';form.querySelector('[type="submit"]').disabled=true;
+      dispatchAction('APPROVE_TRANSPORT_NO_HOST',{serviceId:STATE.transportEdit?.id||'',expectedUpdatedAt:STATE.transportEdit?.updatedAt||'',note});
+    }
+    function saveTransportVehicle(event) {
+      event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
+      const values=Object.fromEntries(new FormData(form)); values.capacity=Number(values.capacity);
+      values.id=STATE.transportEdit?.id||''; values.expectedUpdatedAt=STATE.transportEdit?.updatedAt||'';
+      form.querySelector('.transport-error').textContent=''; form.querySelector('[type="submit"]').disabled=true;
+      dispatchAction('SAVE_TRANSPORT_VEHICLE',values);
+    }
+    function saveTransportService(event) {
+      event.preventDefault(); const form=event.currentTarget; if(!form.reportValidity())return;
+      const data=new FormData(form), values=Object.fromEntries(data); const start=new Date(values.startAt), end=new Date(values.endAt);
+      values.staff=[...data.getAll('drivers').map(employeeId=>({employeeId,role:'DRIVER'})),...data.getAll('hosts').map(employeeId=>({employeeId,role:'HOST'})),...data.getAll('other').map(employeeId=>({employeeId,role:'OTHER'}))]; delete values.drivers; delete values.hosts; delete values.other;
+      if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start>=end){transportError('SAVE_TRANSPORT_ASSIGNMENT','End must be after start.');return;}
+      values.startAt=start.toISOString(); values.endAt=end.toISOString(); values.passengerCount=Number(values.passengerCount); values.stops=values.stops.split('\n').map(x=>x.trim()).filter(Boolean);
+      values.id=STATE.transportEdit?.id||''; values.expectedUpdatedAt=STATE.transportEdit?.updatedAt||'';
+      form.querySelector('.transport-error').textContent=''; form.querySelector('[type="submit"]').disabled=true;
+      dispatchAction('SAVE_TRANSPORT_SERVICE_V2',values);
     }
 
     function renderMessages() {
@@ -3267,6 +3459,23 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
       const list = document.getElementById('alertList');
       if(!list) return;
       list.innerHTML = ''; let hasAlert = false;
+      if (transportMonitorUnavailable()) {
+        hasAlert=true;
+        const card=document.createElement('div');card.className='alert-card warning';
+        const title=document.createElement('div');title.className='alert-title';title.textContent='Bus alert monitor unavailable';
+        const description=document.createElement('div');description.className='alert-desc';description.textContent='Review upcoming services manually until the timed alert monitor is restored.';
+        card.append(title,description);list.appendChild(card);
+      }
+      const descriptions={OWN_DRIVER_MISSING_2H:'Call a standby driver immediately.',OWN_HOST_APPROVAL_REQUIRED:'Schedule a Host or approve operating without one.',SUPPLIER_DETAILS_MISSING_4H:'Contact the supplier for driver and vehicle details.',THIRD_PARTY_HOST_MISSING_2H:'Call a standby Host immediately.'};
+      for(const alert of asArray(STATE.transport.alerts)) {
+        hasAlert=true;
+        const service=asArray(STATE.transport.assignments).find(a=>a.id===alert.serviceId),card=document.createElement('button');
+        card.type='button';card.className='alert-card warning';card.style.textAlign='left';card.style.width='100%';
+        const title=document.createElement('div');title.className='alert-title';title.textContent=service?.label||'Bus service';
+        const description=document.createElement('div');description.className='alert-desc';description.textContent=descriptions[alert.code]||alert.code;
+        card.append(title,description);card.addEventListener('click',()=>{switchView('view-logistics',document.getElementById('navLogistics'));if(service)openTransportService(service.id);});
+        list.appendChild(card);
+      }
       STATE.crewData.forEach(crew => {
         crew.acts.forEach(act => {
           if (act.type === 'disrupted' || (act.type === 'sby' && act.isCalloutCandidate)) {
@@ -3420,39 +3629,61 @@ __root.querySelector('[data-skandi-handler-39]').addEventListener("click",functi
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-40]').addEventListener("click",function(event){const result=(function(event){openVacationModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-41]').addEventListener("click",function(event){const result=(function(event){saveSettings()
+__root.querySelector('[data-skandi-handler-41]').addEventListener("click",function(event){const result=(function(event){openTransportVehicle()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-42]').addEventListener("change",function(event){const result=(function(event){zoomGanttFromSettings(this.value)
+__root.querySelector('[data-skandi-handler-42]').addEventListener("click",function(event){const result=(function(event){openTransportService()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-43]').addEventListener("click",function(event){const result=(function(event){toggleAlerts()
+__root.querySelector('[data-skandi-handler-43]').addEventListener("click",function(event){const result=(function(event){saveSettings()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-44]').addEventListener("click",function(event){const result=(function(event){closeModalOnBgClick(event)
+__root.querySelector('[data-skandi-handler-44]').addEventListener("change",function(event){const result=(function(event){zoomGanttFromSettings(this.value)
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-45]').addEventListener("click",function(event){const result=(function(event){closeModal()
+__root.querySelector('[data-skandi-handler-45]').addEventListener("click",function(event){const result=(function(event){toggleAlerts()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-46]').addEventListener("click",function(event){const result=(function(event){closeModal()
+__root.querySelector('[data-skandi-handler-46]').addEventListener("click",function(event){const result=(function(event){closeModalOnBgClick(event)
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-47]').addEventListener("click",function(event){const result=(function(event){saveAssignment()
+__root.querySelector('[data-skandi-handler-47]').addEventListener("submit",function(event){const result=(function(event){saveTransportVehicle(event)
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-48]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-49]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-50]').addEventListener("click",function(event){const result=(function(event){executeStandbyCallout()
+__root.querySelector('[data-skandi-handler-50]').addEventListener("submit",function(event){const result=(function(event){saveTransportService(event)
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-51]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-52]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-53]').addEventListener("click",function(event){const result=(function(event){submitVacationRequest()
+__root.querySelector('[data-skandi-handler-53]').addEventListener("submit",function(event){const result=(function(event){approveTransportNoHost(event)
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-54]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-55]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
-__root.querySelector('[data-skandi-handler-56]').addEventListener("click",function(event){const result=(function(event){sendMessage()
+__root.querySelector('[data-skandi-handler-56]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
 __root.querySelector('[data-skandi-handler-57]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-58]').addEventListener("click",function(event){const result=(function(event){saveAssignment()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-59]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-60]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-61]').addEventListener("click",function(event){const result=(function(event){executeStandbyCallout()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-62]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-63]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-64]').addEventListener("click",function(event){const result=(function(event){submitVacationRequest()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-65]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-66]').addEventListener("click",function(event){const result=(function(event){closeModal()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-67]').addEventListener("click",function(event){const result=(function(event){sendMessage()
+}).call(this,event);if(result===false){event.preventDefault();}});
+__root.querySelector('[data-skandi-handler-68]').addEventListener("click",function(event){const result=(function(event){closeModal()
 }).call(this,event);if(result===false){event.preventDefault();}});
 })();</script>
 
