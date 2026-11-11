@@ -48,7 +48,7 @@ separate deployment states.
 
 ## Release review
 
-1. Review `supabase/migrations/20261110104709_ops_transport_registry.sql`,
+1. Review `supabase/migrations/20261111015433_ops_transport_registry.sql`,
    the database grants, deployment order and the role mapping above. The
    migration adds two tables, two functions and indexes, and grants only the
    service role access; it does not apply itself. Back up and validate the
