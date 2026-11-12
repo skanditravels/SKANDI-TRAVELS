@@ -3,7 +3,6 @@
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
-  loginStaffWithSkIdCore,
   getStaffPortalSessionCore,
   getPortalAppsCore,
   getAlteaLaunchpadAppsCore
@@ -11,7 +10,11 @@ import {
 
 export const loginStaffWithSkId = webMethod(
   Permissions.Anyone,
-  loginStaffWithSkIdCore
+  async () => ({
+    ok: false,
+    code: "DEVICE_VERIFICATION_REQUIRED",
+    message: "Use the current RIAINTRA sign-in page to verify your device."
+  })
 );
 
 export const getStaffPortalSession = webMethod(

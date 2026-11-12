@@ -9,6 +9,7 @@ import { local } from "wix-storage-frontend";
 import { createStaffActivitySession } from "public/riaintraSession.js";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import {
+  issueStaffDeviceToken,
   authenticateStaffWithDeviceTrust,
   verifyStaffOtpAndTrustDevice
 } from "backend/SKANDI_CORE/staffOtp.web";
@@ -26,6 +27,7 @@ const OTP_PATTERN = /^[0-9]{6}$/;
 let html;
 let actionInProgress = false;
 let redirecting = false;
+let transientDeviceToken = "";
 
 $w.onReady(function () {
   html = $w(EMBED_ID);
@@ -113,7 +115,7 @@ async function handleLoginRequest(payload, requestId) {
       message: "Validating SK-ID and device trust..."
     }, requestId);
 
-    const deviceToken = getOrCreateDeviceToken();
+    const deviceToken = await getOrCreateDeviceToken();
     const result = unwrapResult(await authenticateStaffWithDeviceTrust({
       skId,
       password,
@@ -173,7 +175,7 @@ async function handleOtpVerify(payload, requestId) {
       message: "Verifying code and registering trusted device..."
     }, requestId);
 
-    const deviceToken = getOrCreateDeviceToken();
+    const deviceToken = await getOrCreateDeviceToken();
     const result = unwrapResult(await verifyStaffOtpAndTrustDevice({
       skId,
       code,
@@ -276,17 +278,18 @@ async function handleForgotPassword(requestId) {
   }
 }
 
-function getOrCreateDeviceToken() {
-  let token = "";
-  try {
-    token = String(local.getItem(DEVICE_TOKEN_STORAGE_KEY) || "").trim();
-  } catch (_) {}
-
-  if (!token || token.length < 24) {
-    const partA = Date.now().toString(36);
-    const partB = Math.random().toString(36).slice(2, 12);
-    const partC = Math.random().toString(36).slice(2, 12);
-    token = `${partA}-${partB}-${partC}`;
+async function getOrCreateDeviceToken() {
+  let token = transientDeviceToken;
+  if (!/^v2_[a-f0-9]{64}$/.test(token)) {
+    try {
+      token = String(local.getItem(DEVICE_TOKEN_STORAGE_KEY) || "").trim();
+    } catch (_) {}
+  }
+  if (!/^v2_[a-f0-9]{64}$/.test(token)) {
+    const issued = unwrapResult(await issueStaffDeviceToken());
+    token = String(issued?.deviceToken || "").trim();
+    if (!/^v2_[a-f0-9]{64}$/.test(token)) throw new Error("Device verification is unavailable.");
+    transientDeviceToken = token;
     try {
       local.setItem(DEVICE_TOKEN_STORAGE_KEY, token);
     } catch (_) {}

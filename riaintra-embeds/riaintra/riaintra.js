@@ -130,8 +130,8 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
 
       setNotice(
         maskedEmail
-          ? `Verification code sent to ${maskedEmail}. This device will be remembered for 30 days.`
-          : "Verification code sent to your registered email. This device will be remembered for 30 days."
+          ? `A verification code was requested for ${maskedEmail}. Check your inbox. This device can be remembered for 30 days.`
+          : "A verification code was requested for your registered email. Check your inbox. This device can be remembered for 30 days."
       );
       if (!mobileView.matches) setTimeout(() => passwordInput.focus(), 60);
     }

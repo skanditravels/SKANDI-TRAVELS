@@ -18,7 +18,7 @@ const HTTP_METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE", "HEAD"]);
 
 const REST_OBJECTS = new Set([
   // Identity / organization / HR
-  "agent_users", "staff_login_audit", "admin_audit_logs", "intranet_news",
+  "agent_users", "staff_login_audit", "staff_login_otps", "staff_trusted_devices", "admin_audit_logs", "intranet_news",
   "org_access_roles", "org_assignment_audit", "org_bases", "org_departments",
   "org_employee_assignments", "org_job_roles", "org_permission_presets",
   "org_role_base_rules", "hr_base_jurisdictions", "hr_country_rules", "hr_role_requirements",
