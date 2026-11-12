@@ -27,7 +27,7 @@ test('hotel and destination links resolve to their dedicated public pages', asyn
 
 test('map data keeps airports and airlines and Wix receives a stable pin URL', async () => {
   const map = { airports:[{id:'ARN'}], airlines:[{id:'SK'}], destinations:[] };
-  const core = vm.createContext({ callPublicContentRpc:async()=>map });
+  const core = vm.createContext({ callPublicContentRpc:async()=>map, getDestinationFlowCatalogCore:async()=>({ok:true,records:[]}) });
   vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/networkMap.js')),core);
   const messages=[], urlChanges=[];
   let onMessage, onReady, onChange;
@@ -72,4 +72,14 @@ test('Hotel List links directly to an unlinked property and its detail blocks bo
   assert.equal(w.document.getElementById('hotelTitle').textContent,'Lake House');
   assert.equal(w.document.getElementById('hotelBook').disabled,true);
   assert.equal(w.document.getElementById('hotelUnavailable').hidden,false);
+});
+
+
+test('geography links narrow descendants through region and area, including existing details',async()=>{
+ const records=[{id:'us',entityType:'COUNTRY',name:'United States'}, {id:'fl',entityType:'REGION',name:'Florida',parentEntityId:'us'}, {id:'orl',entityType:'DESTINATION',name:'Orlando',parentEntityId:'fl'}, {id:'disney',entityType:'AREA',name:'Disney Area',parentEntityId:'orl'}, {id:'hotel',entityType:'HOTEL',name:'Hotel',details:{areaId:'disney'}}];
+ const context=vm.createContext({...routes,URLSearchParams});vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
+ const c=context.createDestinationContent(()=>records);const hotel=records.at(-1);
+ for(const ancestor of records.slice(0,4))assert.equal(c.isUnder(hotel,ancestor),true,ancestor.name);
+ assert.equal(c.regionOf(hotel).name,'Florida');assert.equal(c.countryOf(hotel).name,'United States');
+ assert.equal(c.hotelsForScope(records[1])[0].id,'hotel');
 });

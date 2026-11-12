@@ -9,10 +9,10 @@ const SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT="SKANDI_INVENTORY_PARENT";
 const MASTER_PARENT="SKANDI_WIX_PARENT";
 const VERSION="V12-INVENTORY-2026.10.09-ASSETS";
-const TYPES=["COUNTRY","DESTINATION","AREA","AIRPORT","AIRLINE","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"];
-const SELLABLE=new Set(["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
-const LABEL={COUNTRY:"Countries",DESTINATION:"Destinations",AREA:"Areas / Resorts",AIRPORT:"Airports",AIRLINE:"Airlines",SUPPLIER:"Suppliers",HOTEL:"Hotels",GUIDED_TOUR:"Guided Tours",ACTIVITY:"Activities",PARTNER_TICKET:"Partner Tickets",TRANSFER:"Transfers",CAR_RENTAL:"Car Rental",PACKAGE:"Packages",ANCILLARY:"Ancillaries"};
-const MASTER_FILTERS=["COUNTRY","DESTINATION","AREA","AIRPORT","AIRLINE","SUPPLIER","HOTEL","TOURS_ACTIVITIES","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"];
+const TYPES=["COUNTRY","REGION","DESTINATION","AREA","AIRPORT","AIRLINE","SUPPLIER","HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"];
+const SELLABLE=new Set(["HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
+const LABEL={COUNTRY:"Countries",DESTINATION:"Destinations",AREA:"Areas",REGION:"Regions / States",AIRPORT:"Airports",AIRLINE:"Airlines",SUPPLIER:"Suppliers",HOTEL:"Hotels",FLIGHT:"Flights",GUIDED_TOUR:"Guided Tours",ACTIVITY:"Activities",PARTNER_TICKET:"Partner Tickets",TRANSFER:"Transfers",CAR_RENTAL:"Car Rental",PACKAGE:"Packages",ANCILLARY:"Ancillaries"};
+const MASTER_FILTERS=["COUNTRY","REGION","DESTINATION","AREA","AIRPORT","AIRLINE","SUPPLIER","HOTEL","FLIGHT","TOURS_ACTIVITIES","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"];
 const MASTER_FILTER_LABEL={...LABEL,TOURS_ACTIVITIES:"Tours & Activities"};
 const STATUS=["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"];
 const requests=new Map();
@@ -91,6 +91,84 @@ function normalizeRelation(row={}){
 }
 
 
+const RELATION_TYPES=[
+  {value:"HOTEL",label:"Hotel",target:"HOTEL"},
+  {value:"FLIGHT",label:"Flight",target:"FLIGHT"},
+  {value:"GUIDED_TOUR",label:"Guided tour",target:"GUIDED_TOUR"},
+  {value:"ACTIVITY",label:"Activity",target:"ACTIVITY"},
+  {value:"PARTNER_TICKET",label:"Ticket",target:"PARTNER_TICKET"},
+  {value:"TRANSFER",label:"Transfer",target:"TRANSFER"},
+  {value:"CAR_RENTAL",label:"Car rental",target:"CAR_RENTAL"},
+  {value:"PACKAGE",label:"Package",target:"PACKAGE"},
+  {value:"ANCILLARY",label:"Ancillary",target:"ANCILLARY"},
+  {value:"AIRPORT",label:"Airport",target:"AIRPORT"},
+  {value:"CHAIN",label:"Hotel chain",target:"SUPPLIER"},
+  {value:"BOOKING_SUPPLIER",label:"Booking supplier",target:"SUPPLIER"},
+  {value:"AIRLINE",label:"Airline",target:"AIRLINE"},
+  {value:"AREA",label:"Area",target:"AREA"},
+  {value:"DESTINATION",label:"Destination",target:"DESTINATION"},
+  {value:"REGION",label:"Region / State",target:"REGION"},
+  {value:"COUNTRY",label:"Country",target:"COUNTRY"}
+];
+function allowedHierarchyTypes(type){
+  if(type==="COUNTRY")return [];
+  if(type==="REGION")return ["COUNTRY"];
+  if(type==="DESTINATION")return ["REGION","COUNTRY"];
+  if(type==="AREA")return ["DESTINATION","REGION","COUNTRY"];
+  if(type==="SUPPLIER")return ["CHAIN","COUNTRY"];
+  if(type==="AIRLINE")return ["CHAIN","COUNTRY"];
+  return RELATION_TYPES.map(x=>x.value);
+}
+function hydrateHierarchy(bundle,records){
+  const next=clone(bundle), rec=next.record||{},details=rec.details||{};
+  next.relations=(next.relations||[]).map(normalizeRelation);
+  const additions=[["COUNTRY",details.countryId],["REGION",details.regionId],["DESTINATION",details.destinationId],["AREA",details.areaId],["BOOKING_SUPPLIER",rec.supplierEntityId]];
+  const parent=(records||[]).find(x=>x.id===rec.parentEntityId);
+  if(parent&&["COUNTRY","REGION","DESTINATION","AREA"].includes(parent.entityType))additions.push([parent.entityType,parent.id]);
+  for(const [kind,id] of additions)if(id&&!next.relations.some(r=>r.relationType===kind))next.relations.push(normalizeRelation({relationType:kind,targetEntityId:id}));
+  return next;
+}
+function withHierarchyEdit(old,relations){
+  const rec={...old.record,details:{...(old.record.details||{})}}, kinds=["COUNTRY","REGION","DESTINATION","AREA"];
+  const get=kind=>{const row=relations.find(x=>x.relationType===kind&&x.active!==false);return row?(row.targetEntityId||row.targetRecordId||""):""};
+  for(const kind of kinds){const key=kind.toLowerCase()+"Id";const value=get(kind);if(value)rec.details[key]=value;else if((old.relations||[]).some(x=>x.relationType===kind))delete rec.details[key]}
+  if((old.relations||[]).some(x=>x.relationType==="BOOKING_SUPPLIER")||get("BOOKING_SUPPLIER"))rec.supplierEntityId=get("BOOKING_SUPPLIER");
+  const allowed=rec.entityType==="REGION"?["COUNTRY"]:rec.entityType==="DESTINATION"?["REGION","COUNTRY"]:rec.entityType==="AREA"?["DESTINATION","REGION","COUNTRY"]:["AREA","DESTINATION","REGION","COUNTRY"];
+  if(rec.entityType!=="COUNTRY"&&!["SUPPLIER","AIRLINE","AIRPORT"].includes(rec.entityType)){
+    const target=allowed.map(get).find(Boolean);if(target)rec.parentEntityId=target;else if((old.relations||[]).some(x=>allowed.includes(x.relationType)))rec.parentEntityId="";
+  }
+  return {...old,record:rec,relations};
+}
+function RelationPanel({draft,setDraft,records=[]}){
+  const record=draft.record||{}, rows=(draft.relations||[]).map(normalizeRelation);
+  const used=new Set(rows.filter(r=>r.active!==false).map(r=>r.relationType));
+  const allowed=new Set(allowedHierarchyTypes(record.entityType));
+  const options=RELATION_TYPES.filter(r=>allowed.has(r.value)&&!used.has(r.value));
+  const refs=records.filter(r=>r.id!==record.id);
+  const rank={COUNTRY:4,REGION:3,DESTINATION:2,AREA:1};
+  function compatible(target){
+    if(!(target.entityType in rank))return true;
+    for(const row of rows){const other=refs.find(x=>x.id===(row.targetEntityId||row.targetRecordId));if(!other||other.id===target.id||!(other.entityType in rank)||other.entityType===target.entityType)continue;
+      const child=rank[target.entityType]<rank[other.entityType]?target:other,parent=child===target?other:target,seen=new Set();let node=child,found=null;
+      while(node?.parentEntityId&&!seen.has(node.parentEntityId)){seen.add(node.parentEntityId);node=refs.find(x=>x.id===node.parentEntityId);if(node?.entityType===parent.entityType){found=node;break}}
+      if(found&&found.id!==parent.id)return false;
+    }
+    return true;
+  }
+  const selectedCountry=refs.find(r=>r.entityType==="COUNTRY"&&r.id===(rows.find(x=>x.relationType==="COUNTRY")?.targetEntityId||record.details?.countryId||record.parentEntityId));
+  const regionLabel=[selectedCountry?.code,selectedCountry?.name,record.details?.countryCode,record.details?.countryName].some(v=>["US","USA","UNITED STATES","UNITED STATES OF AMERICA"].includes(text(v).toUpperCase()))?"State":"Region";
+  function change(i,patch){setDraft(old=>{const list=[...(old.relations||[])];list[i]={...list[i],...patch};return withHierarchyEdit(old,list)})}
+  const incoming=draft.incoming||{},linked=new Map();
+  for(const rel of incoming.relations||[]){const id=rel.source_entity_id||rel.source_record_id;const match=records.find(x=>x.id===id);if(match)linked.set(`${match.entityType}:${match.id}`,{record:match,reason:rel.relation_type})}
+  for(const [kind,items] of [["Parent",incoming.children||[]],["Supplier",incoming.supplied||[]],["Geography",incoming.geographic||[]]])for(const item of items){const match=records.find(x=>x.id===item.id)||{id:item.id,entityType:item.entity_type,code:item.code,name:item.name};linked.set(`${match.entityType}:${match.id}`,{record:match,reason:kind})}
+  return html`<div><div className="paneltitle"><span>Related inventory</span><button className="btn small" disabled=${!options.length} onClick=${()=>setDraft(old=>({...old,relations:[...(old.relations||[]),normalizeRelation({relationType:options[0].value})]}))}>+ Add relation</button></div>
+  ${rows.length?rows.map((row,i)=>{const def=RELATION_TYPES.find(x=>x.value===row.relationType);const targetValue=row.targetEntityId||row.targetRecordId||"";return html`<div className="relitem"><div className="formgrid three">
+  <${Field} label="Relation type" type="select" options=${[...(def?[]:[{value:row.relationType,label:`Existing: ${row.relationType}`}]),...RELATION_TYPES.filter(x=>x.value===row.relationType||(allowed.has(x.value)&&!used.has(x.value))).map(x=>({value:x.value,label:x.value==="REGION"?regionLabel:x.label}))]} value=${row.relationType} onChange=${value=>change(i,{relationType:value,targetEntityId:"",targetRecordType:"",targetRecordId:""})}/>
+  <${Field} label="Target record" type="select" options=${[{value:"",label:"Choose…"},...(targetValue&&!refs.some(x=>x.id===targetValue&&(!def||x.entityType===def.target))?[{value:targetValue,label:`Existing link requires review · ${refs.find(x=>x.id===targetValue)?.name||targetValue}`,disabled:true}]:[]),...refs.filter(x=>(!def||x.entityType===def.target)&&(x.id===targetValue||compatible(x))).map(x=>({value:x.id,label:`${x.entityType} · ${x.name} (${x.code||"—"})`}))]} value=${targetValue} onChange=${value=>{const target=refs.find(x=>x.id===value),external=target&&["AIRPORT","AIRLINE"].includes(target.entityType);change(i,{targetEntityId:target&&!external?value:"",targetRecordType:external?target.entityType:"",targetRecordId:external?value:""})}}/>
+  <button className="btn danger" onClick=${()=>setDraft(old=>withHierarchyEdit(old,(old.relations||[]).filter((_,n)=>n!==i)))}>Remove</button></div></div>`}):html`<div className="empty">No related inventory assigned.</div>`}
+  <div className="sectiontitle">Used as related inventory by</div>${[...linked.values()].length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Record</th><th>Relationship</th></tr></thead><tbody>${[...linked.values()].map(({record:r,reason})=>html`<tr><td>${r.entityType}</td><td>${r.name} ${r.code?`(${r.code})`:""}</td><td>${reason}</td></tr>`)}</tbody></table></div>`:html`<div className="empty">No incoming relationships found.</div>`}</div>`;
+}
+
 function Field({label,value,onChange,type="text",options=[],help,disabled=false,full=false,placeholder=""}){
   return html`<div className=${`field ${full?"full":""}`}><label>${label}</label>
     ${type==="textarea"
@@ -98,7 +176,7 @@ function Field({label,value,onChange,type="text",options=[],help,disabled=false,
       :type==="select"
         ?html`<select className="select" value=${value??""} disabled=${disabled} onChange=${e=>onChange(e.target.value)}>
             ${!options.some(o=>(typeof o==="string"?o:o.value)==="")?html`<option value="">Choose…</option>`:null}
-            ${options.map(o=>html`<option value=${typeof o==="string"?o:o.value}>${typeof o==="string"?o:o.label}</option>`)}
+            ${options.map(o=>html`<option value=${typeof o==="string"?o:o.value} disabled=${typeof o==="object"&&o.disabled===true}>${typeof o==="string"?o:o.label}</option>`)}
           </select>`
         :html`<input className="input" type=${type} value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(type==="number"?numOrNull(e.target.value):e.target.value)} />`}
     ${help?html`<small>${help}</small>`:null}
@@ -198,6 +276,7 @@ const ENTITY_SCHEMAS={
     SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Best Time to Visit","details.bestTimeToVisit","textarea"),SF("High Season","details.highSeason"),SF("Low Season","details.lowSeason"),
     SL("Tags","details.tags"),SL("Good For","details.goodFor"),SL("Signature Reasons","details.signatureReasons"),SF("Climate","details.climate","textarea")
   ]},
+  REGION:{details:[SF("Country","details.countryId","reference",[],"",["COUNTRY"]),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number")]},
   DESTINATION:{details:[
     SF("Region / Sub-region","details.region"),SF("Nearest Airport","details.nearestAirportId","reference",[],"",["AIRPORT"]),SF("Secondary Airport","details.secondaryAirportId","reference",[],"",["AIRPORT"]),
     SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Timezone","details.timezone"),SF("Currency","details.currency","select",ENUM.currency),
@@ -212,7 +291,7 @@ const ENTITY_SCHEMAS={
     SF("Supplier Integration","details.apiProvider","boolean"),SF("Account Reference","details.accountReference"),SF("Contract Status","details.contractStatus","select",ENUM.contractStatus),SF("Payment Terms","details.paymentTerms","textarea"),SF("Commission Model","details.commissionModel")
   ]},
   HOTEL:{details:[
-    SF("Brand","details.brand"),SF("Property Type","details.propertyType","select",ENUM.propertyType),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Nearest Airport","details.nearestAirportId","reference",[],"",["AIRPORT"]),
+    SF("Brand","details.brand"),SF("Property Type","details.propertyType","select",ENUM.propertyType),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Nearest Airport","details.nearestAirportId","reference",[],"",["AIRPORT"]),
     SF("Supplier Hotel Reference","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
     SF("Official Star Rating","details.officialStarRating","number"),SF("SKANDI Rating","details.skandiRating","number"),SF("Guest Rating","details.guestRating","number"),SF("Review Count","details.reviewCount","number"),
     SF("Check-in Time","details.checkinTime","time"),SF("Check-out Time","details.checkoutTime","time"),SF("Minimum Check-in Age","details.minimumCheckinAge","number"),SF("Pets Allowed","details.petsAllowed","boolean"),SF("Smoking Policy","details.smokingPolicy","select",ENUM.smokingPolicy),
@@ -222,7 +301,7 @@ const ENTITY_SCHEMAS={
     SR("Hotel Facts","details.facts",[SF("Label","label"),SF("Value","value")])
   ],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Operational Notes","operations.notes","textarea")]},
   GUIDED_TOUR:{details:[
-    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Category","details.category"),SF("Tour Type","details.tourType","select",ENUM.tourType),SF("Duration Minutes","details.durationMinutes","number"),SF("Difficulty","details.difficulty","select",ENUM.difficulty),
+    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Category","details.category"),SF("Tour Type","details.tourType","select",ENUM.tourType),SF("Duration Minutes","details.durationMinutes","number"),SF("Difficulty","details.difficulty","select",ENUM.difficulty),
     SF("Minimum Age","details.minimumAge","number"),SF("Child Policy","details.childPolicy","textarea"),SF("Accessibility","details.accessibility","textarea"),SL("Languages","details.languages")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("Adult Price","commercial.adultPrice","number"),SF("Child Price","commercial.childPrice","number"),SF("Infant Price","commercial.infantPrice","number"),SF("Private Price","commercial.privatePrice","number")],operations:[
     SF("Guide Required","operations.guideRequired","boolean"),SF("Languages Required","operations.languagesRequired"),SF("Guide Briefing","operations.guideBriefing","textarea"),
@@ -231,14 +310,14 @@ const ENTITY_SCHEMAS={
     SF("Booking Available","operations.bookingAvailable","boolean"),SF("Request Only","operations.requestOnly","boolean"),SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Minimum Units / Guests","operations.minimum","number"),SF("Maximum Units / Guests","operations.maximum","number"),SF("Cancellation Rule","operations.cancellationRule","textarea"),SF("Amendment Policy","operations.amendmentPolicy","textarea"),SF("Internal Operational Notes","operations.internalNotes","textarea")
   ]},
   ACTIVITY:{details:[
-    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Category","details.category"),SF("Subcategory","details.subcategory"),SF("Activity Type","details.activityType","select",ENUM.activityType),SF("Duration Minutes","details.durationMinutes","number"),
+    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Category","details.category"),SF("Subcategory","details.subcategory"),SF("Activity Type","details.activityType","select",ENUM.activityType),SF("Duration Minutes","details.durationMinutes","number"),
     SF("Start Location","details.startLocation"),SF("Meeting Point","details.meetingPoint","textarea"),SF("Pickup Available","details.pickupAvailable","boolean"),SF("Hotel Pickup Available","details.hotelPickupAvailable","boolean"),SF("Guide Type","details.guideType"),SF("Minimum Age","details.minimumAge","number"),SF("Maximum Age","details.maximumAge","number"),SF("Child Policy","details.childPolicy","textarea"),SF("Accessibility","details.accessibility","textarea"),SL("Languages","details.languages")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("Adult Price","commercial.adultPrice","number"),SF("Child Price","commercial.childPrice","number")],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Policy","operations.cancellationPolicy","textarea"),SF("Operational Notes","operations.notes","textarea")]},
   PARTNER_TICKET:{details:[
-    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Vendor Ticket ID","details.vendorTicketId"),SF("Category","details.category"),SF("Ticket Type","details.ticketType","select",ENUM.ticketType),SF("Validity Type","details.validityType","select",ENUM.validityType),SF("Duration","details.duration"),SF("Venue / Meeting Location","details.meetingLocation"),SF("Restrictions","details.restrictions","textarea")
+    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Vendor Ticket ID","details.vendorTicketId"),SF("Category","details.category"),SF("Ticket Type","details.ticketType","select",ENUM.ticketType),SF("Validity Type","details.validityType","select",ENUM.validityType),SF("Duration","details.duration"),SF("Venue / Meeting Location","details.meetingLocation"),SF("Restrictions","details.restrictions","textarea")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("Adult Price","commercial.adultPrice","number"),SF("Child Price","commercial.childPrice","number")],operations:[SF("Delivery Method","operations.deliveryMethod","select",ENUM.deliveryMethod),SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Policy","operations.cancellationPolicy","textarea"),SF("Operational Notes","operations.notes","textarea")]},
   TRANSFER:{details:[
-    SF("Transfer Type","details.transferType","select",ENUM.transferType),SF("Direction","details.direction","select",ENUM.direction),SF("Airport","details.airportId","reference",[],"",["AIRPORT"]),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Terminal","details.terminal"),SF("Arrival Hall","details.arrivalHall"),SF("Airport Exit Number","details.airportExitNumber"),SF("Waiting Area","details.waitingArea"),SF("Meeting Point","details.meetingPoint"),SF("Meeting Point Description","details.meetingPointDescription","textarea"),SF("Emergency Phone","details.emergencyPhone"),SF("Distance km","details.distanceKm","number"),SF("Zone Code","details.zoneCode"),SF("Zone Name","details.zoneName"),
+    SF("Transfer Type","details.transferType","select",ENUM.transferType),SF("Direction","details.direction","select",ENUM.direction),SF("Airport","details.airportId","reference",[],"",["AIRPORT"]),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Terminal","details.terminal"),SF("Arrival Hall","details.arrivalHall"),SF("Airport Exit Number","details.airportExitNumber"),SF("Waiting Area","details.waitingArea"),SF("Meeting Point","details.meetingPoint"),SF("Meeting Point Description","details.meetingPointDescription","textarea"),SF("Emergency Phone","details.emergencyPhone"),SF("Distance km","details.distanceKm","number"),SF("Zone Code","details.zoneCode"),SF("Zone Name","details.zoneName"),
     SF("Transport Mode","details.transportMode","select",ENUM.transportMode),SF("Vehicle Type","details.vehicleType"),SF("Vehicle Class","details.vehicleClass","select",ENUM.vehicleClass),SF("Vehicle Capacity","details.vehicleCapacity","number"),SF("Luggage Capacity","details.luggageCapacity","number"),SF("Published Time Min","details.publishedTimeMin","number"),SF("Published Time Max","details.publishedTimeMax","number"),SF("Shared Time Min","details.sharedTimeMin","number"),SF("Shared Time Max","details.sharedTimeMax","number"),SF("Direct Time Min","details.directTimeMin","number"),SF("Direct Time Max","details.directTimeMax","number"),SF("Air Conditioning","details.airConditioning","boolean"),SF("Wi-Fi","details.wifi","boolean"),SF("Toilet","details.toilet","boolean"),SF("Accessible Vehicle Available","details.accessibleVehicleAvailable","boolean"),SF("Accessible Vehicle Guaranteed","details.accessibleVehicleGuaranteed","boolean"),SF("Accessibility Request Required","details.accessibilityRequestRequired","boolean"),SF("Accessibility Notes","details.accessibilityNotes","textarea"),
     SR("Transfer Zones","details.zones",[SF("Code","code"),SF("Name","name"),SF("Description","description","textarea")])
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("One-way Supplier Cost","commercial.internalCostOneWay","number"),SF("One-way Public Price","commercial.oneWayPublicPrice","number"),SF("Roundtrip Supplier Cost","commercial.internalCostRoundtrip","number"),SF("Roundtrip Public Price","commercial.roundtripPublicPrice","number"),SF("Child Price","commercial.childPrice","number"),SF("Infant Price","commercial.infantPrice","number"),SF("Child Seat Fee","commercial.childSeatFee","number"),SF("Extra Bag Fee","commercial.extraBagFee","number"),SF("Sports Equipment Fee","commercial.sportsEquipmentFee","number")],operations:[
@@ -248,7 +327,7 @@ const ENTITY_SCHEMAS={
     SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Airport","details.airportId","reference",[],"",["AIRPORT"]),SF("Vehicle Category","details.vehicleCategory","select",ENUM.vehicleCategory),SF("Vehicle Name","details.vehicleName"),SF("Vehicle Class","details.vehicleClass","select",ENUM.vehicleClass),SF("Transmission","details.transmission","select",ENUM.transmission),SF("Fuel Type","details.fuelType","select",ENUM.fuel),SF("Seats","details.seats","number"),SF("Doors","details.doors","number"),SF("Large Bags","details.largeBags","number"),SF("Small Bags","details.smallBags","number"),SF("Air Conditioning","details.airConditioning","boolean"),SF("Minimum Driver Age","details.minimumDriverAge","number"),SF("Mileage Policy","details.mileagePolicy","select",ENUM.mileagePolicy),SF("Fuel Policy","details.fuelPolicy","select",ENUM.fuelPolicy),SF("Deposit Policy","details.depositPolicy","textarea"),SF("Insurance Summary","details.insuranceSummary","textarea"),SF("Pickup Location","details.pickupLocation"),SF("Drop-off Location","details.dropoffLocation")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Rule","operations.cancellationRule","textarea"),SF("Internal Operational Notes","operations.internalNotes","textarea")]},
   PACKAGE:{details:[
-    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Package Type","details.packageType","select",ENUM.packageType),SF("Start Date","details.startDate","date"),SF("End Date","details.endDate","date"),SF("Number of Days","details.numberOfDays","number"),SF("Number of Nights","details.numberOfNights","number")
+    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Package Type","details.packageType","select",ENUM.packageType),SF("Start Date","details.startDate","date"),SF("End Date","details.endDate","date"),SF("Number of Days","details.numberOfDays","number"),SF("Number of Nights","details.numberOfNights","number")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("Deposit Amount","commercial.depositAmount","number")],operations:[SF("Booking Flow","operations.bookingFlow","textarea"),SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Rule","operations.cancellationRule","textarea"),SF("Internal Operational Notes","operations.internalNotes","textarea")]},
   ANCILLARY:{details:[
     SF("Extra Type","details.extraType","select",ENUM.ancillaryType),SF("Minimum Age","details.minimumAge","number"),SF("Maximum Age","details.maximumAge","number"),SF("Max Quantity","details.maxQuantity","number"),SF("Refundable","details.refundable","boolean"),SF("Changeable","details.changeable","boolean"),SF("Description","details.description","textarea")
@@ -339,7 +418,7 @@ function RepeatSchemaEditor({field,record,update,records}){
   </div>`;
 }
 function ExplicitSchemaEditor({type,section,record,update,records}){
-  const fields=schemaFields(type,section);
+  const fields=schemaFields(type,section).filter(field=>!["details.countryId","details.regionId","details.destinationId","details.areaId"].includes(field.path));
   if(!fields.length)return html`<div className="smartempty">No additional fields for this section.</div>`;
   return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)}/>` )}</div>`;
 }
@@ -592,7 +671,7 @@ function AssetLibraryPanel({setBusy,setToast}){
 
 
 function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast}){
-  const [draft,setDraft]=useState(()=>clone(bundle));
+  const [draft,setDraft]=useState(()=>hydrateHierarchy(bundle,records));
   const [tab,setTab]=useState("identity");
   const [lang,setLang]=useState(languages?.[0]||"EN");
   const [assetPicker,setAssetPicker]=useState(null);
@@ -606,12 +685,12 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const media=(draft.media||[]).map(normalizeMedia);
   const relations=(draft.relations||[]).map(normalizeRelation);
   const catalog=draft.catalog||{catalogType:"NONE",partnerTier:"",searchable:false,featured:false,homepageFeatured:false,searchPriority:rec.sortPriority||100,searchKeywords:[],marketCodes:["ALL"],salesChannels:["WEB"],publicLabel:"",badge:"",validFrom:"",validTo:"",notes:"",active:true};
-  const setCatalog=(k,v)=>setDraft(d=>({...d,catalog:{...(d.catalog||catalog),[k]:v}}));
-  const parentOptions=[{value:"",label:"None"},...refs.filter(x=>x.id!==rec.id&&["COUNTRY","DESTINATION","AREA"].includes(x.entityType)).map(x=>({value:x.id,label:`${x.entityType} · ${x.name}`}))];
+  const setCatalog=(k,v)=>setDraft(d=>({...d,catalog:{...(d.catalog||catalog),...(k==="partnerTier"&&v?{catalogType:"SKANDI_COLLECTION"}:{}),[k]:v}}));
+  const parentOptions=[{value:"",label:"None"},...refs.filter(x=>x.id!==rec.id&&["COUNTRY","REGION","DESTINATION","AREA"].includes(x.entityType)).map(x=>({value:x.id,label:`${x.entityType} · ${x.name}`}))];
   const supplierOptions=[{value:"",label:"None"},...refs.filter(x=>x.entityType==="SUPPLIER").map(x=>({value:x.id,label:x.name}))];
 
 
-  const detailKnown=[...knownSectionKeys(rec.entityType,"details"),"logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets","duffel"];
+  const detailKnown=[...knownSectionKeys(rec.entityType,"details"),"countryId","regionId","destinationId","areaId","logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets","duffel"];
   const commercialKnown=knownSectionKeys(rec.entityType,"commercial");
   const operationsKnown=knownSectionKeys(rec.entityType,"operations");
   const setSection=(key,next)=>setDraft(d=>({...d,record:{...d.record,[key]:next}}));
@@ -658,8 +737,6 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Assigned by SKANDI TRAVELS.":"Assigned when the record is saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
       <${Field} label="Sort Priority" type="number" value=${rec.sortPriority} onChange=${v=>update("sortPriority",v)}/>
-      ${["DESTINATION","AREA"].includes(rec.entityType)?html`<${Field} label="Parent Geography" type="select" options=${parentOptions} value=${rec.parentEntityId||""} onChange=${v=>update("parentEntityId",v)} />`:null}
-      ${SELLABLE.has(rec.entityType)?html`<${Field} label="Supplier" type="select" options=${supplierOptions} value=${rec.supplierEntityId||""} onChange=${v=>update("supplierEntityId",v)} />`:null}
       <${Toggle} label="Active" value=${rec.active!==false} onChange=${v=>update("active",v)}/>
       <${Toggle} label="Customer Visible" value=${rec.customerVisible===true} onChange=${v=>update("customerVisible",v)}/>
       <${Toggle} label="Staff Visible" value=${rec.staffVisible!==false} onChange=${v=>update("staffVisible",v)}/>
@@ -707,17 +784,10 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed image":"Supplier-managed image"}</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Browse the Asset Library to add one.</div>`}
       ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker.context} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
     </div>`:null}
-    ${tab==="relations"?html`<div>
-      <div className="paneltitle"><span>Relations</span><button className="btn small" onClick=${()=>setDraft(d=>({...d,relations:[...(d.relations||[]),normalizeRelation({})]}))}>+ Add Relation</button></div>
-      ${relations.length?relations.map((r,i)=>html`<div className="relitem"><div className="formgrid three">
-        <${Field} label="Relation Type" value=${r.relationType} onChange=${v=>setDraft(d=>{const a=[...(d.relations||[])];a[i]={...a[i],relationType:v};return{...d,relations:a}})}/>
-        <${Field} label="Target Record" type="select" options=${[{value:"",label:"Choose…" },...refs.filter(x=>x.id!==rec.id).map(x=>({value:x.id,label:`${x.entityType} · ${x.name}`}))]} value=${r.targetEntityId||r.targetRecordId||""} onChange=${v=>setDraft(d=>{const a=[...(d.relations||[])];const target=refs.find(x=>x.id===v);a[i]={...a[i],targetEntityId:target&&!["AIRPORT","AIRLINE"].includes(target.entityType)?v:"",targetRecordType:target&&["AIRPORT","AIRLINE"].includes(target.entityType)?target.entityType:"",targetRecordId:target&&["AIRPORT","AIRLINE"].includes(target.entityType)?v:""};return{...d,relations:a}})}/>
-        <button className="btn danger" onClick=${()=>setDraft(d=>({...d,relations:(d.relations||[]).filter((_,x)=>x!==i)}))}>Remove</button>
-      </div></div>`):html`<div className="empty">No relations.</div>`}
-    </div>`:null}
+    ${tab==="relations"?html`<${RelationPanel} draft=${draft} setDraft=${setDraft} records=${refs}/>`:null}
     ${tab==="catalog"?html`<div className="formgrid three">
-      <${Field} label="Website Placement" type="select" options=${[{value:"NONE",label:"None"},{value:"SKANDI_COLLECTION",label:"SKANDI TRAVELS"},{value:"SKANDI_PARTNER",label:"SKANDI Partner"}]} value=${catalog.catalogType||"NONE"} onChange=${v=>setCatalog("catalogType",v)}/>
-      <${Field} label="Partner Tier" value=${catalog.partnerTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
+      <${Field} label="Website Placement" type="select" options=${[{value:"NONE",label:"None"},{value:"SKANDI_COLLECTION",label:"SKANDI Collection"},...(["SUPPLIER","AIRLINE"].includes(rec.entityType)?[{value:"SKANDI_PARTNER",label:"SKANDI Partner"}]:[])]} value=${catalog.catalogType||"NONE"} onChange=${v=>setCatalog("catalogType",v)}/>
+      <${Field} label="SKANDI Collection Level" type="select" options=${[{value:"",label:"None"},...(["SELECT","SIGNATURE","EXCELSIOR"].map(value=>({value,label:value[0]+value.slice(1).toLowerCase()}))),...(!["","SELECT","SIGNATURE","EXCELSIOR"].includes(hotelTierForDisplay("",catalog.partnerTier))?[{value:hotelTierForDisplay("",catalog.partnerTier),label:`Previous value: ${hotelTierForDisplay("",catalog.partnerTier)} — review`,disabled:true}]:[])]} value=${hotelTierForDisplay("",catalog.partnerTier)} onChange=${v=>setCatalog("partnerTier",v)}/>
       <${Field} label="Search Priority" type="number" value=${catalog.searchPriority??100} onChange=${v=>setCatalog("searchPriority",v)}/>
       <${Toggle} label="Searchable" value=${catalog.searchable===true} onChange=${v=>setCatalog("searchable",v)}/>
       <${Toggle} label="Featured" value=${catalog.featured===true} onChange=${v=>setCatalog("featured",v)}/>
@@ -900,7 +970,7 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView})
       <div className="card panel"><div className="paneltitle"><span>Find a Supplier</span><span className="matchtag duffel">Supplier</span></div>
         <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} disabled=${Boolean(masterFilter)} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search Supplier</label><button className="btn primary" disabled=${!providerMatchesScope} onClick=${search}>Search</button></div></div>
         ${resourceType==="DESTINATION"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Import geography</div><div className="field"><label>Parent country for new SKANDI destination</label><select className="select" value=${countryId} onChange=${e=>setCountryId(e.target.value)}><option value="">No parent yet · keep Draft</option>${countries.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div>`:null}
-        ${resourceType==="HOTEL"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Optional SKANDI geography</div><div className="formgrid"><div className="field"><label>Destination</label><select className="select" value=${destinationId} onChange=${e=>setDestinationId(e.target.value)}><option value="">Assign later</option>${destinations.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div><div className="field"><label>Area / Resort</label><select className="select" value=${areaId} onChange=${e=>setAreaId(e.target.value)}><option value="">Assign later</option>${areas.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div></div>`:null}
+        ${resourceType==="HOTEL"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Optional SKANDI geography</div><div className="formgrid"><div className="field"><label>Destination</label><select className="select" value=${destinationId} onChange=${e=>setDestinationId(e.target.value)}><option value="">Assign later</option>${destinations.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div><div className="field"><label>Area</label><select className="select" value=${areaId} onChange=${e=>setAreaId(e.target.value)}><option value="">Assign later</option>${areas.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div></div>`:null}
       </div>
       <div className="card panel"><div className="paneltitle"><span>Search results</span><span className="pill">${results.length}</span></div>
         ${results.length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Resource</th><th>Code</th><th>Supplier Reference</th><th>Status</th><th></th></tr></thead><tbody>${results.map(item=>html`<tr><td><div className="providerresult"><div className="providerlogo">${item.preview?.logoSymbolUrl?html`<img src=${item.preview.logoSymbolUrl}/>`:html`<b>${item.code||item.entityType.slice(0,3)}</b>`}</div><div><b>${item.name||"Unnamed resource"}</b><div className="sub">${item.secondary||resourceTypeDisplay(item.entityType||item.providerResourceType)}</div></div></div></td><td><b>${item.code||"—"}</b></td><td>${item.providerId}</td><td>${item.alreadyInSkandiCollection?html`<span className="matchtag collection">${item.existingRecord?.collectionType==="SKANDI_PARTNER"?"SKANDI Partner":"In Inventory"}</span>`:item.canonicalMatch?html`<span className="matchtag match">Existing record</span>`:item.importSupported===false?html`<span className="matchtag block">Reference only</span>`:html`<span className="matchtag duffel">${item.existingRecord?.collectionType==="SKANDI_PARTNER"?"SKANDI Partner":"Supplier only"}</span>`}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>inspect(item)}>Details</button>${item.alreadyInSkandiCollection?html`<button className="btn small" onClick=${()=>openExisting(item)}>Open</button><button className="btn small" onClick=${()=>refreshSource(item)}>Refresh</button>`:item.canonicalMatch?html`<button className="btn small cyan" onClick=${()=>importItem(item,{linkExisting:true})}>Link Supplier</button>`:item.importSupported!==false?html`<button className="btn small primary" onClick=${()=>importItem(item)}>Add to Inventory</button>`:null}</div></td></tr>`)}</tbody></table></div>`:html`<div className="empty">Search Supplier to find hotels, airlines, airports, destinations/cities or aircraft references.</div>`}
@@ -939,7 +1009,7 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
   const [editor,setEditor]=useState(null);
   const [createPicker,setCreatePicker]=useState(false);
   const [createType,setCreateType]=useState("");
-  const createTypeLabels={COUNTRY:"Country",DESTINATION:"Destination",AREA:"Area / Resort",AIRPORT:"Airport",AIRLINE:"Airline",SUPPLIER:"Supplier",HOTEL:"Hotel",GUIDED_TOUR:"Guided Tour",ACTIVITY:"Activity",PARTNER_TICKET:"Partner Ticket",TRANSFER:"Transfer",CAR_RENTAL:"Car Rental",PACKAGE:"Package",ANCILLARY:"Ancillary"};
+  const createTypeLabels={COUNTRY:"Country",DESTINATION:"Destination",AREA:"Area",REGION:"Region / State",AIRPORT:"Airport",AIRLINE:"Airline",SUPPLIER:"Supplier",HOTEL:"Hotel",FLIGHT:"Flight",GUIDED_TOUR:"Guided Tour",ACTIVITY:"Activity",PARTNER_TICKET:"Partner Ticket",TRANSFER:"Transfer",CAR_RENTAL:"Car Rental",PACKAGE:"Package",ANCILLARY:"Ancillary"};
   const matchesType=r=>r.entityType!=="HOTEL"&&(!type||(type==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType)&&(!tourSubtype||r.entityType===tourSubtype):r.entityType===type));
   const filtered=(boot.records||[]).filter(r=>matchesType(r)&&(!statusFilter||r.status===statusFilter)&&(!customerFilter||(customerFilter==="YES"?r.customerVisible===true:r.customerVisible!==true))&&(!alteaFilter||(alteaFilter==="YES"?r.alteaVisible===true:r.alteaVisible!==true))&&(!search||[r.code,r.name,r.slug,r.entityType,r.status].join(" ").toLowerCase().includes(search.toLowerCase())));
   const records=[...filtered].sort((a,b)=>sortBy==="TITLE_ASC"?text(a.name).localeCompare(text(b.name)):sortBy==="CODE_ASC"?text(a.code).localeCompare(text(b.code)):sortBy==="TYPE_ASC"?`${a.entityType}|${a.name}`.localeCompare(`${b.entityType}|${b.name}`):text(b.updatedAt).localeCompare(text(a.updatedAt)));
@@ -1409,7 +1479,7 @@ function PDPropertyMap({latitude,longitude,onCoordinates}){
   </div>`;
 }
 function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
-  const [draft,setDraft]=useState(()=>clone(bundle));
+  const [draft,setDraft]=useState(()=>hydrateHierarchy(bundle,boot.records));
   const [tab,setTab]=useState("MASTER");
   const [lang,setLang]=useState("SV");
   const [translationBusy,setTranslationBusy]=useState(false);
@@ -1439,7 +1509,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const airportOptions=[{value:"",label:"Choose..."},...airports.map(x=>({value:x.id,label:`${x.code||""} ${x.name}`}))];
   function update(path,value){setDraft(old=>{const next=clone(old);setPath(next.record,path,value);return next})}
   function setDetails(name,val){update(`details.${name}`,val)}
-  function setCatalog(name,val){setDraft(old=>({...old,record:name==="partnerTier"?{...old.record,details:{...(old.record.details||{}),skandiTier:val}}:old.record,catalog:{...(old.catalog||{}),[name]:val}}))}
+  function setCatalog(name,val){setDraft(old=>({...old,record:name==="partnerTier"?{...old.record,details:{...(old.record.details||{}),skandiTier:val}}:old.record,catalog:{...(old.catalog||{}),...(name==="partnerTier"?{catalogType:val?"SKANDI_COLLECTION":"NONE"}:{}),[name]:val}}))}
   function setLangValue(name,val){setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}next.localizedContent[i]={...next.localizedContent[i],[name]:val};if(lang==="EN"&&(name==="seoTitle"||name==="seoDescription"))next.record.seo={...(next.record.seo||{}),[name==="seoTitle"?"title":"description"]:val};return next});if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(code=>[code,true])))}
   function setLangArray(name,position,value,action="set"){
     setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];
@@ -1553,9 +1623,9 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
       <div className="formgrid three">
         <${PDField} label="System Code" value=${rec.code} onChange=${v=>update("code",v)} help="Unique property code"/>
         <${PDField} label="Master Name" value=${rec.name} onChange=${v=>update("name",v)}/>
-        <${PDField} label="Brand / Chain" value=${d.brand||""} onChange=${v=>setDetails("brand",v)} help="Supplier details may change after refresh"/>
+        <${PDField} label="Brand" value=${d.brand||""} disabled=${true} help="Select the hotel chain under Related inventory."/>
         <${PDField} label="Property Type" type="select" options=${ENUM.propertyType} value=${d.propertyType||""} onChange=${v=>setDetails("propertyType",v)}/>
-        <${PDField} label="SKANDI Tier" type="select" options=${optionList(["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"],hotelTierForDisplay(d.skandiTier,catalog.partnerTier))} value=${hotelTierForDisplay(d.skandiTier,catalog.partnerTier)} onChange=${v=>setCatalog("partnerTier",v)}/>
+        <${PDField} label="SKANDI Tier" type="select" options=${[{value:"",label:"None"},...["SELECT","SIGNATURE","EXCELSIOR"].map(value=>({value,label:value[0]+value.slice(1).toLowerCase()})),...(!["","SELECT","SIGNATURE","EXCELSIOR"].includes(hotelTierForDisplay(d.skandiTier,catalog.partnerTier))?[{value:hotelTierForDisplay(d.skandiTier,catalog.partnerTier),label:`Previous value: ${hotelTierForDisplay(d.skandiTier,catalog.partnerTier)} — review`,disabled:true}]:[])]} value=${hotelTierForDisplay(d.skandiTier,catalog.partnerTier)} onChange=${v=>setCatalog("partnerTier",v)}/>
         <${PDField} label="Settlement Currency" type="select" options=${ENUM.currency} value=${rec.commercial?.currency||"USD"} onChange=${v=>update("commercial.currency",v)}/>
         <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from Master Name"/>
         <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Assigned by SKANDI TRAVELS"/>
@@ -1565,7 +1635,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     <${PDSection} title="Geography & Routing">
       <div className="formgrid">
         <div>
-          <div className="formgrid"><${PDField} label="Destination" type="select" options=${destOptions} value=${d.destinationId||""} onChange=${v=>setDetails("destinationId",v)}/><${PDField} label="Area / Resort" type="select" options=${areaOptions} value=${d.areaId||""} onChange=${v=>setDetails("areaId",v)}/></div>
+
           <div className="formgrid" style=${{marginTop:"12px"}}><${PDField} label="Address" value=${addressText} onChange=${setAddress}/><${PDField} label="City" value=${d.city||""} onChange=${v=>setDetails("city",v)}/></div>
           <div className="formgrid" style=${{marginTop:"12px"}}><${PDField} label="Postal Code" value=${d.postalCode||""} onChange=${v=>setDetails("postalCode",v)}/><${PDField} label="Country" value=${d.countryName||d.country||""} onChange=${v=>setDetails("countryName",v)}/></div>
           <div className="formgrid" style=${{marginTop:"12px"}}><${PDField} label="Nearest Airport" type="select" value=${d.nearestAirportId||""} options=${airportOptions} onChange=${v=>setDetails("nearestAirportId",v)}/><${PDField} label="Transfer Time (Min)" type="number" value=${d.transferTimeMinutes??""} onChange=${v=>setDetails("transferTimeMinutes",v)}/></div>
@@ -1575,6 +1645,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
         <div><div className="pd-field-row"><${PDField} label="Latitude" type="number" value=${d.latitude??""} onChange=${v=>setDetails("latitude",v)}/><${PDField} label="Longitude" type="number" value=${d.longitude??""} onChange=${v=>setDetails("longitude",v)}/></div><${PDPropertyMap} latitude=${d.latitude} longitude=${d.longitude} onCoordinates=${(latitude,longitude)=>setDraft(old=>{const next=clone(old);next.record.details={...(next.record.details||{}),latitude,longitude};return next})}/></div>
       </div>
     </${PDSection}>
+    <${PDSection} title="Related inventory"><${RelationPanel} draft=${draft} setDraft=${setDraft} records=${boot.records||[]}/></${PDSection}>
     <${PDSection} title="Facilities & Ratings">
       <div className="formgrid four"><${PDField} label="Star Rating" type="number" value=${d.officialStarRating??""} onChange=${v=>setDetails("officialStarRating",v)}/><${PDField} label="Editorial Rating" type="number" value=${d.skandiRating??""} onChange=${v=>setDetails("skandiRating",v)}/><${PDField} label="Guest Rating" type="number" value=${d.guestRating??""} onChange=${v=>setDetails("guestRating",v)}/><${PDField} label="Review Count" type="number" value=${d.reviewCount??""} onChange=${v=>setDetails("reviewCount",v)}/></div>
       <div className="notice" style=${{marginTop:"12px"}}>Enable facilities. Assign one HERO facility for primary display.</div>
