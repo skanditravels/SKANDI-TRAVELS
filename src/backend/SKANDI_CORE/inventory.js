@@ -27,11 +27,11 @@ import {
 export const INVENTORY_CORE_VERSION = "V12-INVENTORY-2026.10.05";
 
 const MASTER_TYPES = new Set([
-  "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
+  "COUNTRY","REGION","DESTINATION","AREA","SUPPLIER","HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY",
   "PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"
 ]);
 const REFERENCE_TYPES = new Set(["AIRPORT","AIRLINE"]);
-const SELLABLE_TYPES = new Set(["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
+const SELLABLE_TYPES = new Set(["HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
 const STATUS = new Set(["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"]);
 const CATALOG_TYPES = new Set(["NONE","SKANDI_COLLECTION","SKANDI_PARTNER"]);
 const MEDIA_ROLES = new Set(["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]);
@@ -536,16 +536,26 @@ export async function getInventoryBootstrapCore(input={}){
   };
 }
 
+async function getIncomingRelations(type,id){
+  const reference=REFERENCE_TYPES.has(type);
+  const relationQuery=reference?{target_record_type:qeq(type),target_record_id:qeq(id)}:{target_entity_id:qeq(id)};
+  const tasks=[select("inventory_entity_relations",{select:"*",...relationQuery,active:"eq.true",limit:"3000"})];
+  if(!reference){tasks.push(select("inventory_master_entities",{select:"id,public_id,entity_type,code,name,parent_entity_id,supplier_entity_id",parent_entity_id:qeq(id),limit:"3000"}),select("inventory_master_entities",{select:"id,public_id,entity_type,code,name,parent_entity_id,supplier_entity_id",supplier_entity_id:qeq(id),limit:"3000"}));
+    tasks.push(select("inventory_master_entities",{select:"id,public_id,entity_type,code,name",or:`(details->>countryId.eq.${id},details->>regionId.eq.${id},details->>destinationId.eq.${id},details->>areaId.eq.${id})`,limit:"3000"}));}
+  const [relations,children=[],supplied=[],geographic=[]]=await Promise.all(tasks);
+  return {relations,children,supplied,geographic};
+}
 async function getMasterBundle(id){
   const row=(await select("inventory_master_entities",{select:"*",id:qeq(id),limit:"1"}))[0];
   if(!row)throw new Error("INVENTORY_RECORD_NOT_FOUND");
-  const [localized,media,relations,catalog]=await Promise.all([
+  const [localized,media,relations,catalog,incoming]=await Promise.all([
     select("inventory_localized_content",{select:"*",entity_id:qeq(id),order:"language.asc"}),
     select("inventory_media_assets",{select:"*",entity_id:qeq(id),order:"sort_order.asc"}),
     select("inventory_entity_relations",{select:"*",source_entity_id:qeq(id),order:"sequence_no.asc"}),
-    select("inventory_catalog_entries",{select:"*",target_entity_id:qeq(id),limit:"1"})
+    select("inventory_catalog_entries",{select:"*",target_entity_id:qeq(id),limit:"1"}),
+    getIncomingRelations(upper(row.entity_type,40),id)
   ]);
-  return{record:normalizeMaster(row),localizedContent:localized,media,relations,catalog:catalog[0]?normalizeCatalog(catalog[0]):null};
+  return{record:normalizeMaster(row),localizedContent:localized,media,relations,incoming,catalog:catalog[0]?normalizeCatalog(catalog[0]):null};
 }
 async function getReferenceBundle(type,id){
   const isAirline=type==="AIRLINE";
@@ -562,7 +572,7 @@ async function getReferenceBundle(type,id){
   });
   const localizedContent=array(raw.localized_content);
   const media=array(raw.media_assets);
-  return{record,localizedContent,media,relations,catalog:cat[0]?normalizeCatalog(cat[0]):null};
+  return{record,localizedContent,media,relations,incoming:await getIncomingRelations(type,id),catalog:cat[0]?normalizeCatalog(cat[0]):null};
 }
 
 export async function getInventoryRecordCore(input={}){
@@ -681,8 +691,8 @@ async function canonicalizeMasterRecord(input={}){
     delete d.maximumQuantity;
   }
 
-  if(["AREA","DESTINATION"].includes(type) && record.parentEntityId){
-    const parent=await resolveCanonicalReference(record.parentEntityId,["COUNTRY","AREA","DESTINATION"]);
+  if(["AREA","DESTINATION","REGION"].includes(type) && record.parentEntityId){
+    const parent=await resolveCanonicalReference(record.parentEntityId,["COUNTRY","REGION","DESTINATION"]);
     if(parent){
       record.parentEntityId=parent.id;
       const pd=object(parent.details);
@@ -748,7 +758,7 @@ function validateMasterRecord(record,bundle={}){
   const d=object(record.details), status=safeStatus(record.status);
   const finalizing=status==="REVIEW"||status==="PUBLISHED";
   if(type==="COUNTRY"&&!upper(d.countryCode||record.code,8))throw new Error("INVENTORY_COUNTRY_CODE_REQUIRED");
-  if(finalizing&&["AREA","DESTINATION"].includes(type)&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_PARENT_REQUIRED");
+  if(finalizing&&["AREA","DESTINATION","REGION"].includes(type)&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_PARENT_REQUIRED");
   if(finalizing&&type==="HOTEL"&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
   if(finalizing&&["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","PACKAGE"].includes(type)&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
   if(finalizing&&type==="TRANSFER"&&!isUuid(d.airportId))throw new Error("INVENTORY_AIRPORT_REQUIRED");
@@ -993,6 +1003,40 @@ async function resolveAircraftChildAssetFields(kind,item={},current={}){
   return out;
 }
 
+const HIERARCHY_RELATIONS=Object.freeze({HOTEL:["HOTEL"],FLIGHT:["FLIGHT"],GUIDED_TOUR:["GUIDED_TOUR"],ACTIVITY:["ACTIVITY"],PARTNER_TICKET:["PARTNER_TICKET"],TRANSFER:["TRANSFER"],CAR_RENTAL:["CAR_RENTAL"],PACKAGE:["PACKAGE"],ANCILLARY:["ANCILLARY"],AIRPORT:["AIRPORT"],COUNTRY:["COUNTRY"],REGION:["REGION"],DESTINATION:["DESTINATION"],AREA:["AREA"],CHAIN:["SUPPLIER"],BOOKING_SUPPLIER:["SUPPLIER"],AIRLINE:["AIRLINE"]});
+async function validateHierarchyRelations(bundle){
+  if(!Array.isArray(bundle.relations))return;
+  const record=bundle.record||{},self=clean(record.id,100),type=upper(record.entityType||record.entity_type,40);
+  const sourceQuery=REFERENCE_TYPES.has(type)?{source_record_type:qeq(type),source_record_id:qeq(self)}:{source_entity_id:qeq(self)};
+  const existing=self?await select("inventory_entity_relations",{select:"id,relation_type,target_entity_id,target_record_type,target_record_id,active",...sourceQuery,limit:"3000"}):[];
+  const unchanged=row=>existing.some(old=>clean(old.id,100)===clean(row.id,100)&&upper(old.relation_type,80)===upper(row.relationType??row.relation_type,80)&&clean(old.target_entity_id||old.target_record_id,100)===clean(row.targetEntityId||row.target_entity_id||row.targetRecordId||row.target_record_id,100)&&old.active!==(row.active===false));
+  const counts=new Map(),selected=new Map();
+  for(const row of bundle.relations){
+    const kind=upper(row.relationType??row.relation_type,80),allowed=HIERARCHY_RELATIONS[kind];
+    if(!allowed||row.active===false)continue;
+    const id=clean(row.targetEntityId||row.target_entity_id||row.targetRecordId||row.target_record_id,100),isUnchanged=unchanged(row);
+    if(!id)throw new Error("Select a target for each related inventory field.");
+    if(id===self&&!isUnchanged)throw new Error("A record cannot be related to itself.");
+    const group=counts.get(kind)||[];group.push(isUnchanged);counts.set(kind,group);
+    const target=await resolveCanonicalReference(id,allowed);
+    if(!target&&!isUnchanged)throw new Error(`Select an existing ${kind.replace(/_/g," ").toLowerCase()} record.`);
+    if(target&&["COUNTRY","REGION","DESTINATION","AREA"].includes(kind))selected.set(kind,{target,unchanged:isUnchanged});
+  }
+  for(const [kind,items] of counts)if(items.length>1&&!items.every(Boolean))throw new Error(`Only one ${kind.replace(/_/g," ").toLowerCase()} can be selected.`);
+  const levels=["AREA","DESTINATION","REGION","COUNTRY"],cache=new Map();
+  async function read(id){if(!id)return null;if(!cache.has(id))cache.set(id,await resolveCanonicalReference(id,["COUNTRY","REGION","DESTINATION","AREA"]));return cache.get(id)}
+  for(let i=0;i<levels.length;i++){
+    const child=selected.get(levels[i]);if(!child)continue;
+    const seen=new Set([child.target.id]),queue=[child.target],ancestors=[];
+    while(queue.length&&seen.size<30){const current=queue.shift(),d=object(current.details);
+      for(const id of [current.parentEntityId,d.countryId,d.regionId,d.destinationId,d.areaId]){const parent=await read(clean(id,100));if(parent&&!seen.has(parent.id)){seen.add(parent.id);ancestors.push(parent);queue.push(parent)}}
+    }
+    for(const parentKind of levels.slice(i+1)){const chosen=selected.get(parentKind);if(!chosen)continue;const known=ancestors.filter(x=>x.entityType===parentKind);
+      if(known.length&&!known.some(x=>x.id===chosen.target.id)&&(!child.unchanged||!chosen.unchanged))throw new Error(`The selected ${levels[i].toLowerCase()} does not belong to the selected ${parentKind.toLowerCase()}.`);
+    }
+  }
+}
+
 function relationBody(record,row={},index=0){
   const isExternal=REFERENCE_TYPES.has(upper(record.entityType,40));
   const targetId=clean(row.targetEntityId??row.target_entity_id,80);
@@ -1016,6 +1060,10 @@ function catalogBody(record,row={}){
   const type=upper(record.entityType,40);
   const catalogType=upper(row.catalogType??row.catalog_type??"NONE",80);
   if(!CATALOG_TYPES.has(catalogType))throw new Error("INVENTORY_CATALOG_TYPE_INVALID");
+  if(catalogType==="SKANDI_PARTNER"&&!["SUPPLIER","AIRLINE"].includes(type))throw new Error("SKANDI Partner is available only for suppliers, chains and airlines.");
+  const rawTier=upper(row.partnerTier??row.partner_tier,80);
+  const tier=rawTier==="SIGNATURE COLLECTION"?"SIGNATURE":rawTier;
+  if(catalogType==="SKANDI_COLLECTION"&&tier&&!new Set(["SELECT","SIGNATURE","EXCELSIOR"]).has(tier))throw new Error("Choose Select, Signature, Excelsior or no tier.");
   if(catalogType==="NONE")return null;
   const isExternal=REFERENCE_TYPES.has(type);
   return{
@@ -1023,7 +1071,7 @@ function catalogBody(record,row={}){
     target_record_type:type,
     target_record_id:clean(record.id,100),
     target_code:upper(record.code,180),
-    catalog_type:catalogType,partner_tier:upper(row.partnerTier??row.partner_tier,80)||null,
+    catalog_type:catalogType,partner_tier:tier||null,
     searchable:bool(row.searchable,false),featured:bool(row.featured,false),
     homepage_featured:bool(row.homepageFeatured??row.homepage_featured,false),
     search_priority:nullableNumber(row.searchPriority??row.search_priority,{integer:true,min:0})??100,
@@ -1063,7 +1111,7 @@ function canonicalCollectionTier(catalog={}){
   if(upper(catalog?.catalogType,80)!=="SKANDI_COLLECTION")return "";
   const value=upper(catalog?.partnerTier,80);
   const normalized=value==="SIGNATURE COLLECTION"?"SIGNATURE":value;
-  return ["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"].includes(normalized)?normalized:"";
+  return ["SELECT","SIGNATURE","EXCELSIOR"].includes(normalized)?normalized:"";
 }
 
 async function syncMasterChildren(session,record,bundle){
@@ -1278,6 +1326,8 @@ export async function saveInventoryBundleCore(input={}){
   const type=upper(bundle?.record?.entityType||bundle?.record?.entity_type,40);
   if(!MASTER_TYPES.has(type)&&!REFERENCE_TYPES.has(type))throw new Error("INVENTORY_RECORD_TYPE_UNSUPPORTED");
 
+  if(bundle.catalog)catalogBody({...bundle.record,id:bundle.record.id||"pending"},bundle.catalog);
+  await validateHierarchyRelations(bundle);
   const rollback=await snapshotBundleForRollback(bundle.record);
   let record=null;
 

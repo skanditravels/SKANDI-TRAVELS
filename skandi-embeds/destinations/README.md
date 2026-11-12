@@ -1,5 +1,7 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+2026-11-12 — The accessible network directory can narrow published inventory by Country, Region/State, Destination and Area. It reads the public inventory hierarchy and keeps existing map links as a fallback. Requires coordinated Wix backend deployment and live verification.
+
 ## 2026-11-11 — Mobile map detail and presentation
 
 The active source triplet adds the supplied responsive presentation and a dismissible, expandable mobile selection sheet. The sheet starts hidden from assistive technology and is made available only while a selection is open. Map data, routes, selection messages and the canonical public network projection are unchanged. The original reference below is historical; the source triplet is the builder input. Source and controlled browser checks do not by themselves verify the published Wix site.

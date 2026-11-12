@@ -1,5 +1,7 @@
 # INFO / LOG — Inventory Control
 
+2026-11-12 — Hierarchy work: added Region/State and Area labels, typed related-record dropdowns and inbound references, with separate chain and booking-supplier slots. Existing mismatched relationships are retained for review. Collection levels are Select, Signature and Excelsior; Partner is limited to suppliers and airlines. Backend and published embed must be deployed together; live Wix verification is required.
+
 ## 2026-11-11 — Mobile inventory workspace
 
 The active source adds a compact sections drawer, scroll reset and responsive labeled cards for the existing inventory and property tables. All mutations and inventory data continue through the existing controller and canonical backend. Authenticated live verification remains required.

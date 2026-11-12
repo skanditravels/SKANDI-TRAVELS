@@ -28,7 +28,7 @@ test('media cannot be moved from another product or replaced with a raw URL',asy
 
 test('save reports an unconfirmed restore instead of claiming rollback succeeded',async()=>{
  const events=[];
- const ctx=vm.createContext({...base,MASTER_TYPES:new Set(['HOTEL']),REFERENCE_TYPES:new Set(),requireInventoryAccess:async()=>({}),snapshotBundleForRollback:async()=>({id:'hotel'}),savePrimary:async()=>({id:'hotel'}),syncMasterChildren:async()=>{throw Error('write failed')},compensateBundleSave:async()=>false,audit:async(_s,event)=>events.push(event)});
+ const ctx=vm.createContext({...base,validateHierarchyRelations:async()=>{},catalogBody:()=>null,MASTER_TYPES:new Set(['HOTEL']),REFERENCE_TYPES:new Set(),requireInventoryAccess:async()=>({}),snapshotBundleForRollback:async()=>({id:'hotel'}),savePrimary:async()=>({id:'hotel'}),syncMasterChildren:async()=>{throw Error('write failed')},compensateBundleSave:async()=>false,audit:async(_s,event)=>events.push(event)});
  vm.runInContext(functionCode('saveInventoryBundleCore')+'\nthis.save=saveInventoryBundleCore',ctx);
  await assert.rejects(()=>ctx.save({bundle:{record:{entityType:'HOTEL'}}}),e=>e.message==='INVENTORY_BUNDLE_RESTORE_FAILED'&&/could not be fully restored/.test(e.publicMessage));
  assert.deepEqual(events,['INVENTORY_BUNDLE_RESTORE_FAILED']);
@@ -66,4 +66,52 @@ test('catalog owns merchandising and recognized collection tier remains aligned'
  writes.length=0;catalog={catalogType:'SKANDI_PARTNER',partnerTier:'SIGNATURE'};
  await ctx.sync({},record,{});
  assert.equal('details' in writes[0].body,false);
+});
+
+
+test('SKANDI Partner is limited to suppliers and airlines and collection levels are valid',()=>{
+ const ctx=vm.createContext({...base,CATALOG_TYPES:new Set(['NONE','SKANDI_COLLECTION','SKANDI_PARTNER']),REFERENCE_TYPES:new Set(['AIRLINE']),bool:(v,d)=>v===undefined?d:!!v,nullableNumber:()=>100,uniqueStrings:()=>[]});
+ vm.runInContext(functionCode('catalogBody')+'\nthis.catalogBody=catalogBody',ctx);
+ assert.throws(()=>ctx.catalogBody({entityType:'HOTEL',id:'h'},{catalogType:'SKANDI_PARTNER'}),/only for suppliers/);
+ assert.doesNotThrow(()=>ctx.catalogBody({entityType:'SUPPLIER',id:'s'},{catalogType:'SKANDI_PARTNER'}));
+ assert.doesNotThrow(()=>ctx.catalogBody({entityType:'HOTEL',id:'h'},{catalogType:'SKANDI_COLLECTION',partnerTier:'EXCELSIOR'}));
+ assert.throws(()=>ctx.catalogBody({entityType:'HOTEL',id:'h'},{catalogType:'SKANDI_COLLECTION',partnerTier:'CLASSIC'}),/Select, Signature, Excelsior/);
+});
+
+test('hierarchy rejects duplicate levels and invalid target types',async()=>{
+ const ctx=vm.createContext({...base,qeq:x=>'eq.'+x,select:async()=>[],REFERENCE_TYPES:new Set(),HIERARCHY_RELATIONS:{COUNTRY:['COUNTRY'],AREA:['AREA']},resolveCanonicalReference:async(id,types)=>id==='country'&&types.includes('COUNTRY')?{id}:null});
+ vm.runInContext(functionCode('validateHierarchyRelations')+'\nthis.validate=validateHierarchyRelations',ctx);
+ const link=(type,id)=>({relationType:type,targetEntityId:id});
+ await assert.doesNotReject(()=>ctx.validate({record:{id:'hotel'},relations:[link('COUNTRY','country')]}));
+ await assert.rejects(()=>ctx.validate({record:{id:'hotel'},relations:[link('COUNTRY','country'),link('COUNTRY','country')]}),/Only one/);
+ await assert.rejects(()=>ctx.validate({record:{id:'hotel'},relations:[link('AREA','country')]}),/existing area/);
+});
+
+test('existing geographic references are editable without losing the hierarchy',async()=>{
+ const ui=await fs.readFile(new URL('../altea-embeds/inventory-control/skandi-inventory-control.js',import.meta.url),'utf8');
+ const tree=parse(ui,{ecmaVersion:'latest',sourceType:'module'});const fn=name=>{const n=tree.body.find(x=>x.type==='FunctionDeclaration'&&x.id.name===name);assert.ok(n);return ui.slice(n.start,n.end)};
+ const ctx=vm.createContext({JSON,Set,Map,clone:v=>JSON.parse(JSON.stringify(v)),text:v=>String(v??'')});
+ vm.runInContext([fn('normalizeRelation'),fn('hydrateHierarchy'),fn('withHierarchyEdit'),'this.hydrate=hydrateHierarchy;this.edit=withHierarchyEdit'].join('\n'),ctx);
+ const bundle=ctx.hydrate({record:{entityType:'HOTEL',parentEntityId:'area',details:{areaId:'area',destinationId:'city'}},relations:[]},[{id:'area',entityType:'AREA'}]);
+ assert.equal(bundle.relations.length,2);assert.equal(bundle.relations.find(x=>x.relationType==='AREA').targetEntityId,'area');
+ const changed=ctx.edit(bundle,bundle.relations.filter(x=>x.relationType!=='AREA'));
+ assert.equal(changed.record.details.areaId,undefined);assert.equal(changed.record.parentEntityId,'city');assert.equal(changed.record.details.destinationId,'city');
+});
+
+test('unchanged legacy relationships remain editable without permitting new duplicates',async()=>{
+ const existing=[{id:'old',relation_type:'DESTINATION',target_entity_id:'country',active:true}];
+ const ctx=vm.createContext({...base,qeq:x=>'eq.'+x,select:async()=>existing,REFERENCE_TYPES:new Set(),HIERARCHY_RELATIONS:{DESTINATION:['DESTINATION']},resolveCanonicalReference:async()=>null});
+ vm.runInContext(functionCode('validateHierarchyRelations')+'\nthis.validate=validateHierarchyRelations',ctx);
+ const row={id:'old',relationType:'DESTINATION',targetEntityId:'country',active:true};
+ await assert.doesNotReject(()=>ctx.validate({record:{id:'hotel'},relations:[row]}));
+ await assert.rejects(()=>ctx.validate({record:{id:'hotel'},relations:[row,{relationType:'DESTINATION',targetEntityId:'country'}]}),/existing destination|Only one/);
+});
+
+test('a new geographic link cannot contradict the selected parent',async()=>{
+ const records={fl:{id:'fl',entityType:'REGION',parentEntityId:'us',details:{}},us:{id:'us',entityType:'COUNTRY',details:{}},se:{id:'se',entityType:'COUNTRY',details:{}}};
+ const ctx=vm.createContext({...base,qeq:x=>'eq.'+x,select:async()=>[],REFERENCE_TYPES:new Set(),HIERARCHY_RELATIONS:{COUNTRY:['COUNTRY'],REGION:['REGION']},resolveCanonicalReference:async(id,types)=>types.includes(records[id]?.entityType)?records[id]:null});
+ vm.runInContext(functionCode('validateHierarchyRelations')+'\nthis.validate=validateHierarchyRelations',ctx);
+ const link=(type,id)=>({relationType:type,targetEntityId:id});
+ await assert.doesNotReject(()=>ctx.validate({record:{id:'h'},relations:[link('REGION','fl'),link('COUNTRY','us')]}));
+ await assert.rejects(()=>ctx.validate({record:{id:'h'},relations:[link('REGION','fl'),link('COUNTRY','se')]}),/does not belong/);
 });

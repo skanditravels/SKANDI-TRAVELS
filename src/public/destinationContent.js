@@ -89,51 +89,36 @@ function relatedRecords(record, relationTypes = [], entityTypes = []) {
     .filter(Boolean);
 }
 function parentOf(record) { return record ? (byId(record.parentEntityId) || relationTarget(record, ["PARENT"], [])) : null; }
-function ancestors(record) {
-  const result = [], seen = new Set(); let current = record;
-  while (current) {
-    const parent = parentOf(current); if (!parent || seen.has(parent.id)) break;
-    seen.add(parent.id); result.push(parent); current = parent;
+function geographicParents(record) {
+  if (!record) return [];
+  const d=obj(record.details), ids=[record.parentEntityId,d.countryId,d.countryEntityId,d.regionId,d.regionEntityId,d.destinationId,d.destinationEntityId,d.areaId,d.areaEntityId];
+  const geoTypes=new Set(["COUNTRY","REGION","DESTINATION","AREA"]);
+  for(const relation of arr(record.relations)){
+    const relationType=clean(first(relation.relationType,relation.relation_type,relation.type),80).toUpperCase();
+    if(["COUNTRY","REGION","DESTINATION","AREA","PARENT"].includes(relationType))ids.push(first(relation.targetEntityId,relation.target_entity_id,relation.targetId));
   }
+  const rank={COUNTRY:4,REGION:3,DESTINATION:2,AREA:1};
+  const ownRank=rank[record.entityType]??0;
+  return [...new Set(ids.filter(Boolean))].map(byId).filter(item=>item&&geoTypes.has(item.entityType)&&rank[item.entityType]>ownRank);
+}
+function ancestors(record) {
+  const result=[],seen=new Set([record?.id]),queue=geographicParents(record);
+  while(queue.length){const parent=queue.shift();if(!parent||seen.has(parent.id))continue;seen.add(parent.id);result.push(parent);queue.push(...geographicParents(parent));}
   return result;
 }
-function countryOf(record) {
-  if (!record) return null; if (record.entityType === "COUNTRY") return record;
-  const d = obj(record.details);
-  return byId(first(d.countryId, d.countryEntityId)) || relationTarget(record, ["COUNTRY"], ["COUNTRY"])
-    || ancestors(record).find(x => x.entityType === "COUNTRY") || null;
-}
-function destinationOf(record) {
-  if (!record) return null; if (record.entityType === "DESTINATION") return record;
-  const d = obj(record.details);
-  return byId(first(d.destinationId, d.destinationEntityId)) || relationTarget(record, ["DESTINATION"], ["DESTINATION"])
-    || ancestors(record).find(x => x.entityType === "DESTINATION") || null;
-}
-function areaOf(record) {
-  if (!record) return null; if (record.entityType === "AREA") return record;
-  const d = obj(record.details);
-  return byId(first(d.areaId, d.areaEntityId)) || relationTarget(record, ["AREA"], ["AREA"])
-    || ancestors(record).find(x => x.entityType === "AREA") || null;
-}
-function isDirectChild(child, parent) {
-  if (!child || !parent) return false;
-  if (clean(child.parentEntityId, 160) === clean(parent.id, 160)) return true;
-  return arr(child.relations).some(r => clean(first(r.relationType, r.type), 80).toUpperCase() === "PARENT"
-    && clean(first(r.targetEntityId, r.targetId), 160) === clean(parent.id, 160));
+function countryOf(record) {return record?.entityType==="COUNTRY"?record:ancestors(record).find(x=>x.entityType==="COUNTRY")||null;}
+function regionOf(record) {return record?.entityType==="REGION"?record:ancestors(record).find(x=>x.entityType==="REGION")||null;}
+function destinationOf(record) {return record?.entityType==="DESTINATION"?record:ancestors(record).find(x=>x.entityType==="DESTINATION")||null;}
+function areaOf(record) {return record?.entityType==="AREA"?record:ancestors(record).find(x=>x.entityType==="AREA")||null;}
+function isDirectChild(child,parent) {
+  if(!child||!parent)return false;
+  return geographicParents(child).some(item=>item.id===parent.id);
 }
 function directChildren(parent, types = []) {
-  const allowed = new Set(arr(types).map(v => clean(v, 60).toUpperCase()));
-  return getCatalog().filter(r => (!allowed.size || allowed.has(clean(r.entityType, 60).toUpperCase())) && isDirectChild(r, parent));
+  const allowed=new Set(arr(types).map(v=>clean(v,60).toUpperCase()));
+  return getCatalog().filter(r=>(!allowed.size||allowed.has(clean(r.entityType,60).toUpperCase()))&&isDirectChild(r,parent));
 }
-function isUnder(record, ancestor) {
-  if (!record || !ancestor) return false; if (record.id === ancestor.id) return true;
-  if (ancestors(record).some(x => x.id === ancestor.id)) return true;
-  const d = obj(record.details), type = clean(ancestor.entityType, 60).toUpperCase();
-  if (type === "COUNTRY" && [d.countryId,d.countryEntityId].map(clean).includes(clean(ancestor.id))) return true;
-  if (type === "DESTINATION" && [d.destinationId,d.destinationEntityId].map(clean).includes(clean(ancestor.id))) return true;
-  if (type === "AREA" && [d.areaId,d.areaEntityId].map(clean).includes(clean(ancestor.id))) return true;
-  return false;
-}
+function isUnder(record,ancestor) {return !!record&&!!ancestor&&(record.id===ancestor.id||ancestors(record).some(x=>x.id===ancestor.id));}
 function hotelsForScope(scope) { return !scope ? records("HOTEL") : records("HOTEL").filter(h => isUnder(h, scope)); }
 
 
@@ -319,5 +304,5 @@ function liveHotel(item,language="EN"){
   return{...preview,...item,id:clean(first(item.id,item.staySearchResultId,preview.id),180),name:clean(first(preview.name,item.title,item.name),500),image:clean(first(preview.image,item.imageUrl),1800),imageUrl:clean(first(preview.image,item.imageUrl),1800),location:clean(first(preview.location,item.location),500),price:numeric(item.total,item.price?.total,item.price?.amount,item.cheapestRateTotalAmount),currency:normalizeCurrency(first(item.currency,item.price?.currency,item.cheapestRateTotalCurrency,"USD")),isLive:true,offer:{...item,itemType:"hotel",tripType:"hotelOnly"},supplier:"DUFFEL_STAYS"};
 }
 
-return { records, byId, byTypeSlug, relationTarget, relatedRecords, parentOf, ancestors, countryOf, destinationOf, areaOf, isDirectChild, directChildren, isUnder, hotelsForScope, localized, mediaRows, mediaUrl, imagesOf, imageOf, cardImageOf, summaryOf, descriptionOf, paragraphs, pageFacts, climate, faqs, signature, guide, stories, quickFacts, countryFacts, introFor, heroFor, hierarchy, customPath, directoryDestinations, directoryAreas, airportDirectory, airportFromValue, airportFor, v9BookingSearch, previewHotel, countryPage, destinationPage, areaPage, hotelListPage, normalizeRoom, hotelPage, hotelSearch, sameAccommodation, liveHotel };
+return { records, byId, byTypeSlug, relationTarget, relatedRecords, parentOf, ancestors, countryOf, regionOf, destinationOf, areaOf, isDirectChild, directChildren, isUnder, hotelsForScope, localized, mediaRows, mediaUrl, imagesOf, imageOf, cardImageOf, summaryOf, descriptionOf, paragraphs, pageFacts, climate, faqs, signature, guide, stories, quickFacts, countryFacts, introFor, heroFor, hierarchy, customPath, directoryDestinations, directoryAreas, airportDirectory, airportFromValue, airportFor, v9BookingSearch, previewHotel, countryPage, destinationPage, areaPage, hotelListPage, normalizeRoom, hotelPage, hotelSearch, sameAccommodation, liveHotel };
 }
