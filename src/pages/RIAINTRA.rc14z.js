@@ -93,7 +93,7 @@ async function handleLoginRequest(payload, requestId) {
   const password = typeof payload.password === "string" ? payload.password : "";
 
   if (!SK_ID_PATTERN.test(skId)) {
-    throw new PublicError("Enter a valid SK-ID in the AA0000 format.");
+    throw new PublicError("Enter a valid SK-ID.");
   }
 
   if (!password.trim()) {
@@ -157,7 +157,7 @@ async function handleOtpVerify(payload, requestId) {
   const code = String(payload.code || "").replace(/\D/g, "").slice(0, 6);
 
   if (!SK_ID_PATTERN.test(skId)) {
-    throw new PublicError("Enter a valid SK-ID in the AA0000 format.");
+    throw new PublicError("Enter a valid SK-ID.");
   }
 
   if (!OTP_PATTERN.test(code)) {
@@ -198,13 +198,13 @@ async function handleOtpVerify(payload, requestId) {
 // Shared helper to apply Wix session token, verify authorization, and start activity session
 async function finalizeWixSession(sessionToken, requestId) {
   postToEmbed("STAFF_LOGIN_PROGRESS", {
-    message: "Starting secure Wix member session..."
+    message: "Checking connection..."
   }, requestId);
 
   await authentication.applySessionToken(sessionToken);
 
   postToEmbed("STAFF_LOGIN_PROGRESS", {
-    message: "Linking your Wix session to the SKANDI staff profile..."
+    message: "Preparing your RIAINTRA experience..."
   }, requestId);
 
   const session = await waitForAuthorizedSession();
@@ -217,7 +217,7 @@ async function finalizeWixSession(sessionToken, requestId) {
     staffActivitySession.start();
   } catch (error) {
     try { await authentication.logout(); } catch (_) {}
-    throw new PublicError("Secure staff session could not be established. Please try signing in again.");
+    throw new PublicError("We encountered an error on our end. Please try signing in again.");
   }
 
   postToEmbed("STAFF_LOGIN_OK", {
@@ -251,7 +251,7 @@ async function handleForgotPassword(requestId) {
 
   try {
     postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Opening Wix password reset..."
+      message: "Opening password reset..."
     }, requestId);
 
     try {
@@ -267,7 +267,7 @@ async function handleForgotPassword(requestId) {
     }
 
     postToEmbed("STAFF_LOGIN_NOTICE", {
-      message: "If the account exists, password reset instructions will be sent by Wix."
+      message: "If the account exists, password reset instructions will be sent by email to SK-ID account owner."
     }, requestId);
   } finally {
     actionInProgress = false;
@@ -356,13 +356,13 @@ function sessionReasonMessage(reason) {
   const code = String(reason || "").toUpperCase();
   const messages = {
     STAFF_AUTH_REQUIRED: "Sign in with your SK-ID to access RIAINTRA.",
-    STAFF_PROFILE_NOT_FOUND: "No active SKANDI staff profile is linked to this Wix member account.",
+    STAFF_PROFILE_NOT_FOUND: "No active SKANDI staff profile is linked to this SK-ID.",
     STAFF_PROFILE_INACTIVE: "This staff account is inactive.",
-    STAFF_PROFILE_NOT_AUTHORIZED: "This staff account is not authorized for RIAINTRA.",
-    STAFF_PROFILE_PORTAL_DISABLED: "RIAINTRA access is disabled for this staff account.",
+    STAFF_PROFILE_NOT_AUTHORIZED: "Not authorized for RIAINTRA.",
+    STAFF_PROFILE_PORTAL_DISABLED: "RIAINTRA access is disabled.",
     STAFF_ACCESS_ROLE_MISSING: "No system access role is assigned to this staff account.",
     STAFF_ACCESS_ROLE_INVALID: "The assigned system access role is not active.",
-    STAFF_PERMISSION_PRESET_MISSING: "No permission preset is assigned to this staff account.",
+    STAFF_PERMISSION_PRESET_MISSING: "No permission is assigned to this staff account.",
     STAFF_PERMISSION_PRESET_INVALID: "The assigned permission preset is not active."
   };
   return messages[code] || "This staff session is not authorized for RIAINTRA.";
