@@ -71,7 +71,9 @@ async function handleReady(requestId) {
     try {
       const session = unwrapResult(await getStaffPortalSession());
       if (session?.loggedIn && session?.authorized && staffActivitySession.active()) {
-        redirectToDashboard();
+        postToEmbed("STAFF_LOGIN_NOTICE", {
+          message: "Enter your SK-ID and password to sign in. Your session ends after 30 minutes of inactivity."
+        }, requestId);
         return;
       }
     } catch (_) { /* Require a fresh sign-in if authorization cannot be verified. */ }

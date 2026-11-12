@@ -9,12 +9,18 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   const passwordInput = document.getElementById("login-password");
   const loginBtn = document.getElementById("login-submit");
   const forgotBtn = document.getElementById("forgot-password");
+  const passwordVisibilityBtn = document.getElementById("password-visibility");
+  const passwordFieldGroup = passwordInput.closest(".field-group");
+  const passwordLabel = passwordFieldGroup?.querySelector('label[for="login-password"]');
+  const formSubtitle = cardWrap?.querySelector(".login-intro");
+
   const clock = document.getElementById("clock");
   const appMain = document.getElementById("app-main");
   const pullIndicator = document.getElementById("pull-refresh");
   const pullLabel = document.getElementById("pull-refresh-label");
   const refreshButton = document.getElementById("refresh-session");
   const mobileView = window.matchMedia("(max-width: 760px)");
+
   let refreshing = false;
   let refreshRequestId = "";
   let refreshTimer = null;
@@ -25,6 +31,8 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   let isPulling = false;
   let activeRequestId = "";
   let requestSequence = 0;
+  let authStep = "CREDENTIALS"; // "CREDENTIALS" | "OTP"
+  let verifiedSkId = "";
 
   function createRequestId(action) {
     requestSequence += 1;
@@ -38,11 +46,7 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
       payload,
       timestamp: new Date().toISOString()
     };
-
-    if (requestId) {
-      message.requestId = requestId;
-    }
-
+    if (requestId) message.requestId = requestId;
     window.parent.postMessage(message, "*");
   }
 
@@ -67,22 +71,92 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     loginNotice.textContent = message || "";
   }
 
+  function setAuthStep(step, maskedEmail = "") {
+    authStep = step;
+    setError("");
+
+    if (step === "CREDENTIALS") {
+      verifiedSkId = "";
+      usernameInput.disabled = false;
+
+      if (passwordFieldGroup) passwordFieldGroup.style.display = "";
+      if (passwordLabel) passwordLabel.textContent = "Password";
+      if (passwordVisibilityBtn) {
+        passwordVisibilityBtn.style.display = "";
+        passwordVisibilityBtn.textContent = "Show";
+        passwordVisibilityBtn.setAttribute("aria-pressed", "false");
+      }
+
+      passwordInput.type = "password";
+      passwordInput.inputMode = "text";
+      passwordInput.autocomplete = "current-password";
+      passwordInput.maxLength = 256;
+      passwordInput.placeholder = "Enter your password";
+      passwordInput.value = "";
+
+      if (formSubtitle) {
+        formSubtitle.textContent = "Sign in with your SK-ID and password to access RIAINTRA.";
+      }
+      loginBtn.textContent = "Sign in to RIAINTRA";
+
+      if (forgotBtn) {
+        forgotBtn.style.display = "";
+        forgotBtn.textContent = "Forgot your password?";
+      }
+      setNotice("");
+    } else if (step === "OTP") {
+      usernameInput.disabled = true;
+
+      if (passwordFieldGroup) passwordFieldGroup.style.display = "";
+      if (passwordLabel) passwordLabel.textContent = "Verification Code";
+      if (passwordVisibilityBtn) passwordVisibilityBtn.style.display = "none";
+
+      passwordInput.type = "text";
+      passwordInput.inputMode = "numeric";
+      passwordInput.autocomplete = "one-time-code";
+      passwordInput.maxLength = 6;
+      passwordInput.placeholder = "Enter 6-digit code";
+      passwordInput.value = "";
+
+      if (formSubtitle) {
+        formSubtitle.textContent = "New or expired device detected. Verify your identity to trust this device for 30 days.";
+      }
+      loginBtn.textContent = "Verify & Trust Device";
+
+      if (forgotBtn) {
+        forgotBtn.style.display = "";
+        forgotBtn.textContent = "Use a different SK-ID";
+      }
+
+      setNotice(
+        maskedEmail
+          ? `Verification code sent to ${maskedEmail}. This device will be remembered for 30 days.`
+          : "Verification code sent to your registered email. This device will be remembered for 30 days."
+      );
+      if (!mobileView.matches) setTimeout(() => passwordInput.focus(), 60);
+    }
+  }
+
   function setBusy(isBusy, text) {
     const busy = Boolean(isBusy);
     loginBtn.disabled = busy;
     loginBtn.style.opacity = busy ? ".6" : "1";
-    loginBtn.textContent = busy ? (text || "Checking...") : "Sign in to RIAINTRA";
+    loginBtn.textContent = busy
+      ? (text || "Checking...")
+      : (authStep === "OTP" ? "Verify & Trust Device" : "Sign in to RIAINTRA");
     loginBtn.setAttribute("aria-busy", String(busy));
 
-    usernameInput.disabled = busy;
+    usernameInput.disabled = busy || authStep === "OTP";
     passwordInput.disabled = busy;
-    forgotBtn.disabled = busy;
+    if (forgotBtn) forgotBtn.disabled = busy;
+    if (passwordVisibilityBtn) passwordVisibilityBtn.disabled = busy;
   }
 
   function showLoginCard() {
     cardWrap.style.display = "flex";
-    // A parent response must not open the mobile keyboard and resize the app unprompted.
-    if (!mobileView.matches) setTimeout(() => usernameInput.focus(), 80);
+    if (!mobileView.matches) {
+      setTimeout(() => (authStep === "OTP" ? passwordInput : usernameInput).focus(), 80);
+    }
   }
 
   function updateClock() {
@@ -146,8 +220,6 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     pullIndicator.classList.add("is-refreshing");
     pullIndicator.setAttribute("aria-hidden", "false");
     pullLabel.textContent = "Refreshing session...";
-    // Re-read authoritative Wix session via the existing V12 page-controller contract.
-    // Do not reload the Wix iframe or bypass authentication.
     post("STAFF_LOGIN_READY", {}, refreshRequestId);
     refreshTimer = window.setTimeout(function() {
       if (!refreshing) return;
@@ -190,7 +262,6 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
       if (event.cancelable) event.preventDefault();
       return;
     }
-    // Safari fallback for constrained iframe scrolling at the edges.
     const atTop = appMain.scrollTop <= 0 && dy > 0;
     const atBottom = appMain.scrollTop + appMain.clientHeight >= appMain.scrollHeight - 1 && dy < 0;
     if ((atTop || atBottom) && dy > dx * 1.2 && event.cancelable) event.preventDefault();
@@ -214,7 +285,6 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     });
   }
 
-  const passwordVisibilityBtn = document.getElementById("password-visibility");
   const brandLogos = Array.from(document.querySelectorAll("[data-master-logo]"));
   function setBrandLogoVisible(logo, visible) {
     logo.hidden = !visible;
@@ -242,74 +312,115 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
       if (logo.complete && logo.naturalWidth > 0) setBrandLogoVisible(logo, true);
     }
   }
-  passwordVisibilityBtn.addEventListener("click", function() {
-    const visible = passwordInput.type === "text";
-    passwordInput.type = visible ? "password" : "text";
-    passwordVisibilityBtn.textContent = visible ? "Show" : "Hide";
-    passwordVisibilityBtn.setAttribute("aria-pressed", String(!visible));
-    passwordInput.focus({ preventScroll: true });
-  });
+
+  if (passwordVisibilityBtn) {
+    passwordVisibilityBtn.addEventListener("click", function() {
+      if (authStep !== "CREDENTIALS") return;
+      const visible = passwordInput.type === "text";
+      passwordInput.type = visible ? "password" : "text";
+      passwordVisibilityBtn.textContent = visible ? "Show" : "Hide";
+      passwordVisibilityBtn.setAttribute("aria-pressed", String(!visible));
+      passwordInput.focus({ preventScroll: true });
+    });
+  }
 
   usernameInput.addEventListener("input", function(event) {
     event.target.value = cleanSkId(event.target.value);
   });
 
+  passwordInput.addEventListener("input", function(event) {
+    if (authStep === "OTP") {
+      event.target.value = String(event.target.value || "").replace(/\D/g, "").slice(0, 6);
+    }
+  });
+
+  if (forgotBtn) {
+    forgotBtn.addEventListener("click", function(event) {
+      event.preventDefault();
+      finishRefresh();
+      setError("");
+
+      // In Step 2 (OTP), reset back to SK-ID + Password screen
+      if (authStep === "OTP") {
+        activeRequestId = "";
+        setAuthStep("CREDENTIALS");
+        if (!mobileView.matches) usernameInput.focus();
+        return;
+      }
+
+      // In Step 1 (Credentials), trigger Wix password reset
+      setNotice("Opening password reset...");
+      setBusy(true, "Please wait...");
+      activeRequestId = createRequestId("reset");
+      post("STAFF_FORGOT_PASSWORD", {}, activeRequestId);
+    });
+  }
+
   loginForm.addEventListener("submit", function(event) {
     event.preventDefault();
     finishRefresh();
-
     setError("");
-    setNotice("");
 
-    const skId = cleanSkId(usernameInput.value);
-    const password = String(passwordInput.value || "");
+    if (authStep === "CREDENTIALS") {
+      const skId = cleanSkId(usernameInput.value);
+      const password = String(passwordInput.value || "");
+      usernameInput.value = skId;
 
-    usernameInput.value = skId;
+      if (!isValidSkId(skId)) {
+        setError("Enter a valid SK-ID in the AA0000 format.");
+        showLoginCard();
+        usernameInput.focus();
+        return;
+      }
 
-    if (!isValidSkId(skId)) {
-      setError("Enter a valid SK-ID in the AA0000 format.");
-      showLoginCard();
-      usernameInput.focus();
+      if (!password.trim()) {
+        setError("Enter your password.");
+        showLoginCard();
+        passwordInput.focus();
+        return;
+      }
+
+      setBusy(true, "Validating...");
+      setNotice("Validating SK-ID and device trust...");
+      activeRequestId = createRequestId("login");
+      post("STAFF_LOGIN_REQUEST", { skId, password }, activeRequestId);
       return;
     }
 
-    if (!password.trim()) {
-      setError("Enter your password.");
-      showLoginCard();
-      passwordInput.focus();
-      return;
+    if (authStep === "OTP") {
+      const code = String(passwordInput.value || "").replace(/\D/g, "").slice(0, 6);
+      if (code.length !== 6) {
+        setError("Enter the 6-digit verification code sent to your email.");
+        showLoginCard();
+        passwordInput.focus();
+        return;
+      }
+
+      setBusy(true, "Verifying...");
+      setNotice("Verifying security code...");
+      activeRequestId = createRequestId("otp_verify");
+      post("STAFF_OTP_VERIFY", { skId: verifiedSkId, code }, activeRequestId);
     }
-
-    setBusy(true, "Validating...");
-    setNotice("Validating SK-ID...");
-    activeRequestId = createRequestId("login");
-
-    post("STAFF_LOGIN_REQUEST", {
-      skId,
-      password
-    }, activeRequestId);
-  });
-
-  forgotBtn.addEventListener("click", function() {
-    finishRefresh();
-    setError("");
-    setNotice("Opening password reset...");
-    setBusy(true, "Please wait...");
-    activeRequestId = createRequestId("reset");
-    post("STAFF_FORGOT_PASSWORD", {}, activeRequestId);
   });
 
   window.addEventListener("message", function(event) {
-    const data = event.data || {};
+    let data = event.data;
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch (_) { return; }
+    }
+    if (!data || event.source !== window.parent) return;
+    if (data.source !== PARENT_SOURCE) return;
+
     const payload = data.payload || {};
 
-    if (event.source !== window.parent) return;
-    if (data.source !== PARENT_SOURCE) return;
     if (data.type === "SKANDI_MASTER_CONFIG") {
       applyMasterLogos(payload.brand);
       return;
     }
-    if (data.requestId && activeRequestId && data.requestId !== activeRequestId) return;
+
+    if (data.requestId && data.requestId !== activeRequestId && data.requestId !== refreshRequestId) return;
+    if (!data.requestId && activeRequestId) return;
+
     if (refreshing && data.requestId === refreshRequestId &&
         (data.type === "STAFF_LOGIN_OK" || data.type === "STAFF_LOGIN_ERROR" || data.type === "STAFF_LOGIN_NOTICE")) {
       finishRefresh();
@@ -320,6 +431,18 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
       setError("");
       setNotice(payload.message || "Working...");
       setBusy(true, "Please wait...");
+      return;
+    }
+
+    if (data.type === "STAFF_OTP_REQUIRED") {
+      if (authStep !== "CREDENTIALS" || !activeRequestId || data.requestId !== activeRequestId || !activeRequestId.startsWith("login-")) return;
+      const submittedSkId = cleanSkId(usernameInput.value);
+      if (!isValidSkId(submittedSkId) || (payload.skId && cleanSkId(payload.skId) !== submittedSkId)) return;
+      showLoginCard();
+      setBusy(false);
+      activeRequestId = "";
+      verifiedSkId = submittedSkId;
+      setAuthStep("OTP", payload.maskedEmail || "");
       return;
     }
 
@@ -357,6 +480,7 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   updateClock();
   setInterval(updateClock, 1000);
 
+  setAuthStep("CREDENTIALS");
   setBusy(false);
   syncMobileViewport();
   post("MASTER_CONFIG_REQUEST", { context:"riaintra-login" });

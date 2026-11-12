@@ -1,5 +1,8 @@
 # RIAINTRA Staff Login — INFO / LOG
 
+- 2026-11-12 — Prepared the supplied RIAINTRA credential/verification interface, corrected its duplicated touch handler and kept the canonical builder and receiver. The login page controller no longer automatically redirects an already authorized session away from `/riaintra`. OTP delivery and enforcement are BLOCKED pending backend/security review and Wix integration; the existing public password-only session method bypasses the new check. No claim of live deployment or MFA enforcement.
+
+
 > Current document: `riaintra-embeds/riaintra/references/riaintra-riaintra-login-md/README.md`. Original reference: `HTML_REF/riaintra/RIAINTRA Login.md`.
 
 
