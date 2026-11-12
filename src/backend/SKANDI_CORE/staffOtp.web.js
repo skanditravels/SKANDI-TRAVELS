@@ -2,7 +2,8 @@
 import crypto from "crypto";
 import { Permissions, webMethod } from "wix-web-module";
 import { authentication } from "wix-members-backend";
-import { triggeredEmails } from "wix-crm-backend";
+import { automations } from "wix-automations-backend";
+import { fetch } from "wix-fetch";
 import wixData from "wix-data";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { loginStaffWithSkId } from "backend/SKANDI_CORE/staffAuth.web";
@@ -19,7 +20,7 @@ import { tryWriteStaffLoginAudit } from "backend/SKANDI_CORE/platformAudit";
 const AGENT_TABLE = "agent_users";
 const OTP_TABLE = "staff_login_otps";
 const TRUSTED_DEVICE_TABLE = "staff_trusted_devices";
-const TRIGGERED_EMAIL_ID = "riaintra_staff_otp";
+const AUTOMATION_TRIGGER_ID = "YOUR_TRIGGER_ID_FROM_WIX_AUTOMATIONS";
 const TRUST_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const BLOCKED_EMPLOYMENT = new Set(["TERMINATED", "SUSPENDED", "FURLOUGHED", "INACTIVE"]);
 
@@ -32,19 +33,76 @@ function maskEmail(emailAddress) {
   return `${localPart.slice(0, 2)}***@${domain}`;
 }
 
+function formatStaffPhone(rawPhone) {
+  const cleaned = String(rawPhone || "").trim().replace(/[^\d+]/g, "");
+  if (!cleaned) return "";
+
+  // US / North America (+1 followed by 10 digits) -> +1 (360) 901-7157
+  if (/^\+1\d{10}$/.test(cleaned)) {
+    const area = cleaned.slice(2, 5);
+    const prefix = cleaned.slice(5, 8);
+    const line = cleaned.slice(8, 12);
+    return `+1 (${area}) ${prefix}-${line}`;
+  }
+
+  // Sweden (+46 followed by 9 digits) -> +46 (0) 72-21 56 997
+  if (/^\+46\d{9}$/.test(cleaned)) {
+    const ndc = cleaned.slice(3, 5);
+    const part1 = cleaned.slice(5, 7);
+    const part2 = cleaned.slice(7, 9);
+    const part3 = cleaned.slice(9, 12);
+    return `+46 (0) ${ndc}-${part1} ${part2} ${part3}`;
+  }
+
+  return String(rawPhone || "").trim();
+}
+
+function parseDeviceSummary(ua = "") {
+  const s = String(ua);
+  const browser = /Edg\//.test(s) ? "Edge"
+    : /Chrome\//.test(s) && !/Chromium/.test(s) ? "Chrome"
+    : /Safari\//.test(s) && !/Chrome\//.test(s) ? "Safari"
+    : /Firefox\//.test(s) ? "Firefox"
+    : "Browser";
+
+  const os = /iPhone|iPad/.test(s) ? "iOS"
+    : /Android/.test(s) ? "Android"
+    : /Mac OS X/.test(s) ? "macOS"
+    : /Windows/.test(s) ? "Windows"
+    : /Linux/.test(s) ? "Linux"
+    : "Unknown OS";
+
+  return `${browser} on ${os}`;
+}
+
+async function resolveIpGeolocation(ip) {
+  if (!ip || ip === "Unavailable" || ip === "127.0.0.1" || ip.startsWith("192.168.")) {
+    return "Unknown Location";
+  }
+  try {
+    const res = await fetch(`https://ipapi.co{encodeURIComponent(ip)}/json/`, { method: "GET" });
+    if (!res.ok) return "Unknown Location";
+    const geo = await res.json();
+    const parts = [geo.city, geo.region_code, geo.country_code].filter(Boolean);
+    return parts.length ? parts.join(", ") : "Unknown Location";
+  } catch (_) {
+    return "Unknown Location";
+  }
+}
+
 /**
  * Step 1: Verify SK-ID + Password first.
  * If deviceToken is trusted (< 30 days), return sessionToken immediately.
- * Otherwise, dispatch a 6-digit email OTP and require MFA verification.
+ * Otherwise, dispatch a 6-digit email OTP with telemetry via Wix Automations.
  */
 export const authenticateStaffWithDeviceTrust = webMethod(
   Permissions.Anyone,
-  async ({ skId: rawSkId, password, deviceToken, userAgent = "" }) => {
+  async ({ skId: rawSkId, password, deviceToken, userAgent = "" }, context) => {
     const skId = normalizeSkId(rawSkId);
     const cleanDeviceToken = text(deviceToken, 128);
 
     if (!isValidSkId(skId)) {
-      return { ok: false, code: "INVALID_SK_ID", message: "Enter a valid SK-ID in the AA0000 format." };
+      return { ok: false, code: "INVALID_SK_ID", message: "Enter a valid SK-ID." };
     }
 
     if (!password || typeof password !== "string") {
@@ -80,9 +138,9 @@ export const authenticateStaffWithDeviceTrust = webMethod(
         }
       }
 
-      // 3. New or expired device (> 30 days): lookup agent & Wix Member to send OTP
+      // 3. New or expired device (> 30 days): lookup agent (including phone) & Wix Member
       const rows = await restRequest(
-        `${AGENT_TABLE}?sk_id=eq.${encodeURIComponent(skId)}&select=id,agent_id,sk_id,email,corporate_email_address,employment_status,status,active,portal_access&limit=1`
+        `${AGENT_TABLE}?sk_id=eq.${encodeURIComponent(skId)}&select=id,agent_id,sk_id,email,corporate_email_address,phone,employment_status,status,active,portal_access&limit=1`
       );
       const agent = firstRow(rows);
 
@@ -92,7 +150,7 @@ export const authenticateStaffWithDeviceTrust = webMethod(
 
       const empStatus = upper(agent.employment_status || agent.status);
       if (BLOCKED_EMPLOYMENT.has(empStatus) || agent.active === false || agent.portal_access === false) {
-        return { ok: false, code: "ACCESS_DENIED", message: "Portal access is restricted for this account." };
+        return { ok: false, code: "ACCESS_DENIED", message: "RIA access is restricted for this account." };
       }
 
       const targetEmail = cleanEmail(agent.corporate_email_address || agent.email);
@@ -101,9 +159,9 @@ export const authenticateStaffWithDeviceTrust = webMethod(
         .limit(1)
         .find({ suppressAuth: true });
 
-      const wixMember = memberRes.items;
+      const wixMember = memberRes.items[0];
       if (!wixMember) {
-        return { ok: false, code: "WIX_MEMBER_MISSING", message: "Wix Member account not linked to this email." };
+        return { ok: false, code: "WIX_MEMBER_MISSING", message: "Invalid email." };
       }
 
       // 4. Generate 6-digit OTP (5-minute TTL) & invalidate previous unused codes
@@ -129,12 +187,29 @@ export const authenticateStaffWithDeviceTrust = webMethod(
         }
       });
 
-      await triggeredEmails.emailMember(TRIGGERED_EMAIL_ID, wixMember._id, {
-        variables: {
-          code: otpCode,
-          skId: skId,
-          expiresInMinutes: "5"
-        }
+      // 5. Gather telemetry & format US (+1) / Swedish (+46) phone number
+      const formattedPhone = formatStaffPhone(agent.phone);
+      const ipAddress = String(context?.clientIp || "Unavailable").trim();
+      const location = await resolveIpGeolocation(ipAddress);
+      const deviceSummary = parseDeviceSummary(userAgent);
+      const deviceIdShort = cleanDeviceToken
+        ? `DEV-${hashDeviceToken(cleanDeviceToken).slice(0, 8).toUpperCase()}`
+        : "DEV-UNKNOWN";
+      const requestedAtUtc = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
+
+      // 6. Trigger Wix Automation
+      await automations.run(AUTOMATION_TRIGGER_ID, {
+        contactId: wixMember._id,
+        email: targetEmail,
+        phone: formattedPhone,
+        skId: skId,
+        code: otpCode,
+        expiresInMinutes: 5,
+        requestedAtUtc,
+        ipAddress,
+        location,
+        deviceSummary,
+        deviceIdShort
       });
 
       await tryWriteStaffLoginAudit?.({ skId, agentId: agent.agent_id, event: "MFA_OTP_SENT_NEW_DEVICE" });
@@ -186,7 +261,7 @@ export const verifyStaffOtpAndTrustDevice = webMethod(
         return { ok: false, code: "TOO_MANY_ATTEMPTS", message: "Too many failed attempts. Please sign in again." };
       }
 
-      if (otpRecord.code !== code) {
+            if (otpRecord.code !== code) {
         await restRequest(`${OTP_TABLE}?id=eq.${otpRecord.id}`, {
           method: "PATCH",
           body: { attempts: (otpRecord.attempts || 0) + 1 }
