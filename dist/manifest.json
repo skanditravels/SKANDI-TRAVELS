@@ -2595,8 +2595,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "edbea960e3290e7e16af587ee0cfaa05372ec767e9607c2d37244a580d666d3b",
-      "bytes": 345707
+      "sha256": "0d6f5560e7e9deacedcae66b3d957a23220abfa81d16a4fc79a0b991c6a4df0e",
+      "bytes": 355039
     },
     {
       "key": "uniformCenter",
