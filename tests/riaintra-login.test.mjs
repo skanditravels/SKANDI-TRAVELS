@@ -79,3 +79,21 @@ test('login validation, request correlation, password visibility and reset remai
   receive('STAFF_LOGIN_NOTICE',{message:'Password reset was closed.'},reset.requestId);
   assert.equal(submit.disabled,false); assert.match(doc.getElementById('login-notice').textContent,/closed/);
 });
+
+test('verification UI handles the correlated challenge and ignores stale responses', async t => {
+  const {w,doc,messages,receive} = await loginPage(t);
+  const user=doc.getElementById('login-username'), input=doc.getElementById('login-password');
+  const form=doc.getElementById('login-form'), submit=()=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  user.value='AB1234';input.value='example-password';submit();
+  const request=messages.find(x=>x.type==='STAFF_LOGIN_REQUEST');
+  receive('STAFF_OTP_REQUIRED',{skId:'AB1234',maskedEmail:'ab***@example.test'},'stale-id');
+  assert.equal(input.type,'password');
+  receive('STAFF_OTP_REQUIRED',{skId:'AB1234',maskedEmail:'ab***@example.test'},request.requestId);
+  assert.equal(input.type,'text');assert.equal(input.autocomplete,'one-time-code');assert.equal(user.disabled,true);
+  assert.equal(input.value,'');assert.match(doc.querySelector('label[for="login-password"]').textContent,/Verification Code/);
+  input.value='12a3456';input.dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(input.value,'123456');submit();
+  const verify=messages.find(x=>x.type==='STAFF_OTP_VERIFY');assert.equal(verify.payload.skId,'AB1234');assert.equal(verify.payload.code,'123456');
+  receive('STAFF_LOGIN_ERROR',{message:'Incorrect code'},verify.requestId);assert.equal(doc.getElementById('login-submit').disabled,false);
+  doc.getElementById('forgot-password').click();assert.equal(input.type,'password');assert.equal(user.disabled,false);
+  receive('STAFF_OTP_REQUIRED',{skId:'AB1234'},request.requestId);assert.equal(input.type,'password');
+});

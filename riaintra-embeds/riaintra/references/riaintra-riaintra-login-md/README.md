@@ -1,5 +1,10 @@
 # RIAINTRA Staff Login — INFO / LOG
 
+- 2026-11-12 — Repaired the staff OTP chain in source: verified the existing tables and active Wix automation, corrected the REST and custom-trigger contracts, added cryptographic device/code generation and conditional attempt-limited consumption, and stopped the legacy password-only web method from issuing a session. The controller obtains a strong device token from the backend. A separate Wix-member sign-in can still reach the existing staff authorization boundary without this device challenge; portal-wide MFA remains unverified and is not asserted. No database schema or permission changes were made. Live login and email delivery remain to be verified.
+
+- 2026-11-12 — Prepared the supplied RIAINTRA credential/verification interface, corrected its duplicated touch handler and kept the canonical builder and receiver. The login page controller no longer automatically redirects an already authorized session away from `/riaintra`. OTP delivery and enforcement are BLOCKED pending backend/security review and Wix integration; the existing public password-only session method bypasses the new check. No claim of live deployment or MFA enforcement.
+
+
 > Current document: `riaintra-embeds/riaintra/references/riaintra-riaintra-login-md/README.md`. Original reference: `HTML_REF/riaintra/RIAINTRA Login.md`.
 
 

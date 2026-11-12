@@ -79,7 +79,7 @@ function memberEmail(member = {}) {
 }
 function agentSelect() {
   return [
-    "id","agent_id","wix_member_id","member_id","contact_id","email","corporate_email_address",
+    "id","agent_id","wix_member_id","member_id","contact_id","email","corporate_email_address","phone",
     "sk_id","first_name","last_name","display_name","preferred_name","job_title","position",
     "department","station","base","employment_status","status","active","portal_access","authorized",
     "can_access_payroll","can_access_grouptalk","can_manage","last_login_at","badge_photo_url","company_code",
@@ -276,7 +276,30 @@ function publicLoginMessage(code) {
   return map[code] || "The SK-ID or password could not be verified.";
 }
 
-export async function loginStaffWithSkIdCore({ skId, password } = {}) {
+// Backend-only identity projection for a previously authenticated verification
+// challenge. Never expose this function as a web method.
+export async function resolveStaffVerificationIdentityCore(rawSkId) {
+  const skId = normalizeSkId(rawSkId);
+  if (!isValidSkId(skId)) throw new SkandiError("STAFF_SK_ID_INVALID");
+  const agent = await findAgentBySkId(skId);
+  assertIdentity(agent);
+  await resolveAuthorization(agent);
+  const loginEmail = email(agent.payload?.successFactors?.wixLoginEmail || agent.corporate_email_address || agent.email);
+  const deliveryEmail = email(agent.corporate_email_address || agent.email || loginEmail);
+  if (!loginEmail || !deliveryEmail) throw new SkandiError("STAFF_LOGIN_EMAIL_MISSING");
+  return {
+    skId,
+    agentUserId: text(agent.id, 80),
+    agentId: text(agent.agent_id || agent.sk_id, 80),
+    memberId: text(agent.wix_member_id || agent.member_id, 160),
+    contactId: text(agent.contact_id, 160),
+    phone: text(agent.phone, 80),
+    loginEmail,
+    deliveryEmail
+  };
+}
+
+export async function loginStaffWithSkIdCore({ skId, password } = {}, { pendingVerification = false } = {}) {
   const cleanSkId = normalizeSkId(skId), cleanPassword = typeof password === "string" ? password : "";
   if (!isValidSkId(cleanSkId)) throw new SkandiError("STAFF_SK_ID_INVALID", "Invalid SK-ID.", { publicMessage:"Enter a valid SK-ID in the AA0000 format." });
   if (!cleanPassword.trim()) throw new SkandiError("STAFF_PASSWORD_REQUIRED", "Password is required.", { publicMessage:"Enter your password." });
@@ -286,7 +309,7 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
     agent = await findAgentBySkId(cleanSkId); assertIdentity(agent); const auth = await resolveAuthorization(agent);
     loginEmail = email(agent.payload?.successFactors?.wixLoginEmail || agent.corporate_email_address || agent.email); if (!loginEmail) throw new SkandiError("STAFF_LOGIN_EMAIL_MISSING");
     const token = loginToken(await authentication.login(loginEmail, cleanPassword)); if (!token) throw new SkandiError("WIX_SESSION_TOKEN_MISSING");
-    await tryWriteStaffLoginAudit({ agentUserId: agent.id, skId: cleanSkId, emailAddress: loginEmail, eventType: "STAFF_LOGIN_OK", success: true });
+    await tryWriteStaffLoginAudit({ agentUserId: agent.id, skId: cleanSkId, emailAddress: loginEmail, eventType: pendingVerification ? "STAFF_PASSWORD_VERIFIED" : "STAFF_LOGIN_OK", success: true });
     const session = authorized(agent, auth);
     return { ok: true, sessionToken: token, profile: session.profile, apps: session.apps, allowedApps: session.allowedApps, permissionKeys: session.permissionKeys, permissionGroups: session.permissionGroups, accessRole: session.accessRole, permissionPreset: session.permissionPreset, canManage: session.canManage };
   } catch (error) {
