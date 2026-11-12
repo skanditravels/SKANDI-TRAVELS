@@ -31,3 +31,9 @@ test('new rows never copy existing content',()=>{
  const c=vm.createContext({Array,Object});vm.runInContext(extract(ui,'emptyStructuredTemplate')+'\nthis.empty=emptyStructuredTemplate',c);
  const result=c.empty({name:'Saver',fares:[{name:'value'}],settings:{enabled:true,count:8}});assert.equal(result.name,'');assert.equal(result.fares.length,0);assert.equal(result.settings.enabled,false);assert.equal(result.settings.count,null);
 });
+test('a saved airline updates the directory and airline lists immediately',()=>{
+ const c=vm.createContext({});vm.runInContext(extract(ui,'updateSavedRecord')+'\nthis.update=updateSavedRecord',c);
+ let state={records:[{id:'a',entityType:'AIRLINE',name:'Old'},{id:'b',entityType:'AIRLINE',name:'Other'}],airlines:[{id:'a',entityType:'AIRLINE',name:'Old'}]};
+ c.update(fn=>{state=fn(state)},{bundle:{record:{id:'a',entityType:'AIRLINE',name:'New'}}});
+ assert.equal(state.records.find(x=>x.id==='a').name,'New');assert.equal(state.records.find(x=>x.id==='b').name,'Other');assert.equal(state.airlines[0].name,'New');
+});
