@@ -1,5 +1,10 @@
 # INFO / LOG — Inventory Control
 
+## 2026-11-11 — Mobile inventory workspace
+
+The active source adds a compact sections drawer, scroll reset and responsive labeled cards for the existing inventory and property tables. All mutations and inventory data continue through the existing controller and canonical backend. Authenticated live verification remains required.
+
+
 > Current document: `altea-embeds/inventory-control/README.md`. Original reference: `HTML_REF/altea/Inventory Control.md`.
 
 

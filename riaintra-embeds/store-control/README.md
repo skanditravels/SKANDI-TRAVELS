@@ -1,5 +1,10 @@
 # INFO / LOG — Store Control
 
+## 2026-11-11 — Mobile section navigation
+
+The existing Store Control interface now groups its authorized panels in a compact, expandable section menu on narrow screens. The supplied alternative uses BACKOFFICE_* operations and a different child source that are not implemented by the current Wix controller. Those unsupported transfer, picking, returns, receiving and campaign actions were not connected; the current STORE_CONTROL_* operations and permissions remain authoritative. Authenticated Wix testing is required.
+
+
 > Current document: `riaintra-embeds/store-control/README.md`. Original reference: `HTML_REF/riaintra/The Store Control.md`.
 
 

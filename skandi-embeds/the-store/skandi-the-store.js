@@ -84,7 +84,7 @@ function showCatalogError(){
 }
 
 function loadSaved(){
-  try{return JSON.parse(localStorage.getItem("skandiStoreSaved")||"[]")}catch(_){return[]}
+  try{const value=JSON.parse(localStorage.getItem("skandiStoreSaved")||"[]");return Array.isArray(value)?value.filter(x=>typeof x==="string"):[]}catch(_){return[]}
 }
 function persistSaved(){
   try{localStorage.setItem("skandiStoreSaved",JSON.stringify([...SAVED]))}catch(_){}
@@ -100,7 +100,8 @@ function toast(message){
 }
 function money(price){
   if(!price)return"—";if(price.formatted)return price.formatted;
-  const amount=Number(price.amount||0);
+  if(price.amount===undefined||price.amount===null||price.amount==="")return"—";
+  const amount=Number(price.amount);
   return `${price.currency||""} ${amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`.trim();
 }
 function textOf(p){return [p.name,p.brand,p.description,p.summary,p.sku,(p.categoryNames||[]).join(" "),p.ribbon,p.badge,p.recommendation].join(" ").toLowerCase()}
@@ -283,6 +284,79 @@ function subcategoryRecords(){
 function isSale(p){return !!(p.comparePrice&&Number(p.comparePrice.amount)>Number(p.price?.amount||0))||/sale|offer|deal/i.test(`${p.ribbon||""} ${p.badge||""} ${(p.categoryNames||[]).join(" ")}`)}
 function bagCount(){return (CART.lineItems||[]).reduce((sum,item)=>sum+Number(item.quantity||0),0)}
 
+/* Store journey tools; merchandise and cart remain owned by Wix. */
+let ACTIVE_CORRIDOR='med';
+const KIT_SELECTION={slot1:'',slot2:'',slot3:''},KIT_CHOICES={slot1:{},slot2:{},slot3:{}};
+let kitOperation=null,kitTimer=null,storeModalReturn=null;
+const CORRIDOR_DATA={
+ med:{kicker:'Mediterranean & Canary Islands',title:'Ready for the coast',desc:'Consider breathable clothing, sun protection and a light day bag. Conditions vary by destination and season.',category:'Beach',tags:['Beach','Luggage','Travel Essentials','SKANDI']},
+ tropical:{kicker:'Thailand & Tropical',title:'Comfort for a longer journey',desc:'Consider cabin comfort, sun protection and a water-resistant day bag. Check your destination forecast before packing.',category:'Travel Essentials',tags:['Travel Essentials','Beach','Luggage','Gift Cards']},
+ city:{kicker:'Nordic & City Breaks',title:'Travel light through the city',desc:'Consider adaptable layers, a compact day bag and an organizer for your documents and electronics.',category:'Luggage',tags:['Luggage','SKANDI','Travel Essentials','New']},
+ family:{kicker:'Family Holiday',title:'Make room for the essentials',desc:'Keep travel documents, activities, sun protection and everyday essentials within easy reach.',category:'Family',tags:['Family','Beach','Travel Essentials','Gifts']}
+};
+function renderDestinationFinder(){
+ const host=$('destinationResultBox');if(!host)return;const info=CORRIDOR_DATA[ACTIVE_CORRIDOR]||CORRIDOR_DATA.med;
+ document.querySelectorAll('[data-dest-corridor]').forEach(btn=>{const active=btn.dataset.destCorridor===ACTIVE_CORRIDOR;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active))});
+ host.innerHTML=`<div class="destination-copy"><span class="destination-label">${esc(info.kicker)}</span><h3>${esc(info.title)}</h3><p>${esc(info.desc)}</p><p class="destination-note">Check the forecast and your airline’s baggage rules for your own trip.</p></div><div class="destination-links">${info.tags.map(t=>`<button type="button" data-category="${esc(t)}">${esc(t)} <span aria-hidden="true">↗</span></button>`).join('')}<button class="finder-shop" type="button" data-category="${esc(info.category)}">Explore essentials →</button></div>`;
+}
+function kitPools(){const items=PRODUCTS.filter(p=>!p.virtualGiftCard&&p.inStock!==false&&p.canAddToCart!==false);return [
+ {key:'slot1',label:'Luggage & bags',pool:items.filter(p=>/luggage|bag|case|trolley|backpack/i.test(textOf(p)))},
+ {key:'slot2',label:'Cabin comfort',pool:items.filter(p=>/travel|essential|pillow|adapter|organi/i.test(textOf(p)))},
+ {key:'slot3',label:'Destination essentials',pool:items.filter(p=>/beach|sun|towel|family|gift/i.test(textOf(p)))}];}
+function renderTravelKitBuilder(){
+ const host=$('kitSlotsContainer');if(!host)return;const defs=kitPools();
+ for(const slot of defs)if(KIT_SELECTION[slot.key]&&!slot.pool.some(p=>String(p.id)===KIT_SELECTION[slot.key])){KIT_SELECTION[slot.key]='';KIT_CHOICES[slot.key]={}}
+ host.innerHTML=defs.map(slot=>{
+  const selected=slot.pool.find(p=>String(p.id)===KIT_SELECTION[slot.key]);
+  const options=selected?(selected.options||[]).map(o=>`<label class="kit-choice"><span>${esc(o.name)}</span><select data-kit-choice="${esc(slot.key)}" data-kit-option="${esc(o.name)}"><option value="">Choose ${esc(o.name)}</option>${(o.choices||[]).map(c=>{const v=String(c.value||c.description||c),label=String(c.description||c.value||c);return `<option value="${esc(v)}" ${KIT_CHOICES[slot.key]?.[o.name]===v?'selected':''}>${esc(label)}</option>`}).join('')}</select></label>`).join(''):'';
+  return `<div class="kit-slot"><span class="kit-slot-label">${esc(slot.label)}</span><div class="kit-slot-thumb">${selected?.imageUrl?imageTagForProduct(selected,selected.name):'<span>Choose a product</span>'}</div><label class="sr" for="kit-${slot.key}">${esc(slot.label)}</label><select id="kit-${slot.key}" data-kit-slot="${slot.key}"><option value="">${slot.pool.length?'Choose a product':'No matching products'}</option>${slot.pool.map(p=>`<option value="${esc(p.id)}" ${selected&&String(p.id)===String(selected.id)?'selected':''}>${esc(p.name)} · ${esc(money(p.price))}</option>`).join('')}</select>${options}</div>`;
+ }).join('');
+ const chosen=Object.values(KIT_SELECTION).filter(Boolean).map(id=>PRODUCTS.find(p=>String(p.id)===id)).filter(Boolean);
+ const currencies=[...new Set(chosen.map(p=>p.price?.currency).filter(Boolean))];
+ const known=chosen.length&&chosen.every(p=>p.price?.amount!==undefined&&p.price?.amount!==null&&Number.isFinite(Number(p.price.amount))&&p.price?.currency);
+ $('kitTotalSummary').textContent=known&&currencies.length===1?`${chosen.length} selected · ${money({amount:chosen.reduce((n,p)=>n+Number(p.price.amount),0),currency:currencies[0]})}`:chosen.length?`${chosen.length} selected · prices shown per item`:'Choose products to build your kit';
+ $('addKitToBagBtn').disabled=!!kitOperation||!chosen.length;
+}
+function beginKitAdd(){
+ if(ADDING||kitOperation){toast('Please wait for the current bag update.');return}
+ const slots=Object.keys(KIT_SELECTION).filter(key=>KIT_SELECTION[key]);if(!slots.length){toast('Choose at least one product.');return}
+ const queue=[];for(const key of slots){const p=PRODUCTS.find(x=>String(x.id)===KIT_SELECTION[key]);if(!p||p.inStock===false||p.canAddToCart===false){toast('One of your selected products is unavailable.');return}
+ const options=p.options||[],choices=KIT_CHOICES[key]||{};if(options.some(o=>!choices[o.name])){toast(`Choose all options for ${p.name}.`);return}queue.push({id:String(p.id),name:p.name,choices:{...choices}})}
+ kitOperation={queue,index:0,completed:0,current:null};renderTravelKitBuilder();advanceKit();
+}
+function advanceKit(){
+ if(!kitOperation)return;if(kitOperation.index>=kitOperation.queue.length){const count=kitOperation.completed;kitOperation=null;ADDING=false;clearTimeout(kitTimer);renderTravelKitBuilder();toast(`${count} ${count===1?'item':'items'} added to your bag.`);return}
+ const next=kitOperation.queue[kitOperation.index];kitOperation.current=next;ADDING=true;toast(`Adding ${next.name}…`);post('STOREFRONT_ADD_TO_CART',{productId:next.id,quantity:1,choices:next.choices});
+ clearTimeout(kitTimer);kitTimer=setTimeout(()=>{if(!kitOperation)return;const count=kitOperation.completed;kitOperation=null;ADDING=false;renderTravelKitBuilder();status(`The next bag update was not confirmed. ${count} item(s) were confirmed. Check your bag before trying again.`,'warn')},20000);
+}
+function kitCartUpdated(payload){
+ if(!kitOperation||payload?.action!=='added'||String(payload.productId||'')!==kitOperation.current?.id)return false;
+ clearTimeout(kitTimer);CART=payload.cart||CART;renderHeaderCounts();kitOperation.completed++;kitOperation.index++;ADDING=false;setTimeout(advanceKit,0);return true;
+}
+function stopKitOnError(payload){if(!kitOperation)return false;clearTimeout(kitTimer);const count=kitOperation.completed;kitOperation=null;ADDING=false;renderTravelKitBuilder();status(`${count} item(s) were added before the next item failed. ${payload?.message||'Check your bag and try again.'}`,'error');return true}
+function storeFitResult(){
+ const ids=['bagLength','bagWidth','bagHeight','allowLength','allowWidth','allowHeight'];const values=ids.map(id=>Number($(id)?.value));const out=$('bagFitResult');
+ if(values.some(v=>!Number.isFinite(v)||v<=0||v>1000)){out.textContent='Enter all six dimensions in centimeters.';return}
+ const actual=values.slice(0,3),allowed=values.slice(3);
+ out.textContent=actual.every((v,i)=>v<=allowed[i])?'The bag fits the dimensions you entered. Check weight, handles, wheels and your airline’s current rules.':'At least one bag dimension is larger than the allowance you entered.';
+}
+function openCabinModal(){const modal=$('cabinSizerModal');if(!modal)return;storeModalReturn=document.activeElement;modal.classList.add('show');modal.setAttribute('aria-hidden','false');document.body.classList.add('locked','store-overlay-open');$('closeCabinSizerBtn')?.focus()}
+function closeCabinModal(){const modal=$('cabinSizerModal');if(!modal)return;modal.classList.remove('show');modal.setAttribute('aria-hidden','true');document.body.classList.remove('locked','store-overlay-open');storeModalReturn?.focus?.()}
+function bindStoreJourneyTools(){
+ $('mobileCabinSizerBtn')?.addEventListener('click',()=>{closeMenus();openCabinModal();storeModalReturn=$('mobileMenuBtn')});
+ $('cabinSizerBtn')?.addEventListener('click',openCabinModal);$('openCabinModalInlineBtn')?.addEventListener('click',openCabinModal);$('closeCabinSizerBtn')?.addEventListener('click',closeCabinModal);
+ $('heroPackingJumpBtn')?.addEventListener('click',()=>$('packingFinderSection')?.scrollIntoView({behavior:'smooth',block:'start'}));
+ $('shopLuggageFromModalBtn')?.addEventListener('click',()=>{closeCabinModal();openCategory('Luggage')});$('checkBagFitBtn')?.addEventListener('click',storeFitResult);
+ document.querySelectorAll('[data-bag-tier]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-bag-tier]').forEach(item=>{const active=item===btn;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});$('bagTierHint').textContent=({underseat:'Enter your airline’s per-side limits for a personal item.',cabin:'Enter your airline’s per-side limits for a cabin trolley.',checked:'Enter your airline’s per-side limits for a checked bag.'})[btn.dataset.bagTier]}));
+ $('addKitToBagBtn')?.addEventListener('click',beginKitAdd);
+ $('cabinSizerModal')?.addEventListener('click',event=>{if(event.target===$('cabinSizerModal'))closeCabinModal()});
+ $('cabinSizerModal')?.addEventListener('keydown',event=>{if(event.key!=='Tab')return;const controls=[...$('cabinSizerModal').querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')].filter(el=>!el.hidden);if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}});
+ document.addEventListener('change',event=>{const product=event.target.closest?.('[data-kit-slot]');if(product){const key=product.dataset.kitSlot;KIT_SELECTION[key]=product.value;KIT_CHOICES[key]={};renderTravelKitBuilder();return}const choice=event.target.closest?.('[data-kit-choice]');if(choice){KIT_CHOICES[choice.dataset.kitChoice][choice.dataset.kitOption]=choice.value}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('cabinSizerModal')?.classList.contains('show')){event.stopPropagation();closeCabinModal()}});
+ document.querySelectorAll('[data-store-mobile-action]').forEach(btn=>btn.addEventListener('click',()=>{const action=btn.dataset.storeMobileAction;if(action==='categories'){navigate('home');setTimeout(()=>$('popularCategories')?.scrollIntoView({behavior:'smooth'}),50)}else if(action==='search'){navigate('shop');setTimeout(()=>$('query')?.focus(),50)}}));
+ const viewport=window.visualViewport;if(viewport){let baseline=viewport.height;const adjust=()=>{const el=document.activeElement,editing=!!el?.matches?.('input:not([type=hidden]),select,textarea');if(!editing)baseline=viewport.height;document.body.classList.toggle('store-keyboard-open',editing&&baseline-viewport.height>140)};viewport.addEventListener('resize',adjust);document.addEventListener('focusin',adjust);document.addEventListener('focusout',()=>setTimeout(adjust,80))}
+}
+
 function parseRoute(){
   const raw=(location.hash||"#/home").replace(/^#\/?/,"");
   const [pathPart,queryString=""]=raw.split("?");
@@ -318,6 +392,7 @@ function showPage(page){
   });
 }
 function closeMenus(){
+  if($("cabinSizerModal")?.classList.contains("show"))closeCabinModal();
   $("categoryMenu")?.classList.remove("show");
   $("categoryMenu")?.setAttribute("aria-hidden","true");
   $("mobileNav")?.classList.remove("show");
@@ -348,13 +423,13 @@ function applyRoute(){
   }else if(page==="orders"){
     renderOrdersPage();
   }else if(page==="home"){
-    renderHomeProducts();
+    renderHomeProducts();renderDestinationFinder();renderTravelKitBuilder();
   }else if(page==="support"){
     filterSupportTopics();
   }
 
   showPage(page);
-  window.scrollTo({top:0,behavior:"auto"});
+  const scroller=$("skandi-app-root");if(scroller&&scroller.scrollHeight>scroller.clientHeight+1)scroller.scrollTo({top:0,behavior:"auto"});else window.scrollTo({top:0,behavior:"auto"});
 }
 function openCategory(name){navigate("shop",{category:name||""})}
 function currentShopParams(overrides={}){
@@ -614,7 +689,7 @@ function renderHeaderCounts(){
 }
 let ADDING=false;
 function addToCart(id,qty=1,choices={}){
-  if(ADDING)return;
+  if(ADDING||kitOperation)return;
   const p=PRODUCTS.find(x=>String(x.id)===String(id));if(!p)return;
   if(p.virtualGiftCard){navigate("product",{id});toast("Choose a design and recipient details first.");return}
   if(p.canAddToCart===false||p.inStock===false){toast(p.accessMessage||"This product is currently unavailable.");return}
@@ -625,7 +700,7 @@ function addToCart(id,qty=1,choices={}){
 }
 function toggleCategoryMenu(){
   const el=$("categoryMenu"),show=!el.classList.contains("show");
-  el.classList.toggle("show",show);el.setAttribute("aria-hidden",String(!show));
+  el.classList.toggle("show",show);el.setAttribute("aria-hidden",String(!show));if(window.matchMedia("(max-width: 1020px)").matches){document.body.classList.toggle("locked",show);if(show)$("closeCategoryMenu")?.focus()}
 }
 function openOrders(){
   toast("Opening your orders…");
@@ -699,7 +774,7 @@ function updateSupportCategory(preferred=""){
   setSupportRequired(["productName"],showProduct);
   setSupportRequired(["companyName","bulkQuantity"],showBusiness);
 }
-function supportFiles(){return Array.from($("fileInput")?.files||[]).slice(0,3)}
+function supportFiles(){return Array.from($("fileInput")?.files||[])}
 function validateSupportFiles(files=supportFiles()){
   const allowed=new Set(["application/pdf","image/jpeg","image/png"]),total=files.reduce((sum,file)=>sum+Number(file.size||0),0);
   if(files.length>3)return"Choose no more than 3 files.";
@@ -709,6 +784,7 @@ function validateSupportFiles(files=supportFiles()){
 }
 function renderSupportFiles(){
   const files=supportFiles(),error=validateSupportFiles(files),summary=$("fileSummary");if(!summary)return;
+  if($("clearSupportFilesBtn"))$("clearSupportFilesBtn").hidden=files.length===0;
   summary.innerHTML=error?`<span style="color:var(--danger)">${esc(error)}</span>`:files.length?files.map(file=>`<span>${esc(file.name)} · ${(file.size/1024/1024).toFixed(2)} MB</span>`).join(""):"";
 }
 function focusSupportForm(category="",subcategory=""){
@@ -728,6 +804,7 @@ function submitSupportRequest(event){
   event.preventDefault();const form=$("publicSupportForm");if(!form)return;
   if(!form.checkValidity()){form.reportValidity();return}
   const fileError=validateSupportFiles();if(fileError){setSupportStatus(fileError,"error");return}
+  if(supportFiles().length){setSupportStatus("File attachments cannot be sent by this form yet. Remove the files and ask support how to send them.","error");return}
   $("submitBtn").disabled=true;setSupportStatus("Submitting your request…");$("supportConfirmation")?.classList.remove("show");
   const firstName=supportValue("firstName"),lastName=supportValue("lastName");
   supportPost("PUBLIC_SUPPORT_CREATE_CASE",{
@@ -749,6 +826,7 @@ function resetSupportForm(){
 }
 
 function handleClick(event){
+  const journey=event.target.closest("[data-dest-corridor]");if(journey){ACTIVE_CORRIDOR=journey.dataset.destCorridor;renderDestinationFinder();return}
   const route=event.target.closest("[data-route]");
   if(route){navigate(route.dataset.route);return}
   const category=event.target.closest("[data-category]");
@@ -785,7 +863,7 @@ function handleClick(event){
   if(supportPrefill){focusSupportForm(supportPrefill.dataset.supportPrefill||"");return}
   if(event.target.closest("[data-support-form]")){focusSupportForm();return}
   const path=event.target.closest("[data-open-path]");
-  if(path){post("STOREFRONT_NAVIGATE",{path:path.dataset.openPath});return}
+  if(path){if(path.closest("#cabinSizerModal"))closeCabinModal();post("STOREFRONT_NAVIGATE",{path:path.dataset.openPath});return}
   const back=event.target.closest("[data-back]");
   if(back){history.length>1?history.back():navigate("shop");return}
   const clear=event.target.closest("[data-clear-shop]");
@@ -804,11 +882,12 @@ $("query").addEventListener("input",()=>{
   if(parseRoute().page==="shop"){VISIBLE_LIMIT=12;renderShop()}
 });
 $("sort").addEventListener("change",()=>{VISIBLE_LIMIT=12;renderShop()});
-$("searchBtn").onclick=()=>{$("query").focus();window.scrollTo({top:0,behavior:"smooth"})};
+$("searchBtn").onclick=()=>{const scroller=$("skandi-app-root");if(scroller&&scroller.scrollHeight>scroller.clientHeight+1)scroller.scrollTo({top:0,behavior:"smooth"});else window.scrollTo({top:0,behavior:"smooth"});$("query").focus()};
 $("categoriesBtn").onclick=toggleCategoryMenu;
 $("shopCategoriesBtn").onclick=toggleCategoryMenu;
 $("footerCategoriesBtn").onclick=toggleCategoryMenu;
-$("mobileCategoriesBtn").onclick=()=>{closeMenus();navigate("home");setTimeout(()=>$("popularCategories")?.scrollIntoView({behavior:"smooth"}),40)};
+$("mobileCategoriesBtn").onclick=()=>{closeMenus();toggleCategoryMenu()};
+$("closeCategoryMenu").onclick=closeMenus;
 $("bagBtn").onclick=()=>navigate("bag");
 $("savedBtn").onclick=()=>navigate("saved");
 $("ordersBtn").onclick=()=>{navigate("orders");openOrders()};
@@ -830,11 +909,12 @@ $("supportSearchInput")?.addEventListener("input",filterSupportTopics);
 $("supportSearchInput")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();filterSupportTopics()}});
 $("supportSearchBtn")?.addEventListener("click",filterSupportTopics);
 $("fileInput")?.addEventListener("change",renderSupportFiles);
+$("clearSupportFilesBtn")?.addEventListener("click",()=>{if($("fileInput"))$("fileInput").value="";renderSupportFiles()});
 $("supportFileDrop")?.addEventListener("click",()=>$("fileInput")?.click());
 $("supportFileDrop")?.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();$("fileInput")?.click()}});
 ["dragenter","dragover"].forEach(type=>$("supportFileDrop")?.addEventListener(type,event=>{event.preventDefault();$("supportFileDrop").classList.add("dragging")}));
 ["dragleave","drop"].forEach(type=>$("supportFileDrop")?.addEventListener(type,event=>{event.preventDefault();$("supportFileDrop").classList.remove("dragging")}));
-$("supportFileDrop")?.addEventListener("drop",event=>{const transfer=new DataTransfer();Array.from(event.dataTransfer?.files||[]).slice(0,3).forEach(file=>transfer.items.add(file));if($("fileInput"))$("fileInput").files=transfer.files;renderSupportFiles()});
+$("supportFileDrop")?.addEventListener("drop",event=>{const transfer=new DataTransfer();Array.from(event.dataTransfer?.files||[]).forEach(file=>transfer.items.add(file));if($("fileInput"))$("fileInput").files=transfer.files;renderSupportFiles()});
 toggleSupportOrderFields();updateSupportCategory();renderSupportFiles();
 
 
@@ -881,7 +961,7 @@ window.addEventListener("message",event=>{
     renderHeroAndCampaigns();
     renderTravelCards();
     renderCategories();
-    renderHomeProducts();
+    renderHomeProducts();renderDestinationFinder();renderTravelKitBuilder();
     renderHeaderCounts();
     if(!INITIAL_CATEGORY_APPLIED&&String(payload.initialCategory||"").trim().toLowerCase()==="gift cards"){
       INITIAL_CATEGORY_APPLIED=true;
@@ -899,6 +979,7 @@ window.addEventListener("message",event=>{
     return;
   }
   if(message.type==="STOREFRONT_CART_UPDATED"){
+    if(kitOperation){if(!kitCartUpdated(payload)&&payload.cart){CART=payload.cart;renderHeaderCounts()}if(parseRoute().page==="bag")renderBagPage();return}
     ADDING=false;CART=payload.cart||CART;renderHeaderCounts();toast("Added to your bag");
     if(parseRoute().page==="bag")renderBagPage();return;
   }
@@ -921,6 +1002,7 @@ window.addEventListener("message",event=>{
   }
   if(message.type==="STOREFRONT_PROGRESS"){status(payload.message||"Working…");toast(payload.message||"Working…");return}
   if(message.type==="STOREFRONT_ERROR"){
+    if(kitOperation&&payload.stage==="STOREFRONT_ADD_TO_CART"){stopKitOnError(payload);return}
     ADDING=false;
     console.error("[SKANDI Storefront] Parent error:",payload);
     if(["catalog","STOREFRONT_READY","STOREFRONT_REFRESH"].includes(payload.stage))showCatalogError();
@@ -932,7 +1014,7 @@ window.addEventListener("message",event=>{
 
 $("footerYear").textContent=String(new Date().getFullYear());
 post("MASTER_CONFIG_REQUEST",{context:"the-store"});
-renderHeroAndCampaigns();renderTravelCards();renderCategories();renderHomeProducts();renderHeaderCounts();
+renderHeroAndCampaigns();renderTravelCards();renderCategories();renderHomeProducts();renderDestinationFinder();renderTravelKitBuilder();renderHeaderCounts();bindStoreJourneyTools();
 if(!location.hash)history.replaceState(null,"","#/home");
 applyRoute();
 requestStorefront("initial");

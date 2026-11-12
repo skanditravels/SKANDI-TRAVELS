@@ -230,7 +230,7 @@ async function finalizeWixSession(sessionToken, requestId) {
 }
 
 async function waitForAuthorizedSession() {
-  const delays =;
+  const delays = [0, 150, 350, 700, 1200];
   let latest = null;
 
   for (const delay of delays) {
