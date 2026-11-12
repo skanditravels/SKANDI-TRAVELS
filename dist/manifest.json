@@ -2000,8 +2000,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/riaintra/riaintra.receiver.html",
       "receiverFile": "riaintra-embeds/riaintra/riaintra.receiver.html",
-      "sha256": "0db60c50e56223196caa9070a51edc8b0d124bf94a452188dee9ca9553440777",
-      "bytes": 49576
+      "sha256": "82004b7c39787591d69dfa7ce3812dbde987b94ab8e43b6b35e0614b4864327a",
+      "bytes": 54064
     },
     {
       "key": "staffLogin",
