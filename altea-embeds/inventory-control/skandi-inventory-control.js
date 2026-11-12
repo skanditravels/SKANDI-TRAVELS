@@ -436,7 +436,7 @@ function AirlineBaggageEditor({value,onChange}){
   const parsed=parseStructuredInput(value);
   if(parsed!=null&&parsed!==""&&!Array.isArray(parsed))return html`<${SmartValueEditor} label="Baggage information" path="baggageAllowance" value=${parsed} onChange=${onChange} full=${true}/>`;
   const rows=Array.isArray(parsed)?parsed:[];
-  if(rows.some(row=>!row||typeof row!=="object"||Array.isArray(row)))return html`<${SmartValueEditor} label="Baggage information" path="baggageAllowance" value=${rows} onChange=${onChange} full=${true}/>`;
+  if(rows.some(row=>!row||typeof row!=="object"||Array.isArray(row)||(row.fares!=null&&(!Array.isArray(row.fares)||row.fares.some(f=>!f||typeof f!=="object"||Array.isArray(f))))))return html`<${SmartValueEditor} label="Baggage information" path="baggageAllowance" value=${rows} onChange=${onChange} full=${true}/>`;
   const setRow=(index,row)=>onChange(rows.map((old,i)=>i===index?row:old));
   return html`<div className="smartgroup full"><div className="paneltitle"><span>Baggage by cabin and fare</span><button type="button" className="btn small" onClick=${()=>onChange([...rows,{cabin_type:"",travel_class:"",fares:[]}])}>+ Add cabin</button></div><div className="sub">Allowances depend on itinerary and ticket. Record a source and review date before publishing.</div>
     ${rows.map((row,i)=>{const fares=Array.isArray(row.fares)?row.fares:[];const change=(key,val)=>setRow(i,{...row,[key]:val});return html`<div className="smartobject"><div className="paneltitle"><span>Cabin ${i+1}</span><button type="button" className="btn small danger" onClick=${()=>onChange(rows.filter((_,n)=>n!==i))}>Remove</button></div><div className="formgrid"><${Field} label="Cabin type" value=${row.cabin_type??row.cabinType??""} onChange=${v=>change("cabin_type",v)}/><${Field} label="Airline cabin name" value=${row.travel_class??row.travelClass??""} onChange=${v=>change("travel_class",v)}/></div>
@@ -897,6 +897,15 @@ function ProviderDetailGrid({resource,type}){
   return html`<div className="detailgrid">${rows.map(r=>html`<div className="detailcell"><small>${r.label}</small><div>${r.kind==="url"&&safeUrl(r.value)?html`<a href=${r.value} target="_blank" rel="noreferrer">${r.value}</a>`:text(r.value)}</div></div>`)}</div>`
 }
 
+function updateSavedRecord(setBoot,result){
+  const record=result?.bundle?.record||result?.record;
+  if(!record?.id)return;
+  setBoot(previous=>{
+    if(!previous)return previous;
+    const replace=list=>[...(list||[]).filter(item=>!(item.id===record.id&&item.entityType===record.entityType)),record];
+    return {...previous,records:replace(previous.records),...(record.entityType==="AIRLINE"?{airlines:replace(previous.airlines)}:{})};
+  });
+}
 function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView}){
   const [mode,setMode]=useState("collection");
   const [resourceType,setResourceType]=useState("HOTEL");
@@ -1027,7 +1036,7 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView})
     ${detail?html`<${Modal} title=${`Supplier Details · ${detailItem?.name||detailResource?.name||resourceType}`} onClose=${()=>setDetail(null)} actions=${html`<button className="btn" onClick=${()=>setDetail(null)}>Close</button>`}><div className="notice">Review the supplier details before adding or linking the record.</div><div className="hr"></div><${ProviderDetailGrid} resource=${detailResource||detailItem?.preview||{}} type=${detail?.entityType||resourceType}/>${detailResource?.description?html`<div><div className="hr"></div><div className="sectiontitle">Supplier description</div><div className="notice">${detailResource.description}</div></div>`:null}</${Modal}>`:null}
 
 
-    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
 
 
     ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"The rate access code cannot be changed after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
@@ -1098,7 +1107,7 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
     ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
       <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.filter(t=>t!=="HOTEL").map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
     <//>`:null}
-    ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
 
