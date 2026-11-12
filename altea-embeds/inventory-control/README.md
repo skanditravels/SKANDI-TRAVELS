@@ -2321,3 +2321,13 @@ The airline editor groups information into Airline profile, At the airport, Cabi
 Existing structured values and legacy Travel Info fields are displayed without replacing them on an unrelated save. When an airline service field is edited, Inventory Control updates its established Travel Info column as well as the inventory details used by the public projection. Where an existing structure contains fields not in the standard form, they remain editable and are preserved. Fare, baggage and service information is editorial guidance: the flight offer and airline remain authoritative for the passenger's particular itinerary.
 
 The UI and Wix backend changes must be deployed together. Before release verify existing Thai Airways baggage/cabin records, linked country and airport, an unrelated save preserving legacy content, an edited field appearing in both inventory and Travel Info, a new airline with valid IATA/ICAO codes, and the published website. Changes are not applied to existing airline records until staff save them.
+
+### Aircraft & Cabin Studio
+
+Create an aircraft by selecting an existing operating airline and entering its equipment code and name; save the record before adding cabins, cabin views, interactive hotspots and walkthrough scenes. Airline and equipment code, and existing child codes, are fixed in the editor after creation to avoid silently breaking links. Airline identity and selected child references are checked on the server. Legacy unmodified references are retained for review.
+
+Aircraft details are grouped into identity and seats, display and walkthrough, images, and review and visibility. Cabin, view, hotspot and scene edits save independently; unsaved aircraft details remain in the editor when a child record is saved. All active and inactive cabin records remain visible in the cabin list. Dragging a hotspot saves its new position and restores the previous position if the save fails.
+
+Cabin records and the aircraft's configuration summary are separate stored values. The “Use active cabin records” action prepares the summary from active cabins; Save Aircraft persists the result. It does not overwrite the airline's fleet template. Review cabin-seat totals and source information for the specific aircraft configuration before publishing. Existing images must remain linked through Asset Library.
+
+Deploy the Inventory Control embed and Wix backend together. In an authenticated preview, test creating an aircraft for an existing airline, adding cabins, selecting a view's cabin, saving a hotspot position, connecting scenes, preserving unsaved aircraft edits while saving a child, and checking the public aircraft view. Verify the airline fleet template separately before using Sync Airline Fleet.

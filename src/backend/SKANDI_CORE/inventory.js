@@ -1838,8 +1838,14 @@ export async function saveAircraftCore(input={}){
   const session=await requireInventoryAccess({write:true});
   const a=object(input.aircraft||input),id=clean(a.id,80);
   const current=id?(await select("travel_info_aircraft",{select:"*",id:qeq(id),limit:"1"}))[0]||{}:{};
+  if(id&&!current.id)throw new Error("Aircraft record was not found.");
   const resolvedAssets=await resolveAircraftAssetFields(a,current);
-  const airlineId=clean(a.airlineId??a.airline_id,120),airlineCode=upper(a.airlineCode??a.airline_code,8);
+  const airlineId=clean(a.airlineId??a.airline_id,120);let airlineCode=upper(a.airlineCode??a.airline_code,8);
+  if(!id||airlineId!==clean(current.airline_id,120)||airlineCode!==upper(current.airline_code,8)){
+    const airline=(await select("travel_info_airlines",{select:"ID,iataCode",ID:qeq(airlineId),limit:"1"}))[0];
+    if(!airline?.ID||!airline.iataCode)throw new Error("Select an existing airline with an IATA code.");
+    airlineCode=upper(airline.iataCode,8);
+  }
   const code=upper(a.aircraftCode??a.aircraft_code,80),name=clean(a.aircraftName??a.aircraft_name,240);
   if(!airlineId||!airlineCode||!code||!name)throw new Error("AIRCRAFT_REQUIRED_FIELDS_MISSING");
   const body={
@@ -1865,6 +1871,14 @@ export async function saveAircraftCore(input={}){
     sort_order:nullableNumber(a.sortOrder??a.sort_order,{integer:true,min:0})??100,
     source:clean(a.source||"INVENTORY_CONTROL",120),source_reference:clean(a.sourceReference??a.source_reference,500)||null
   };
+  if(body.default_cabin_code&&upper(current.default_cabin_code,80)!==body.default_cabin_code){
+    const cabin=id?(await select("travel_info_aircraft_cabins",{select:"id",aircraft_id:qeq(id),cabin_code:qeq(body.default_cabin_code),limit:"1"}))[0]:null;
+    if(!cabin)throw new Error("Choose a default cabin belonging to this aircraft.");
+  }
+  if(body.walkthrough_start_scene_code&&upper(current.walkthrough_start_scene_code,120)!==upper(body.walkthrough_start_scene_code,120)){
+    const scene=id?(await select("travel_info_aircraft_walk_scenes",{select:"id",aircraft_id:qeq(id),scene_code:qeq(body.walkthrough_start_scene_code),limit:"1"}))[0]:null;
+    if(!scene)throw new Error("Choose a starting scene belonging to this aircraft.");
+  }
   let saved;
   if(id)saved=(await restRequest({table:"travel_info_aircraft",method:"PATCH",query:{id:qeq(id)},body,prefer:"return=representation"}))?.[0];
   else saved=(await restRequest({table:"travel_info_aircraft",method:"POST",body,prefer:"return=representation"}))?.[0];
@@ -1881,7 +1895,7 @@ export async function archiveAircraftCore(input={}){
 function aircraftChildBody(kind,item={}){
   const spec=AIRCRAFT_CHILDREN[kind];if(!spec)throw new Error("AIRCRAFT_CHILD_KIND_INVALID");
   const aliases={
-    aircraft_id:item.aircraft_id??item.aircraftId,cabin_id:item.cabin_id??item.cabinId,
+    aircraft_id:item.aircraft_id??item.aircraftId,cabin_id:clean(item.cabin_id??item.cabinId,80)||null,
     view_id:item.view_id??item.viewId,scene_id:item.scene_id??item.sceneId,
     cabin_code:upper(item.cabin_code??item.cabinCode,80),cabin_name:clean(item.cabin_name??item.cabinName,240),
     rank:nullableNumber(item.rank,{integer:true,min:0})??100,seat_count:nullableNumber(item.seat_count??item.seatCount,{integer:true,min:0}),
@@ -1908,14 +1922,40 @@ function aircraftChildBody(kind,item={}){
   if((kind==="view"||kind==="scene")&&!body.image_url)throw new Error("AIRCRAFT_IMAGE_REQUIRED");
   return body;
 }
+async function validateAircraftChildLinks(kind,body,current={}){
+  const parent=kind==="hotspot"?"view_id":kind==="sceneHotspot"?"scene_id":"aircraft_id";
+  const table=kind==="hotspot"?"travel_info_aircraft_views":kind==="sceneHotspot"?"travel_info_aircraft_walk_scenes":"travel_info_aircraft";
+  const parentId=clean(body[parent],80);
+  if(!parentId)throw new Error("Select a parent aircraft or view first.");
+  if(current.id&&clean(current[parent],80)!==parentId)throw new Error("A saved record cannot be moved to a different aircraft or view.");
+  const parentRow=(await select(table,{select:kind==="hotspot"||kind==="sceneHotspot"?"id,aircraft_id":"id",id:qeq(parentId),limit:"1"}))[0];
+  if(!parentRow)throw new Error("The selected aircraft or view no longer exists.");
+  const aircraftId=kind==="hotspot"||kind==="sceneHotspot"?clean(parentRow.aircraft_id,80):parentId;
+  if(kind==="view"&&body.cabin_id&&clean(body.cabin_id,80)!==clean(current.cabin_id,80)){
+    const cabin=(await select("travel_info_aircraft_cabins",{select:"id,aircraft_id",id:qeq(body.cabin_id),limit:"1"}))[0];
+    if(!cabin||clean(cabin.aircraft_id,80)!==aircraftId)throw new Error("Choose a cabin belonging to this aircraft.");
+  }
+  if(kind==="hotspot"&&body.target_cabin_code&&upper(body.target_cabin_code,80)!==upper(current.target_cabin_code,80)){
+    const cabin=(await select("travel_info_aircraft_cabins",{select:"id",aircraft_id:qeq(aircraftId),cabin_code:qeq(body.target_cabin_code),limit:"1"}))[0];
+    if(!cabin)throw new Error("Choose a target cabin belonging to this aircraft.");
+  }
+  if(kind==="scene")for(const key of ["forward_scene_code","back_scene_code"]){
+    if(!body[key]||upper(body[key],120)===upper(current[key],120))continue;
+    if(upper(body[key],120)===upper(body.scene_code,120))throw new Error("A scene cannot link to itself.");
+    const scene=(await select("travel_info_aircraft_walk_scenes",{select:"id",aircraft_id:qeq(aircraftId),scene_code:qeq(body[key]),limit:"1"}))[0];
+    if(!scene)throw new Error("Choose a walkthrough scene belonging to this aircraft.");
+  }
+}
 export async function saveAircraftChildCore(input={}){
   const session=await requireInventoryAccess({write:true});
   const kind=clean(input.kind,40),spec=AIRCRAFT_CHILDREN[kind],item=object(input.item);
   if(!spec)throw new Error("AIRCRAFT_CHILD_KIND_INVALID");
   const id=clean(item.id,80);
   const current=id?(await select(spec.table,{select:"*",id:qeq(id),limit:"1"}))[0]||{}:{};
+  if(id&&!current.id)throw new Error("Aircraft detail record was not found.");
   const assetFields=await resolveAircraftChildAssetFields(kind,item,current);
   const body=aircraftChildBody(kind,{...item,...assetFields});
+  await validateAircraftChildLinks(kind,body,current);
   let saved;
   if(id)saved=(await restRequest({table:spec.table,method:"PATCH",query:{id:qeq(id)},body,prefer:"return=representation"}))?.[0];
   else saved=(await restRequest({table:spec.table,method:"POST",body,prefer:"return=representation"}))?.[0];
