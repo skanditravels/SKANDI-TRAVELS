@@ -20,7 +20,7 @@ import { tryWriteStaffLoginAudit } from "backend/SKANDI_CORE/platformAudit";
 const AGENT_TABLE = "agent_users";
 const OTP_TABLE = "staff_login_otps";
 const TRUSTED_DEVICE_TABLE = "staff_trusted_devices";
-const AUTOMATION_TRIGGER_ID = "YOUR_TRIGGER_ID_FROM_WIX_AUTOMATIONS";
+const AUTOMATION_TRIGGER_ID = "d5dbec02-71b6-475e-aa80-6d67b0bd4432";
 const TRUST_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const BLOCKED_EMPLOYMENT = new Set(["TERMINATED", "SUSPENDED", "FURLOUGHED", "INACTIVE"]);
 
