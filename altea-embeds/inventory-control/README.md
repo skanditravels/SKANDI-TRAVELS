@@ -2313,3 +2313,11 @@ createRoot(document.getElementById("root")).render(html`<${React.StrictMode}><${
 </html>
 ```
 {% endraw %}
+
+### Airline record workflow
+
+The airline editor groups information into Airline profile, At the airport, Cabins & onboard, Fares & baggage, and Disruptions & sources. Page content, media, related inventory, visibility and publishing remain separate. Airline records can link one country, airline group/supplier and primary hub airport under Related inventory; the hub relationship and descriptive hub information are maintained separately. The linked country also updates the airline's displayed country. Existing unlinked country text remains available for review.
+
+Existing structured values and legacy Travel Info fields are displayed without replacing them on an unrelated save. When an airline service field is edited, Inventory Control updates its established Travel Info column as well as the inventory details used by the public projection. Where an existing structure contains fields not in the standard form, they remain editable and are preserved. Fare, baggage and service information is editorial guidance: the flight offer and airline remain authoritative for the passenger's particular itinerary.
+
+The UI and Wix backend changes must be deployed together. Before release verify existing Thai Airways baggage/cabin records, linked country and airport, an unrelated save preserving legacy content, an edited field appearing in both inventory and Travel Info, a new airline with valid IATA/ICAO codes, and the published website. Changes are not applied to existing airline records until staff save them.

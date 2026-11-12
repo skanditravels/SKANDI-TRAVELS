@@ -116,7 +116,7 @@ function allowedHierarchyTypes(type){
   if(type==="DESTINATION")return ["REGION","COUNTRY"];
   if(type==="AREA")return ["DESTINATION","REGION","COUNTRY"];
   if(type==="SUPPLIER")return ["CHAIN","COUNTRY"];
-  if(type==="AIRLINE")return ["CHAIN","COUNTRY"];
+  if(type==="AIRLINE")return ["CHAIN","COUNTRY","AIRPORT"];
   return RELATION_TYPES.map(x=>x.value);
 }
 function hydrateHierarchy(bundle,records){
@@ -157,13 +157,13 @@ function RelationPanel({draft,setDraft,records=[]}){
   }
   const selectedCountry=refs.find(r=>r.entityType==="COUNTRY"&&r.id===(rows.find(x=>x.relationType==="COUNTRY")?.targetEntityId||record.details?.countryId||record.parentEntityId));
   const regionLabel=[selectedCountry?.code,selectedCountry?.name,record.details?.countryCode,record.details?.countryName].some(v=>["US","USA","UNITED STATES","UNITED STATES OF AMERICA"].includes(text(v).toUpperCase()))?"State":"Region";
-  function change(i,patch){setDraft(old=>{const list=[...(old.relations||[])];list[i]={...list[i],...patch};return withHierarchyEdit(old,list)})}
+  function change(i,patch){setDraft(old=>{const list=[...(old.relations||[])];list[i]={...list[i],...patch};const next=withHierarchyEdit(old,list);const target=refs.find(x=>x.id===(list[i].targetEntityId||list[i].targetRecordId));if(old.record.entityType==="AIRLINE"&&list[i].relationType==="COUNTRY"&&target)next.record.details.country=target.name;return next})}
   const incoming=draft.incoming||{},linked=new Map();
   for(const rel of incoming.relations||[]){const id=rel.source_entity_id||rel.source_record_id;const match=records.find(x=>x.id===id);if(match)linked.set(`${match.entityType}:${match.id}`,{record:match,reason:rel.relation_type})}
   for(const [kind,items] of [["Parent",incoming.children||[]],["Supplier",incoming.supplied||[]],["Geography",incoming.geographic||[]]])for(const item of items){const match=records.find(x=>x.id===item.id)||{id:item.id,entityType:item.entity_type,code:item.code,name:item.name};linked.set(`${match.entityType}:${match.id}`,{record:match,reason:kind})}
   return html`<div><div className="paneltitle"><span>Related inventory</span><button className="btn small" disabled=${!options.length} onClick=${()=>setDraft(old=>({...old,relations:[...(old.relations||[]),normalizeRelation({relationType:options[0].value})]}))}>+ Add relation</button></div>
   ${rows.length?rows.map((row,i)=>{const def=RELATION_TYPES.find(x=>x.value===row.relationType);const targetValue=row.targetEntityId||row.targetRecordId||"";return html`<div className="relitem"><div className="formgrid three">
-  <${Field} label="Relation type" type="select" options=${[...(def?[]:[{value:row.relationType,label:`Existing: ${row.relationType}`}]),...RELATION_TYPES.filter(x=>x.value===row.relationType||(allowed.has(x.value)&&!used.has(x.value))).map(x=>({value:x.value,label:x.value==="REGION"?regionLabel:x.label}))]} value=${row.relationType} onChange=${value=>change(i,{relationType:value,targetEntityId:"",targetRecordType:"",targetRecordId:""})}/>
+  <${Field} label="Relation type" type="select" options=${[...(def?[]:[{value:row.relationType,label:`Existing: ${row.relationType}`}]),...RELATION_TYPES.filter(x=>x.value===row.relationType||(allowed.has(x.value)&&!used.has(x.value))).map(x=>({value:x.value,label:x.value==="REGION"?regionLabel:record.entityType==="AIRLINE"&&x.value==="AIRPORT"?"Primary hub airport":record.entityType==="AIRLINE"&&x.value==="CHAIN"?"Airline group / supplier":x.label}))]} value=${row.relationType} onChange=${value=>change(i,{relationType:value,targetEntityId:"",targetRecordType:"",targetRecordId:""})}/>
   <${Field} label="Target record" type="select" options=${[{value:"",label:"Choose…"},...(targetValue&&!refs.some(x=>x.id===targetValue&&(!def||x.entityType===def.target))?[{value:targetValue,label:`Existing link requires review · ${refs.find(x=>x.id===targetValue)?.name||targetValue}`,disabled:true}]:[]),...refs.filter(x=>(!def||x.entityType===def.target)&&(x.id===targetValue||compatible(x))).map(x=>({value:x.id,label:`${x.entityType} · ${x.name} (${x.code||"—"})`}))]} value=${targetValue} onChange=${value=>{const target=refs.find(x=>x.id===value),external=target&&["AIRPORT","AIRLINE"].includes(target.entityType);change(i,{targetEntityId:target&&!external?value:"",targetRecordType:external?target.entityType:"",targetRecordId:external?value:""})}}/>
   <button className="btn danger" onClick=${()=>setDraft(old=>withHierarchyEdit(old,(old.relations||[]).filter((_,n)=>n!==i)))}>Remove</button></div></div>`}):html`<div className="empty">No related inventory assigned.</div>`}
   <div className="sectiontitle">Used as related inventory by</div>${[...linked.values()].length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Record</th><th>Relationship</th></tr></thead><tbody>${[...linked.values()].map(({record:r,reason})=>html`<tr><td>${r.entityType}</td><td>${r.name} ${r.code?`(${r.code})`:""}</td><td>${reason}</td></tr>`)}</tbody></table></div>`:html`<div className="empty">No incoming relationships found.</div>`}</div>`;
@@ -343,7 +343,7 @@ const ENTITY_SCHEMAS={
     SR("Reference links","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]},
   AIRLINE:{details:[
-    SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Alliance","details.alliance"),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SF("Lounges","details.lounges","textarea"),SF("Loyalty Program","details.loyaltyProgram","textarea"),
+    SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Airline alliance","details.alliance","select",["Star Alliance","oneworld","SkyTeam","None"]),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SF("Lounges","details.lounges","textarea"),SF("Frequent flyer programme","details.loyaltyProgram"),SF("Frequent flyer programme website","details.loyaltyProgramUrl","url"),
     SR("Baggage Allowance","details.baggageAllowance",[SF("Cabin / Fare","name"),SF("Under-seat Bag","underSeatBag"),SF("Carry-on","overheadCarryOn"),SF("Checked Bag","checkedBag"),SF("Notes","description","textarea")]),
     SR("Food & Drinks","details.foodDrinksJson",[SF("Cabin / Fare","name"),SF("Service","service"),SF("Description","description","textarea")]),
     SR("Wi-Fi / Connectivity","details.wifiOnboardJson",[SF("Product / Supplier","name"),SF("Availability","availability"),SF("Price","price"),SF("Notes","description","textarea")]),
@@ -354,7 +354,7 @@ const ENTITY_SCHEMAS={
     SR("Lost & Found","details.lostFoundJson",[SF("Topic","title"),SF("Procedure","description","textarea"),SF("URL","url","url")]),
     SR("Quick Facts","details.quickFactsJson",[SF("Label","label"),SF("Value","value")]),
     SR("Cabins","details.cabinsJson",[SF("Cabin","name"),SF("Code","code"),SF("Description","description","textarea")]),
-    SR("Hubs","details.hubsJson",[SF("Airport Code","code"),SF("Airport / City","name")]),
+    SR("Hub information","details.hubsJson",[SF("Airport code","airport"),SF("Airport / city","city"),SF("Role","role")]),
     SR("Fleet Summary","details.fleetSummaryJson",[SF("Aircraft","aircraft"),SF("Count","count","number"),SF("Notes","notes","textarea")]),
     SR("Reference links","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]}
@@ -411,10 +411,48 @@ function normalizeStructuredRows(value,fields=[]){
   return parsed===null||parsed===undefined?[]:[{[first]:String(parsed)}];
 }
 function RepeatSchemaEditor({field,record,update,records}){
-  const raw=getPath(record,field.path);const rows=normalizeStructuredRows(raw,field.fields);
-  const add=()=>{const item={};for(const f of field.fields)item[f.path]=f.type==="boolean"?false:f.type==="number"?0:"";update(field.path,[...rows,item])};
+  const raw=getPath(record,field.path);const parsed=parseStructuredInput(raw);
+  if(Array.isArray(parsed)&&parsed.length&&parsed.every(v=>typeof v==="string"))return html`<${ListField} label=${field.label+" — one per line"} value=${parsed} onChange=${v=>update(field.path,v)} full=${true}/>`;
+  if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))return html`<${SmartValueEditor} label=${field.label} path=${field.path} value=${parsed} onChange=${v=>update(field.path,v)} full=${true}/>`;
+  const rows=normalizeStructuredRows(raw,field.fields);
+  const add=()=>{const item={};for(const f of field.fields)item[f.path]=f.type==="boolean"?false:f.type==="number"?null:"";update(field.path,[...rows,item])};
   return html`<div className="smartgroup full"><div className="paneltitle"><span>${field.label}</span><button className="btn small" onClick=${add}>+ Add</button></div>${field.help?html`<div className="sub">${field.help}</div>`:null}
-    ${rows.length?rows.map((row,i)=>html`<div className="smartobject"><div className="paneltitle"><span>${field.label} ${i+1}</span><button className="btn small danger" onClick=${()=>update(field.path,rows.filter((_,x)=>x!==i))}>Remove</button></div><div className="formgrid three">${field.fields.map(f=>html`<${SchemaScalar} field=${f} records=${records} value=${row?.[f.path]} onChange=${v=>update(field.path,rows.map((x,idx)=>idx===i?{...x,[f.path]:v}:x))}/>` )}</div></div>`):html`<div className="smartempty">No ${field.label.toLowerCase()} yet. Add the first one here.</div>`}
+    ${rows.length?rows.map((row,i)=>html`<div className="smartobject"><div className="paneltitle"><span>${field.label} ${i+1}</span><button className="btn small danger" onClick=${()=>update(field.path,rows.filter((_,x)=>x!==i))}>Remove</button></div><div className="formgrid three">${field.fields.map(f=>html`<${SchemaScalar} field=${f} records=${records} value=${row?.[f.path]} onChange=${v=>update(field.path,rows.map((x,idx)=>idx===i?{...x,[f.path]:v}:x))}/>` )}</div><${SmartObjectEditor} value=${row} exclude=${field.fields.map(f=>f.path)} onChange=${v=>update(field.path,rows.map((x,idx)=>idx===i?v:x))}/></div>`):html`<div className="smartempty">No ${field.label.toLowerCase()} yet. Add the first one here.</div>`}
+  </div>`;
+}
+const AIRLINE_LEGACY_FIELDS={"details.checkIn":"checkInDeadline","details.boarding":"boarding","details.lounges":"lounges","details.loyaltyProgram":"loyaltyProgram","details.loyaltyProgramUrl":"loyaltyProgramUrl","details.contactUrl":"contactUrl","details.baggageAllowance":"baggageAllowence","details.foodDrinksJson":"foodDrinksJson","details.wifiOnboardJson":"wifiOnboardJson","details.ticketTypesJson":"ticketTypesJson","details.childrenInfantsJson":"childrenInfantsJson","details.delaysCancellationsJson":"delayCancellationJson","details.damagedBaggageJson":"damagedBaggageJson","details.lostFoundJson":"lostFoundJson","details.quickFactsJson":"quickFactsJson","details.cabinsJson":"cabinsJson","details.hubsJson":"hubsJson","details.fleetSummaryJson":"fleetSummaryJson","details.sourceUrlsJson":"sourceUrlsJson"};
+const AIRLINE_GROUPS=[
+  {id:"profile",label:"Airline profile",paths:["icaoCode","shortName","alliance","brandGroup","country","city","website","contactUrl","summary","loyaltyProgram","loyaltyProgramUrl","quickFactsJson"]},
+  {id:"airport",label:"At the airport",paths:["hubsJson","checkIn","boarding","lounges"]},
+  {id:"onboard",label:"Cabins & onboard",paths:["cabinsJson","foodDrinksJson","wifiOnboardJson","fleetSummaryJson"]},
+  {id:"fares",label:"Fares & baggage",paths:["ticketTypesJson","baggageAllowance","childrenInfantsJson"]},
+  {id:"support",label:"Disruptions & sources",paths:["delaysCancellationsJson","damagedBaggageJson","lostFoundJson","sourceUrlsJson"]}
+];
+function airlineFieldValue(record,field){
+  const current=getPath(record,field.path);
+  return current!==undefined&&current!==null?current:record.sourceRecord?.[AIRLINE_LEGACY_FIELDS[field.path]];
+}
+function AirlineBaggageEditor({value,onChange}){
+  const parsed=parseStructuredInput(value);
+  if(parsed!=null&&parsed!==""&&!Array.isArray(parsed))return html`<${SmartValueEditor} label="Baggage information" path="baggageAllowance" value=${parsed} onChange=${onChange} full=${true}/>`;
+  const rows=Array.isArray(parsed)?parsed:[];
+  if(rows.some(row=>!row||typeof row!=="object"||Array.isArray(row)||(row.fares!=null&&(!Array.isArray(row.fares)||row.fares.some(f=>!f||typeof f!=="object"||Array.isArray(f))))))return html`<${SmartValueEditor} label="Baggage information" path="baggageAllowance" value=${rows} onChange=${onChange} full=${true}/>`;
+  const setRow=(index,row)=>onChange(rows.map((old,i)=>i===index?row:old));
+  return html`<div className="smartgroup full"><div className="paneltitle"><span>Baggage by cabin and fare</span><button type="button" className="btn small" onClick=${()=>onChange([...rows,{cabin_type:"",travel_class:"",fares:[]}])}>+ Add cabin</button></div><div className="sub">Allowances depend on itinerary and ticket. Record a source and review date before publishing.</div>
+    ${rows.map((row,i)=>{const fares=Array.isArray(row.fares)?row.fares:[];const change=(key,val)=>setRow(i,{...row,[key]:val});return html`<div className="smartobject"><div className="paneltitle"><span>Cabin ${i+1}</span><button type="button" className="btn small danger" onClick=${()=>onChange(rows.filter((_,n)=>n!==i))}>Remove</button></div><div className="formgrid"><${Field} label="Cabin type" value=${row.cabin_type??row.cabinType??""} onChange=${v=>change("cabin_type",v)}/><${Field} label="Airline cabin name" value=${row.travel_class??row.travelClass??""} onChange=${v=>change("travel_class",v)}/></div>
+      <div className="paneltitle"><span>Fare allowances</span><button type="button" className="btn small" onClick=${()=>change("fares",[...fares,{name:"",description:"",baggage_allowance:{under_seat_bag:"",overhead_carry_on:"",checked_bag:""}}])}>+ Add fare</button></div>
+      ${fares.map((fare,j)=>{const bag=fare.baggage_allowance||fare.baggageAllowance||{};const setFare=next=>change("fares",fares.map((old,n)=>n===j?next:old));const setBag=(key,val)=>setFare({...fare,baggage_allowance:{...bag,[key]:val}});return html`<div className="smartobject"><div className="paneltitle"><span>Fare ${j+1}</span><button type="button" className="btn small danger" onClick=${()=>change("fares",fares.filter((_,n)=>n!==j))}>Remove</button></div><div className="formgrid three"><${Field} label="Fare name" value=${fare.name||""} onChange=${v=>setFare({...fare,name:v})}/><${Field} label="Personal item" value=${bag.under_seat_bag??bag.underSeatBag??""} onChange=${v=>setBag("under_seat_bag",v)}/><${Field} label="Cabin bag" value=${bag.overhead_carry_on??bag.overheadCarryOn??""} onChange=${v=>setBag("overhead_carry_on",v)}/><${Field} label="Checked baggage" value=${bag.checked_bag??bag.checkedBag??""} onChange=${v=>setBag("checked_bag",v)}/><${Field} label="Notes" type="textarea" value=${fare.description||""} onChange=${v=>setFare({...fare,description:v})}/></div><${SmartObjectEditor} value=${fare} exclude=${["name","description","baggage_allowance","baggageAllowance"]} onChange=${setFare}/></div>`})}
+      <${SmartObjectEditor} value=${row} exclude=${["cabin_type","cabinType","travel_class","travelClass","fares"]} onChange=${next=>setRow(i,next)}/></div>`})}
+    ${!rows.length?html`<div className="smartempty">No cabin allowances added.</div>`:null}
+  </div>`;
+}
+function AirlineDetailsEditor({record,update,records,relations=[]}){
+  const [group,setGroup]=useState("profile");
+  const selected=AIRLINE_GROUPS.find(x=>x.id===group)||AIRLINE_GROUPS[0];
+  const fields=schemaFields("AIRLINE","details").filter(f=>selected.paths.includes(f.path.split(".").pop()));
+  return html`<div><div className="notice">Maintain the airline profile by topic. Link its country, supplier and primary hub under Related inventory. Check fare and baggage information against the operating airline.</div>
+    <div className="tabs">${AIRLINE_GROUPS.map(g=>html`<button type="button" className=${`tab ${group===g.id?"active":""}`} onClick=${()=>setGroup(g.id)}>${g.label}</button>`)}</div>
+    <div className="formgrid three">${fields.map(field=>{const value=airlineFieldValue(record,field);const withValue={...record,details:{...(record.details||{}),[field.path.split(".").pop()]:value}};return field.path==="details.baggageAllowance"?html`<${AirlineBaggageEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.country"&&relations.some(r=>r.relationType==="COUNTRY"&&r.active!==false&&r.targetEntityId)?html`<${Field} label="Country (linked)" value=${value||""} disabled=${true} help="Change the country in Related inventory."/>`:field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${withValue} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} value=${value} onChange=${v=>update(field.path,v)} records=${records}/>`})}</div>
   </div>`;
 }
 function ExplicitSchemaEditor({type,section,record,update,records}){
@@ -447,6 +485,11 @@ function smartTextType(path,value){
   if(/description|summary|information|notes|content|policy|instructions|reason|message/.test(token)||text(value).length>140)return"textarea";
   return"text";
 }
+function emptyStructuredTemplate(value){
+  if(Array.isArray(value))return [];
+  if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,emptyStructuredTemplate(item)]));
+  return typeof value==="boolean"?false:typeof value==="number"?null:"";
+}
 function SmartValueEditor({label,path,value,onChange,full=false}){
   const parsed=parseStructuredInput(value);
   if(parsed!==value)return html`<${SmartValueEditor} label=${label} path=${path} value=${parsed} onChange=${onChange} full=${full}/>`;
@@ -455,7 +498,7 @@ function SmartValueEditor({label,path,value,onChange,full=false}){
     if(!objects){
       return html`<${ListField} label=${label+" — one per line"} value=${value} onChange=${onChange} full=${full}/>`
     }
-    return html`<div className="smartgroup"><div className="smarttitle">${label}</div>
+    return html`<div className="smartgroup"><div className="paneltitle"><span className="smarttitle">${label}</span><button type="button" className="btn small" onClick=${()=>onChange([...value,emptyStructuredTemplate(value.find(v=>v&&typeof v==="object")||{})])}>+ Add</button></div>
       ${value.length?value.map((item,i)=>html`<div className="smartobject"><div className="paneltitle"><span>Item ${i+1}</span><button className="btn small danger" onClick=${()=>onChange(value.filter((_,x)=>x!==i))}>Remove</button></div><${SmartValueEditor} label=${`Item ${i+1}`} path=${path} value=${item} onChange=${next=>onChange(value.map((x,idx)=>idx===i?next:x))} full=${true}/></div>`):html`<div className="smartempty">No list items.</div>`}
     </div>`
   }
@@ -725,14 +768,15 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   }
 
 
-  const tabs=["identity","details","commercial","operations","content","media","relations","catalog","publishing"];
+  const tabs=rec.entityType==="AIRLINE"?["identity","details","content","media","relations","catalog","publishing"]:["identity","details","commercial","operations","content","media","relations","catalog","publishing"];
+  const tabNames=rec.entityType==="AIRLINE"?{identity:"Airline identity",details:"Airline information",content:"Page content",media:"Images & logos",relations:"Related inventory",catalog:"Visibility & badges",publishing:"SEO & publishing"}:{};
   return html`<${Modal} title=${`${rec.entityType} · ${rec.name||"New record"}`} onClose=${onClose} wide=${true}
     actions=${html`<button className="btn small" onClick=${()=>save(rec.status||"DRAFT")}>Save</button><button className="btn small" onClick=${()=>save("REVIEW")}>Review</button><button className="btn small cyan" onClick=${()=>save("PUBLISHED")}>Publish</button>`}>
-    <div className="tabs">${tabs.map(t=>html`<button className=${`tab ${tab===t?"active":""}`} onClick=${()=>setTab(t)}>${t[0].toUpperCase()+t.slice(1)}</button>`)}</div>
+    <div className="tabs">${tabs.map(t=>html`<button className=${`tab ${tab===t?"active":""}`} onClick=${()=>setTab(t)}>${tabNames[t]||t[0].toUpperCase()+t.slice(1)}</button>`)}</div>
     ${tab==="identity"?html`<div className="formgrid three">
       <${Field} label="Record Type" value=${rec.entityType} disabled=${true}/>
       <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>
-      <${Field} label="Master Name / Title" value=${rec.name} onChange=${v=>update("name",v)}/>
+      <${Field} label=${rec.entityType==="AIRLINE"?"Airline name":"Master Name / Title"} value=${rec.name} onChange=${v=>update("name",v)}/>
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Assigned by SKANDI TRAVELS.":"Assigned when the record is saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
@@ -743,8 +787,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/>
     </div>`:null}
     ${tab==="details"?html`<div>
-      <div className="notice">Complete the fields needed for this record.</div>
-      <div style=${{marginTop:"12px"}}><${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/></div>
+      <div style=${{marginTop:"12px"}}>${rec.entityType==="AIRLINE"?html`<${AirlineDetailsEditor} record=${rec} update=${update} records=${refs} relations=${relations}/>`:html`<${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/>`}</div>
       <div className="hr"></div><div className="sectiontitle">Additional Stored Fields</div>
       <${SmartObjectEditor} value=${rec.details||{}} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
     </div>`:null}
@@ -854,6 +897,15 @@ function ProviderDetailGrid({resource,type}){
   return html`<div className="detailgrid">${rows.map(r=>html`<div className="detailcell"><small>${r.label}</small><div>${r.kind==="url"&&safeUrl(r.value)?html`<a href=${r.value} target="_blank" rel="noreferrer">${r.value}</a>`:text(r.value)}</div></div>`)}</div>`
 }
 
+function updateSavedRecord(setBoot,result){
+  const record=result?.bundle?.record||result?.record;
+  if(!record?.id)return;
+  setBoot(previous=>{
+    if(!previous)return previous;
+    const replace=list=>[...(list||[]).filter(item=>!(item.id===record.id&&item.entityType===record.entityType)),record];
+    return {...previous,records:replace(previous.records),...(record.entityType==="AIRLINE"?{airlines:replace(previous.airlines)}:{})};
+  });
+}
 function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView}){
   const [mode,setMode]=useState("collection");
   const [resourceType,setResourceType]=useState("HOTEL");
@@ -984,7 +1036,7 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView})
     ${detail?html`<${Modal} title=${`Supplier Details · ${detailItem?.name||detailResource?.name||resourceType}`} onClose=${()=>setDetail(null)} actions=${html`<button className="btn" onClick=${()=>setDetail(null)}>Close</button>`}><div className="notice">Review the supplier details before adding or linking the record.</div><div className="hr"></div><${ProviderDetailGrid} resource=${detailResource||detailItem?.preview||{}} type=${detail?.entityType||resourceType}/>${detailResource?.description?html`<div><div className="hr"></div><div className="sectiontitle">Supplier description</div><div className="notice">${detailResource.description}</div></div>`:null}</${Modal}>`:null}
 
 
-    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
 
 
     ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"The rate access code cannot be changed after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
@@ -1055,7 +1107,7 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
     ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
       <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.filter(t=>t!=="HOTEL").map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
     <//>`:null}
-    ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
 

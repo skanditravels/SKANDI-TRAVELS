@@ -1284,6 +1284,24 @@ async function compensateBundleSave(snapshot,savedRecord=null){
   }
 }
 
+// Keep the established Travel Info columns in step with edits made in Inventory Control.
+// Only changed fields are written: older structured records and unrelated source data stay intact.
+const AIRLINE_DETAIL_COLUMNS={checkIn:"checkInDeadline",boarding:"boarding",lounges:"lounges",loyaltyProgram:"loyaltyProgram",loyaltyProgramUrl:"loyaltyProgramUrl",contactUrl:"contactUrl",baggageAllowance:"baggageAllowence",foodDrinksJson:"foodDrinksJson",wifiOnboardJson:"wifiOnboardJson",ticketTypesJson:"ticketTypesJson",childrenInfantsJson:"childrenInfantsJson",delaysCancellationsJson:"delayCancellationJson",damagedBaggageJson:"damagedBaggageJson",lostFoundJson:"lostFoundJson",quickFactsJson:"quickFactsJson",cabinsJson:"cabinsJson",hubsJson:"hubsJson",fleetSummaryJson:"fleetSummaryJson",sourceUrlsJson:"sourceUrlsJson"};
+function airlineComparable(value){
+  if(typeof value==="string")try{return JSON.parse(value)}catch(_){return value}
+  return value;
+}
+function airlineLegacyPatch(details={},existing={}){
+  const patch={},previous=object(existing.inventory_details);
+  for(const [key,column] of Object.entries(AIRLINE_DETAIL_COLUMNS)){
+    if(!Object.prototype.hasOwnProperty.call(details,key))continue;
+    const before=Object.prototype.hasOwnProperty.call(previous,key)?previous[key]:existing[column];
+    const after=details[key];
+    if(JSON.stringify(airlineComparable(before??null))===JSON.stringify(airlineComparable(after??null)))continue;
+    patch[column]=["quickFactsJson","hubsJson"].includes(column)?airlineComparable(after):after&&typeof after==="object"?JSON.stringify(after):after;
+  }
+  return patch;
+}
 async function savePrimary(session,bundle){
   const r=object(bundle.record),type=upper(r.entityType||r.entity_type,40);
   if(MASTER_TYPES.has(type)){
@@ -1306,7 +1324,12 @@ async function savePrimary(session,bundle){
     const preCatalog=bundle.catalog?normalizeCatalog(bundle.catalog):null;
     const body=referenceBody(type,record,preCatalog);
     if(id){
-      const exists=(await select(table,{select:"ID",ID:qeq(id),limit:"1"}))[0];
+      const exists=(await select(table,{select:isAirline?"*":"ID",ID:qeq(id),limit:"1"}))[0];
+      if(isAirline){
+        if((!exists||upper(exists.iataCode,8)!==body.iataCode)&&!/^[A-Z0-9]{2}$/.test(body.iataCode))throw new Error("Airline IATA code must contain two letters or digits.");
+        if(body.icaoCode&&(!exists||upper(exists.icaoCode,8)!==body.icaoCode)&&!/^[A-Z]{3}$/.test(body.icaoCode))throw new Error("Airline ICAO code must contain three letters.");
+        Object.assign(body,airlineLegacyPatch(object(record.details),exists||{}));
+      }
       if(exists){
         const saved=(await restRequest({table,method:"PATCH",query:{ID:qeq(id)},body,prefer:"return=representation"}))?.[0];
         return isAirline?normalizeAirline(saved||{...body,ID:id}):normalizeAirport(saved||{...body,ID:id});
