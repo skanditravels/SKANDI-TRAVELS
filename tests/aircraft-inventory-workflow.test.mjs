@@ -36,3 +36,11 @@ test('generated child codes do not collide with existing or inactive items',()=>
  const c=vm.createContext({text:v=>String(v??''),Set});vm.runInContext(ui.slice(start,end)+'\nthis.next=nextAircraftChildCode',c);
  assert.equal(c.next('VIEW',[{view_code:'VIEW_1'},{view_code:'view_2',active:false}],'view_code'),'VIEW_3');
 });
+test('saving an aircraft uses the selected airline record as the code authority',async()=>{
+ const start=source.indexOf('export async function saveAircraftCore('),end=source.indexOf('\nexport async function archiveAircraftCore(',start);assert.ok(start>=0&&end>start);
+ const writes=[];const clean=v=>String(v??'').trim(),upper=v=>clean(v).toUpperCase();
+ const context=vm.createContext({object:v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},clean,upper,qeq:v=>'eq.'+v,nullableNumber:v=>v==null||v===''?null:Number(v),bool:(v,d)=>v==null?d:v===true,safeStatus:v=>v||'DRAFT',uniqueStrings:v=>Array.isArray(v)?v:[],normalizeAircraft:v=>v,resolveAircraftAssetFields:async()=>({}),requireInventoryAccess:async()=>({}),audit:async()=>{},select:async(table)=>table==='travel_info_airlines'?[{ID:'thai',iataCode:'TG'}]:[],restRequest:async arg=>{writes.push(arg);return [{...arg.body,id:'aircraft'}]}});
+ vm.runInContext(source.slice(start,end).replace('export async function','async function')+'\nthis.save=saveAircraftCore',context);
+ await context.save({aircraft:{airlineId:'thai',airlineCode:'XX',aircraftCode:'359',aircraftName:'A350',configuration:{}}});
+ assert.equal(writes.length,1);assert.equal(writes[0].body.airline_id,'thai');assert.equal(writes[0].body.airline_code,'TG');
+});
