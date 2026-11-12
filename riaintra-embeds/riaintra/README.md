@@ -1,6 +1,10 @@
 # riaintra
 
-## 2026-11-12 — Verification flow repair (prepared for deployment)
+## 2026-11-12 — Publication
+
+PR #100 was merged and Wix Studio reported that the site was published. A signed-out live visit to `/riaintra` displayed the RIAINTRA login. A real verification email, authenticated session and the alternate Wix sign-in paths have not been tested; the portal-wide MFA limitation below remains open.
+
+## 2026-11-12 — Verification flow repair
 
 The RIAINTRA code uses the configured, active Wix custom trigger with its existing email, contact and code fields. `staffOtp.web.js` exposes the web methods and `staffOtp.js` owns their backend implementation. Calls use the canonical Supabase transport and the existing `staff_login_otps` and `staff_trusted_devices` tables. Device tokens and codes use cryptographic randomness; codes are stored as device-bound digests and consumed with a conditional, attempt-limited update. Staff identity and Wix member/contact links are rechecked before issuing a session. The old public `loginStaffWithSkId` export returns an explicit instruction to use the current login page instead of issuing a password-only token; older callers must migrate to the current device-verification methods. Existing unversioned device tokens are replaced, so those devices require verification again. No Supabase schema or permission changes are part of this repair.
 
