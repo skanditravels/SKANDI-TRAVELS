@@ -574,6 +574,12 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
   @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
 }
+
+/* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */
+@media(max-width:1020px){
+  body.locked:has(#pageHost) #skandi-mobile-nav-container{visibility:hidden;pointer-events:none}
+  body.store-keyboard-open:has(#pageHost) #skandi-mobile-nav-container{display:none!important}
+}
 </style>
 <style data-skandi-part="store-control">
 #skandi-app-root{
@@ -1526,6 +1532,16 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 @media(max-width:820px){
  #skandi-app-root .ops-menu{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .ops-menu__section{grid-column:1/-1}#skandi-app-root .ops-workspace{padding:12px;min-width:0}#skandi-app-root .ops-menu button,#skandi-app-root .ops-menu a,#skandi-app-root .btn,#skandi-app-root .button{min-height:44px}#skandi-app-root .panel,#skandi-app-root .ops-card,#skandi-app-root .metric-card{border-radius:10px;min-width:0}#skandi-app-root .table{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}#skandi-app-root .field input,#skandi-app-root .field select,#skandi-app-root .field textarea{font-size:16px}
 }
+
+/* Compact access to the existing authorized back-office sections. */
+#skandi-app-root .store-control-sections > summary{display:none}
+@media(max-width:820px){
+ #skandi-app-root .store-control-sections > summary{display:flex;align-items:center;min-height:44px;padding:10px 12px;border:1px solid #cbd9e2;border-radius:10px;background:#fff;color:#022e64;font-weight:700;cursor:pointer}
+ #skandi-app-root .store-control-sections > summary::after{content:"+";margin-left:auto;font-size:20px}
+ #skandi-app-root .store-control-sections[open] > summary::after{content:"−"}
+ #skandi-app-root .ops-menu{padding-top:8px}#skandi-app-root .ops-rail-search{margin-bottom:8px}
+ #skandi-app-root .table-wrap,#skandi-app-root .table-container{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -1724,6 +1740,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
       <input id="query" class="input search" type="search" placeholder="Search SKU, product, order, customer…">
     </div>
 
+    <details id="storeControlSections" class="store-control-sections" open=""><summary>Store sections</summary>
     <nav id="sideNav" class="ops-menu nav-group">
       <div class="ops-menu__section">Operations</div>
       <button class="nav-btn nav-button active" data-panel="dashboard" type="button"><span class="nav-icon">D</span><span>Dashboard</span></button>
@@ -1737,7 +1754,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
       <div class="ops-menu__section">Trace</div>
       <button class="nav-btn nav-button" data-panel="audit" type="button"><span class="nav-icon">L</span><span>Session Activity</span><span class="nav-count">LOG</span></button>
-    </nav>
+    </nav></details>
 
     <div class="ops-rail-footer">
       <strong><span class="mini-led"></span>Operating with no issues</strong>
@@ -3077,6 +3094,12 @@ $("orderFilter").addEventListener("change",renderOrders);
 $("productVariant").onchange=fillVariant;
 $("inventoryRecord").onchange=()=>{const i=state.inventory.find(x=>x.id===$("inventoryRecord").value);if(!i)return;$("inventoryProductId").value=i.productId;$("inventoryVariantId").value=i.variantId;$("inventoryQuantity").value=i.quantity??"";$("inventoryTracked").value=String(i.tracked);};
 $("bulkPriceBtn").onclick=()=>{const value=$("bulkPriceValue").value;if(value===""||!Number.isFinite(Number(value))){status("Enter a price adjustment.","error");return}post("STORE_CONTROL_BULK_PRICE",{productIds:arr($("bulkProductIds").value),operation:$("bulkPriceOperation").value,value:Number(value),compareAtMode:"KEEP"})};
+const sectionMenu=$("storeControlSections");
+const compactSections=window.matchMedia("(max-width: 820px)");
+function syncSectionMenu(event){sectionMenu.open=!event.matches}
+syncSectionMenu(compactSections);
+if(compactSections.addEventListener)compactSections.addEventListener("change",syncSectionMenu);
+$("sideNav").addEventListener("click",event=>{if(compactSections.matches&&event.target.closest("[data-panel]"))sectionMenu.open=false});
 seedData();render();load();
 
 

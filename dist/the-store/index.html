@@ -190,6 +190,12 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
   @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
 }
+
+/* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */
+@media(max-width:1020px){
+  body.locked:has(#pageHost) #skandi-mobile-nav-container{visibility:hidden;pointer-events:none}
+  body.store-keyboard-open:has(#pageHost) #skandi-mobile-nav-container{display:none!important}
+}
 </style>
 <style data-skandi-part="the-store">
 #skandi-app-root{
@@ -694,6 +700,98 @@ body.page-product #skandi-app-root .search-dock{display:none}
 @media(max-width:880px){#skandi-app-root .support-channel-grid{grid-template-columns:1fr}#skandi-app-root .support-layout{grid-template-columns:1fr}#skandi-app-root .support-sidebar{position:static;grid-template-columns:1fr 1fr}#skandi-app-root .support-form-card{padding:28px}#skandi-app-root .support-hero{padding:40px 24px}#skandi-app-root .support-hero h1{font-size:34px}}
 @media(max-width:560px){#skandi-app-root .support-sidebar{grid-template-columns:1fr}#skandi-app-root .support-grid-2{grid-template-columns:1fr;gap:0}#skandi-app-root .support-form-card{padding:22px 16px}#skandi-app-root .support-hero{padding:34px 16px}#skandi-app-root .support-hero h1{font-size:29px}#skandi-app-root .support-search{grid-template-columns:1fr}#skandi-app-root .support-search button{height:42px}#skandi-app-root .support-channel{padding:20px}}
 
+/* Store-native mobile and editorial refinements. The Wix cart remains authoritative. */
+#skandi-app-root{--store-safe:env(safe-area-inset-bottom,0px)}
+#skandi-app-root :is(button,a,input,select,textarea):focus-visible{outline:3px solid #5fc7cf;outline-offset:2px}
+#skandi-app-root .destination-finder{border:1px solid #dce7ed;border-radius:20px;background:#f5f9fb;padding:24px}
+#skandi-app-root .destination-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#skandi-app-root .dest-pill{min-width:0;border:1px solid #dce7ed;border-radius:13px;background:white;padding:14px;text-align:left;color:#0b3053;display:grid;gap:5px}
+#skandi-app-root .dest-pill small,#skandi-app-root .destination-label,#skandi-app-root .kit-copy small{font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#207494}
+#skandi-app-root .dest-pill strong{font-size:13px;line-height:1.35}#skandi-app-root .dest-pill span{font-size:13px;line-height:1.4;color:#65778a}
+#skandi-app-root .dest-pill.active{background:#0b3154;color:#fff;border-color:#0b3154}#skandi-app-root .dest-pill.active small,#skandi-app-root .dest-pill.active span{color:#c7ebee}
+#skandi-app-root .destination-Result{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.75fr);gap:20px;margin-top:14px;border:1px solid #e0eaf0;border-radius:14px;background:#fff;padding:20px}
+#skandi-app-root .destination-copy h3{font-size:20px;color:#0a2e55;margin:8px 0}#skandi-app-root .destination-copy p{font-size:13px;line-height:1.65;color:#5a6c82;margin:8px 0}
+#skandi-app-root .destination-copy .destination-note{font-size:13px}#skandi-app-root .destination-links{display:flex;align-content:center;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap}
+#skandi-app-root .destination-links button{min-height:38px;padding:8px 12px;border-radius:9px;border:1px solid #d2e2ea;background:#f6fafc;color:#0c4264;font-size:13px;font-weight:700}
+#skandi-app-root .destination-links .finder-shop{background:#0c4264;color:#fff;border-color:#0c4264}
+#skandi-app-root .kit-builder{display:grid;grid-template-columns:minmax(220px,290px) minmax(0,1fr);gap:26px;padding:28px;border-radius:20px;background:#0a2e55;color:#fff}
+#skandi-app-root .kit-copy small{color:#91e0df}#skandi-app-root .kit-copy h2{font-size:26px;line-height:1.1;margin:9px 0;color:#fff}#skandi-app-root .kit-copy p{font-size:13px;line-height:1.6;color:#d7e5f1}
+#skandi-app-root .kit-total{font-size:13px;font-weight:700;color:#a5e3e1;margin:14px 0}
+#skandi-app-root .kit-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#skandi-app-root .kit-slot{min-width:0;padding:12px;border:1px solid #ffffff2b;border-radius:13px;background:#ffffff0d;display:flex;flex-direction:column;gap:9px}
+#skandi-app-root .kit-slot-label{font-size:13px;font-weight:800;color:#b6e7e6}
+#skandi-app-root .kit-slot-thumb{height:110px;border-radius:8px;background:#fff1;display:grid;place-items:center;overflow:hidden;color:#d8e9ee;font-size:13px;text-align:center}
+#skandi-app-root .kit-slot-thumb img{width:100%;height:100%;object-fit:cover}#skandi-app-root .kit-slot select{min-width:0;width:100%;min-height:42px;border:1px solid #b3c8d1;border-radius:8px;background:#fff;color:#173854;padding:7px;font-size:13px}
+#skandi-app-root .kit-choice{display:grid;gap:4px;font-size:13px;color:#e4f3f5}
+#skandi-app-root .skandi-modal-backdrop{position:fixed;inset:0;z-index:2400;display:none;align-items:center;justify-content:center;background:#071b44b8;padding:16px}
+#skandi-app-root .skandi-modal-backdrop.show{display:flex}#skandi-app-root .skandi-modal-card{width:min(610px,100%);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;border-radius:18px;background:#fff;padding:24px;color:#19364c;box-shadow:0 24px 75px #00172966}
+#skandi-app-root .bag-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}#skandi-app-root .bag-modal-head h2{font-size:24px;line-height:1.15;margin:5px 0 12px;color:#082e54}
+#skandi-app-root .skandi-modal-card p{font-size:13px;line-height:1.6;color:#526b7e}#skandi-app-root .allowance-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#skandi-app-root .allowance-tier{min-height:44px;border:1px solid #d2dfe8;border-radius:9px;background:#f7fafc;color:#123b59;font-size:13px;font-weight:700}#skandi-app-root .allowance-tier.active{border-color:#1f6b89;background:#e8f5f5}
+#skandi-app-root .bag-measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}#skandi-app-root .bag-measure-grid fieldset{min-width:0;border:1px solid #dce6ec;border-radius:10px;display:grid;gap:8px}
+#skandi-app-root .bag-measure-grid legend{font-size:13px;font-weight:800;color:#163f5d}#skandi-app-root .bag-measure-grid label{display:grid;gap:3px;font-size:13px;font-weight:700}
+#skandi-app-root .bag-measure-grid input{width:100%;min-width:0;min-height:42px;border:1px solid #c7d5df;border-radius:7px;padding:8px;color:#12334e;background:#fff}
+#skandi-app-root .bag-fit-result{min-height:1em;font-weight:700;color:#0b5271!important}#skandi-app-root .bag-modal-actions{display:flex;flex-wrap:wrap;gap:8px}
+#skandi-app-root .store-quickbar{display:none}
+@media(max-width:1020px){
+ body.locked #skandi-app-root{overflow:hidden!important}
+
+
+ #skandi-app-root .utility-bar{display:none}
+ #skandi-app-root .site-header{top:0;z-index:80;background:#fff}
+ #skandi-app-root .header-main{height:58px;display:flex;justify-content:space-between;gap:8px;padding:0 14px}
+ #skandi-app-root .brand-mark{height:43px;max-width:180px}#skandi-app-root .brand-mark img{height:100%;width:auto;max-width:100%;object-fit:contain}
+ #skandi-app-root .header-actions{gap:0}#skandi-app-root .action-button{min-width:44px;min-height:44px;height:44px;padding:3px 6px}
+ #skandi-app-root .search-inner{display:block;padding:6px 14px 8px}#skandi-app-root .search-box{height:44px;border-radius:12px;background:#f3f7f9}
+ #skandi-app-root .search-box input,#skandi-app-root :is(input:not([type=hidden]),select,textarea){font-size:16px!important}
+ #skandi-app-root .store-quickbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;padding:3px 8px;border-bottom:1px solid #e5edf2;background:#fff}
+ #skandi-app-root .store-quickbar button{min-width:0;min-height:48px;border:0;border-radius:8px;background:transparent;color:#284a64;display:grid;place-content:center;gap:1px;font-size:13px;font-weight:700}
+ #skandi-app-root .store-quickbar button svg{display:block;margin:auto;width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}#skandi-app-root .store-quickbar button.active{color:#076d87;background:#eaf7f7}
+ #skandi-app-root .hero-wrap{padding:0 12px;margin-top:12px}#skandi-app-root .hero{display:flex;align-items:flex-end;min-height:330px;padding:105px 12px 12px;border-radius:16px;background-position:center}
+ #skandi-app-root .hero-panel{position:relative;left:auto;right:auto;top:auto;bottom:auto;transform:none;width:100%;max-height:none;overflow:visible;padding:19px 20px;border-radius:13px}
+ #skandi-app-root .hero h1{font-size:max(13px, clamp(27px,7.4vw,36px));line-height:1.08;overflow-wrap:anywhere}#skandi-app-root .hero p{font-size:13px;line-height:1.5;margin:10px 0 14px}
+ #skandi-app-root .content-shell,#skandi-app-root .page-shell{padding:18px 14px 34px}#skandi-app-root .section{padding-top:32px}#skandi-app-root .section-head{align-items:start;gap:12px;margin-bottom:15px}
+ #skandi-app-root .section-head h2{font-size:23px}#skandi-app-root .section-head p,#skandi-app-root .page-intro{font-size:13px}
+ #skandi-app-root .category-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(88px,25vw);grid-template-columns:none;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding-bottom:8px}
+ #skandi-app-root .category-orb{scroll-snap-align:start}#skandi-app-root .category-orb-label{font-size:13px;margin-top:8px}
+ #skandi-app-root .customer-assurance{display:flex;overflow-x:auto;gap:8px;padding:0 12px;scroll-snap-type:x proximity}#skandi-app-root .customer-assurance article{flex:0 0 min(78vw,280px);min-height:70px;padding:12px;scroll-snap-align:start}
+ #skandi-app-root .destination-finder{padding:14px}#skandi-app-root .destination-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,65vw);grid-template-columns:none;overflow-x:auto;scroll-snap-type:x proximity}
+ #skandi-app-root .dest-pill{scroll-snap-align:start;min-height:105px}#skandi-app-root .destination-Result{grid-template-columns:1fr;gap:6px;padding:15px}
+ #skandi-app-root .kit-builder{grid-template-columns:1fr;padding:18px;gap:16px}#skandi-app-root .kit-slots{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(180px,72vw);grid-template-columns:none;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:5px}#skandi-app-root .kit-slot{scroll-snap-align:start}
+ #skandi-app-root .product-grid,#skandi-app-root .home-featured-grid,#skandi-app-root .saved-page-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ #skandi-app-root .product-card{border-radius:12px;min-width:0}#skandi-app-root .product-card:hover{transform:none}#skandi-app-root .product-media{aspect-ratio:1/1.18}
+ #skandi-app-root .product-overlay{position:absolute;left:0;right:0;bottom:0;transform:none;z-index:4;display:grid;grid-template-columns:1fr 1fr;border:0;background:#fff}
+ #skandi-app-root .product-overlay button{min-width:0;min-height:44px;height:auto;padding:5px 2px;font-size:13px;line-height:1.2;white-space:normal}
+ #skandi-app-root .save-button{min-width:44px;min-height:44px;right:6px;top:6px}#skandi-app-root .product-content{padding:12px 10px}#skandi-app-root .product-name{font-size:13px;overflow-wrap:anywhere}
+ #skandi-app-root .product-summary{font-size:13px;line-height:1.45}#skandi-app-root .price-row{font-size:14px;flex-wrap:wrap}
+ #skandi-app-root .page-heading{font-size:30px;overflow-wrap:anywhere}#skandi-app-root .page-topline{margin-bottom:18px}#skandi-app-root .product-page{gap:18px}
+ #skandi-app-root .product-gallery-main{min-height:0;aspect-ratio:1/1}#skandi-app-root .product-page-info,#skandi-app-root .order-summary{position:static}
+ #skandi-app-root .product-page-title{font-size:27px}#skandi-app-root .product-page-description{font-size:13px;line-height:1.65}
+ #skandi-app-root .product-toolbar{display:flex;flex-wrap:wrap;gap:5px}#skandi-app-root .toolbar-left{overflow-x:auto;flex-wrap:nowrap;gap:14px}#skandi-app-root .filter-button{white-space:nowrap;min-height:44px}
+ #skandi-app-root .bag-page-item{grid-template-columns:72px minmax(0,1fr) auto;gap:9px}#skandi-app-root .bag-page-thumb{width:72px}#skandi-app-root .order-summary{padding:18px}
+ #skandi-app-root .mobile-nav{height:100vh;height:100dvh;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}#skandi-app-root .mobile-nav-body button{min-height:48px;font-size:14px}
+ #skandi-app-root .skandi-modal-backdrop{align-items:flex-end;padding:0}#skandi-app-root .skandi-modal-card{width:100%;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 12px);padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));border-radius:18px 18px 0 0}
+ #skandi-app-root .allowance-tiers{grid-template-columns:repeat(3,minmax(0,1fr))}#skandi-app-root .bag-measure-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #skandi-app-root .toast{left:12px;right:12px;bottom:calc(8px + var(--store-safe));max-width:none}
+}
+@media(max-width:340px){#skandi-app-root .product-grid,#skandi-app-root .home-featured-grid,#skandi-app-root .saved-page-grid{gap:8px}#skandi-app-root .allowance-tier{font-size:13px}}
+@media(prefers-reduced-motion:reduce){#skandi-app-root *,#skandi-app-root *::before,#skandi-app-root *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+#skandi-app-root .hero-actions{display:flex;flex-wrap:wrap;gap:9px}
+#skandi-app-root .cta.ghost-light{background:#ffffff1a;color:#fff;border-color:#ffffff70}
+#skandi-app-root .category-close{display:none}
+#skandi-app-root .kit-copy .kit-note{font-size:13px;color:#c6dce7}
+@media(max-width:1020px){
+ #skandi-app-root .category-menu.show{display:block!important;position:fixed;z-index:2450;inset:auto 0 0;max-height:min(80dvh,700px);overflow:auto;overscroll-behavior:contain;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom,0px);background:#fff;box-shadow:0 -10px 60px #08284550}
+ #skandi-app-root .category-menu-inner{display:block;padding:18px 16px}
+ #skandi-app-root .category-menu-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+ #skandi-app-root .category-menu-list button{min-height:46px;font-size:13px;overflow-wrap:anywhere}
+ #skandi-app-root .category-close{display:block;float:right;width:44px;height:44px;border:0;background:transparent;color:#0a3152;font-size:26px}
+ #skandi-app-root .page-status-wrap:has(.status:not(.show)){display:none}
+}
+@media(max-width:1020px){
+ #skandi-app-root .primary-nav,#skandi-app-root .header-actions .desktop-only,#skandi-app-root .quick-links{display:none!important}
+ #skandi-app-root .mobile-menu-button{display:grid!important}
+}
 
 
 #skandi-app-root .product-card{border:1px solid rgba(2,46,100,.12);box-shadow:0 5px 20px rgba(2,46,100,.045);transition:transform .2s,box-shadow .2s}
@@ -861,7 +959,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <div class="utility-links">
     </div>
     <div class="utility-account">
-      <button id="ordersBtn">My orders</button><span>•</span><button data-open-path="/">Go to SKANDI Travels</button>
+      <button id="cabinSizerBtn" type="button">Cabin bag sizer</button><span>•</span><button id="ordersBtn">My orders</button><span>•</span><button data-open-path="/">Go to SKANDI Travels</button>
     </div>
   </div>
 </div>
@@ -908,16 +1006,23 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     </div>
   </div>
 </header>
+<nav class="store-quickbar" aria-label="Store shortcuts">
+ <button type="button" data-route="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9H14v-6h-4v6H3z"></path></svg>Home</button>
+ <button type="button" data-route="shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1 11H5L4 9Zm4 0V7a4 4 0 0 1 8 0v2"></path></svg>Shop</button>
+ <button type="button" data-store-mobile-action="categories"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>Categories</button>
+ <button type="button" data-route="saved"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5a4.8 4.8 0 0 0-6.8 0L12 7l-2-2a4.8 4.8 0 0 0-6.8 6.8L12 20l8.8-8.2a4.8 4.8 0 0 0 0-6.8Z"></path></svg>Saved</button>
+ <button type="button" data-route="bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 12H5L4 8Zm4 0V6a4 4 0 0 1 8 0v2"></path></svg>Bag</button>
+</nav>
 
 <div class="category-menu" id="categoryMenu" aria-hidden="true">
   <div class="category-menu-inner">
-    <div class="category-menu-intro"><h3>Shop by category</h3><p>Browse THE STORE by SKANDI travel products, destination essentials and selected lifestyle items.</p></div>
+    <div class="category-menu-intro"><button type="button" class="category-close" id="closeCategoryMenu" aria-label="Close categories">×</button><h3>Shop by category</h3><p>Browse THE STORE by SKANDI travel products, destination essentials and selected lifestyle items.</p></div>
     <div class="category-menu-list" id="categoryMenuList"></div>
   </div>
 </div>
 
 
-<main id="pageHost">
+<div class="page-status-wrap"><div id="status" class="status" role="status" aria-live="polite"></div></div><main id="pageHost">
   <div class="content-shell" id="storeCatalogError" role="status" hidden="">
     <p>We couldn’t load the store catalog. <button type="button" id="retryStoreCatalogBtn" class="text-link">Try again</button></p>
   </div>
@@ -929,13 +1034,13 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
           <div class="hero-kicker" data-content-id="store-hero-eyebrow">SKANDI The Store</div>
           <h1 id="heroTitle" data-content-id="store-hero-h1">Everything for the journey</h1>
           <p id="heroText" data-content-id="store-hero-copy">Travel-ready essentials, SKANDI products and destination picks.</p>
-          <button class="cta teal" data-route="shop">Explore products <span aria-hidden="true">→</span></button>
+          <div class="hero-actions"><button class="cta teal" data-route="shop">Explore products <span aria-hidden="true">→</span></button><button class="cta ghost-light" id="heroPackingJumpBtn" type="button">Destination packing finder</button></div>
         </div>
       </div>
     </section>
 
     <section class="customer-assurance" aria-label="Store benefits">
-      <article><div class="customer-assurance-icon">✓</div><div><strong>Open 24/7</strong><span>No SKANDI Club membership is required to shop.</span></div></article>
+      <article><div class="customer-assurance-icon">✓</div><div><strong>Open to everyone</strong><span>No SKANDI Club membership is required to shop.</span></div></article>
       <article><div class="customer-assurance-icon">✈</div><div><strong>Made for travel</strong><span>Products selected for the airport, journey and destination.</span></div></article>
       <article><div class="customer-assurance-icon">↗</div><div><strong>Secure checkout</strong><span>Shop, review your bag and complete payment in one continuous experience.</span></div></article>
     </section>
@@ -949,6 +1054,16 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <div class="category-strip" id="popularCategories"></div>
       </section>
 
+      <section class="section" id="packingFinderSection" aria-labelledby="packingFinderHeading">
+        <div class="section-head"><div><h2 id="packingFinderHeading">Find your journey essentials</h2><p>Explore packing ideas for the way you travel.</p></div><button class="text-link" id="openCabinModalInlineBtn" type="button">Check bag dimensions</button></div>
+        <div class="destination-finder"><div class="destination-tabs" id="destinationTabs" aria-label="Choose a journey">
+          <button type="button" class="dest-pill active" data-dest-corridor="med" aria-pressed="true"><small>Sunny &amp; coastal</small><strong>Mediterranean &amp; Canary</strong><span>Mallorca · Rhodes · Gran Canaria</span></button>
+          <button type="button" class="dest-pill" data-dest-corridor="tropical" aria-pressed="false"><small>Long-haul</small><strong>Thailand &amp; Tropical</strong><span>Phuket · Krabi · Indian Ocean</span></button>
+          <button type="button" class="dest-pill" data-dest-corridor="city" aria-pressed="false"><small>Weekend &amp; hub</small><strong>Nordic &amp; City Breaks</strong><span>Stockholm · London · New York</span></button>
+          <button type="button" class="dest-pill" data-dest-corridor="family" aria-pressed="false"><small>Resort &amp; kids</small><strong>Family Holiday</strong><span>Pool, beach &amp; cabin comfort</span></button>
+        </div><div class="destination-Result" id="destinationResultBox"></div></div>
+      </section>
+
       <section class="section" aria-label="Featured campaigns">
         <div class="campaign-grid" id="bannerRow"></div>
       </section>
@@ -960,6 +1075,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         </div>
         <div id="homeProductGrid" class="home-featured-grid"></div>
       </section>
+
+      <section class="section" aria-labelledby="kitBuilderHeading"><div class="kit-builder"><div class="kit-copy"><small>Curated by you</small><h2 id="kitBuilderHeading">Build your travel kit</h2><p>Choose the items you need for the journey. Select any required options before adding them to your bag.</p><div id="kitTotalSummary" class="kit-total" aria-live="polite">Choose products to build your kit</div><button type="button" class="cta teal" id="addKitToBagBtn" disabled="">Add selected items</button><p class="kit-note">Items are added separately. If an item cannot be added, check your bag before retrying.</p></div><div class="kit-slots" id="kitSlotsContainer"></div></div></section>
 
       <section class="section" aria-labelledby="travelHeading">
         <div class="section-head">
@@ -1051,8 +1168,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <aside class="order-summary">
           <h2>Order summary</h2>
           <div class="order-summary-line"><span>Items</span><span id="bagItemCount">0</span></div>
-          <div class="order-summary-line"><span>Delivery</span><span>Calculated at checkout</span></div>
-          <div class="order-summary-total"><span>Total</span><span id="bagTotal">—</span></div>
+          <div class="order-summary-line"><span>Delivery &amp; taxes</span><span>Calculated at checkout</span></div>
+          <div class="order-summary-total"><span>Subtotal</span><span id="bagTotal">—</span></div>
           <button class="cta navy" id="checkoutBtn">Proceed to checkout</button>
           <button class="cta white" data-route="shop">Continue shopping</button>
         </aside>
@@ -1211,7 +1328,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
             <div id="promotionDetailsModule" class="support-dynamic-module">
               <h4>Promotion, gift card or reward details</h4>
-              <div class="support-grid-2"><div class="support-field"><label for="promotionCode">Promotion or gift card code</label><input id="promotionCode" type="text"></div><div class="support-field"><label for="promotionName">Promotion name</label><input id="promotionName" type="text"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="promotionCode">Promotion code (do not enter a gift card code)</label><input id="promotionCode" type="text"></div><div class="support-field"><label for="promotionName">Promotion name</label><input id="promotionName" type="text"></div></div>
               <div class="support-grid-2"><div class="support-field"><label for="giftCardLast4">Gift card last 4 characters</label><input id="giftCardLast4" type="text" maxlength="4"></div><div class="support-field"><label for="expectedDiscount">Expected discount or benefit</label><input id="expectedDiscount" type="text"></div></div>
             </div>
 
@@ -1233,10 +1350,10 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
             <div class="support-form-section">4. Supporting documents</div>
             <div class="support-file-drop" id="supportFileDrop" tabindex="0" role="button" aria-controls="fileInput">
-              <strong>Choose files or drag them here</strong><span>Maximum 3 files: PDF, JPG or PNG. Maximum 10 MB total. Remove full payment-card numbers and other unnecessary sensitive information.</span>
+              <strong>Choose files or drag them here</strong><span>File attachments are not available in this form yet. Submit without a file and ask support how to send it.</span>
               <input id="fileInput" type="file" hidden="" multiple="" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
             </div>
-            <div class="support-file-list" id="fileSummary"></div>
+            <div class="support-file-list" id="fileSummary"></div><button type="button" class="clear-button" id="clearSupportFilesBtn" hidden="">Remove selected files</button>
 
             <div class="support-checkbox"><input id="consentPrivacy" type="checkbox" required=""><label for="consentPrivacy">I confirm the information is accurate and consent to processing of my personal data under SKANDI’s Privacy Policy. <span class="support-required">*</span></label></div>
             <div class="support-checkbox"><input id="consentSla" type="checkbox" required=""><label for="consentSla">I understand that response times depend on request type and current support volume. <span class="support-required">*</span></label></div>
@@ -1257,6 +1374,17 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     </div>
   </section>
 </main>
+<div class="skandi-modal-backdrop" id="cabinSizerModal" aria-hidden="true">
+  <section class="skandi-modal-card" role="dialog" aria-modal="true" aria-labelledby="cabinSizerTitle" aria-describedby="cabinSizerDescription">
+    <div class="bag-modal-head"><div><span class="destination-label">Baggage guide</span><h2 id="cabinSizerTitle">Check your bag size</h2></div><button class="close-button" id="closeCabinSizerBtn" type="button" aria-label="Close baggage guide">×</button></div>
+    <p id="cabinSizerDescription">Enter your bag’s measurements and the allowance from your airline or booking. The calculator compares the numbers you provide.</p>
+    <div class="allowance-tiers" aria-label="Baggage type"><button type="button" class="allowance-tier active" data-bag-tier="underseat" aria-pressed="true">Under-seat</button><button type="button" class="allowance-tier" data-bag-tier="cabin" aria-pressed="false">Cabin trolley</button><button type="button" class="allowance-tier" data-bag-tier="checked" aria-pressed="false">Checked bag</button></div><p id="bagTierHint" class="bag-tier-hint">Enter your airline’s per-side limits for a personal item.</p>
+    <div class="bag-measure-grid"><fieldset><legend>Your bag · cm</legend><label>Length<input id="bagLength" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Width<input id="bagWidth" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Height<input id="bagHeight" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label></fieldset>
+    <fieldset><legend>Airline allowance · cm</legend><label>Length<input id="allowLength" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Width<input id="allowWidth" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Height<input id="allowHeight" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label></fieldset></div>
+    <button class="cta navy" id="checkBagFitBtn" type="button">Compare dimensions</button><p id="bagFitResult" class="bag-fit-result" role="status" aria-live="polite"></p>
+    <p>Airline limits differ by carrier, aircraft and fare. Include handles and wheels and check weight; some airlines use total linear dimensions.</p><div class="bag-modal-actions"><button class="cta white" type="button" data-open-path="/travel-info">Open travel information</button><button class="cta white" id="shopLuggageFromModalBtn" type="button">Shop luggage</button></div>
+  </section>
+</div>
 
 <footer class="footer">
   <div class="footer-main">
@@ -1277,12 +1405,11 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <div class="mobile-nav-heading">Store</div>
     <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button><button data-category="Sale">Offers</button>
     <div class="mobile-nav-heading">My store</div>
-    <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button>
+    <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button><button type="button" id="mobileCabinSizerBtn">Check bag dimensions</button>
   </div>
 </section>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
 
 
 
@@ -1846,7 +1973,7 @@ function showCatalogError(){
 }
 
 function loadSaved(){
-  try{return JSON.parse(localStorage.getItem("skandiStoreSaved")||"[]")}catch(_){return[]}
+  try{const value=JSON.parse(localStorage.getItem("skandiStoreSaved")||"[]");return Array.isArray(value)?value.filter(x=>typeof x==="string"):[]}catch(_){return[]}
 }
 function persistSaved(){
   try{localStorage.setItem("skandiStoreSaved",JSON.stringify([...SAVED]))}catch(_){}
@@ -1862,7 +1989,8 @@ function toast(message){
 }
 function money(price){
   if(!price)return"—";if(price.formatted)return price.formatted;
-  const amount=Number(price.amount||0);
+  if(price.amount===undefined||price.amount===null||price.amount==="")return"—";
+  const amount=Number(price.amount);
   return `${price.currency||""} ${amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`.trim();
 }
 function textOf(p){return [p.name,p.brand,p.description,p.summary,p.sku,(p.categoryNames||[]).join(" "),p.ribbon,p.badge,p.recommendation].join(" ").toLowerCase()}
@@ -2045,6 +2173,79 @@ function subcategoryRecords(){
 function isSale(p){return !!(p.comparePrice&&Number(p.comparePrice.amount)>Number(p.price?.amount||0))||/sale|offer|deal/i.test(`${p.ribbon||""} ${p.badge||""} ${(p.categoryNames||[]).join(" ")}`)}
 function bagCount(){return (CART.lineItems||[]).reduce((sum,item)=>sum+Number(item.quantity||0),0)}
 
+/* Store journey tools; merchandise and cart remain owned by Wix. */
+let ACTIVE_CORRIDOR='med';
+const KIT_SELECTION={slot1:'',slot2:'',slot3:''},KIT_CHOICES={slot1:{},slot2:{},slot3:{}};
+let kitOperation=null,kitTimer=null,storeModalReturn=null;
+const CORRIDOR_DATA={
+ med:{kicker:'Mediterranean & Canary Islands',title:'Ready for the coast',desc:'Consider breathable clothing, sun protection and a light day bag. Conditions vary by destination and season.',category:'Beach',tags:['Beach','Luggage','Travel Essentials','SKANDI']},
+ tropical:{kicker:'Thailand & Tropical',title:'Comfort for a longer journey',desc:'Consider cabin comfort, sun protection and a water-resistant day bag. Check your destination forecast before packing.',category:'Travel Essentials',tags:['Travel Essentials','Beach','Luggage','Gift Cards']},
+ city:{kicker:'Nordic & City Breaks',title:'Travel light through the city',desc:'Consider adaptable layers, a compact day bag and an organizer for your documents and electronics.',category:'Luggage',tags:['Luggage','SKANDI','Travel Essentials','New']},
+ family:{kicker:'Family Holiday',title:'Make room for the essentials',desc:'Keep travel documents, activities, sun protection and everyday essentials within easy reach.',category:'Family',tags:['Family','Beach','Travel Essentials','Gifts']}
+};
+function renderDestinationFinder(){
+ const host=$('destinationResultBox');if(!host)return;const info=CORRIDOR_DATA[ACTIVE_CORRIDOR]||CORRIDOR_DATA.med;
+ document.querySelectorAll('[data-dest-corridor]').forEach(btn=>{const active=btn.dataset.destCorridor===ACTIVE_CORRIDOR;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active))});
+ host.innerHTML=`<div class="destination-copy"><span class="destination-label">${esc(info.kicker)}</span><h3>${esc(info.title)}</h3><p>${esc(info.desc)}</p><p class="destination-note">Check the forecast and your airline’s baggage rules for your own trip.</p></div><div class="destination-links">${info.tags.map(t=>`<button type="button" data-category="${esc(t)}">${esc(t)} <span aria-hidden="true">↗</span></button>`).join('')}<button class="finder-shop" type="button" data-category="${esc(info.category)}">Explore essentials →</button></div>`;
+}
+function kitPools(){const items=PRODUCTS.filter(p=>!p.virtualGiftCard&&p.inStock!==false&&p.canAddToCart!==false);return [
+ {key:'slot1',label:'Luggage & bags',pool:items.filter(p=>/luggage|bag|case|trolley|backpack/i.test(textOf(p)))},
+ {key:'slot2',label:'Cabin comfort',pool:items.filter(p=>/travel|essential|pillow|adapter|organi/i.test(textOf(p)))},
+ {key:'slot3',label:'Destination essentials',pool:items.filter(p=>/beach|sun|towel|family|gift/i.test(textOf(p)))}];}
+function renderTravelKitBuilder(){
+ const host=$('kitSlotsContainer');if(!host)return;const defs=kitPools();
+ for(const slot of defs)if(KIT_SELECTION[slot.key]&&!slot.pool.some(p=>String(p.id)===KIT_SELECTION[slot.key])){KIT_SELECTION[slot.key]='';KIT_CHOICES[slot.key]={}}
+ host.innerHTML=defs.map(slot=>{
+  const selected=slot.pool.find(p=>String(p.id)===KIT_SELECTION[slot.key]);
+  const options=selected?(selected.options||[]).map(o=>`<label class="kit-choice"><span>${esc(o.name)}</span><select data-kit-choice="${esc(slot.key)}" data-kit-option="${esc(o.name)}"><option value="">Choose ${esc(o.name)}</option>${(o.choices||[]).map(c=>{const v=String(c.value||c.description||c),label=String(c.description||c.value||c);return `<option value="${esc(v)}" ${KIT_CHOICES[slot.key]?.[o.name]===v?'selected':''}>${esc(label)}</option>`}).join('')}</select></label>`).join(''):'';
+  return `<div class="kit-slot"><span class="kit-slot-label">${esc(slot.label)}</span><div class="kit-slot-thumb">${selected?.imageUrl?imageTagForProduct(selected,selected.name):'<span>Choose a product</span>'}</div><label class="sr" for="kit-${slot.key}">${esc(slot.label)}</label><select id="kit-${slot.key}" data-kit-slot="${slot.key}"><option value="">${slot.pool.length?'Choose a product':'No matching products'}</option>${slot.pool.map(p=>`<option value="${esc(p.id)}" ${selected&&String(p.id)===String(selected.id)?'selected':''}>${esc(p.name)} · ${esc(money(p.price))}</option>`).join('')}</select>${options}</div>`;
+ }).join('');
+ const chosen=Object.values(KIT_SELECTION).filter(Boolean).map(id=>PRODUCTS.find(p=>String(p.id)===id)).filter(Boolean);
+ const currencies=[...new Set(chosen.map(p=>p.price?.currency).filter(Boolean))];
+ const known=chosen.length&&chosen.every(p=>p.price?.amount!==undefined&&p.price?.amount!==null&&Number.isFinite(Number(p.price.amount))&&p.price?.currency);
+ $('kitTotalSummary').textContent=known&&currencies.length===1?`${chosen.length} selected · ${money({amount:chosen.reduce((n,p)=>n+Number(p.price.amount),0),currency:currencies[0]})}`:chosen.length?`${chosen.length} selected · prices shown per item`:'Choose products to build your kit';
+ $('addKitToBagBtn').disabled=!!kitOperation||!chosen.length;
+}
+function beginKitAdd(){
+ if(ADDING||kitOperation){toast('Please wait for the current bag update.');return}
+ const slots=Object.keys(KIT_SELECTION).filter(key=>KIT_SELECTION[key]);if(!slots.length){toast('Choose at least one product.');return}
+ const queue=[];for(const key of slots){const p=PRODUCTS.find(x=>String(x.id)===KIT_SELECTION[key]);if(!p||p.inStock===false||p.canAddToCart===false){toast('One of your selected products is unavailable.');return}
+ const options=p.options||[],choices=KIT_CHOICES[key]||{};if(options.some(o=>!choices[o.name])){toast(`Choose all options for ${p.name}.`);return}queue.push({id:String(p.id),name:p.name,choices:{...choices}})}
+ kitOperation={queue,index:0,completed:0,current:null};renderTravelKitBuilder();advanceKit();
+}
+function advanceKit(){
+ if(!kitOperation)return;if(kitOperation.index>=kitOperation.queue.length){const count=kitOperation.completed;kitOperation=null;ADDING=false;clearTimeout(kitTimer);renderTravelKitBuilder();toast(`${count} ${count===1?'item':'items'} added to your bag.`);return}
+ const next=kitOperation.queue[kitOperation.index];kitOperation.current=next;ADDING=true;toast(`Adding ${next.name}…`);post('STOREFRONT_ADD_TO_CART',{productId:next.id,quantity:1,choices:next.choices});
+ clearTimeout(kitTimer);kitTimer=setTimeout(()=>{if(!kitOperation)return;const count=kitOperation.completed;kitOperation=null;ADDING=false;renderTravelKitBuilder();status(`The next bag update was not confirmed. ${count} item(s) were confirmed. Check your bag before trying again.`,'warn')},20000);
+}
+function kitCartUpdated(payload){
+ if(!kitOperation||payload?.action!=='added'||String(payload.productId||'')!==kitOperation.current?.id)return false;
+ clearTimeout(kitTimer);CART=payload.cart||CART;renderHeaderCounts();kitOperation.completed++;kitOperation.index++;ADDING=false;setTimeout(advanceKit,0);return true;
+}
+function stopKitOnError(payload){if(!kitOperation)return false;clearTimeout(kitTimer);const count=kitOperation.completed;kitOperation=null;ADDING=false;renderTravelKitBuilder();status(`${count} item(s) were added before the next item failed. ${payload?.message||'Check your bag and try again.'}`,'error');return true}
+function storeFitResult(){
+ const ids=['bagLength','bagWidth','bagHeight','allowLength','allowWidth','allowHeight'];const values=ids.map(id=>Number($(id)?.value));const out=$('bagFitResult');
+ if(values.some(v=>!Number.isFinite(v)||v<=0||v>1000)){out.textContent='Enter all six dimensions in centimeters.';return}
+ const actual=values.slice(0,3),allowed=values.slice(3);
+ out.textContent=actual.every((v,i)=>v<=allowed[i])?'The bag fits the dimensions you entered. Check weight, handles, wheels and your airline’s current rules.':'At least one bag dimension is larger than the allowance you entered.';
+}
+function openCabinModal(){const modal=$('cabinSizerModal');if(!modal)return;storeModalReturn=document.activeElement;modal.classList.add('show');modal.setAttribute('aria-hidden','false');document.body.classList.add('locked','store-overlay-open');$('closeCabinSizerBtn')?.focus()}
+function closeCabinModal(){const modal=$('cabinSizerModal');if(!modal)return;modal.classList.remove('show');modal.setAttribute('aria-hidden','true');document.body.classList.remove('locked','store-overlay-open');storeModalReturn?.focus?.()}
+function bindStoreJourneyTools(){
+ $('mobileCabinSizerBtn')?.addEventListener('click',()=>{closeMenus();openCabinModal();storeModalReturn=$('mobileMenuBtn')});
+ $('cabinSizerBtn')?.addEventListener('click',openCabinModal);$('openCabinModalInlineBtn')?.addEventListener('click',openCabinModal);$('closeCabinSizerBtn')?.addEventListener('click',closeCabinModal);
+ $('heroPackingJumpBtn')?.addEventListener('click',()=>$('packingFinderSection')?.scrollIntoView({behavior:'smooth',block:'start'}));
+ $('shopLuggageFromModalBtn')?.addEventListener('click',()=>{closeCabinModal();openCategory('Luggage')});$('checkBagFitBtn')?.addEventListener('click',storeFitResult);
+ document.querySelectorAll('[data-bag-tier]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-bag-tier]').forEach(item=>{const active=item===btn;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});$('bagTierHint').textContent=({underseat:'Enter your airline’s per-side limits for a personal item.',cabin:'Enter your airline’s per-side limits for a cabin trolley.',checked:'Enter your airline’s per-side limits for a checked bag.'})[btn.dataset.bagTier]}));
+ $('addKitToBagBtn')?.addEventListener('click',beginKitAdd);
+ $('cabinSizerModal')?.addEventListener('click',event=>{if(event.target===$('cabinSizerModal'))closeCabinModal()});
+ $('cabinSizerModal')?.addEventListener('keydown',event=>{if(event.key!=='Tab')return;const controls=[...$('cabinSizerModal').querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')].filter(el=>!el.hidden);if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}});
+ document.addEventListener('change',event=>{const product=event.target.closest?.('[data-kit-slot]');if(product){const key=product.dataset.kitSlot;KIT_SELECTION[key]=product.value;KIT_CHOICES[key]={};renderTravelKitBuilder();return}const choice=event.target.closest?.('[data-kit-choice]');if(choice){KIT_CHOICES[choice.dataset.kitChoice][choice.dataset.kitOption]=choice.value}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('cabinSizerModal')?.classList.contains('show')){event.stopPropagation();closeCabinModal()}});
+ document.querySelectorAll('[data-store-mobile-action]').forEach(btn=>btn.addEventListener('click',()=>{const action=btn.dataset.storeMobileAction;if(action==='categories'){navigate('home');setTimeout(()=>$('popularCategories')?.scrollIntoView({behavior:'smooth'}),50)}else if(action==='search'){navigate('shop');setTimeout(()=>$('query')?.focus(),50)}}));
+ const viewport=window.visualViewport;if(viewport){let baseline=viewport.height;const adjust=()=>{const el=document.activeElement,editing=!!el?.matches?.('input:not([type=hidden]),select,textarea');if(!editing)baseline=viewport.height;document.body.classList.toggle('store-keyboard-open',editing&&baseline-viewport.height>140)};viewport.addEventListener('resize',adjust);document.addEventListener('focusin',adjust);document.addEventListener('focusout',()=>setTimeout(adjust,80))}
+}
+
 function parseRoute(){
   const raw=(location.hash||"#/home").replace(/^#\/?/,"");
   const [pathPart,queryString=""]=raw.split("?");
@@ -2080,6 +2281,7 @@ function showPage(page){
   });
 }
 function closeMenus(){
+  if($("cabinSizerModal")?.classList.contains("show"))closeCabinModal();
   $("categoryMenu")?.classList.remove("show");
   $("categoryMenu")?.setAttribute("aria-hidden","true");
   $("mobileNav")?.classList.remove("show");
@@ -2110,13 +2312,13 @@ function applyRoute(){
   }else if(page==="orders"){
     renderOrdersPage();
   }else if(page==="home"){
-    renderHomeProducts();
+    renderHomeProducts();renderDestinationFinder();renderTravelKitBuilder();
   }else if(page==="support"){
     filterSupportTopics();
   }
 
   showPage(page);
-  window.scrollTo({top:0,behavior:"auto"});
+  const scroller=$("skandi-app-root");if(scroller&&scroller.scrollHeight>scroller.clientHeight+1)scroller.scrollTo({top:0,behavior:"auto"});else window.scrollTo({top:0,behavior:"auto"});
 }
 function openCategory(name){navigate("shop",{category:name||""})}
 function currentShopParams(overrides={}){
@@ -2376,7 +2578,7 @@ function renderHeaderCounts(){
 }
 let ADDING=false;
 function addToCart(id,qty=1,choices={}){
-  if(ADDING)return;
+  if(ADDING||kitOperation)return;
   const p=PRODUCTS.find(x=>String(x.id)===String(id));if(!p)return;
   if(p.virtualGiftCard){navigate("product",{id});toast("Choose a design and recipient details first.");return}
   if(p.canAddToCart===false||p.inStock===false){toast(p.accessMessage||"This product is currently unavailable.");return}
@@ -2387,7 +2589,7 @@ function addToCart(id,qty=1,choices={}){
 }
 function toggleCategoryMenu(){
   const el=$("categoryMenu"),show=!el.classList.contains("show");
-  el.classList.toggle("show",show);el.setAttribute("aria-hidden",String(!show));
+  el.classList.toggle("show",show);el.setAttribute("aria-hidden",String(!show));if(window.matchMedia("(max-width: 1020px)").matches){document.body.classList.toggle("locked",show);if(show)$("closeCategoryMenu")?.focus()}
 }
 function openOrders(){
   toast("Opening your orders…");
@@ -2461,7 +2663,7 @@ function updateSupportCategory(preferred=""){
   setSupportRequired(["productName"],showProduct);
   setSupportRequired(["companyName","bulkQuantity"],showBusiness);
 }
-function supportFiles(){return Array.from($("fileInput")?.files||[]).slice(0,3)}
+function supportFiles(){return Array.from($("fileInput")?.files||[])}
 function validateSupportFiles(files=supportFiles()){
   const allowed=new Set(["application/pdf","image/jpeg","image/png"]),total=files.reduce((sum,file)=>sum+Number(file.size||0),0);
   if(files.length>3)return"Choose no more than 3 files.";
@@ -2471,6 +2673,7 @@ function validateSupportFiles(files=supportFiles()){
 }
 function renderSupportFiles(){
   const files=supportFiles(),error=validateSupportFiles(files),summary=$("fileSummary");if(!summary)return;
+  if($("clearSupportFilesBtn"))$("clearSupportFilesBtn").hidden=files.length===0;
   summary.innerHTML=error?`<span style="color:var(--danger)">${esc(error)}</span>`:files.length?files.map(file=>`<span>${esc(file.name)} · ${(file.size/1024/1024).toFixed(2)} MB</span>`).join(""):"";
 }
 function focusSupportForm(category="",subcategory=""){
@@ -2490,6 +2693,7 @@ function submitSupportRequest(event){
   event.preventDefault();const form=$("publicSupportForm");if(!form)return;
   if(!form.checkValidity()){form.reportValidity();return}
   const fileError=validateSupportFiles();if(fileError){setSupportStatus(fileError,"error");return}
+  if(supportFiles().length){setSupportStatus("File attachments cannot be sent by this form yet. Remove the files and ask support how to send them.","error");return}
   $("submitBtn").disabled=true;setSupportStatus("Submitting your request…");$("supportConfirmation")?.classList.remove("show");
   const firstName=supportValue("firstName"),lastName=supportValue("lastName");
   supportPost("PUBLIC_SUPPORT_CREATE_CASE",{
@@ -2511,6 +2715,7 @@ function resetSupportForm(){
 }
 
 function handleClick(event){
+  const journey=event.target.closest("[data-dest-corridor]");if(journey){ACTIVE_CORRIDOR=journey.dataset.destCorridor;renderDestinationFinder();return}
   const route=event.target.closest("[data-route]");
   if(route){navigate(route.dataset.route);return}
   const category=event.target.closest("[data-category]");
@@ -2547,7 +2752,7 @@ function handleClick(event){
   if(supportPrefill){focusSupportForm(supportPrefill.dataset.supportPrefill||"");return}
   if(event.target.closest("[data-support-form]")){focusSupportForm();return}
   const path=event.target.closest("[data-open-path]");
-  if(path){post("STOREFRONT_NAVIGATE",{path:path.dataset.openPath});return}
+  if(path){if(path.closest("#cabinSizerModal"))closeCabinModal();post("STOREFRONT_NAVIGATE",{path:path.dataset.openPath});return}
   const back=event.target.closest("[data-back]");
   if(back){history.length>1?history.back():navigate("shop");return}
   const clear=event.target.closest("[data-clear-shop]");
@@ -2566,11 +2771,12 @@ $("query").addEventListener("input",()=>{
   if(parseRoute().page==="shop"){VISIBLE_LIMIT=12;renderShop()}
 });
 $("sort").addEventListener("change",()=>{VISIBLE_LIMIT=12;renderShop()});
-$("searchBtn").onclick=()=>{$("query").focus();window.scrollTo({top:0,behavior:"smooth"})};
+$("searchBtn").onclick=()=>{const scroller=$("skandi-app-root");if(scroller&&scroller.scrollHeight>scroller.clientHeight+1)scroller.scrollTo({top:0,behavior:"smooth"});else window.scrollTo({top:0,behavior:"smooth"});$("query").focus()};
 $("categoriesBtn").onclick=toggleCategoryMenu;
 $("shopCategoriesBtn").onclick=toggleCategoryMenu;
 $("footerCategoriesBtn").onclick=toggleCategoryMenu;
-$("mobileCategoriesBtn").onclick=()=>{closeMenus();navigate("home");setTimeout(()=>$("popularCategories")?.scrollIntoView({behavior:"smooth"}),40)};
+$("mobileCategoriesBtn").onclick=()=>{closeMenus();toggleCategoryMenu()};
+$("closeCategoryMenu").onclick=closeMenus;
 $("bagBtn").onclick=()=>navigate("bag");
 $("savedBtn").onclick=()=>navigate("saved");
 $("ordersBtn").onclick=()=>{navigate("orders");openOrders()};
@@ -2592,11 +2798,12 @@ $("supportSearchInput")?.addEventListener("input",filterSupportTopics);
 $("supportSearchInput")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();filterSupportTopics()}});
 $("supportSearchBtn")?.addEventListener("click",filterSupportTopics);
 $("fileInput")?.addEventListener("change",renderSupportFiles);
+$("clearSupportFilesBtn")?.addEventListener("click",()=>{if($("fileInput"))$("fileInput").value="";renderSupportFiles()});
 $("supportFileDrop")?.addEventListener("click",()=>$("fileInput")?.click());
 $("supportFileDrop")?.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();$("fileInput")?.click()}});
 ["dragenter","dragover"].forEach(type=>$("supportFileDrop")?.addEventListener(type,event=>{event.preventDefault();$("supportFileDrop").classList.add("dragging")}));
 ["dragleave","drop"].forEach(type=>$("supportFileDrop")?.addEventListener(type,event=>{event.preventDefault();$("supportFileDrop").classList.remove("dragging")}));
-$("supportFileDrop")?.addEventListener("drop",event=>{const transfer=new DataTransfer();Array.from(event.dataTransfer?.files||[]).slice(0,3).forEach(file=>transfer.items.add(file));if($("fileInput"))$("fileInput").files=transfer.files;renderSupportFiles()});
+$("supportFileDrop")?.addEventListener("drop",event=>{const transfer=new DataTransfer();Array.from(event.dataTransfer?.files||[]).forEach(file=>transfer.items.add(file));if($("fileInput"))$("fileInput").files=transfer.files;renderSupportFiles()});
 toggleSupportOrderFields();updateSupportCategory();renderSupportFiles();
 
 
@@ -2643,7 +2850,7 @@ window.addEventListener("message",event=>{
     renderHeroAndCampaigns();
     renderTravelCards();
     renderCategories();
-    renderHomeProducts();
+    renderHomeProducts();renderDestinationFinder();renderTravelKitBuilder();
     renderHeaderCounts();
     if(!INITIAL_CATEGORY_APPLIED&&String(payload.initialCategory||"").trim().toLowerCase()==="gift cards"){
       INITIAL_CATEGORY_APPLIED=true;
@@ -2661,6 +2868,7 @@ window.addEventListener("message",event=>{
     return;
   }
   if(message.type==="STOREFRONT_CART_UPDATED"){
+    if(kitOperation){if(!kitCartUpdated(payload)&&payload.cart){CART=payload.cart;renderHeaderCounts()}if(parseRoute().page==="bag")renderBagPage();return}
     ADDING=false;CART=payload.cart||CART;renderHeaderCounts();toast("Added to your bag");
     if(parseRoute().page==="bag")renderBagPage();return;
   }
@@ -2683,6 +2891,7 @@ window.addEventListener("message",event=>{
   }
   if(message.type==="STOREFRONT_PROGRESS"){status(payload.message||"Working…");toast(payload.message||"Working…");return}
   if(message.type==="STOREFRONT_ERROR"){
+    if(kitOperation&&payload.stage==="STOREFRONT_ADD_TO_CART"){stopKitOnError(payload);return}
     ADDING=false;
     console.error("[SKANDI Storefront] Parent error:",payload);
     if(["catalog","STOREFRONT_READY","STOREFRONT_REFRESH"].includes(payload.stage))showCatalogError();
@@ -2694,7 +2903,7 @@ window.addEventListener("message",event=>{
 
 $("footerYear").textContent=String(new Date().getFullYear());
 post("MASTER_CONFIG_REQUEST",{context:"the-store"});
-renderHeroAndCampaigns();renderTravelCards();renderCategories();renderHomeProducts();renderHeaderCounts();
+renderHeroAndCampaigns();renderTravelCards();renderCategories();renderHomeProducts();renderDestinationFinder();renderTravelKitBuilder();renderHeaderCounts();bindStoreJourneyTools();
 if(!location.hash)history.replaceState(null,"","#/home");
 applyRoute();
 requestStorefront("initial");

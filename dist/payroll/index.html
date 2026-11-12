@@ -581,6 +581,12 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
   @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
 }
+
+/* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */
+@media(max-width:1020px){
+  body.locked:has(#pageHost) #skandi-mobile-nav-container{visibility:hidden;pointer-events:none}
+  body.store-keyboard-open:has(#pageHost) #skandi-mobile-nav-container{display:none!important}
+}
 </style>
 <style data-skandi-part="payroll">
 #skandi-app-root{--navy:#003366;--navy2:#00264d;--blue:#0a6ed1;--blue2:#085caf;--cyan:#00a6c7;--canvas:#f3f4f5;--surface:#fff;--surface2:#f7f8f9;--line:#d9dfe3;--line2:#b9c3ca;--text:#1d2d3e;--muted:#5b6b7a;--green:#188918;--orange:#e76500;--red:#bb0000;--info:#eaf3fc;--radius:7px;--shadow:0 2px 8px rgba(0,35,70,.10);--shell:54px;--side:246px;font-family:"72",Arial,sans-serif}

@@ -518,6 +518,12 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
   @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
 }
+
+/* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */
+@media(max-width:1020px){
+  body.locked:has(#pageHost) #skandi-mobile-nav-container{visibility:hidden;pointer-events:none}
+  body.store-keyboard-open:has(#pageHost) #skandi-mobile-nav-container{display:none!important}
+}
 </style>
 <style data-skandi-part="eos">#skandi-app-root {
       --sk-royal: #000F89;

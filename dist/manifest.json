@@ -88,8 +88,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
       "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "fe221fcdd64c42db29ac3faa7cd01f2a933f386295b354fbb3b9bce1c2483a68",
-      "bytes": 472262
+      "sha256": "3bd2da2326c51d76b7ab17831d4e3c38420e1d2cc9266ccff5b120fb67e49fa3",
+      "bytes": 472582
     },
     {
       "key": "search",
@@ -137,8 +137,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/search/skandi-search.receiver.html",
       "receiverFile": "skandi-embeds/search/skandi-search.receiver.html",
-      "sha256": "a8c35390d1026ffea84ad890f417e56224b32d3fb2c65ed1c81d6a96092eee0b",
-      "bytes": 189184
+      "sha256": "2da649607b355e70b15bb2ae329f03518c43459a7c125cfe1784abec0efd144e",
+      "bytes": 189504
     },
     {
       "key": "flights",
@@ -311,8 +311,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flights/skandi-flights.receiver.html",
       "receiverFile": "skandi-embeds/flights/skandi-flights.receiver.html",
-      "sha256": "3728b55ea43a6d6834317287b1037dde685e54662b22b396c7ab3fb7f073ba37",
-      "bytes": 207195
+      "sha256": "0eb10914b27ee6f8e5e5a4e514055206d280144b9341818db30fd410f3a8cae7",
+      "bytes": 207515
     },
     {
       "key": "carRental",
@@ -382,8 +382,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/car-rental/skandi-car-rental.receiver.html",
       "receiverFile": "skandi-embeds/car-rental/skandi-car-rental.receiver.html",
-      "sha256": "b1f91322ce81a87e0ec8aa76c32f50014ebef1085844ce43dc666535a1fafbdf",
-      "bytes": 224776
+      "sha256": "57e648f7085fd557d5b4fae6d84ddd58aadeb1824cde8522e57742cae91fb798",
+      "bytes": 225096
     },
     {
       "key": "hotels",
@@ -636,8 +636,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/cruises/skandi-cruises.receiver.html",
       "receiverFile": "skandi-embeds/cruises/skandi-cruises.receiver.html",
-      "sha256": "cedb1dbb9b340f11c66edb4a9bbe8e59764f38f8322109cb02edb15255a8b920",
-      "bytes": 219330
+      "sha256": "6f4de2f8b2121059cb7dc0e956b9dcd6a0f7abe674cd2cfec27c25ca7a7b0887",
+      "bytes": 219650
     },
     {
       "key": "tours",
@@ -700,8 +700,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/tours/skandi-tours.receiver.html",
       "receiverFile": "skandi-embeds/tours/skandi-tours.receiver.html",
-      "sha256": "d228daed6b316a79b820077d1ff70d3ec86ad2c7c80fdd9d814c3e0a773d294e",
-      "bytes": 313951
+      "sha256": "5721138205e80decc23cc8acb1ec3fe6fc3b5fe1bb82bdd1f29636b5d365a813",
+      "bytes": 314271
     },
     {
       "key": "activities",
@@ -768,8 +768,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "d7aae2ff9cd8a2c06b5ad396dd834bc300997362b124466dc210c8050e884b4d",
-      "bytes": 321215
+      "sha256": "fa6a56e41262d11753aa8ef205729ec7021b457dd87601344d6ab8d2fee89215",
+      "bytes": 321535
     },
     {
       "key": "travelInfo",
@@ -859,8 +859,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "54aceaa02f0356d9a9a4f62931842e58cbd0111ae1e62d84e5f888a1581be71a",
-      "bytes": 500592
+      "sha256": "cf870c896ac3d3b322d6e3ce72df6f3dc1c1f2be8684465a7fdece67f53aaddf",
+      "bytes": 500912
     },
     {
       "key": "transfers",
@@ -941,8 +941,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html",
       "receiverFile": "skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html",
-      "sha256": "42d65eba15f00719c31fcebf87748b7dcc9a9dfeb68f8af897542757d464d637",
-      "bytes": 252989
+      "sha256": "85b86b9bdbb99924d31d6a8a024d182e95c42b5ac391814250d9e4e3a1929f8b",
+      "bytes": 253309
     },
     {
       "key": "voy",
@@ -1001,8 +1001,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/voy/skandi-voy.receiver.html",
       "receiverFile": "skandi-embeds/voy/skandi-voy.receiver.html",
-      "sha256": "9f61e6584fff672d9df36717c6e8b7dba8cd79ce9e049415ef00871b4599d51f",
-      "bytes": 274754
+      "sha256": "7624433b57e282b559cec7fa4f280e207cdc76dfbd04d4ad0e6d47fa12c3e844",
+      "bytes": 275074
     },
     {
       "key": "club",
@@ -1057,8 +1057,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/club/skandi-club.receiver.html",
       "receiverFile": "skandi-embeds/club/skandi-club.receiver.html",
-      "sha256": "8ebfe5b0c50937efb50803ee6e0be1e887c9f652f5715e7147dd8460aefb83f4",
-      "bytes": 208338
+      "sha256": "e586df2575777034d2c61cd655ae2eec01e29b410bc85ecaa650eaa75ee70ef9",
+      "bytes": 208658
     },
     {
       "key": "clubLogin",
@@ -1118,8 +1118,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/club-login/skandi-club-login.receiver.html",
       "receiverFile": "skandi-embeds/club-login/skandi-club-login.receiver.html",
-      "sha256": "250d17eda526057eff730ef60fc574d3349431b5ebcb1329b1426bf64cb89b58",
-      "bytes": 177558
+      "sha256": "40d6279e91ccac4f61fda4d8fba98d740514e475854e767ea278382ba77900a8",
+      "bytes": 177878
     },
     {
       "key": "forgotPassword",
@@ -1164,8 +1164,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
       "receiverFile": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
-      "sha256": "23a2b55b5826e4291e396616459853e4a8652de5c3fed3b70b27df2b9877d4fb",
-      "bytes": 163745
+      "sha256": "96b3a346953458d8ed731e9c2407bc43270907d22ce42cda8de8b67f6e4f5b78",
+      "bytes": 164065
     },
     {
       "key": "about",
@@ -1219,8 +1219,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/about/skandi-about.receiver.html",
       "receiverFile": "skandi-embeds/about/skandi-about.receiver.html",
-      "sha256": "060d7f50ee9e694a95109630a784e139fda6e5bc97a81766e818d0f8911f71b2",
-      "bytes": 234518
+      "sha256": "1cec8c956a7bed8a37ddf0a384e1be846562a703c0f8d8ff693919bd1a545603",
+      "bytes": 234838
     },
     {
       "key": "support",
@@ -1312,8 +1312,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/support/skandi-support.receiver.html",
       "receiverFile": "skandi-embeds/support/skandi-support.receiver.html",
-      "sha256": "07e1783d042adb6be14e124eacc371f903bfa6234b136e240564874b6242f6bb",
-      "bytes": 235283
+      "sha256": "74d39b2f62607a6f6bb63b216face40c99b619c1c808fc81d03ae9b1180808ac",
+      "bytes": 235603
     },
     {
       "key": "newsroom",
@@ -1365,8 +1365,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/newsroom/skandi-newsroom.receiver.html",
       "receiverFile": "skandi-embeds/newsroom/skandi-newsroom.receiver.html",
-      "sha256": "2464a34b6edaaf905c548f546b8e989fa242790b65d7d9636afc3598bf1bfd2a",
-      "bytes": 194372
+      "sha256": "ec130cb9088172fdd24ea3725e7d49b1b017b1b4c36e6a4881b4c4175bfdffd2",
+      "bytes": 194692
     },
     {
       "key": "accessRestricted",
@@ -1409,8 +1409,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/access-restricted/skandi-access-restricted.receiver.html",
       "receiverFile": "skandi-embeds/access-restricted/skandi-access-restricted.receiver.html",
-      "sha256": "6a296c82ac9ca73d0a8b49ec41fd1f8ad45d27af4287a603e02b4d825a5771d4",
-      "bytes": 166339
+      "sha256": "b0692fa44cce674c83c0e728cb9e5db909063b1db65958bcb59f85e9ff113928",
+      "bytes": 166659
     },
     {
       "key": "expiredResetLink",
@@ -1458,8 +1458,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/expired-reset-link/skandi-expired-reset-link.receiver.html",
       "receiverFile": "skandi-embeds/expired-reset-link/skandi-expired-reset-link.receiver.html",
-      "sha256": "bd9eae4b5afa77858f582b4ae2722eae021025c57a3deeced2e43b6f4cdead21",
-      "bytes": 167887
+      "sha256": "b1ff00618195df222ff9d58a39ad7b93c5e1202d73df6f0aa4af97d699bf8753",
+      "bytes": 168207
     },
     {
       "key": "theStore",
@@ -1525,8 +1525,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/the-store/skandi-the-store.receiver.html",
       "receiverFile": "skandi-embeds/the-store/skandi-the-store.receiver.html",
-      "sha256": "38d3d061dfce1a61b720d8222befc83250343dbbbdee910438bc84640740408c",
-      "bytes": 201850
+      "sha256": "987614db6fa804dd6139e16a9fab746b187b11a989cd3a36f0a71fd5166d9b42",
+      "bytes": 234990
     },
     {
       "key": "storeCheckout",
@@ -1713,8 +1713,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/legal/skandi-legal.receiver.html",
       "receiverFile": "skandi-embeds/legal/skandi-legal.receiver.html",
-      "sha256": "c931df429acfe2b6285f2f1f4cf6f17d6cecfd96d1fb26e9839bdbb93d25742f",
-      "bytes": 182147
+      "sha256": "887480303c03caa57ad0d49a73d4635a327c584940d82fc7db2829537c3e5965",
+      "bytes": 182467
     },
     {
       "key": "policies",
@@ -1772,8 +1772,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/policies/skandi-policies.receiver.html",
       "receiverFile": "skandi-embeds/policies/skandi-policies.receiver.html",
-      "sha256": "60c52d1de110a68593a17a6b8bdf35da897b77ae059b46a4cf0de13dee844be1",
-      "bytes": 210772
+      "sha256": "4a36e98ffaa3bb62a81f430a1f096dcf1c8923aeacca16bd337c81f4bf8c2816",
+      "bytes": 211092
     },
     {
       "key": "cookiePreferences",
@@ -1946,8 +1946,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
       "receiverFile": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
-      "sha256": "d1cf6b63bfcdae6ea039e6b0aeea063b19d5a14321ab5fc2835ecb6e58d549a6",
-      "bytes": 168870
+      "sha256": "001d55517e292975416fbeeec75db69984f677615f779e37af5287836d207e37",
+      "bytes": 169190
     },
     {
       "key": "riaintra",
@@ -1978,7 +1978,8 @@
       "missing": [],
       "issues": [],
       "backend": [
-        "src/backend/SKANDI_CORE/staffAuth.web.js"
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/staffOtp.web.js"
       ],
       "messages": [
         "SKANDI_STAFF_LOGIN",
@@ -1989,7 +1990,9 @@
         "STAFF_LOGIN_OK",
         "STAFF_LOGIN_PROGRESS",
         "STAFF_LOGIN_READY",
-        "STAFF_LOGIN_REQUEST"
+        "STAFF_LOGIN_REQUEST",
+        "STAFF_OTP_REQUIRED",
+        "STAFF_OTP_VERIFY"
       ],
       "output": "dist/riaintra/index.html",
       "dynamic": false,
@@ -2143,8 +2146,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/success-factors/success-factors.receiver.html",
       "receiverFile": "riaintra-embeds/success-factors/success-factors.receiver.html",
-      "sha256": "3b066aecc880d68cd74143fda5a3f5be3b5a5cc20410957404e14a1fc6b50344",
-      "bytes": 534568
+      "sha256": "ac1079256e08c74126d60083d6f13814da686d9879b0f80385c900b33718c3e7",
+      "bytes": 534888
     },
     {
       "key": "legalInternal",
@@ -2191,8 +2194,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/legal-internal/skandi-legal-internal.receiver.html",
       "receiverFile": "riaintra-embeds/legal-internal/skandi-legal-internal.receiver.html",
-      "sha256": "093bd1dc4f2c3dcdede9d9f49c803a501332a90f9c712ab1498251506fd238cb",
-      "bytes": 87621
+      "sha256": "319a64a2df48f34898596f1325e3e9188fa6e6115685ba777694b3f7c89f8ab5",
+      "bytes": 87941
     },
     {
       "key": "alteaLaunchpad",
@@ -2255,8 +2258,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/altea-launchpad/skandi-altea-launchpad.receiver.html",
       "receiverFile": "altea-embeds/altea-launchpad/skandi-altea-launchpad.receiver.html",
-      "sha256": "164ea1042331a2c0e11437416b31f53e10d7b9194bc158cf2dcd4715242e35d4",
-      "bytes": 113615
+      "sha256": "e3d17fccfd5480228ce6cf8b02edd4fc7a0007793e39e9dea0389227a4a487ba",
+      "bytes": 113935
     },
     {
       "key": "alteaReservations",
@@ -2308,8 +2311,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/altea-reservations/skandi-altea-reservations.receiver.html",
       "receiverFile": "altea-embeds/altea-reservations/skandi-altea-reservations.receiver.html",
-      "sha256": "fc88b95639ae5716b1acee3ca19ccd591d5f5eeba69561a49ff70ddab93957fc",
-      "bytes": 638103
+      "sha256": "0ce63b64df3407bf610222f952f4cc1714dc1367f2e074a6f96292ee09c1bf4d",
+      "bytes": 638423
     },
     {
       "key": "opsControl",
@@ -2364,8 +2367,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/ops-control/skandi-ops-control.receiver.html",
       "receiverFile": "altea-embeds/ops-control/skandi-ops-control.receiver.html",
-      "sha256": "c452d0235ea065c6f4e9ccccbbc48bf527c94f6066d02a0779cc07878363159c",
-      "bytes": 223208
+      "sha256": "87159a330602a95175cadb5e4b87088086d137cea7da3d178092b040250557ac",
+      "bytes": 223528
     },
     {
       "key": "eos",
@@ -2538,8 +2541,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/eos/skandi-eos.receiver.html",
       "receiverFile": "altea-embeds/eos/skandi-eos.receiver.html",
-      "sha256": "a4e404c431b524f01d63159d91f6f132f97e726b48b8409c75f79845ce5382a1",
-      "bytes": 112852
+      "sha256": "edf98e03a9cee179af09bc2065960cbb242cb981266f18a95675b0b85e25a0ac",
+      "bytes": 113172
     },
     {
       "key": "inventoryControl",
@@ -2592,8 +2595,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "23194e5ad41ca418a53d11d8382d15bcc68dc4a46fa41251c4121d5b3762f142",
-      "bytes": 324664
+      "sha256": "8e5c3e6320d1fea4763463a4f7d512cbb861c2f6dfa6214ba9fdb0e8c39ecdc0",
+      "bytes": 338044
     },
     {
       "key": "uniformCenter",
@@ -2649,8 +2652,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/uniform-center/skandi-uniform-center.receiver.html",
       "receiverFile": "riaintra-embeds/uniform-center/skandi-uniform-center.receiver.html",
-      "sha256": "b357eb754d53f52bbacde45db788734f7f4e7ab4f99d20f61a073176641c1572",
-      "bytes": 179818
+      "sha256": "e5b23f2dd099c4078ed939424e322ad9b52ca75fe17088c8af0fc92d3db30c8f",
+      "bytes": 180138
     },
     {
       "key": "uniformControl",
@@ -2704,8 +2707,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/uniform-control/skandi-uniform-control.receiver.html",
       "receiverFile": "riaintra-embeds/uniform-control/skandi-uniform-control.receiver.html",
-      "sha256": "b413320f050572c72f53180124a5201aba8e8b7966870e0b913eb33bfc4c1973",
-      "bytes": 170691
+      "sha256": "583fe6b408bd5f545c94a03410141dfbc3a91567a68d9ececeadee28b076cbf8",
+      "bytes": 171011
     },
     {
       "key": "alteaTimatic",
@@ -2816,8 +2819,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/mail/skandi-mail.receiver.html",
       "receiverFile": "riaintra-embeds/mail/skandi-mail.receiver.html",
-      "sha256": "e4381694e001cc8cadaab0b64b18c75859f7b1a13ac9e47fc014dd23b9fae98b",
-      "bytes": 120358
+      "sha256": "7ce432eb0875ac60b50828637c188eeabe8ac48bb207af994980d8ef18e6f4dd",
+      "bytes": 120678
     },
     {
       "key": "docunet",
@@ -2865,8 +2868,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/docunet/skandi-docunet.receiver.html",
       "receiverFile": "riaintra-embeds/docunet/skandi-docunet.receiver.html",
-      "sha256": "d0302a5d3b071189cb236a067db56ce050514679e31d309a92201dbc09487401",
-      "bytes": 184098
+      "sha256": "f37ceef1cfdce6963df3518fb4755cf0df21f3ff2eb9870661fc665604956c77",
+      "bytes": 205180
     },
     {
       "key": "docunetAdmin",
@@ -2941,8 +2944,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/docunet-admin/skandi-docunet-admin.receiver.html",
       "receiverFile": "riaintra-embeds/docunet-admin/skandi-docunet-admin.receiver.html",
-      "sha256": "43d04ff601721b91b31563369605346debacd60974efd063a5b50a0662b33309",
-      "bytes": 160399
+      "sha256": "3c67c3c64b0e2e0cc983c2c5d40c759c94e5cb33cf1a7743b48651e32d331f06",
+      "bytes": 160719
     },
     {
       "key": "serviceDesk",
@@ -3031,8 +3034,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/service-desk/skandi-service-desk.receiver.html",
       "receiverFile": "riaintra-embeds/service-desk/skandi-service-desk.receiver.html",
-      "sha256": "ad6077bfd445d36f34d10706e3926ab70de8d507317462b5a6e03a1dea896e91",
-      "bytes": 194545
+      "sha256": "7a3698c1e6fe9ffcf1246bc936328ce2ee30b4ae93dcc316bcb04de53d4bd673",
+      "bytes": 194865
     },
     {
       "key": "policyControl",
@@ -3089,8 +3092,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/policy-control/skandi-policy-control.receiver.html",
       "receiverFile": "riaintra-embeds/policy-control/skandi-policy-control.receiver.html",
-      "sha256": "14d439edab853633e0e29ba8770cc54c7645682ba6f5e93964914484bf84b6cf",
-      "bytes": 162726
+      "sha256": "c9c25168d6f5434d5b211734094fe8c209bf56ab0210498a07a31d7e476d1c64",
+      "bytes": 163046
     },
     {
       "key": "mediaControl",
@@ -3241,8 +3244,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/media-control/skandi-media-control.receiver.html",
       "receiverFile": "riaintra-embeds/media-control/skandi-media-control.receiver.html",
-      "sha256": "d5223d587636440d84e04af5deda74c029af1479939db4768e0c0a5e37d58301",
-      "bytes": 597613
+      "sha256": "4750f09dd7c671bc848459656e10188939b32b1dcb301ca6d25992ef25cf3f2c",
+      "bytes": 597933
     },
     {
       "key": "storeControl",
@@ -3314,8 +3317,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/store-control/skandi-store-control.receiver.html",
       "receiverFile": "riaintra-embeds/store-control/skandi-store-control.receiver.html",
-      "sha256": "8f2c2b72af20c0fc07d78d7eddf823033ee7ce33872112efd5ac43063f61b873",
-      "bytes": 139581
+      "sha256": "ae943873342c66ebf8af3529596d4195d9eff3bd2660ee3b3ebbc40110686f63",
+      "bytes": 141260
     },
     {
       "key": "payroll",
@@ -3368,8 +3371,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/payroll/skandi-payroll.receiver.html",
       "receiverFile": "riaintra-embeds/payroll/skandi-payroll.receiver.html",
-      "sha256": "4b0af19a1da324c73f8c42f97599a2a6985449d6cc3eeb33ac7c6fe5446aaf07",
-      "bytes": 108338
+      "sha256": "df61d606ae27cca0f9a6816931e5133ec18bbca421fbfe023f64c171ff33a2be",
+      "bytes": 108658
     },
     {
       "key": "country",
@@ -3446,8 +3449,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/country/skandi-country.receiver.html",
       "receiverFile": "skandi-embeds/country/skandi-country.receiver.html",
-      "sha256": "2ebb80f7624d10f028933f7f40eae57b19d1f42c97accaa9d23be2f813f43ada",
-      "bytes": 396848
+      "sha256": "724a44e4368cdf055e86bed2f300413f28bff5ae4e8e181168706bfd80ab98f6",
+      "bytes": 397168
     },
     {
       "key": "hotelList",
@@ -3489,8 +3492,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
       "receiverFile": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
-      "sha256": "92b1927b3e371c3d2b64d2aa8acf4935dd4e52161f646db4ad79af4e92d4d7e0",
-      "bytes": 178114
+      "sha256": "cf2584eb3232e5a36ed740162c6da95e3d3ac97bd8fb1c429155130842f9271c",
+      "bytes": 178434
     },
     {
       "key": "bookingFlow",
@@ -3630,8 +3633,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
       "receiverFile": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
-      "sha256": "4316e310d924bd7a02de533388b5f37e2e986fc454f600908a1f503ec6692756",
-      "bytes": 298701
+      "sha256": "e5fccbfeae545339e366bb841243431f1bbb99797403e798d0b7c4dcacbc6c9b",
+      "bytes": 299021
     },
     {
       "key": "myTrips",
@@ -3719,8 +3722,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/careers/skandi-careers.receiver.html",
       "receiverFile": "skandi-embeds/careers/skandi-careers.receiver.html",
-      "sha256": "1e0d43c01597cf86d79aac9f4f89912e20053e71bbe8e95c119f198b79519e5f",
-      "bytes": 233287
+      "sha256": "2255cb0a3f2dabd8d41a9e863482b69c28310a522b4c5572156303952ff119fc",
+      "bytes": 233607
     },
     {
       "key": "myRoster",
@@ -3784,8 +3787,8 @@
       "blockers": [],
       "receiver": "altea-embeds/my-roster/skandi-my-roster.receiver.html",
       "receiverFile": "altea-embeds/my-roster/skandi-my-roster.receiver.html",
-      "sha256": "d09bea48024f7647b509f236f59d4c399cd43062ceaa44b1da30435775763933",
-      "bytes": 160332
+      "sha256": "e8e169c887f94c2c51f933b97b895fb27d800a30247176d5e859e8c3358a8e42",
+      "bytes": 160652
     },
     {
       "key": "groupTalk",
@@ -3932,8 +3935,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/passport-visa/skandi-passport-visa.receiver.html",
       "receiverFile": "skandi-embeds/passport-visa/skandi-passport-visa.receiver.html",
-      "sha256": "22ec918ffb1a7a4678eca263d40665864dd77bfbc3a252c0be24680b9f06a9c5",
-      "bytes": 198915
+      "sha256": "d9e0069d7d3df1151162f524bafa8420649c1de7ba66d4eef27306c4667ae14b",
+      "bytes": 199235
     },
     {
       "key": "baggageAllowance",
@@ -3983,8 +3986,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
       "receiverFile": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
-      "sha256": "b6a0c009eaa2ee08b825c5894cd0c4f2ce95ba38499a3864be4bedecaf324502",
-      "bytes": 197213
+      "sha256": "af868c9447b5b67a6bc8a367ae33930b1d8aefc45c9a8701bb94262e66f98bcb",
+      "bytes": 197533
     },
     {
       "key": "travelInsurance",
@@ -4036,8 +4039,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html",
       "receiverFile": "skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html",
-      "sha256": "a472a0848f650495dcc00995f11e6d09df15fcf5de68491200a69bb1d032d691",
-      "bytes": 187043
+      "sha256": "f641304a1b978d231247d9dbd4212bb60d2013caa383bbe179b8e30274f8e7e2",
+      "bytes": 187363
     },
     {
       "key": "specialAssistance",
@@ -4208,8 +4211,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
       "receiverFile": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
-      "sha256": "96797c9cb4c9b83b98d942585ed1dc7b9dbb5332672dbb7193e5eace19be7adb",
-      "bytes": 193838
+      "sha256": "a2cf4a430d5740379a5f66cd4f52b8ff45d8558016419d680a661b2ce2487b0e",
+      "bytes": 194158
     },
     {
       "key": "flightStatus",
@@ -4272,8 +4275,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flight-status/flight-status.receiver.html",
       "receiverFile": "skandi-embeds/flight-status/flight-status.receiver.html",
-      "sha256": "a286e8b24415165d281bd8ff36d2bce2db2b3440929437874cd26e31bd1f22ff",
-      "bytes": 336980
+      "sha256": "4b9787bab85b4d01a3ee0ea7837a25a8f91afc66f1f6bce92ca85a041e15eb88",
+      "bytes": 337300
     }
   ],
   "globalComponents": {
