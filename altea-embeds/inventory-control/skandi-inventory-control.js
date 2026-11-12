@@ -978,8 +978,8 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
     <div className="notice">Hotels are managed in Property Director.</div>
     <div className="filters"><div className="field w240"><label>Record Family</label><select className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("");setPage(1)}}><option value="">All</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>{setTourSubtype(e.target.value);setPage(1)}}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field w180"><label>Status</label><select className="select" value=${statusFilter} onChange=${e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div><div className="field w180"><label>Customer Visible</label><select className="select" value=${customerFilter} onChange=${e=>{setCustomerFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w180"><label>ALTEA Visible</label><select className="select" value=${alteaFilter} onChange=${e=>{setAlteaFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w240"><label>Sort</label><select className="select" value=${sortBy} onChange=${e=>{setSortBy(e.target.value);setPage(1)}}><option value="UPDATED_DESC">Recently updated</option><option value="TITLE_ASC">Title A–Z</option><option value="CODE_ASC">Code A–Z</option><option value="TYPE_ASC">Type / Title</option></select></div><div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Code, title, slug, type or status"/></div></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
-    <div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Code</th><th>Title</th><th>Status</th><th>Customer</th><th>ALTEA</th><th>Updated</th><th></th></tr></thead><tbody>
-      ${pageRecords.length?pageRecords.map(r=>html`<tr className="clickrow" onClick=${()=>open(r)}><td>${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType}</td><td><b>${r.code}</b></td><td>${r.name}</td><td>${statusPill(r.status)}</td><td>${r.customerVisible?"Yes":"No"}</td><td>${r.alteaVisible?"Yes":"No"}</td><td>${text(r.updatedAt).slice(0,10)}</td><td><button className="btn small danger" onClick=${e=>archived(r,e)}>Archive</button></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No matching records.</div></td></tr>`}
+    <div className="tablewrap"><table className="table inventory-card-table" role="table"><thead role="rowgroup"><tr role="row"><th scope="col">Type</th><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Status</th><th scope="col">Customer</th><th scope="col">ALTEA</th><th scope="col">Updated</th><th scope="col">Actions</th></tr></thead><tbody role="rowgroup">
+      ${pageRecords.length?pageRecords.map(r=>html`<tr className="clickrow" role="row" onClick=${()=>open(r)}><td data-label="Type" role="cell">${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType}</td><td data-label="Code" role="cell"><b>${r.code}</b></td><td data-label="Title" role="cell">${r.name}</td><td data-label="Status" role="cell">${statusPill(r.status)}</td><td data-label="Customer" role="cell">${r.customerVisible?"Yes":"No"}</td><td data-label="ALTEA" role="cell">${r.alteaVisible?"Yes":"No"}</td><td data-label="Updated" role="cell">${text(r.updatedAt).slice(0,10)}</td><td data-label="Actions" role="cell"><div className="inventory-row-actions"><button type="button" className="btn small" onClick=${e=>{e.stopPropagation();open(r)}}>Open</button><button type="button" className="btn small danger" onClick=${e=>archived(r,e)}>Archive</button></div></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No matching records.</div></td></tr>`}
     </tbody></table></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
@@ -1687,8 +1687,8 @@ function PropertyDirector({boot,masterFilter,setBusy,setToast,onSaved}){
     <div className="top"><div><div className="eyebrow">RIAINTRA / ALTEA</div><h1>Property Master Directory</h1><div className="sub">Choose a hotel to view or edit its details.</div></div><div className="toolbar"><button className="btn primary" disabled=${!canViewHotels} onClick=${createHotel}>+ INITIALIZE PROPERTY</button></div></div>
     ${!canViewHotels?html`<div className="notice warn">Master Filter is ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}. Choose HOTELS or GLOBAL PORTFOLIO to open the property directory.</div>`:html`<div className="card panel">
       <div className="filters"><div className="field grow"><label>Property / Code</label><input className="input" value=${query} onInput=${e=>{setQuery(e.target.value);setPage(1)}} placeholder="Search real hotel records"/></div><div className="field w180"><label>Status</label><select className="select" value=${status} onChange=${e=>{setStatus(e.target.value);setPage(1)}}><option value="">ALL STATUSES</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div></div>
-      <div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Sys Code</th><th>Master Title</th><th>Dest</th><th>Status</th><th>Actions</th></tr></thead><tbody>
-        ${visible.length?visible.map(h=>html`<tr className="clickrow" onClick=${()=>openHotel(h)}><td>${h.details?.propertyType||"HOTEL"}</td><td><b>${h.code||"—"}</b></td><td>${h.name||"—"}</td><td>${(boot.records||[]).find(x=>x.id===h.details?.destinationId)?.code||h.details?.destinationCode||"—"}</td><td>${statusPill(h.status)}</td><td><button className="btn small" onClick=${e=>{e.stopPropagation();openHotel(h)}}>OPEN</button></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No matching hotels found.</div></td></tr>`}
+      <div className="tablewrap"><table className="table inventory-card-table" role="table"><thead role="rowgroup"><tr role="row"><th scope="col">Type</th><th scope="col">Sys Code</th><th scope="col">Master Title</th><th scope="col">Dest</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead><tbody role="rowgroup">
+        ${visible.length?visible.map(h=>html`<tr className="clickrow" role="row" onClick=${()=>openHotel(h)}><td data-label="Type" role="cell">${h.details?.propertyType||"HOTEL"}</td><td data-label="Code" role="cell"><b>${h.code||"—"}</b></td><td data-label="Property" role="cell">${h.name||"—"}</td><td data-label="Destination" role="cell">${(boot.records||[]).find(x=>x.id===h.details?.destinationId)?.code||h.details?.destinationCode||"—"}</td><td data-label="Status" role="cell">${statusPill(h.status)}</td><td data-label="Actions" role="cell"><button type="button" className="btn small" onClick=${e=>{e.stopPropagation();openHotel(h)}}>Open</button></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No matching hotels found.</div></td></tr>`}
       </tbody></table></div><${Pagination} page=${currentPage} totalPages=${totalPages} total=${hotels.length} pageSize=${pageSize} onPage=${setPage}/>
     </div>`}
   </div>`;
@@ -1712,11 +1712,26 @@ function Overview({boot,setView,masterFilter}){
 function App(){
   const [boot,setBoot]=useState(null);
   const [view,setView]=useState("overview");
+  const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
+  const mainScrollRef=useRef(null);
   const [masterFilter,setMasterFilter]=useState("");
   const [busy,setBusy]=useState("Connecting Inventory Control…");
   const [toast,setToastState]=useState(null);
   const [masterConfig,setMasterConfig]=useState(null);
   const [connectionError,setConnectionError]=useState("");
+  function switchInventoryView(next){
+    setView(next);
+    setMobileMenuOpen(false);
+  }
+  useEffect(()=>{
+    if(mainScrollRef.current)mainScrollRef.current.scrollTop=0;
+  },[view]);
+  useEffect(()=>{
+    if(!mobileMenuOpen)return;
+    const closeOnEscape=event=>{if(event.key==="Escape")setMobileMenuOpen(false)};
+    window.addEventListener("keydown",closeOnEscape);
+    return()=>window.removeEventListener("keydown",closeOnEscape);
+  },[mobileMenuOpen]);
   function setToast(message,error=false){
     const display=error?employeeErrorMessage(message):text(message);
     if(error&&!requests.size&&INTERNAL_ISSUE_PATTERN.test(text(message)))logInventoryIssue("ui-error",{kind:"technical-response"});
@@ -1777,13 +1792,14 @@ function App(){
   return html`<div className="shell">
     <header className="global-header">
       <div className="global-brand"><strong>ALTEA</strong><span className="system-label">SKANDI TRAVELS · INVENTORY CONTROL</span></div>
+      <button type="button" className="inventory-menu-button" aria-label="Inventory sections" aria-controls="inventory-sections" aria-expanded=${mobileMenuOpen} onClick=${()=>setMobileMenuOpen(value=>!value)}><span aria-hidden="true">☰</span> Sections</button>
       <div className="global-controls">
         <div className="global-scope"><label htmlFor="inventoryMasterScope">Master Filter:</label><select id="inventoryMasterScope" aria-label="Master Filter" value=${masterFilter} onChange=${e=>setMasterFilter(e.target.value)}><option value="">GLOBAL PORTFOLIO</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${(MASTER_FILTER_LABEL[t]||t).toUpperCase()}</option>`)}</select></div>
         <span className="operator">OPE: RIAINTRA</span>
       </div>
     </header>
-    <div className="shell-body"><aside className="sidebar"><div className="group">Navigation</div>${nav.map(([k,l])=>html`<button className=${`navbtn ${view===k?"active":""}`} onClick=${()=>setView(k)}>${l}</button>`)}</aside>
-    <main className="main"><div className="top"><div><div className="eyebrow">SKANDI TRAVELS · ALTEA · RIAINTRA</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">Manage travel inventory, hotels, suppliers, rates and aircraft.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
+    <div className="shell-body">${mobileMenuOpen?html`<button type="button" className="inventory-menu-scrim" aria-label="Close sections menu" onClick=${()=>setMobileMenuOpen(false)}></button>`:null}<aside id="inventory-sections" aria-label="Inventory sections" className=${`sidebar ${mobileMenuOpen?"mobile-open":""}`}><div className="inventory-menu-heading"><span>Inventory sections</span><button type="button" aria-label="Close sections menu" onClick=${()=>setMobileMenuOpen(false)}>×</button></div><div className="group">Navigation</div>${nav.map(([k,l])=>html`<button type="button" className=${`navbtn ${view===k?"active":""}`} aria-current=${view===k?"page":undefined} onClick=${()=>switchInventoryView(k)}>${l}</button>`)}</aside>
+    <main className="main" ref=${mainScrollRef}><div className="top"><div><div className="eyebrow">SKANDI TRAVELS · ALTEA · RIAINTRA</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">Manage travel inventory, hotels, suppliers, rates and aircraft.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
       ${masterFilter&&!["overview","master","property","provider"].includes(view)?html`<div className="scope-label">Showing ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}.</div>`:null}
       ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory Control is unavailable":"Connecting to Inventory Control…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
         view==="overview"?html`<${Overview} boot=${boot} setView=${setView} masterFilter=${masterFilter}/>`:

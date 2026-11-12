@@ -356,5 +356,11 @@ $("orderFilter").addEventListener("change",renderOrders);
 $("productVariant").onchange=fillVariant;
 $("inventoryRecord").onchange=()=>{const i=state.inventory.find(x=>x.id===$("inventoryRecord").value);if(!i)return;$("inventoryProductId").value=i.productId;$("inventoryVariantId").value=i.variantId;$("inventoryQuantity").value=i.quantity??"";$("inventoryTracked").value=String(i.tracked);};
 $("bulkPriceBtn").onclick=()=>{const value=$("bulkPriceValue").value;if(value===""||!Number.isFinite(Number(value))){status("Enter a price adjustment.","error");return}post("STORE_CONTROL_BULK_PRICE",{productIds:arr($("bulkProductIds").value),operation:$("bulkPriceOperation").value,value:Number(value),compareAtMode:"KEEP"})};
+const sectionMenu=$("storeControlSections");
+const compactSections=window.matchMedia("(max-width: 820px)");
+function syncSectionMenu(event){sectionMenu.open=!event.matches}
+syncSectionMenu(compactSections);
+if(compactSections.addEventListener)compactSections.addEventListener("change",syncSectionMenu);
+$("sideNav").addEventListener("click",event=>{if(compactSections.matches&&event.target.closest("[data-panel]"))sectionMenu.open=false});
 seedData();render();load();
 

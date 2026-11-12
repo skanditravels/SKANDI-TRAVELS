@@ -1,5 +1,10 @@
 # INFO / LOG — The Store
 
+## 2026-11-11 — Mobile Store and journey tools
+
+The active source adds responsive Store navigation, a user-entered baggage dimension comparison, destination packing suggestions and a travel kit built from current Wix products. Kit additions use the existing cart bridge sequentially and stop on a failure or unconfirmed update; displayed totals are estimates and Wix remains authoritative. Support attachments are explicitly rejected until the support bridge can send them. Existing shared branding, catalog and commerce ownership remain unchanged. Controlled tests only; live checkout, purchases and support submission require separate verification.
+
+
 > Current document: `skandi-embeds/the-store/README.md`. Original reference: `HTML_REF/skandi/The Store.md`.
 
 

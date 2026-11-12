@@ -1,5 +1,10 @@
 # SKANDI INFO / LOG — V12 DOCUMENT SYSTEM CONVERGENCE
 
+## 2026-11-11 — Mobile document viewer
+
+The active source adds mobile navigation, filters and viewer controls. Acknowledgements remain pending until confirmed by the existing backend and are not invented on failure. Signed document access links are refreshed after expiry, and missing or delayed requests provide retry states. Existing document permissions and server-owned records remain unchanged. Controlled tests only; authenticated Wix access and document acknowledgement require live verification.
+
+
 > Current document: `riaintra-embeds/docunet/README.md`. Original reference: `HTML_REF/riaintra/DocuNet.md`.
 
 

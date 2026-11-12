@@ -949,3 +949,13 @@ pre{
 @media(max-width:820px){
  .ops-menu{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-menu__section{grid-column:1/-1}.ops-workspace{padding:12px;min-width:0}.ops-menu button,.ops-menu a,.btn,.button{min-height:44px}.panel,.ops-card,.metric-card{border-radius:10px;min-width:0}.table{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.field input,.field select,.field textarea{font-size:16px}
 }
+
+/* Compact access to the existing authorized back-office sections. */
+.store-control-sections > summary{display:none}
+@media(max-width:820px){
+ .store-control-sections > summary{display:flex;align-items:center;min-height:44px;padding:10px 12px;border:1px solid #cbd9e2;border-radius:10px;background:#fff;color:#022e64;font-weight:700;cursor:pointer}
+ .store-control-sections > summary::after{content:"+";margin-left:auto;font-size:20px}
+ .store-control-sections[open] > summary::after{content:"−"}
+ .ops-menu{padding-top:8px}.ops-rail-search{margin-bottom:8px}
+ .table-wrap,.table-container{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}

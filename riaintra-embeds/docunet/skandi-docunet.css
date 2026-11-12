@@ -213,3 +213,101 @@ body.night{--workspace:#202932;--paper:#18222b;color:#e7edf1}body.night .global-
 }
 
 @media(max-width:920px){.global-toolbar .effectivity-group{display:flex;flex:0 0 auto}.global-toolbar #backBtn,.global-toolbar #forwardBtn{display:inline-flex}}
+
+/* DocuNet editorial workspace; mobile keeps the shared RIA navigation. */
+.app-shell{height:100%;min-height:0;grid-template-rows:auto auto auto minmax(0,1fr) auto}
+.app-header{min-height:50px;background:#0a2d50;border:0}
+.brand-name{letter-spacing:-.025em;font-weight:750}
+.brand-subtitle{font-size:11px;letter-spacing:.06em;color:#bfdae5}
+.global-toolbar{min-width:0;padding:8px 12px;gap:8px;background:#f7f9fb;border-color:#dbe4eb;overflow:visible}
+.global-search{min-width:160px;max-width:480px}
+.global-search input{height:40px;border:1px solid #cbd9e4;border-radius:8px;font-size:14px;background:#fff}
+.global-search .search-icon{top:12px}
+.global-search .shortcut{top:9px}
+.tool-group{height:40px;border-radius:7px;border-color:#d4e0e8}
+.tool-btn{height:38px;min-width:38px;font-size:12px}
+.tool-btn:focus-visible,.docunet-quickbar button:focus-visible,.docunet-tools-panel button:focus-visible{outline:3px solid #62bdd5;outline-offset:-3px}
+.docunet-filter-tray{margin-left:auto;min-width:0}
+.docunet-filter-tray>summary{display:none}
+.effectivity-group{margin-left:0}
+.effectivity-summary{border:0;background:transparent;font-weight:600}
+.compact-select{height:38px;border-radius:7px;border-color:#cbd9e4}
+.document-tabs{background:#edf2f5;border-color:#d7e1e8;padding:5px 10px 0;gap:5px}
+.doc-tab{height:36px;min-width:150px;max-width:230px;padding:0 4px 0 7px;border-color:#d4dfe7;border-radius:7px 7px 0 0}
+.doc-tab.active{height:37px;border-color:#bfced9;box-shadow:inset 0 -2px #1b7295}
+.doc-tab-main{min-width:0;flex:1;display:flex;align-items:center;gap:6px;height:100%;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.doc-tab .tab-close{flex:0 0 auto;min-width:28px;min-height:28px}
+.new-tab-btn{height:34px;border-color:#d4dfe7;border-radius:7px 7px 0 0}
+.sidebar{background:#f7f9fb;border-color:#d7e2e9}
+.sidebar-tabs,.inspector-head{background:#edf3f6;border-color:#dbe4eb}
+.tree-row{min-height:34px;height:auto;padding-top:4px;padding-bottom:4px}
+.tree-label{font-size:12px}
+.viewer{grid-template-rows:38px minmax(0,1fr) auto}
+.viewer-header,.viewer-footer{background:#fff;border-color:#dbe4eb;min-height:38px}
+.viewer-scroll{background:#eaf0f4}
+.document-page{width:min(960px,100%);border:1px solid #d7e2e9;box-shadow:0 12px 35px #1c405614}
+.document-page h1{font-size:clamp(21px,2vw,27px);line-height:1.2}
+.document-page p{font-size:14px;line-height:1.65}
+.docunet-pdf-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 10px;color:#526a7a;font-size:12px}
+.docunet-open-pdf,.docunet-empty button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 14px;border:0;border-radius:8px;background:#0b527c;color:white;text-decoration:none;font-size:13px;font-weight:700}
+.live-pdf{width:100%;height:min(75vh,1000px);min-height:480px;border:1px solid #d7e2e9;border-radius:8px}
+.docunet-empty{max-width:530px;margin:14vh auto;padding:24px;text-align:center}
+.docunet-empty h1{font-size:22px}
+.docunet-pdf-footer{display:none;color:#5a7180;font-size:12px;padding:10px 6px}
+.docunet-pdf-mode .docunet-pdf-footer{display:block}
+.docunet-pdf-mode .page-nav,.docunet-pdf-mode .view-controls{display:none}
+.status-bar{background:#f5f8fa;border-color:#dbe4eb;color:#536b7a;min-height:28px}
+.docunet-quickbar,.docunet-tools-panel,.dn-close-library{display:none}
+.docunet-tools-panel[hidden],.docunet-tools-panel [hidden]{display:none!important}
+.docunet-filter-tray:not([open])>.effectivity-group{display:none}
+@media(max-width:920px){
+ .app-header{min-height:44px;padding:0 12px}
+ .brand-block{padding:0;border:0}
+ .brand-subtitle{display:block;font-size:10px}
+ .header-nav{display:none}
+ .global-toolbar{position:relative;display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 10px 3px;overflow:visible}
+ .global-toolbar>.history,.global-toolbar>.tool-group,.toolbar-separator{display:none!important}
+ .global-search{width:100%;max-width:none;min-width:0;grid-column:1;grid-row:1}
+ .global-search input{height:44px;padding:0 12px 0 36px;font-size:16px!important}
+ .global-search .shortcut{display:none}
+ .global-search .search-icon{top:14px}
+ .docunet-quickbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;grid-column:1;grid-row:2}
+ .docunet-quickbar button{min-width:0;min-height:46px;border:0;border-radius:8px;background:transparent;color:#284e69;display:grid;justify-items:center;align-content:center;gap:1px;padding:2px;cursor:pointer}
+ .docunet-quickbar button span{display:grid;place-items:center;width:20px;height:20px}
+ .docunet-quickbar button svg{width:20px;height:20px}
+ .docunet-quickbar button small{font-size:10px;font-weight:700;line-height:13px}
+ .docunet-filter-tray{margin:0;grid-column:1;grid-row:3}
+ .docunet-filter-tray>summary{display:none}
+ .global-toolbar .docunet-filter-tray[open]>.effectivity-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .effectivity-label,.effectivity-summary{display:none}
+ .compact-select{width:100%;min-width:0;min-height:44px;font-size:16px!important;padding:0 5px}
+ .docunet-tools-panel:not([hidden]){position:absolute;top:calc(100% + 4px);right:10px;z-index:75;width:min(340px,calc(100% - 20px));max-height:min(58dvh,400px);overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:7px;border:1px solid #d7e4eb;border-radius:10px;background:white;box-shadow:0 14px 36px #062b4640}
+ .docunet-tools-panel button{min-height:44px;border:0;border-radius:7px;background:#eef4f7;color:#23455b;font-size:12px;font-weight:650;overflow-wrap:anywhere}
+ .document-tabs{padding:4px 8px 0}
+ .doc-tab{min-width:120px;max-width:180px}
+ .workspace{position:relative;min-width:0;min-height:0}
+ .sidebar{position:absolute;top:0;bottom:0;left:auto;right:0;width:min(360px,94%);height:auto;max-width:100%;transform:translateX(102%);z-index:60}
+ .sidebar.mobile-open{transform:translateX(0)}
+ .sidebar-tabs{grid-template-columns:repeat(4,minmax(0,1fr)) 44px}
+ .sidebar-tab{min-height:44px;font-size:11px}
+ .dn-close-library{display:block;min-height:44px;border:0;background:transparent;color:#25465d;font-size:23px}
+ .tree-row{min-height:44px;padding-top:5px;padding-bottom:5px}
+ .tree-toggle{min-width:40px;min-height:40px}
+ .tree-label,.result-title,.bookmark-title{font-size:13px}
+ .result-item,.bookmark-item,.update-item{padding:13px 12px}
+ .viewer-header{min-height:34px}
+ .viewer{grid-template-rows:34px minmax(0,1fr) auto}
+ .viewer-scroll{padding:0;background:#fff}
+ .document-page{width:100%;min-height:100%;padding:20px 16px 30px;border:0;box-shadow:none}
+ .document-page p{font-size:15px;line-height:1.62}
+ .section-meta{gap:5px;flex-wrap:wrap}
+ .live-pdf{min-height:400px;height:55dvh}
+ .inspector:not(.hidden){width:min(360px,94%);max-width:100%;position:absolute;top:0;bottom:0;right:0}
+ .viewer-footer{overflow-x:auto}
+ :is(input:not([type="hidden"]),select,textarea){font-size:16px!important}
+ .status-bar{min-height:26px}
+ .status-cell{white-space:nowrap}
+ .toast{left:12px;right:12px;bottom:calc(var(--sk-shell-nav,68px) + env(safe-area-inset-bottom,0px) + 8px);min-width:0;max-width:none}
+}
+@media (max-width:360px){.docunet-tools-panel:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{.docunet-quickbar,.docunet-tools-panel,.docunet-pdf-actions{display:none!important}}

@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="skandi-docunet.css">
 </head>
 <body>
-
 <div class="app-shell" id="appShell">
   <header class="app-header">
     <div class="brand-block">
@@ -45,30 +44,45 @@
       <button class="tool-btn active" id="inspectorBtn" title="Document information"></button>
     </div>
     <div class="toolbar-separator"></div>
-    <div class="effectivity-group">
+    <details id="dnFilterTray" class="docunet-filter-tray" open><summary>Filters</summary><div class="effectivity-group">
       <span class="effectivity-label">Applicability</span>
       <select class="compact-select" id="serviceFilter" aria-label="Service line filter">
         <option value="ALL">All Services</option>
-        <option value="DESTINATION" selected>Destination Services</option>
+        <option value="DESTINATION" selected="">Destination Services</option>
         <option value="TRANSFERS">Transfers</option>
         <option value="TOURS">Tours &amp; Activities</option>
         <option value="PACKAGES">Travel Packages</option>
       </select>
       <select class="compact-select" id="marketFilter" aria-label="Operating market filter">
         <option value="ALL">All Markets</option>
-        <option value="USNYC" selected>USNYC · New York</option>
+        <option value="USNYC" selected="">USNYC · New York</option>
         <option value="SESTO">SESTO · Stockholm</option>
         <option value="GRHER">GRHER · Crete</option>
       </select>
       <select class="compact-select" id="audienceFilter" aria-label="Staff audience filter">
-        <option value="OPERATIONS" selected>Operations</option>
+        <option value="OPERATIONS" selected="">Operations</option>
         <option value="DESTINATION_STAFF">Destination Staff</option>
         <option value="CUSTOMER_CARE">Customer Care</option>
         <option value="PARTNER_MANAGEMENT">Partner Management</option>
         <option value="ALL">All Teams</option>
       </select>
       <div class="effectivity-summary" id="effectivitySummary"></div>
+    </div></details>
+    <div class="docunet-quickbar" aria-label="Document navigation">
+      <button type="button" id="dnQuickLibrary" aria-controls="sidebar" aria-expanded="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21V5.5ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5A2.5 2.5 0 0 1 20 21V5.5Z" stroke="currentColor" stroke-width="1.7"/></svg></span><small>Library</small></button>
+      <button type="button" id="dnQuickSearch"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><small>Search</small></button>
+      <button type="button" id="dnQuickBookmarks"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><small>Saved</small></button>
+      <button type="button" id="dnQuickFilters" aria-controls="dnFilterTray" aria-expanded="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><small>Filters</small></button>
+      <button type="button" id="dnQuickTools" aria-controls="dnToolsPanel" aria-expanded="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span><small>Tools</small></button>
     </div>
+    <div id="dnToolsPanel" class="docunet-tools-panel" hidden>
+      <button type="button" data-docunet-action="backBtn">Back</button><button type="button" data-docunet-action="forwardBtn">Forward</button>
+      <button type="button" id="dnQuickBookmark" data-docunet-action="bookmarkBtn">Bookmark</button><button type="button" id="dnQuickInfo" data-docunet-action="inspectorBtn">Document details</button>
+      <button type="button" id="dnQuickAck" data-docunet-action="ackBtn" hidden>Acknowledge</button><button type="button" data-docunet-action="nightModeBtn">Reading theme</button>
+      <button type="button" data-docunet-action="updatesHeaderBtn">Updates</button><button type="button" data-docunet-action="formsHeaderBtn">Forms</button>
+      <button type="button" data-docunet-action="syncNowBtn">Refresh</button><button type="button" data-docunet-action="printBtn">Print</button><button type="button" data-docunet-action="helpBtn">Help</button>
+    </div>
+
   </section>
 
   <div class="document-tabs" id="documentTabs" role="tablist"></div>
@@ -79,14 +93,14 @@
         <button class="sidebar-tab active" data-side-tab="library"></button>
         <button class="sidebar-tab" data-side-tab="search"></button>
         <button class="sidebar-tab" data-side-tab="bookmarks"></button>
-        <button class="sidebar-tab" data-side-tab="updates"></button>
+        <button class="sidebar-tab" data-side-tab="updates"></button><button type="button" class="dn-close-library" id="dnCloseLibrary" aria-label="Close library">×</button>
       </div>
       <div class="sidebar-body">
         <section class="side-panel" id="libraryPanel">
           <div class="side-panel-head">
             <div class="side-panel-title"><b>Manual Library</b><div><button class="mini-btn" id="collapseAllBtn" title="Collapse all"></button><button class="mini-btn" id="expandAllBtn" title="Expand all"></button></div></div>
             <div class="tree-filter"><input id="treeFilter" placeholder="Filter library tree"><span id="treeFilterIcon"></span></div>
-            <div class="library-summary"><span id="manualCount">0 manuals</span><span id="applicableCount">0 applicable</span><span>Current</span></div>
+            <div class="library-summary"><span id="manualCount">0 manuals</span><span id="applicableCount">0 applicable</span></div>
           </div>
           <div class="tree-scroll" id="libraryTree"></div>
         </section>
@@ -106,7 +120,7 @@
         </section>
 
         <section class="side-panel hidden" id="updatesPanel">
-          <div class="side-panel-head"><div class="side-panel-title"><b>Document Updates</b><button class="mini-btn" id="syncNowBtn">Sync now</button></div><div class="library-summary"><span>1 pending</span><span>4 current</span></div></div>
+          <div class="side-panel-head"><div class="side-panel-title"><b>Document Updates</b><button class="mini-btn" id="syncNowBtn">Sync now</button></div><div class="library-summary" id="updatesSummary"></div></div>
           <div class="update-list" id="updateList"></div>
         </section>
       </div>
@@ -122,7 +136,7 @@
         <div class="demo-warning" id="demoWarning"></div>
         <article class="document-page" id="documentPage"></article>
       </div>
-      <div class="viewer-footer">
+      <div class="viewer-footer"><div class="docunet-pdf-footer">Use the PDF viewer for pages and zoom.</div>
         <div class="page-nav">
           <button class="footer-btn" id="firstSectionBtn" title="First section"></button>
           <button class="footer-btn" id="previousSectionBtn" title="Previous section"></button>
@@ -152,7 +166,7 @@
     <div class="status-cell" id="statusEffectivity">Applicability: Destination Services / USNYC / Operations</div>
     <div class="status-spacer"></div>
     <div class="status-cell" id="lastSyncCell">Last sync —</div>
-    <div class="status-cell"><div class="sync-progress"><span></span></div><strong id="syncStateText">Connecting…</strong></div>
+    <div class="status-cell"><strong id="syncStateText">Connecting…</strong></div>
   </footer>
 </div>
 

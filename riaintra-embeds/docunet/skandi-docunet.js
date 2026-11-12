@@ -203,8 +203,9 @@
   function manualById(id){ return manuals.find(m => m.id === id); }
   function sectionRecord(sectionId){ return allSections.find(x => x.section.id === sectionId); }
   function currentRecord(){ return sectionRecord(state.activeSectionId) || allSections[0]; }
-  function currentManual(){ return manualById(state.activeManualId) || currentRecord().manual; }
+  function currentManual(){ return manualById(state.activeManualId) || currentRecord()?.manual || null; }
   function isApplicable(manual){
+    if(!manual)return false;
     const serviceOk = state.service === "ALL" || manual.services.includes("ALL") || manual.services.includes(state.service);
     const marketOk = state.market === "ALL" || manual.markets.includes("ALL") || manual.markets.includes(state.market);
     const audienceOk = state.audience === "ALL" || manual.audiences.includes("ALL") || manual.audiences.includes(state.audience);
@@ -227,10 +228,9 @@
   function renderTabs(){
     const container=$("documentTabs");
     container.innerHTML=state.openTabs.map(id=>{
-      const manual=manualById(id);
-      const active=id===state.activeManualId;
-      return `<button class="doc-tab ${active?"active":""}" data-tab-manual="${id}" role="tab" aria-selected="${active}"><span class="tab-code">${manual.code}</span><span class="tab-title">${escapeHtml(manual.short)}</span><span class="tab-close" data-close-tab="${id}" aria-label="Close tab">${icons.x}</span></button>`;
-    }).join("")+`<button class="new-tab-btn" id="newTabBtn" title="Open another manual">${icons.plus}</button>`;
+      const manual=manualById(id);if(!manual)return "";const active=id===state.activeManualId;
+      return `<div class="doc-tab ${active?"active":""}"><button type="button" class="doc-tab-main" data-tab-manual="${escapeHtml(id)}" role="tab" aria-selected="${active}"><span class="tab-code">${escapeHtml(manual.code||"")}</span><span class="tab-title">${escapeHtml(manual.short||manual.title)}</span></button><button type="button" class="tab-close" data-close-tab="${escapeHtml(id)}" aria-label="Close ${escapeHtml(manual.short||manual.title)}">${icons.x}</button></div>`;
+    }).join("")+`<button type="button" class="new-tab-btn" id="newTabBtn" aria-label="Open another manual">${icons.plus}</button>`;
   }
 
   function groupManuals(){
@@ -254,77 +254,68 @@
   function renderManualNode(manual,depth){
     const applicable=isApplicable(manual);
     const selected=manual.id===state.activeManualId && !state.activeSectionId;
-    return `<div class="tree-node expanded ${applicable?"":"not-applicable"}" data-tree-type="manual" data-tree-id="${manual.id}">
-      <div class="tree-row ${selected?"selected":""} ${applicable?"":"disabled"}" data-open-manual="${manual.id}" title="${escapeHtml(manual.title)}"><span class="tree-indent" style="width:${depth*14}px"></span><button class="tree-toggle">${icons.chevronRight}</button><span class="tree-icon">${icons.manual}</span><span class="tree-label manual">${escapeHtml(manual.short)}</span>${manual.updated?'<span class="tree-update-dot" title="New or revised"></span>':""}<span class="tree-meta">R${manual.revision}</span></div>
+    return `<div class="tree-node expanded ${applicable?"":"not-applicable"}" data-tree-type="manual" data-tree-id="${escapeHtml(manual.id)}">
+      <div class="tree-row ${selected?"selected":""} ${applicable?"":"disabled"}" role="button" tabindex="0" data-open-manual="${escapeHtml(manual.id)}" title="${escapeHtml(manual.title)}"><span class="tree-indent" style="width:${depth*14}px"></span><button class="tree-toggle">${icons.chevronRight}</button><span class="tree-icon">${icons.manual}</span><span class="tree-label manual">${escapeHtml(manual.short)}</span>${manual.updated?'<span class="tree-update-dot" title="New or revised"></span>':""}<span class="tree-meta">${manual.revision?"R"+escapeHtml(manual.revision):""}</span></div>
       <div class="tree-children">${manual.chapters.map(ch=>renderChapterNode(manual,ch,depth+1)).join("")}</div>
     </div>`;
   }
   function renderChapterNode(manual,chapter,depth){
-    return `<div class="tree-node expanded" data-tree-type="chapter" data-tree-id="${chapter.id}">
+    return `<div class="tree-node expanded" data-tree-type="chapter" data-tree-id="${escapeHtml(chapter.id)}">
       <div class="tree-row"><span class="tree-indent" style="width:${depth*14}px"></span><button class="tree-toggle">${icons.chevronRight}</button><span class="tree-icon">${icons.folder}</span><span class="tree-label"><span class="tree-label section">${escapeHtml(chapter.code)}</span> ${escapeHtml(chapter.title)}</span></div>
       <div class="tree-children">${chapter.sections.map(sec=>renderSectionNode(manual,chapter,sec,depth+1)).join("")}</div>
     </div>`;
   }
   function renderSectionNode(manual,chapter,section,depth){
     const selected=section.id===state.activeSectionId;
-    return `<div class="tree-node" data-tree-type="section" data-tree-id="${section.id}"><div class="tree-row ${selected?"selected":""}" data-open-section="${section.id}" title="${escapeHtml(section.title)}"><span class="tree-indent" style="width:${depth*14}px"></span><button class="tree-toggle placeholder">${icons.chevronRight}</button><span class="tree-icon">${icons.section}</span><span class="tree-label"><span class="tree-label section">${escapeHtml(section.code)}</span> ${escapeHtml(section.title)}</span></div></div>`;
+    return `<div class="tree-node" data-tree-type="section" data-tree-id="${escapeHtml(section.id)}"><div class="tree-row ${selected?"selected":""}" role="button" tabindex="0" data-open-section="${escapeHtml(section.id)}" title="${escapeHtml(section.title)}"><span class="tree-indent" style="width:${depth*14}px"></span><button class="tree-toggle placeholder">${icons.chevronRight}</button><span class="tree-icon">${icons.section}</span><span class="tree-label"><span class="tree-label section">${escapeHtml(section.code)}</span> ${escapeHtml(section.title)}</span></div></div>`;
   }
 
   function renderDocument(searchTerm=""){
-    const rec=currentRecord(); const {manual,chapter,section}=rec;
-    state.activeManualId=manual.id;
-    if(!state.openTabs.includes(manual.id)) state.openTabs.push(manual.id);
-    let html=manual.liveUrl
-      ? `<iframe class="live-pdf" title="${escapeHtml(manual.title)}" src="${escapeHtml(manual.liveUrl)}#toolbar=1&navpanes=1&view=FitH"></iframe>`
-      : section.body.html;
-    if(searchTerm) html=highlightHtml(html,searchTerm);
-    $("documentPage").innerHTML=`
-      <div class="page-running-head"><div><strong>${escapeHtml(manual.short)}</strong><br>${escapeHtml(manual.title)}</div><div class="right">Revision ${manual.revision}<br>Effective ${manual.revisionDate}</div></div>
-      <div class="doc-section-kicker">${escapeHtml(section.code)} · ${escapeHtml(chapter.code)} ${escapeHtml(chapter.title)}</div>
-      <h1>${escapeHtml(section.body.title)}</h1>
-      <div class="section-meta"><span class="meta-chip"><strong>Manual:</strong> ${escapeHtml(manual.code)}</span><span class="meta-chip"><strong>Service:</strong> ${escapeHtml(serviceLabel(state.service))}</span><span class="meta-chip"><strong>Market:</strong> ${escapeHtml(marketLabel(state.market))}</span><span class="meta-chip"><strong>Audience:</strong> ${escapeHtml(audienceLabel(state.audience))}</span><span class="meta-chip"><strong>Revision:</strong> ${manual.revision}</span></div>
-      ${html}
-      <div class="page-footer"><span>${escapeHtml(manual.code)} · ${escapeHtml(section.code)}</span><span>Controlled electronic copy · Printed copies are uncontrolled</span><span>${pageIndex()+1}</span></div>`;
-    $("documentPage").style.transform=`scale(${state.zoom/100})`;
-    $("documentPage").style.transformOrigin="top center";
-    $("documentPage").style.marginBottom=`${Math.max(0,(state.zoom-100)*7)}px`;
-    $("revisionBadge").innerHTML=`${icons.shield}<span>Revision ${manual.revision} · ${manual.status}</span>`;
-    $("statusDocument").textContent=`${manual.code} · ${section.code} ${section.title}`;
-    $("pageNumber").value=pageIndex()+1; $("pageTotal").textContent=`of ${manual.pages}`;
-    $("zoomValue").textContent=`${state.zoom}%`;
-    renderBreadcrumbs(); renderInspector(); renderTabs(); renderLibraryTree(); updateBookmarkButton(); updateHistoryButtons();
-    $("viewerScroll").scrollTop=0;
-    $("ackBtn").style.display=manual.requiresAcknowledgement?"flex":"none";
-    $("ackBtn").textContent=manual.acknowledgedAt?"Acknowledged":"Acknowledge";
-    $("ackBtn").disabled=Boolean(manual.acknowledgedAt);
+    const rec=currentRecord();if(!rec){$("documentPage").innerHTML='<div class="docunet-empty"><h1>No document selected</h1><p>Open the library to choose a publication.</p></div>';return}
+    const {manual,chapter,section}=rec;state.activeManualId=manual.id;
+    if(!state.openTabs.includes(manual.id))state.openTabs.push(manual.id);
+    let body=manual.liveUrl?`<div class="docunet-pdf-actions"><a class="docunet-open-pdf" href="${escapeHtml(manual.liveUrl)}" target="_blank" rel="noopener noreferrer">Open PDF</a><span>Use the PDF viewer for pages and zoom.</span></div><iframe class="live-pdf" title="${escapeHtml(manual.title)}" src="${escapeHtml(manual.liveUrl)}#toolbar=1&amp;navpanes=1&amp;view=FitH"></iframe>`:section.body.html;
+    if(searchTerm&&!manual.liveUrl)body=highlightHtml(body,searchTerm);
+    const version=manual.revision?`Revision ${escapeHtml(manual.revision)}`:'Revision not provided';
+    $("documentPage").innerHTML=`<div class="page-running-head"><div><strong>${escapeHtml(manual.short)}</strong><br>${escapeHtml(manual.title)}</div><div class="right">${version}${manual.revisionDate?'<br>Effective '+escapeHtml(manual.revisionDate):''}</div></div><div class="doc-section-kicker">${escapeHtml(section.code)} · ${escapeHtml(chapter.code)} ${escapeHtml(chapter.title)}</div><h1>${escapeHtml(section.body.title)}</h1><div class="section-meta"><span class="meta-chip"><strong>Manual:</strong> ${escapeHtml(manual.code||'')}</span><span class="meta-chip"><strong>Service:</strong> ${escapeHtml(serviceLabel(state.service))}</span><span class="meta-chip"><strong>Market:</strong> ${escapeHtml(marketLabel(state.market))}</span><span class="meta-chip"><strong>Audience:</strong> ${escapeHtml(audienceLabel(state.audience))}</span></div>${body}<div class="page-footer"><span>${escapeHtml(manual.code||"")}</span><span>Controlled electronic copy · Printed copies are uncontrolled</span></div>`;
+    $("documentPage").style.transform=manual.isLiveDocument?"":`scale(${state.zoom/100})`;$("documentPage").style.transformOrigin="top center";
+    $("documentPage").style.marginBottom=manual.isLiveDocument?"":`${Math.max(0,(state.zoom-100)*7)}px`;
+    $("revisionBadge").textContent=version;$("statusDocument").textContent=`${manual.code||""} · ${section.title}`;
+    $("pageNumber").value=pageIndex()+1;$("pageTotal").textContent=`of ${manual.pages}`;$("zoomValue").textContent=`${state.zoom}%`;
+    document.querySelector(".viewer").classList.toggle("docunet-pdf-mode",!!manual.isLiveDocument);
+    renderBreadcrumbs();renderInspector();renderTabs();renderLibraryTree();updateBookmarkButton();updateHistoryButtons();
+    $("viewerScroll").scrollTop=0;$("ackBtn").style.display=manual.requiresAcknowledgement?"flex":"none";$("ackBtn").textContent=manual.acknowledgedAt?"Acknowledged":"Acknowledge";$("ackBtn").disabled=Boolean(manual.acknowledgedAt)||!!docunetPendingAck;syncDocunetActions();
   }
 
   function renderBreadcrumbs(){
     const {manual,chapter,section}=currentRecord();
-    $("breadcrumbs").innerHTML=`<button data-breadcrumb-manual="${manual.id}">${escapeHtml(manual.short)}</button><span>›</span><button data-breadcrumb-chapter="${chapter.id}">${escapeHtml(chapter.code)} ${escapeHtml(chapter.title)}</button><span>›</span><span class="current">${escapeHtml(section.code)} ${escapeHtml(section.title)}</span>`;
+    $("breadcrumbs").innerHTML=`<button data-breadcrumb-manual="${escapeHtml(manual.id)}">${escapeHtml(manual.short)}</button><span>›</span><button data-breadcrumb-chapter="${escapeHtml(chapter.id)}">${escapeHtml(chapter.code)} ${escapeHtml(chapter.title)}</button><span>›</span><span class="current">${escapeHtml(section.code)} ${escapeHtml(section.title)}</span>`;
   }
 
   function renderInspector(){
-    const {manual,chapter,section}=currentRecord();
+    const rec=currentRecord();if(!rec){$("inspectorContent").innerHTML='<div class="result-empty">Select a document to see its details.</div>';return}
+    const {manual,chapter,section}=rec;
     const markets=manual.markets.includes("ALL")?["ALL"]:manual.markets;
     $("inspectorContent").innerHTML=`
       <div class="info-card"><div class="info-card-head">Publication</div><div class="info-card-body">
         ${infoRow("Document",manual.title)}${infoRow("Code",manual.code)}${infoRow("Section",section.code)}${infoRow("Owner",manual.owner)}${infoRow("Status",manual.status)}${infoRow("Revision",manual.revision)}${infoRow("Effective",manual.revisionDate)}
       </div></div>
       <div class="info-card"><div class="info-card-head">Current Applicability</div><div class="info-card-body"><div class="effectivity-list">${markets.map(market=>`<span class="effectivity-tag ${state.market!=="ALL"&&!manual.markets.includes("ALL")&&!markets.includes(state.market)?"excluded":""}">${escapeHtml(marketLabel(market))}</span>`).join("")}</div>${infoRow("Service Lines",manual.services.map(serviceLabel).join(", "))}${infoRow("Audience",manual.audiences.map(audienceLabel).join(", "))}</div></div>
-      <div class="info-card"><div class="info-card-head">Revision History</div><div class="info-card-body"><div class="revision-item current"><b>Revision ${manual.revision} — Current</b><span>${manual.revisionDate} · Electronic distribution</span></div><div class="revision-item"><b>Revision ${Math.max(1,Number(manual.revision)-1)}</b><span>Superseded · Archived</span></div><div class="revision-item"><b>Revision ${Math.max(1,Number(manual.revision)-2)}</b><span>Superseded · Archived</span></div></div></div>
-      <div class="info-card"><div class="info-card-head">Location</div><div class="info-card-body">${infoRow("Chapter",chapter.code+" "+chapter.title)}${infoRow("Section",section.code+" "+section.title)}${infoRow("Page",String(pageIndex()+1))}</div></div>`;
+      <div class="info-card"><div class="info-card-head">Revision</div><div class="info-card-body">${infoRow("Revision",manual.revision||"Not provided")}${infoRow("Effective",manual.revisionDate||"Not provided")}<p class="small">Earlier revision history is not available in this viewer.</p></div></div>
+      <div class="info-card"><div class="info-card-head">Location</div><div class="info-card-body">${infoRow("Chapter",chapter.code+" "+chapter.title)}${infoRow("Section",section.code+" "+section.title)}${manual.isLiveDocument?"":infoRow("Page",String(pageIndex()+1))}</div></div>`;
   }
   function infoRow(label,value){ return `<div class="info-row"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div></div>`; }
 
   function renderUpdates(){
-    $("updateList").innerHTML=manuals.map(m=>`<div class="update-item" data-update-manual="${m.id}"><div class="bookmark-title">${escapeHtml(m.short)}</div><div class="bookmark-path">Revision ${m.revision} · Effective ${m.revisionDate}</div><div style="margin-top:5px"><span class="update-status" style="${m.updated?"":"background:var(--green-bg);color:var(--green)"}">${m.updated?"Review update":"Current"}</span></div></div>`).join("");
+    const pending=manuals.filter(m=>m.requiresAcknowledgement&&!m.acknowledgedAt).length;
+    $("updatesSummary").textContent=`${manuals.length} publications · ${pending} requiring acknowledgement`;
+    $("updateList").innerHTML=manuals.length?manuals.map(m=>`<div class="update-item" role="button" tabindex="0" data-update-manual="${escapeHtml(m.id)}"><div class="bookmark-title">${escapeHtml(m.short)}</div><div class="bookmark-path">${m.revision?'Revision '+escapeHtml(m.revision):'Revision not provided'}${m.revisionDate?' · Effective '+escapeHtml(m.revisionDate):''}</div>${m.requiresAcknowledgement&&!m.acknowledgedAt?'<div class="update-note">Acknowledgement requested</div>':''}</div>`).join(""):'<div class="result-empty">No assigned publications.</div>';
   }
 
   function renderBookmarks(){
     const filter=$("bookmarkFilter").value.trim().toLowerCase();
     const rows=state.bookmarks.map(id=>sectionRecord(id)).filter(Boolean).filter(rec=>!filter||(`${rec.manual.title} ${rec.section.code} ${rec.section.title}`).toLowerCase().includes(filter));
-    $("bookmarkList").innerHTML=rows.length?rows.map(rec=>`<div class="bookmark-item" data-bookmark-open="${rec.section.id}"><div class="bookmark-title">${escapeHtml(rec.section.code)} ${escapeHtml(rec.section.title)}</div><div class="bookmark-path">${escapeHtml(rec.manual.short)} › ${escapeHtml(rec.chapter.title)}</div><div class="bookmark-actions"><button class="mini-btn" data-bookmark-remove="${rec.section.id}">Remove</button></div></div>`).join(""):`<div class="result-empty">No bookmarks saved.<br>Use the bookmark button while viewing a section.</div>`;
+    $("bookmarkList").innerHTML=rows.length?rows.map(rec=>`<div class="bookmark-item" data-bookmark-open="${escapeHtml(rec.section.id)}"><div class="bookmark-title">${escapeHtml(rec.section.code)} ${escapeHtml(rec.section.title)}</div><div class="bookmark-path">${escapeHtml(rec.manual.short)} › ${escapeHtml(rec.chapter.title)}</div><div class="bookmark-actions"><button class="mini-btn" data-bookmark-remove="${escapeHtml(rec.section.id)}">Remove</button></div></div>`).join(""):`<div class="result-empty">No bookmarks saved.<br>Use the bookmark button while viewing a section.</div>`;
   }
 
   function switchSideTab(tab){
@@ -343,8 +334,9 @@
       const current=state.history[state.historyIndex];
       if(!current||current.sectionId!==sectionId){ state.history=state.history.slice(0,state.historyIndex+1); state.history.push(item); state.historyIndex=state.history.length-1; }
     }
+    if(rec.manual.liveUrl&&rec.manual.liveUntil&&Date.now()>=rec.manual.liveUntil){rec.manual.liveUrl="";rec.manual.liveUntil=0}
     renderDocument(searchTerm);
-    if(!rec.manual.liveUrl) post("DOCUNET_OPEN_DOCUMENT",{documentId:rec.manual.id});
+    if(!rec.manual.liveUrl){post("DOCUNET_OPEN_DOCUMENT",{documentId:rec.manual.id});const requested=rec.manual.id;window.setTimeout(()=>{const m=manualById(requested);if(m&&!m.liveUrl&&state.activeManualId===requested)$("documentPage").innerHTML='<div class="docunet-empty"><h1>Document not opened</h1><p>The document request is taking longer than expected.</p><button type="button" id="docunetRetryOpen">Try again</button></div>'},16000)}
     if(window.innerWidth<=920) $("sidebar").classList.remove("mobile-open");
   }
 
@@ -361,13 +353,13 @@
   }
 
   function pageIndex(){
-    const manual=currentManual(); const sections=manual.chapters.flatMap(ch=>ch.sections); const idx=sections.findIndex(s=>s.id===state.activeSectionId); if(idx<0) return 0;
+    const manual=currentManual();if(!manual)return 0; const sections=manual.chapters.flatMap(ch=>ch.sections); const idx=sections.findIndex(s=>s.id===state.activeSectionId); if(idx<0) return 0;
     const proportional=Math.round((idx/Math.max(1,sections.length-1))*(manual.pages-1)); return Math.max(0,proportional);
   }
   function adjacentSection(direction){
-    const manual=currentManual(); const sections=manual.chapters.flatMap(ch=>ch.sections); const idx=sections.findIndex(s=>s.id===state.activeSectionId); const next=sections[idx+direction]; if(next) openSection(next.id);
+    const manual=currentManual();if(!manual)return; const sections=manual.chapters.flatMap(ch=>ch.sections); const idx=sections.findIndex(s=>s.id===state.activeSectionId); const next=sections[idx+direction]; if(next) openSection(next.id);
   }
-  function jumpSection(position){ const sections=currentManual().chapters.flatMap(ch=>ch.sections); const target=position==="first"?sections[0]:sections[sections.length-1]; if(target) openSection(target.id); }
+  function jumpSection(position){ if(!currentManual())return;const sections=currentManual().chapters.flatMap(ch=>ch.sections); const target=position==="first"?sections[0]:sections[sections.length-1]; if(target) openSection(target.id); }
 
   function performSearch(query, source="panel"){
     query=query.trim(); state.searchQuery=query;
@@ -376,15 +368,16 @@
     const terms=exact?[query.toLowerCase()]:query.toLowerCase().split(/\s+/).filter(Boolean);
     const records=allSections.filter(rec=>{
       if(scope==="CURRENT"&&rec.manual.id!==state.activeManualId) return false;
-      if(scope==="GROUP"&&rec.manual.group!==currentManual().group) return false;
-      const text=`${rec.manual.title} ${rec.chapter.title} ${rec.section.code} ${rec.section.title} ${stripHtml(rec.section.body.html)}`.toLowerCase();
+      if(scope==="GROUP"&&rec.manual.group!==currentManual()?.group) return false;
+      const text=`${rec.manual.title} ${rec.chapter.title} ${rec.section.code} ${rec.section.title} ${stripHtml(rec.section.body.html)} ${String(rec.manual.searchText||"")}`.toLowerCase();
       return exact?text.includes(terms[0]):terms.every(term=>text.includes(term));
     });
     switchSideTab("search"); $("panelSearch").value=query; $("globalSearch").value=query;
     $("searchResults").innerHTML=records.length?records.map(rec=>{
-      const plain=stripHtml(rec.section.body.html); const snippet=snippetAround(plain,terms[0]);
-      return `<div class="result-item" data-search-open="${rec.section.id}"><div class="result-manual">${escapeHtml(rec.manual.short)}</div><div class="result-title">${escapeHtml(rec.section.code)} ${highlightText(rec.section.title,terms)}</div><div class="result-snippet">${highlightText(snippet,terms)}</div><div class="result-path">${escapeHtml(rec.chapter.code)} / ${escapeHtml(rec.chapter.title)}</div></div>`;
+      const full=String(rec.manual.searchText||"");const plain=full.toLowerCase().includes(terms[0])?full:stripHtml(rec.section.body.html); const snippet=snippetAround(plain,terms[0]);
+      return `<div class="result-item" data-search-open="${escapeHtml(rec.section.id)}"><div class="result-manual">${escapeHtml(rec.manual.short)}</div><div class="result-title">${escapeHtml(rec.section.code)} ${highlightText(rec.section.title,terms)}</div><div class="result-snippet">${highlightText(snippet,terms)}</div><div class="result-path">${escapeHtml(rec.chapter.code)} / ${escapeHtml(rec.chapter.title)}</div></div>`;
     }).join(""):`<div class="result-empty">No results found for “${escapeHtml(query)}”.<br>Try a broader search or change the scope.</div>`;
+    if(window.innerWidth<=920)$("sidebar").classList.add("mobile-open");
     if(source==="global") toast(`${records.length} search result${records.length===1?"":"s"} found.`);
   }
 
@@ -392,29 +385,33 @@
     const q=query.trim().toLowerCase();
     const records=(q?allSections.filter(rec=>`${rec.manual.title} ${rec.section.code} ${rec.section.title}`.toLowerCase().includes(q)):allSections).slice(0,12);
     state.commandSelection=0;
-    $("commandResults").innerHTML=records.map((rec,index)=>`<div class="command-result ${index===0?"active":""}" data-command-open="${rec.section.id}"><div class="command-icon">${icons.section}</div><div><div class="command-title">${escapeHtml(rec.section.code)} ${escapeHtml(rec.section.title)}</div><div class="command-path">${escapeHtml(rec.manual.short)} › ${escapeHtml(rec.chapter.title)}</div></div><div class="command-code">R${rec.manual.revision}</div></div>`).join("");
+    $("commandResults").innerHTML=records.map((rec,index)=>`<div class="command-result ${index===0?"active":""}" data-command-open="${escapeHtml(rec.section.id)}"><div class="command-icon">${icons.section}</div><div><div class="command-title">${escapeHtml(rec.section.code)} ${escapeHtml(rec.section.title)}</div><div class="command-path">${escapeHtml(rec.manual.short)} › ${escapeHtml(rec.chapter.title)}</div></div><div class="command-code">R${rec.manual.revision}</div></div>`).join("");
   }
 
   function highlightHtml(html,term){
-    if(!term) return html;
-    const div=document.createElement("div"); div.innerHTML=html;
-    const walker=document.createTreeWalker(div,NodeFilter.SHOW_TEXT,{acceptNode:node=>node.parentElement&&!["SCRIPT","STYLE"].includes(node.parentElement.tagName)&&node.nodeValue.toLowerCase().includes(term.toLowerCase())?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
-    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(node=>{ const re=new RegExp(`(${escapeRegex(term)})`,`gi`); const span=document.createElement("span"); span.innerHTML=node.nodeValue.replace(re,'<mark class="search-hit">$1</mark>'); node.parentNode.replaceChild(span,node); });
-    return div.innerHTML;
+    if(!term)return html;const div=document.createElement("div");div.innerHTML=html;
+    const walker=document.createTreeWalker(div,NodeFilter.SHOW_TEXT,{acceptNode:node=>node.parentElement&&!['SCRIPT','STYLE'].includes(node.parentElement.tagName)&&node.nodeValue.toLowerCase().includes(term.toLowerCase())?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+    const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(node=>{const span=document.createElement('span');span.innerHTML=highlightText(node.nodeValue,[term]);node.parentNode.replaceChild(span,node)});return div.innerHTML;
   }
-  function highlightText(text,terms){ let output=escapeHtml(text); terms.forEach(term=>{ if(term) output=output.replace(new RegExp(`(${escapeRegex(term)})`,`gi`),'<mark>$1</mark>'); }); return output; }
+  function highlightText(text,terms){
+    const value=String(text||''),selected=(terms||[]).filter(Boolean).map(String).sort((a,b)=>b.length-a.length);if(!selected.length)return escapeHtml(value);
+    const re=new RegExp('('+selected.map(escapeRegex).join('|')+')','gi');let out='',pos=0,match;
+    while((match=re.exec(value))){out+=escapeHtml(value.slice(pos,match.index))+'<mark>'+escapeHtml(match[0])+'</mark>';pos=match.index+match[0].length;if(!match[0].length)re.lastIndex++}
+    return out+escapeHtml(value.slice(pos));
+  }
+
   function escapeRegex(value){ return String(value).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
   function stripHtml(html){ const div=document.createElement("div"); div.innerHTML=html; return div.textContent.replace(/\s+/g," ").trim(); }
   function snippetAround(text,term){ const index=text.toLowerCase().indexOf(term.toLowerCase()); const start=Math.max(0,index-55); return (start>0?"…":"")+text.slice(start,start+170)+(start+170<text.length?"…":""); }
 
   function toggleBookmark(){
-    const id=state.activeSectionId; const idx=state.bookmarks.indexOf(id);
+    const id=state.activeSectionId;if(!id){toast("Choose a publication first.");return} const idx=state.bookmarks.indexOf(id);
     if(idx>=0){ state.bookmarks.splice(idx,1); toast("Bookmark removed."); } else { state.bookmarks.push(id); toast("Section bookmarked."); }
     saveBookmarks(); updateBookmarkButton(); renderBookmarks();
   }
   function updateBookmarkButton(){ const active=state.bookmarks.includes(state.activeSectionId); $("bookmarkBtn").innerHTML=active?icons.bookmarkFill:icons.bookmark; $("bookmarkBtn").classList.toggle("active",active); }
-  function loadBookmarks(){ try{return JSON.parse(localStorage.getItem("skandi-docunet-bookmarks")||"[]");}catch{return [];} }
+  function loadBookmarks(){try{const value=JSON.parse(localStorage.getItem("skandi-docunet-bookmarks")||"[]");return Array.isArray(value)?value.filter(x=>typeof x==="string"):[]}catch{return []}}
   function saveBookmarks(){ try{ localStorage.setItem("skandi-docunet-bookmarks",JSON.stringify(state.bookmarks)); }catch(error){ /* Storage may be unavailable in restricted embeds. */ } }
 
   function applyTreeFilter(value){
@@ -434,7 +431,7 @@
     state.service=$("serviceFilter").value; state.market=$("marketFilter").value; state.audience=$("audienceFilter").value;
     $("statusEffectivity").textContent=`Applicability: ${serviceLabel(state.service)} / ${marketLabel(state.market)} / ${audienceLabel(state.audience)}`;
     renderLibraryTree(); renderInspector(); $("effectivitySummary").innerHTML=icons.shield+`<span>${manuals.filter(isApplicable).length} applicable manuals</span>`;
-    if(!isApplicable(currentManual())) toast("The current manual is outside the selected applicability. It remains visible for reference.");
+    if(currentManual()&&!isApplicable(currentManual())) toast("The current manual is outside the selected applicability. It remains visible for reference.");
   }
   function serviceLabel(value){ return ({DESTINATION:"Destination Services",TRANSFERS:"Transfers",TOURS:"Tours & Activities",PACKAGES:"Travel Packages",ALL:"All Services"})[value]||value; }
   function marketLabel(value){ return ({USNYC:"USNYC · New York",SESTO:"SESTO · Stockholm",GRHER:"GRHER · Crete",ALL:"All Markets"})[value]||value; }
@@ -497,7 +494,7 @@
     $("expandAllBtn").onclick=()=>document.querySelectorAll("#libraryTree .tree-node").forEach(node=>node.classList.add("expanded"));
     $("collapseAllBtn").onclick=()=>document.querySelectorAll("#libraryTree .tree-node").forEach(node=>node.classList.remove("expanded"));
     $("bookmarkBtn").onclick=toggleBookmark; $("printBtn").onclick=()=>window.print();
-    $("ackBtn").onclick=()=>{const manual=currentManual();post("DOCUNET_ACKNOWLEDGE",{documentId:manual.id});toast("Recording acknowledgement…");};
+    $("ackBtn").onclick=()=>{const manual=currentManual();if(!manual||!manual.requiresAcknowledgement||manual.acknowledgedAt||docunetPendingAck)return;docunetPendingAck=manual.id;$("ackBtn").disabled=true;syncDocunetActions();post("DOCUNET_ACKNOWLEDGE",{documentId:manual.id});window.setTimeout(()=>{if(docunetPendingAck===manual.id){docunetPendingAck="";if(currentManual()?.id===manual.id)renderDocument();toast("Acknowledgement was not confirmed. Refresh before retrying.")}},20000);toast("Recording acknowledgement…");};
     $("nightModeBtn").onclick=()=>{document.body.classList.toggle("night");$("nightModeBtn").classList.toggle("active",document.body.classList.contains("night"));};
     $("serviceFilter").onchange=setApplicability; $("marketFilter").onchange=setApplicability; $("audienceFilter").onchange=setApplicability;
     $("previousSectionBtn").onclick=()=>adjacentSection(-1); $("nextSectionBtn").onclick=()=>adjacentSection(1); $("firstSectionBtn").onclick=()=>jumpSection("first"); $("lastSectionBtn").onclick=()=>jumpSection("last");
@@ -505,12 +502,13 @@
     $("backBtn").onclick=()=>moveHistory(-1); $("forwardBtn").onclick=()=>moveHistory(1);
     $("inspectorBtn").onclick=()=>showInspector(!state.inspectorOpen); $("inspectorCloseBtn").onclick=()=>showInspector(false);
     $("mobileLibraryBtn").onclick=()=>$("sidebar").classList.toggle("mobile-open");
-    $("libraryHeaderBtn").onclick=()=>{switchSideTab("library");$("sidebar").classList.add("mobile-open");}; $("updatesHeaderBtn").onclick=()=>switchSideTab("updates");
-    $("formsHeaderBtn").onclick=()=>{switchSideTab("library");$("treeFilter").value="";applyTreeFilter("");document.querySelectorAll("#libraryTree .tree-node").forEach(node=>{if(/controlled forms|forms|customer documents/i.test(node.textContent||""))node.classList.add("expanded")});toast("Controlled forms are available in the document library.");};$("helpBtn").onclick=()=>toast("Use the library tree, search, applicability filters, bookmarks and document tabs.");
-    $("syncNowBtn").onclick=()=>{$("syncStateText").textContent="Syncing…";post("DOCUNET_READY",{forceRefresh:true,includeControlledForms:true,includeDocumentTemplates:true,templateVisibility:"ALL_STAFF"});toast("Synchronizing DocuNet…");};
-    $("pageNumber").addEventListener("change",e=>{ const requested=Math.max(1,Math.min(currentManual().pages,Number(e.target.value)||1)); const sections=currentManual().chapters.flatMap(ch=>ch.sections); const idx=Math.round(((requested-1)/Math.max(1,currentManual().pages-1))*(sections.length-1)); openSection(sections[idx].id); });
+    $("libraryHeaderBtn").onclick=()=>{switchSideTab("library");$("sidebar").classList.add("mobile-open");}; $("updatesHeaderBtn").onclick=()=>{switchSideTab("updates");$("sidebar").classList.add("mobile-open")};
+    $("formsHeaderBtn").onclick=()=>{switchSideTab("library");$("treeFilter").value="";applyTreeFilter("");document.querySelectorAll("#libraryTree .tree-node").forEach(node=>{if(/controlled forms|forms|customer documents/i.test(node.textContent||""))node.classList.add("expanded")});toast("Browse available forms in the document library.");$("sidebar").classList.add("mobile-open");};$("helpBtn").onclick=()=>toast("Use the library tree, search, applicability filters, bookmarks and document tabs.");
+    $("syncNowBtn").onclick=()=>{requestDocunetBootstrap({forceRefresh:true});toast("Refreshing DocuNet…")};
+    $("pageNumber").addEventListener("change",e=>{ if(!currentManual())return;const requested=Math.max(1,Math.min(currentManual().pages,Number(e.target.value)||1)); const sections=currentManual().chapters.flatMap(ch=>ch.sections); const idx=Math.round(((requested-1)/Math.max(1,currentManual().pages-1))*(sections.length-1)); openSection(sections[idx].id); });
 
     document.addEventListener("keydown",e=>{
+      if((e.key==="Enter"||e.key===" ")&&e.target.matches?.("[data-open-manual],[data-open-section],[data-update-manual]")){e.preventDefault();e.target.click();return}
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openCommand();}
       if(e.key==="Escape"){closeCommand();$("sidebar").classList.remove("mobile-open");}
       if(e.altKey&&e.key==="ArrowLeft"){e.preventDefault();moveHistory(-1);} if(e.altKey&&e.key==="ArrowRight"){e.preventDefault();moveHistory(1);}
@@ -529,72 +527,93 @@
   function openCommand(){ $("commandBackdrop").classList.add("open"); $("commandInput").value=""; commandSearch(""); setTimeout(()=>$("commandInput").focus(),0); }
   function closeCommand(){ $("commandBackdrop").classList.remove("open"); }
 
+  function syncDocunetActions(){
+    const manual=currentManual(),ack=$('dnQuickAck');if(ack){ack.hidden=!manual?.requiresAcknowledgement;ack.disabled=!!manual?.acknowledgedAt||!!docunetPendingAck}
+    for(const id of ['dnQuickBookmark','dnQuickInfo']){const el=$(id);if(el)el.disabled=!manual}
+    const mark=$('dnQuickBookmark');if(mark)mark.textContent=state.bookmarks.includes(state.activeSectionId)?'Remove bookmark':'Bookmark';
+    const library=$('dnQuickLibrary');if(library)library.setAttribute('aria-expanded',String($('sidebar').classList.contains('mobile-open')));
+  }
+  function bindDocunetQuickActions(){
+    const tray=$('dnFilterTray'),small=window.matchMedia('(max-width: 920px)');tray.open=!small.matches;
+    const resize=e=>{tray.open=!e.matches};if(small.addEventListener)small.addEventListener('change',resize);else small.addListener?.(resize);
+    $('dnQuickLibrary').onclick=()=>{switchSideTab('library');$('sidebar').classList.toggle('mobile-open');syncDocunetActions()};
+    $('dnQuickSearch').onclick=()=>{const value=$('globalSearch').value.trim();if(value)performSearch(value,'global');else $('globalSearch').focus()};
+    $('dnQuickBookmarks').onclick=()=>{switchSideTab('bookmarks');$('sidebar').classList.add('mobile-open');syncDocunetActions()};
+    $('dnQuickFilters').onclick=()=>{tray.open=!tray.open;$('dnQuickFilters').setAttribute('aria-expanded',String(tray.open));if(tray.open)$('dnToolsPanel').hidden=true};
+    $('dnQuickTools').onclick=()=>{const el=$('dnToolsPanel');el.hidden=!el.hidden;$('dnQuickTools').setAttribute('aria-expanded',String(!el.hidden));if(!el.hidden)tray.open=false};
+    $('dnCloseLibrary').onclick=()=>{$('sidebar').classList.remove('mobile-open');syncDocunetActions()};
+    $('dnToolsPanel').addEventListener('click',event=>{const btn=event.target.closest('[data-docunet-action]');if(!btn||btn.disabled)return;const target=$(btn.dataset.docunetAction);if(target&&!target.disabled)target.click();$('dnToolsPanel').hidden=true;$('dnQuickTools').setAttribute('aria-expanded','false');syncDocunetActions()});
+    document.addEventListener('click',event=>{const pdf=event.target.closest('.docunet-open-pdf'),active=currentManual();if(pdf&&active?.liveUntil&&Date.now()>=active.liveUntil){event.preventDefault();active.liveUrl='';active.liveUntil=0;post('DOCUNET_OPEN_DOCUMENT',{documentId:active.id});toast('Refreshing the link. Open the PDF again in a moment.');return}if(event.target.closest('#docunetRetry')){docunetBootstrapReceived=false;requestDocunetBootstrap()}if(event.target.closest('#docunetRetryOpen')){const m=currentManual();if(m)post('DOCUNET_OPEN_DOCUMENT',{documentId:m.id})}});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'){tray.open=false;$('dnToolsPanel').hidden=true;$('dnQuickTools').setAttribute('aria-expanded','false');$('dnQuickFilters').setAttribute('aria-expanded','false')}});
+    syncDocunetActions();
+  }
+
+
   function init(){
-    assignIcons(); bindEvents(); showInspector(state.inspectorOpen);
+    assignIcons(); bindEvents();bindDocunetQuickActions(); showInspector(state.inspectorOpen);
     manuals=[]; allSections=[]; state.openTabs=[]; state.activeManualId=""; state.activeSectionId="";
     $("documentTabs").innerHTML=""; $("libraryTree").innerHTML='<div class="result-empty">Loading assigned publications…</div>';
     $("documentPage").innerHTML='<h1>Loading DocuNet…</h1><p>Your assigned controlled documents are being synchronized.</p>';
     $("demoWarning").style.display="none";
-    post("DOCUNET_READY",{includeControlledForms:true,includeDocumentTemplates:true,templateVisibility:"ALL_STAFF"});
+    requestDocunetBootstrap();
     $("searchResults").innerHTML='<div class="result-empty">Search across structured manual content, chapter titles and section codes.</div>';
   }
 
-  function loadLiveLibrary(payload){
-    const documents=Array.isArray(payload?.documents)?payload.documents:[];
-    manuals=documents.map(document=>{
-      const sectionId=`${document.id}-pdf`;
-      return {
-        ...document,
-        short:document.short||document.title,
-        group:document.group||"Company Manuals",
-        services:document.services?.length?document.services:["ALL"],
-        markets:document.markets?.length?document.markets:["ALL"],
-        audiences:document.audiences?.length?document.audiences:["ALL"],
-        pages:Math.max(1,Number(document.pages||1)),
-        liveUrl:"",
-        chapters:[{id:`${document.id}-publication`,code:"PUB",title:"Controlled Publication",sections:[
-          section(sectionId,document.code,document.title,document.summary||"Controlled PDF publication.",contentBlock(document.title,`<p>${escapeHtml(document.summary||"Open the controlled PDF to view this publication.")}</p>`))
-        ]}]
-      };
-    });
-    allSections=manuals.flatMap(manual=>manual.chapters.flatMap(chapter=>chapter.sections.map(section=>({manual,chapter,section}))));
-    const actor=payload?.session||{};
-    const syncedAt=payload?.syncedAt||new Date().toISOString();
-    const syncedDate=new Date(syncedAt);
-    $("lastSyncCell").textContent=`Last sync ${syncedDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
-    $("syncStateText").textContent="Up to date";
-    const name=actor.name||"SKANDI Staff";
-    const initials=name.split(/\s+/).map(part=>part[0]).join("").slice(0,2).toUpperCase();
-    document.querySelector(".avatar").textContent=initials;
-    document.querySelector(".user-meta b").textContent=name;
-    document.querySelector(".user-meta span").textContent=[actor.audience,actor.market].filter(Boolean).join(" · ");
-    if(!manuals.length){
-      $("documentPage").innerHTML="<h1>No assigned publications</h1><p>No published documents currently match your staff profile.</p>";
-      renderLibraryTree(); return;
-    }
-    state.activeManualId=manuals[0].id;
-    state.activeSectionId=manuals[0].chapters[0].sections[0].id;
-    state.openTabs=[manuals[0].id];
-    state.service=actor.service||"ALL"; state.market=actor.market||"ALL"; state.audience=actor.audience||"ALL";
-    if([...$("serviceFilter").options].some(o=>o.value===state.service)) $("serviceFilter").value=state.service;
-    if([...$("marketFilter").options].some(o=>o.value===state.market)) $("marketFilter").value=state.market;
-    if([...$("audienceFilter").options].some(o=>o.value===state.audience)) $("audienceFilter").value=state.audience;
-    renderTabs(); renderLibraryTree(); renderUpdates(); renderBookmarks(); openSection(state.activeSectionId);
+  let docunetBootstrapReceived=false,docunetPendingAck="",docunetBootstrapPending=false,docunetRequestSequence=0;
+  function requestDocunetBootstrap(extra={}){
+    docunetBootstrapPending=true;const sequence=++docunetRequestSequence;$('syncStateText').textContent=docunetBootstrapReceived?'Refreshing…':'Connecting…';
+    post('DOCUNET_READY',{includeControlledForms:true,includeDocumentTemplates:true,templateVisibility:'ALL_STAFF',...extra});
+    window.setTimeout(()=>{if(sequence!==docunetRequestSequence||!docunetBootstrapPending)return;docunetBootstrapPending=false;$('syncStateText').textContent='Connection pending';
+      if(!docunetBootstrapReceived)$('documentPage').innerHTML='<div class="docunet-empty"><h1>DocuNet is not connected</h1><p>Try again when the staff connection is available.</p><button type="button" id="docunetRetry">Try again</button></div>';
+      else toast('The refresh is taking longer than expected.');
+    },16000);
   }
-
-  window.addEventListener("message",event=>{
-    const message=event.data||{};
-    if(message.type==="DOCUNET_BOOTSTRAP_RESULT") loadLiveLibrary(message.payload||{});
-    if(message.type==="DOCUNET_DOCUMENT_ACCESS_RESULT"){
-      const manual=manualById(message.payload?.documentId);
-      if(manual){manual.liveUrl=message.payload.signedUrl||"";renderDocument();}
+  function docunetSafeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:''}catch{return ''}}
+  function loadLiveLibrary(payload){
+    docunetBootstrapPending=false;if(!Array.isArray(payload?.documents)){$('syncStateText').textContent='Connection error';$('documentPage').innerHTML='<div class="docunet-empty"><h1>Library unavailable</h1><p>The server did not return a document list.</p><button type="button" id="docunetRetry">Try again</button></div>';return}
+    docunetBootstrapReceived=true;const previous=state.activeManualId,previousTabs=state.openTabs.slice();
+    manuals=payload.documents.filter(d=>d&&typeof d.id==='string'&&typeof d.title==='string').map(d=>{
+      const sectionId=`${d.id}-pdf`;
+      return {...d,short:d.short||d.title,code:String(d.code||''),group:d.group||'Company Manuals',
+        services:Array.isArray(d.services)&&d.services.length?d.services:['ALL'],markets:Array.isArray(d.markets)&&d.markets.length?d.markets:['ALL'],audiences:Array.isArray(d.audiences)&&d.audiences.length?d.audiences:['ALL'],
+        pages:Math.max(1,Number(d.pages||1)),isLiveDocument:true,liveUrl:'',liveUntil:0,
+        chapters:[{id:`${d.id}-publication`,code:'PUB',title:'Controlled Publication',sections:[section(sectionId,d.code||'',d.title,d.summary||'Controlled PDF publication.',contentBlock(d.title,`<p>${escapeHtml(d.summary||'Opening the controlled PDF…')}</p>`))]}]};
+    });
+    allSections=manuals.flatMap(m=>m.chapters.flatMap(c=>c.sections.map(s=>({manual:m,chapter:c,section:s}))));
+    const now=new Date();$('lastSyncCell').textContent=`Refreshed ${now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`;$('syncStateText').textContent='Connected';
+    if(!manuals.length){state.activeManualId='';state.activeSectionId='';state.openTabs=[];state.history=[];state.historyIndex=-1;
+      $('documentPage').innerHTML='<div class="docunet-empty"><h1>No assigned publications</h1><p>No published documents currently match your staff profile.</p></div>';
+      $('documentTabs').innerHTML='';$('breadcrumbs').textContent='';$('revisionBadge').textContent='';$('statusDocument').textContent='No document selected';$('inspectorContent').innerHTML='<div class="result-empty">Select a document to see its details.</div>';renderLibraryTree();renderUpdates();renderBookmarks();syncDocunetActions();return}
+    const actor=payload.session||{};const selected=manualById(previous)||manuals[0];state.activeManualId=selected.id;state.activeSectionId=selected.chapters[0].sections[0].id;
+    state.openTabs=previousTabs.filter(id=>!!manualById(id));if(!state.openTabs.includes(selected.id))state.openTabs.push(selected.id);
+    state.history=state.history.filter(item=>!!sectionRecord(item.sectionId));state.historyIndex=Math.min(state.historyIndex,state.history.length-1);
+    for(const [prop,id] of [['service','serviceFilter'],['market','marketFilter'],['audience','audienceFilter']]){
+      const proposed=previous&&manualById(previous)?state[prop]:actor[prop]||'ALL';const options=[...$(id).options];state[prop]=options.some(o=>o.value===proposed)?proposed:'ALL';$(id).value=state[prop];
     }
-    if(message.type==="DOCUNET_ACKNOWLEDGE_RESULT"){
-      const manual=manualById(message.payload?.documentId);
-      if(manual){manual.acknowledgedAt=message.payload.acknowledgedAt||new Date().toISOString();renderDocument();toast("Current revision acknowledged.");}
+    renderTabs();renderLibraryTree();renderUpdates();renderBookmarks();openSection(state.activeSectionId);setApplicability();
+  }
+  window.addEventListener('message',event=>{
+    if(event.source!==window.parent)return;const message=event.data||{};if(message.source!=='SKANDI_WIX_PARENT')return;
+    if(message.type==='DOCUNET_BOOTSTRAP_RESULT'){loadLiveLibrary(message.payload||{});return}
+    if(message.type==='DOCUNET_DOCUMENT_ACCESS_RESULT'){
+      const result=message.payload||{},manual=manualById(result.documentId);if(!manual)return;
+      const url=docunetSafeUrl(result.signedUrl);if(!url){toast('The document link was unavailable. Please try again.');return}
+      if(manual.revision&&result.revision&&manual.revision!==result.revision)manual.acknowledgedAt=null;
+      manual.liveUrl=url;manual.liveUntil=Date.now()+Math.max(1,Number(result.expiresIn||600)-15)*1000;
+      for(const key of ['revision','revisionDate','pages','requiresAcknowledgement'])if(result[key]!==undefined&&result[key]!==null)manual[key]=result[key];
+      if(state.activeManualId===manual.id)renderDocument();return;
     }
-    if(message.type==="DOCUNET_ERROR"){$("syncStateText").textContent="Sync error";toast(message.message||"DocuNet request failed.");}
+    if(message.type==='DOCUNET_ACKNOWLEDGE_RESULT'){
+      const result=message.payload||{},manual=manualById(result.documentId);docunetPendingAck='';
+      if(result.ok===true&&manual&&result.acknowledgedAt){toast('Checking acknowledgement for the current revision…');requestDocunetBootstrap({forceRefresh:true})}else{if(manual&&state.activeManualId===manual.id)renderDocument();toast('Acknowledgement was not confirmed.')}return;
+    }
+    if(message.type==='DOCUNET_ERROR'){
+      docunetBootstrapPending=false;if(docunetPendingAck){docunetPendingAck='';if(currentManual())renderDocument()}$('syncStateText').textContent='Request failed';const detail=String(message.message||'DocuNet request failed.');toast(detail);
+      if(!docunetBootstrapReceived&&!manuals.length)$('documentPage').innerHTML=`<div class="docunet-empty"><h1>Library unavailable</h1><p>${escapeHtml(detail)}</p><button type="button" id="docunetRetry">Try again</button></div>`;
+      else if(currentManual()&&!currentManual().liveUrl)$('documentPage').innerHTML=`<div class="docunet-empty"><h1>Unable to open document</h1><p>${escapeHtml(detail)}</p><button type="button" id="docunetRetryOpen">Try again</button></div>`;
+    }
   });
+
 
   init();
 })();

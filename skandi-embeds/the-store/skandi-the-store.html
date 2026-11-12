@@ -18,7 +18,7 @@
     <div class="utility-links">
     </div>
     <div class="utility-account">
-      <button id="ordersBtn">My orders</button><span>•</span><button data-open-path="/">Go to SKANDI Travels</button>
+      <button id="cabinSizerBtn" type="button">Cabin bag sizer</button><span>•</span><button id="ordersBtn">My orders</button><span>•</span><button data-open-path="/">Go to SKANDI Travels</button>
     </div>
   </div>
 </div>
@@ -56,26 +56,33 @@
     <div class="search-inner">
       <label class="search-box" for="query">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.2 16.2 4.2 4.2"></path></svg>
-        <input id="query" autocomplete="off" placeholder="Search products, categories or product code"/>
+        <input id="query" autocomplete="off" placeholder="Search products, categories or product code">
       </label>
-      <input id="quickSearch" class="hidden" aria-hidden="true" tabindex="-1"/>
+      <input id="quickSearch" class="hidden" aria-hidden="true" tabindex="-1">
       <div class="quick-links" id="topTabs">
         <button data-category="Travel Essentials">For the journey</button><button data-category="Luggage">Luggage</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button><button data-category="Gift Cards">Gift Cards</button><button data-category="New">New arrivals</button>
       </div>
     </div>
   </div>
 </header>
+<nav class="store-quickbar" aria-label="Store shortcuts">
+ <button type="button" data-route="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9H14v-6h-4v6H3z"/></svg>Home</button>
+ <button type="button" data-route="shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1 11H5L4 9Zm4 0V7a4 4 0 0 1 8 0v2"/></svg>Shop</button>
+ <button type="button" data-store-mobile-action="categories"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Categories</button>
+ <button type="button" data-route="saved"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5a4.8 4.8 0 0 0-6.8 0L12 7l-2-2a4.8 4.8 0 0 0-6.8 6.8L12 20l8.8-8.2a4.8 4.8 0 0 0 0-6.8Z"/></svg>Saved</button>
+ <button type="button" data-route="bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 12H5L4 8Zm4 0V6a4 4 0 0 1 8 0v2"/></svg>Bag</button>
+</nav>
 
 <div class="category-menu" id="categoryMenu" aria-hidden="true">
   <div class="category-menu-inner">
-    <div class="category-menu-intro"><h3>Shop by category</h3><p>Browse THE STORE by SKANDI travel products, destination essentials and selected lifestyle items.</p></div>
+    <div class="category-menu-intro"><button type="button" class="category-close" id="closeCategoryMenu" aria-label="Close categories">×</button><h3>Shop by category</h3><p>Browse THE STORE by SKANDI travel products, destination essentials and selected lifestyle items.</p></div>
     <div class="category-menu-list" id="categoryMenuList"></div>
   </div>
 </div>
 
 
-<main id="pageHost">
-  <div class="content-shell" id="storeCatalogError" role="status" hidden>
+<div class="page-status-wrap"><div id="status" class="status" role="status" aria-live="polite"></div></div><main id="pageHost">
+  <div class="content-shell" id="storeCatalogError" role="status" hidden="">
     <p>We couldn’t load the store catalog. <button type="button" id="retryStoreCatalogBtn" class="text-link">Try again</button></p>
   </div>
   <!-- HOME -->
@@ -86,13 +93,13 @@
           <div class="hero-kicker" data-content-id="store-hero-eyebrow">SKANDI The Store</div>
           <h1 id="heroTitle" data-content-id="store-hero-h1">Everything for the journey</h1>
           <p id="heroText" data-content-id="store-hero-copy">Travel-ready essentials, SKANDI products and destination picks.</p>
-          <button class="cta teal" data-route="shop">Explore products <span aria-hidden="true">→</span></button>
+          <div class="hero-actions"><button class="cta teal" data-route="shop">Explore products <span aria-hidden="true">→</span></button><button class="cta ghost-light" id="heroPackingJumpBtn" type="button">Destination packing finder</button></div>
         </div>
       </div>
     </section>
 
     <section class="customer-assurance" aria-label="Store benefits">
-      <article><div class="customer-assurance-icon">✓</div><div><strong>Open 24/7</strong><span>No SKANDI Club membership is required to shop.</span></div></article>
+      <article><div class="customer-assurance-icon">✓</div><div><strong>Open to everyone</strong><span>No SKANDI Club membership is required to shop.</span></div></article>
       <article><div class="customer-assurance-icon">✈</div><div><strong>Made for travel</strong><span>Products selected for the airport, journey and destination.</span></div></article>
       <article><div class="customer-assurance-icon">↗</div><div><strong>Secure checkout</strong><span>Shop, review your bag and complete payment in one continuous experience.</span></div></article>
     </section>
@@ -106,6 +113,16 @@
         <div class="category-strip" id="popularCategories"></div>
       </section>
 
+      <section class="section" id="packingFinderSection" aria-labelledby="packingFinderHeading">
+        <div class="section-head"><div><h2 id="packingFinderHeading">Find your journey essentials</h2><p>Explore packing ideas for the way you travel.</p></div><button class="text-link" id="openCabinModalInlineBtn" type="button">Check bag dimensions</button></div>
+        <div class="destination-finder"><div class="destination-tabs" id="destinationTabs" aria-label="Choose a journey">
+          <button type="button" class="dest-pill active" data-dest-corridor="med" aria-pressed="true"><small>Sunny &amp; coastal</small><strong>Mediterranean &amp; Canary</strong><span>Mallorca · Rhodes · Gran Canaria</span></button>
+          <button type="button" class="dest-pill" data-dest-corridor="tropical" aria-pressed="false"><small>Long-haul</small><strong>Thailand &amp; Tropical</strong><span>Phuket · Krabi · Indian Ocean</span></button>
+          <button type="button" class="dest-pill" data-dest-corridor="city" aria-pressed="false"><small>Weekend &amp; hub</small><strong>Nordic &amp; City Breaks</strong><span>Stockholm · London · New York</span></button>
+          <button type="button" class="dest-pill" data-dest-corridor="family" aria-pressed="false"><small>Resort &amp; kids</small><strong>Family Holiday</strong><span>Pool, beach &amp; cabin comfort</span></button>
+        </div><div class="destination-Result" id="destinationResultBox"></div></div>
+      </section>
+
       <section class="section" aria-label="Featured campaigns">
         <div class="campaign-grid" id="bannerRow"></div>
       </section>
@@ -117,6 +134,8 @@
         </div>
         <div id="homeProductGrid" class="home-featured-grid"></div>
       </section>
+
+      <section class="section" aria-labelledby="kitBuilderHeading"><div class="kit-builder"><div class="kit-copy"><small>Curated by you</small><h2 id="kitBuilderHeading">Build your travel kit</h2><p>Choose the items you need for the journey. Select any required options before adding them to your bag.</p><div id="kitTotalSummary" class="kit-total" aria-live="polite">Choose products to build your kit</div><button type="button" class="cta teal" id="addKitToBagBtn" disabled>Add selected items</button><p class="kit-note">Items are added separately. If an item cannot be added, check your bag before retrying.</p></div><div class="kit-slots" id="kitSlotsContainer"></div></div></section>
 
       <section class="section" aria-labelledby="travelHeading">
         <div class="section-head">
@@ -170,7 +189,7 @@
     <div class="page-shell">
       <div class="page-topline">
         <div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><button data-route="shop">Shop</button><span aria-hidden="true">/</span><span id="productBreadcrumb">Product</span></div>
-        <button class="route-back" data-back>Back</button>
+        <button class="route-back" data-back="">Back</button>
       </div>
       <div id="productPageContent"></div>
       <section class="related-section" id="relatedSection">
@@ -208,8 +227,8 @@
         <aside class="order-summary">
           <h2>Order summary</h2>
           <div class="order-summary-line"><span>Items</span><span id="bagItemCount">0</span></div>
-          <div class="order-summary-line"><span>Delivery</span><span>Calculated at checkout</span></div>
-          <div class="order-summary-total"><span>Total</span><span id="bagTotal">—</span></div>
+          <div class="order-summary-line"><span>Delivery &amp; taxes</span><span>Calculated at checkout</span></div>
+          <div class="order-summary-total"><span>Subtotal</span><span id="bagTotal">—</span></div>
           <button class="cta navy" id="checkoutBtn">Proceed to checkout</button>
           <button class="cta white" data-route="shop">Continue shopping</button>
         </aside>
@@ -248,8 +267,8 @@
 
       <div class="support-channel-grid">
         <article class="support-channel"><div class="support-channel-icon">□</div><h2>Order assistance</h2><p>Review your order history or contact us about an existing purchase.</p><button data-route="orders">View my orders</button></article>
-        <article class="support-channel"><div class="support-channel-icon">↗</div><h2>Delivery & returns</h2><p>Get help with tracking, delayed parcels, missing items, returns, exchanges or refunds.</p><button data-support-prefill="shipping_delivery">Get delivery help</button></article>
-        <article class="support-channel"><div class="support-channel-icon">?</div><h2>Contact support</h2><p>Send a detailed request to SKANDI Customer Service and include any relevant order or product information.</p><button data-support-form>Open contact form</button></article>
+        <article class="support-channel"><div class="support-channel-icon">↗</div><h2>Delivery &amp; returns</h2><p>Get help with tracking, delayed parcels, missing items, returns, exchanges or refunds.</p><button data-support-prefill="shipping_delivery">Get delivery help</button></article>
+        <article class="support-channel"><div class="support-channel-icon">?</div><h2>Contact support</h2><p>Send a detailed request to SKANDI Customer Service and include any relevant order or product information.</p><button data-support-form="">Open contact form</button></article>
       </div>
 
       <div class="support-layout">
@@ -257,16 +276,16 @@
           <div class="support-side-card">
             <h3>Popular help topics</h3>
             <div class="support-topic-list" id="supportTopicList">
-              <button class="support-topic" data-support-topic data-support-category="order_management" data-support-subcategory="Order status">Where is my order?</button>
-              <button class="support-topic" data-support-topic data-support-category="shipping_delivery" data-support-subcategory="Tracking not updating">My tracking is not updating</button>
-              <button class="support-topic" data-support-topic data-support-category="shipping_delivery" data-support-subcategory="Marked delivered but not received">Marked delivered but not received</button>
-              <button class="support-topic" data-support-topic data-support-category="returns_exchanges" data-support-subcategory="Start a return">Start a return</button>
-              <button class="support-topic" data-support-topic data-support-category="returns_exchanges" data-support-subcategory="Exchange size, color or product">Exchange a product</button>
-              <button class="support-topic" data-support-topic data-support-category="refunds_credits" data-support-subcategory="Refund status">Check a refund status</button>
-              <button class="support-topic" data-support-topic data-support-category="payments_checkout" data-support-subcategory="Payment declined">Payment or checkout problem</button>
-              <button class="support-topic" data-support-topic data-support-category="damaged_wrong_missing" data-support-subcategory="Damaged item">Damaged, wrong or missing item</button>
-              <button class="support-topic" data-support-topic data-support-category="promotions_gift_cards" data-support-subcategory="Promo code not working">Promo code not working</button>
-              <button class="support-topic" data-support-topic data-support-category="account_security" data-support-subcategory="Sign-in issue">I cannot access my account</button>
+              <button class="support-topic" data-support-topic="" data-support-category="order_management" data-support-subcategory="Order status">Where is my order?</button>
+              <button class="support-topic" data-support-topic="" data-support-category="shipping_delivery" data-support-subcategory="Tracking not updating">My tracking is not updating</button>
+              <button class="support-topic" data-support-topic="" data-support-category="shipping_delivery" data-support-subcategory="Marked delivered but not received">Marked delivered but not received</button>
+              <button class="support-topic" data-support-topic="" data-support-category="returns_exchanges" data-support-subcategory="Start a return">Start a return</button>
+              <button class="support-topic" data-support-topic="" data-support-category="returns_exchanges" data-support-subcategory="Exchange size, color or product">Exchange a product</button>
+              <button class="support-topic" data-support-topic="" data-support-category="refunds_credits" data-support-subcategory="Refund status">Check a refund status</button>
+              <button class="support-topic" data-support-topic="" data-support-category="payments_checkout" data-support-subcategory="Payment declined">Payment or checkout problem</button>
+              <button class="support-topic" data-support-topic="" data-support-category="damaged_wrong_missing" data-support-subcategory="Damaged item">Damaged, wrong or missing item</button>
+              <button class="support-topic" data-support-topic="" data-support-category="promotions_gift_cards" data-support-subcategory="Promo code not working">Promo code not working</button>
+              <button class="support-topic" data-support-topic="" data-support-category="account_security" data-support-subcategory="Sign-in issue">I cannot access my account</button>
             </div>
             <div class="support-no-results" id="supportNoResults">No matching help topic was found. Use the contact form and describe what happened.</div>
           </div>
@@ -286,24 +305,24 @@
           <div id="supportStatus" class="support-status" role="status" aria-live="polite"></div>
           <div id="supportConfirmation" class="support-confirmation"><strong id="supportConfirmationTitle">Request submitted</strong><p id="supportConfirmationText">SKANDI Customer Service will follow up by email.</p></div>
 
-          <form id="publicSupportForm" novalidate>
+          <form id="publicSupportForm" novalidate="">
             <div class="support-form-section">1. Contact information</div>
             <div class="support-grid-2">
-              <div class="support-field"><label for="firstName">First name <span class="support-required">*</span></label><input id="firstName" type="text" required autocomplete="given-name"></div>
-              <div class="support-field"><label for="lastName">Last name <span class="support-required">*</span></label><input id="lastName" type="text" required autocomplete="family-name"></div>
+              <div class="support-field"><label for="firstName">First name <span class="support-required">*</span></label><input id="firstName" type="text" required="" autocomplete="given-name"></div>
+              <div class="support-field"><label for="lastName">Last name <span class="support-required">*</span></label><input id="lastName" type="text" required="" autocomplete="family-name"></div>
             </div>
             <div class="support-grid-2">
-              <div class="support-field"><label for="email">Email address <span class="support-required">*</span></label><input id="email" type="email" required autocomplete="email"></div>
+              <div class="support-field"><label for="email">Email address <span class="support-required">*</span></label><input id="email" type="email" required="" autocomplete="email"></div>
               <div class="support-field"><label for="phone">Phone number</label><div style="display:grid;grid-template-columns:92px 1fr;gap:8px"><select id="phonePrefix" aria-label="Phone country code"><option>+1</option><option>+44</option><option>+46</option><option>+47</option><option>+45</option><option>+358</option></select><input id="phone" type="tel" autocomplete="tel"></div></div>
             </div>
             <div class="support-grid-2">
-              <div class="support-field"><label for="countryOfResidence">Country or region <span class="support-required">*</span></label><input id="countryOfResidence" type="text" required autocomplete="country-name"></div>
+              <div class="support-field"><label for="countryOfResidence">Country or region <span class="support-required">*</span></label><input id="countryOfResidence" type="text" required="" autocomplete="country-name"></div>
               <div class="support-field"><label for="preferredContact">Preferred contact method</label><select id="preferredContact"><option value="email">Email</option><option value="phone">Phone</option></select></div>
             </div>
 
             <div class="support-form-section">2. Purchase details</div>
             <div class="support-grid-2">
-              <div class="support-field"><label for="hasOrder">Does this relate to an existing order? <span class="support-required">*</span></label><select id="hasOrder" required><option value="">Select</option><option value="yes">Yes, I have an order</option><option value="no">No, this is a pre-purchase or general question</option></select></div>
+              <div class="support-field"><label for="hasOrder">Does this relate to an existing order? <span class="support-required">*</span></label><select id="hasOrder" required=""><option value="">Select</option><option value="yes">Yes, I have an order</option><option value="no">No, this is a pre-purchase or general question</option></select></div>
               <div class="support-field"><label for="purchaseChannel">Purchase channel</label><select id="purchaseChannel"><option value="">Select when applicable</option><option value="online-store">SKANDI online store</option><option value="customer-service">Customer Service order</option><option value="gift-recipient">I received the item as a gift</option><option value="not-purchased">Not purchased yet</option><option value="other">Other</option></select></div>
             </div>
 
@@ -321,24 +340,24 @@
 
             <div class="support-form-section">3. Request category</div>
             <div class="support-grid-2">
-              <div class="support-field"><label for="caseCategory">Category <span class="support-required">*</span></label><select id="caseCategory" required>
+              <div class="support-field"><label for="caseCategory">Category <span class="support-required">*</span></label><select id="caseCategory" required="">
                 <option value="">Select category</option>
-                <option value="order_management">Orders & order changes</option>
-                <option value="shipping_delivery">Shipping, tracking & delivery</option>
-                <option value="returns_exchanges">Returns & exchanges</option>
-                <option value="refunds_credits">Refunds & store credit</option>
-                <option value="payments_checkout">Payments, charges & checkout</option>
-                <option value="product_information">Product information & availability</option>
+                <option value="order_management">Orders &amp; order changes</option>
+                <option value="shipping_delivery">Shipping, tracking &amp; delivery</option>
+                <option value="returns_exchanges">Returns &amp; exchanges</option>
+                <option value="refunds_credits">Refunds &amp; store credit</option>
+                <option value="payments_checkout">Payments, charges &amp; checkout</option>
+                <option value="product_information">Product information &amp; availability</option>
                 <option value="damaged_wrong_missing">Damaged, defective, wrong or missing items</option>
-                <option value="warranty_repairs">Warranty, repairs & replacement parts</option>
-                <option value="promotions_gift_cards">Promotions, gift cards & rewards</option>
-                <option value="account_security">Account access & security</option>
-                <option value="privacy_data">Privacy & personal data</option>
-                <option value="technical_accessibility">Technical & accessibility support</option>
-                <option value="business_bulk">Business, bulk & corporate orders</option>
-                <option value="feedback_other">Feedback, complaints & other inquiries</option>
+                <option value="warranty_repairs">Warranty, repairs &amp; replacement parts</option>
+                <option value="promotions_gift_cards">Promotions, gift cards &amp; rewards</option>
+                <option value="account_security">Account access &amp; security</option>
+                <option value="privacy_data">Privacy &amp; personal data</option>
+                <option value="technical_accessibility">Technical &amp; accessibility support</option>
+                <option value="business_bulk">Business, bulk &amp; corporate orders</option>
+                <option value="feedback_other">Feedback, complaints &amp; other inquiries</option>
               </select></div>
-              <div class="support-field"><label for="caseSubCategory">Specific topic <span class="support-required">*</span></label><select id="caseSubCategory" required><option value="">Select category first</option></select></div>
+              <div class="support-field"><label for="caseSubCategory">Specific topic <span class="support-required">*</span></label><select id="caseSubCategory" required=""><option value="">Select category first</option></select></div>
             </div>
 
             <div id="shippingDetailsModule" class="support-dynamic-module">
@@ -368,7 +387,7 @@
 
             <div id="promotionDetailsModule" class="support-dynamic-module">
               <h4>Promotion, gift card or reward details</h4>
-              <div class="support-grid-2"><div class="support-field"><label for="promotionCode">Promotion or gift card code</label><input id="promotionCode" type="text"></div><div class="support-field"><label for="promotionName">Promotion name</label><input id="promotionName" type="text"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="promotionCode">Promotion code (do not enter a gift card code)</label><input id="promotionCode" type="text"></div><div class="support-field"><label for="promotionName">Promotion name</label><input id="promotionName" type="text"></div></div>
               <div class="support-grid-2"><div class="support-field"><label for="giftCardLast4">Gift card last 4 characters</label><input id="giftCardLast4" type="text" maxlength="4"></div><div class="support-field"><label for="expectedDiscount">Expected discount or benefit</label><input id="expectedDiscount" type="text"></div></div>
             </div>
 
@@ -385,18 +404,18 @@
               <div class="support-grid-2"><div class="support-field"><label for="bulkQuantity">Estimated quantity <span class="support-required">*</span></label><input id="bulkQuantity" type="number" min="1" step="1"></div><div class="support-field"><label for="requiredByDate">Required-by date</label><input id="requiredByDate" type="date"></div></div>
             </div>
 
-            <div class="support-field"><label for="caseSubject">Subject <span class="support-required">*</span></label><input id="caseSubject" type="text" required maxlength="160" placeholder="Briefly summarize your request"></div>
-            <div class="support-field"><label for="caseDescription">Detailed description <span class="support-required">*</span></label><textarea id="caseDescription" required placeholder="Explain what happened, which item or order is affected, what you have already tried and the resolution you need."></textarea></div>
+            <div class="support-field"><label for="caseSubject">Subject <span class="support-required">*</span></label><input id="caseSubject" type="text" required="" maxlength="160" placeholder="Briefly summarize your request"></div>
+            <div class="support-field"><label for="caseDescription">Detailed description <span class="support-required">*</span></label><textarea id="caseDescription" required="" placeholder="Explain what happened, which item or order is affected, what you have already tried and the resolution you need."></textarea></div>
 
             <div class="support-form-section">4. Supporting documents</div>
             <div class="support-file-drop" id="supportFileDrop" tabindex="0" role="button" aria-controls="fileInput">
-              <strong>Choose files or drag them here</strong><span>Maximum 3 files: PDF, JPG or PNG. Maximum 10 MB total. Remove full payment-card numbers and other unnecessary sensitive information.</span>
-              <input id="fileInput" type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+              <strong>Choose files or drag them here</strong><span>File attachments are not available in this form yet. Submit without a file and ask support how to send it.</span>
+              <input id="fileInput" type="file" hidden="" multiple="" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
             </div>
-            <div class="support-file-list" id="fileSummary"></div>
+            <div class="support-file-list" id="fileSummary"></div><button type="button" class="clear-button" id="clearSupportFilesBtn" hidden>Remove selected files</button>
 
-            <div class="support-checkbox"><input id="consentPrivacy" type="checkbox" required><label for="consentPrivacy">I confirm the information is accurate and consent to processing of my personal data under SKANDI’s Privacy Policy. <span class="support-required">*</span></label></div>
-            <div class="support-checkbox"><input id="consentSla" type="checkbox" required><label for="consentSla">I understand that response times depend on request type and current support volume. <span class="support-required">*</span></label></div>
+            <div class="support-checkbox"><input id="consentPrivacy" type="checkbox" required=""><label for="consentPrivacy">I confirm the information is accurate and consent to processing of my personal data under SKANDI’s Privacy Policy. <span class="support-required">*</span></label></div>
+            <div class="support-checkbox"><input id="consentSla" type="checkbox" required=""><label for="consentSla">I understand that response times depend on request type and current support volume. <span class="support-required">*</span></label></div>
 
             <button id="submitBtn" class="cta navy support-submit" type="submit">Submit support request</button>
           </form>
@@ -414,6 +433,17 @@
     </div>
   </section>
 </main>
+<div class="skandi-modal-backdrop" id="cabinSizerModal" aria-hidden="true">
+  <section class="skandi-modal-card" role="dialog" aria-modal="true" aria-labelledby="cabinSizerTitle" aria-describedby="cabinSizerDescription">
+    <div class="bag-modal-head"><div><span class="destination-label">Baggage guide</span><h2 id="cabinSizerTitle">Check your bag size</h2></div><button class="close-button" id="closeCabinSizerBtn" type="button" aria-label="Close baggage guide">×</button></div>
+    <p id="cabinSizerDescription">Enter your bag’s measurements and the allowance from your airline or booking. The calculator compares the numbers you provide.</p>
+    <div class="allowance-tiers" aria-label="Baggage type"><button type="button" class="allowance-tier active" data-bag-tier="underseat" aria-pressed="true">Under-seat</button><button type="button" class="allowance-tier" data-bag-tier="cabin" aria-pressed="false">Cabin trolley</button><button type="button" class="allowance-tier" data-bag-tier="checked" aria-pressed="false">Checked bag</button></div><p id="bagTierHint" class="bag-tier-hint">Enter your airline’s per-side limits for a personal item.</p>
+    <div class="bag-measure-grid"><fieldset><legend>Your bag · cm</legend><label>Length<input id="bagLength" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Width<input id="bagWidth" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Height<input id="bagHeight" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label></fieldset>
+    <fieldset><legend>Airline allowance · cm</legend><label>Length<input id="allowLength" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Width<input id="allowWidth" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label><label>Height<input id="allowHeight" type="number" min="1" max="1000" inputmode="decimal" placeholder="cm"></label></fieldset></div>
+    <button class="cta navy" id="checkBagFitBtn" type="button">Compare dimensions</button><p id="bagFitResult" class="bag-fit-result" role="status" aria-live="polite"></p>
+    <p>Airline limits differ by carrier, aircraft and fare. Include handles and wheels and check weight; some airlines use total linear dimensions.</p><div class="bag-modal-actions"><button class="cta white" type="button" data-open-path="/travel-info">Open travel information</button><button class="cta white" id="shopLuggageFromModalBtn" type="button">Shop luggage</button></div>
+  </section>
+</div>
 
 <footer class="footer">
   <div class="footer-main">
@@ -434,12 +464,11 @@
     <div class="mobile-nav-heading">Store</div>
     <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button><button data-category="Sale">Offers</button>
     <div class="mobile-nav-heading">My store</div>
-    <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button>
+    <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button><button type="button" id="mobileCabinSizerBtn">Check bag dimensions</button>
   </div>
 </section>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
 
 <script src="skandi-the-store.js"></script>
 </body>
