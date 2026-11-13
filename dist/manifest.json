@@ -636,8 +636,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/cruises/skandi-cruises.receiver.html",
       "receiverFile": "skandi-embeds/cruises/skandi-cruises.receiver.html",
-      "sha256": "6f4de2f8b2121059cb7dc0e956b9dcd6a0f7abe674cd2cfec27c25ca7a7b0887",
-      "bytes": 219650
+      "sha256": "bd5c5ec5522980e883bbf228f081960e836f8507fc4fa71c8ef92acf9b301d30",
+      "bytes": 219665
     },
     {
       "key": "tours",
