@@ -176,7 +176,9 @@ async function exactShaMatches(sha256){
 
 export async function listAssetsCore(input={}){
   await requireAssetAccess();
-  const query={select:"*",status:"eq.ACTIVE",order:"library_root.asc,library_folder.asc,display_name.asc",limit:"1000"};
+  const pageSize=Math.min(1000,Math.max(1,Math.floor(Number(input.limit)||1000)));
+  const offset=Math.min(1000000,Math.max(0,Math.floor(Number(input.offset)||0)));
+  const query={select:"*",status:"eq.ACTIVE",order:"library_root.asc,library_folder.asc,display_name.asc,id.asc",limit:String(pageSize),offset:String(offset)};
   if(clean(input.visibility))query.visibility=qeq(upper(input.visibility,20));
   if(clean(input.assetType))query.asset_type=qeq(upper(input.assetType,30));
   if(clean(input.libraryRoot))query.library_root=qeq(clean(input.libraryRoot,180));
@@ -184,6 +186,7 @@ export async function listAssetsCore(input={}){
   if(clean(input.category))query.category=qeq(clean(input.category,180));
 
   let rows=(await select("platform_assets",query)).map(normalizeAsset);
+  const hasMore=rows.length===pageSize;
   const search=lower(input.search,200);
   if(search){
     rows=rows.filter(a=>[
@@ -208,7 +211,7 @@ export async function listAssetsCore(input={}){
     .map(v=>{const [root,folder]=v.split("\u0000");return{root,folder}})
     .sort((a,b)=>`${a.root}/${a.folder}`.localeCompare(`${b.root}/${b.folder}`));
 
-  return{ok:true,version:ASSET_CORE_VERSION,assets:rows,roots,folders,total:rows.length};
+  return{ok:true,version:ASSET_CORE_VERSION,assets:rows,roots,folders,total:rows.length,hasMore,nextOffset:hasMore?offset+pageSize:null};
 }
 
 export async function checkAssetDuplicateCore(input={}){
@@ -221,6 +224,30 @@ export async function checkAssetDuplicateCore(input={}){
     originalName:input.originalName
   });
   return{ok:true,exactDuplicates:exact,possibleLegacyDuplicates:possible};
+}
+
+// Organize the shared library without changing the physical object URL. Other
+// systems can retain that URL independently of the platform_assets row.
+export async function organizeAssetCore(input={}){
+  const session=await requireAssetAccess({write:true});
+  const id=clean(input.assetId,80);
+  if(!isUuid(id))throw new Error("ASSET_ID_INVALID");
+  const current=await readAsset(id);
+  if(upper(current.status,30)!==ACTIVE)throw new Error("ASSET_NOT_FOUND");
+  if(!input.expectedUpdatedAt||String(current.updated_at||"")!==String(input.expectedUpdatedAt))throw new Error("ASSET_CHANGED_RELOAD");
+  const libraryRoot=upper(input.libraryRoot,180),libraryFolder=clean(input.libraryFolder,240);
+  const librarySubfolder=clean(input.librarySubfolder,500),displayName=clean(input.displayName,300);
+  if(!LIBRARY_ROOTS.has(libraryRoot))throw new Error("ASSET_LIBRARY_ROOT_INVALID");
+  if(!displayName||!libraryFolder)throw new Error("ASSET_FOLDER_REQUIRED");
+  const parts=librarySubfolder?librarySubfolder.split("/").map(part=>part.trim()):[];
+  if(/[\\/\x00-\x1f]/.test(libraryFolder)||[".",".."].includes(libraryFolder)||parts.some(part=>!part||part==='.'||part==='..'||/[\\\x00-\x1f]/.test(part)))throw new Error("ASSET_FOLDER_INVALID");
+  const sub=parts.join(" / ");
+  const rows=await restRequest({table:"platform_assets",method:"PATCH",query:{id:qeq(id),updated_at:qeq(current.updated_at),status:"eq.ACTIVE"},prefer:"return=representation",body:{
+    display_name:displayName,library_root:libraryRoot,library_folder:libraryFolder,library_subfolder:sub||null,
+    folder_path:[libraryRoot,libraryFolder,sub].filter(Boolean).join(" / "),updated_by_agent_user_id:actorId(session),updated_at:new Date().toISOString()
+  }});
+  if(!Array.isArray(rows)||!rows[0])throw new Error("ASSET_CHANGED_RELOAD");
+  return {ok:true,asset:normalizeAsset(rows[0])};
 }
 
 export async function prepareAssetUploadCore(input={}){

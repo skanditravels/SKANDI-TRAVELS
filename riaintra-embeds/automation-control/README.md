@@ -3,7 +3,7 @@
 ## INFO
 
 - **Route:** `/riaintra/success-factors/automation-control` via the existing `src/public/siteMap.js` registry. Wix Studio page settings show this route and component `#sfAutomationEmbed`; the authenticated live page and provider operations still require verification.
-- **Source:** `skandi-automation-control.html`, `.css`, and `.js` in this directory. The builder compiles those files into `dist/automation-control/index.html`. The full HTML below records this revision; the triplet is authoritative for future edits.
+- **Source:** `skandi-automation-control.html`, `.css`, and `.js` in this directory. The builder compiles those files into `dist/automation-control/index.html`. The retained HTML below is a historical snapshot superseded by the current triplet.
 - **Host:** the standard global receiver in the Wix HTML component `#sfAutomationEmbed`; page controller `src/pages/Automation Control.ometk.js`. The existing master page supplies the receiver, branding and shared navigation.
 - **Authority and storage:** `backend/SKANDI_CORE/automationControl.web.js` and `automationsWorkspace.web.js` authorize server-side. Workflow reads/writes use the official provider SDK. Existing VOY campaign records remain the canonical template store; no second template store is created. Access to live workflow administration requires an active RIAINTRA system administrator session and the service permissions assigned to that identity. Template writes continue to require the existing VOY editorial authorization.
 - **Functions:** paginated workflow list; status changes; archive and restore; draft create/open/save/validate/publish/delete; workflow definitions and installed event/action catalogs; email action inspect, sandboxed preview and test send; HTML/visual template metadata management and existing approved-content workflows. Published drafts activate; the interface explicitly confirms operations that modify content or send tests. A small amount of email content may remain at the provider if mapping succeeds but subsequent draft validation fails.
@@ -12,6 +12,8 @@
 - **Security:** all mutations are authorized server-side. Status changes require the exact complete revision including optional override schemas, and fail closed if the provider cannot return it. The initial compiled page contains no preview iframe; message previews create an iframe with an empty sandbox only after a preview is requested.
 
 ## LOG
+
+- **2026-11-13:** Added a visual tree for events, actions, delays, conditions and existing parallel paths. Users can inspect branches, edit supported fields, append steps at empty connections and remove end steps. Complex structures remain available in the advanced definition; provider-controlled connections and protected values remain restricted. Source and automated checks only; provider operations and live publication require verification.
 
 - **2026-11-13:** Registered the page in the existing route/build registry, connected the administrator backend and provider draft APIs, added a responsive editorial UI and reusable template editor, corrected message recipient mapping, added archive/restore with full revision preservation, and documented the required provider dependency refresh. The prior unregistered reference remains historical.
 - **2026-11-13:** Resolved the complete dependency set with the Wix CLI, committed the generated runtime lock and metadata, and removed the temporary pull-request-only resolution step. No Wix publication was performed.

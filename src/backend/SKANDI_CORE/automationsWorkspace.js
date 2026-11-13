@@ -365,6 +365,7 @@ function connectionFields(value,path='',out={}){
 }
 function draftView(row,originalRevision=''){
   return {id:safe(row?._id||row?.id,120),revision:safe(row?.revision,80),originalId:safe(row?.draftInfo?.originalAutomationId,120),originalRevision,
+    canEditGraph:row?.origin==='USER',readonlyActionIds:arr(row?.settings?.actionSettings?.readonlyActionIds).map(id=>safe(id,120)),
     definition:redactDefinition({name:row?.name||'',description:row?.description||'',configuration:row?.configuration||{}})};
 }
 async function standaloneDraft(id){

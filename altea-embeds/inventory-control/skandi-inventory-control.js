@@ -629,12 +629,12 @@ function assetContextForAircraft(boot,aircraft,category,fieldName,subfolder=""){
   const airlineName=airline?.name||aircraft.airlineCode||"Unknown Airline";
   return{visibility:"PUBLIC",assetType:"IMAGE",libraryRoot:"AIRLINES",libraryFolder:airlineName,librarySubfolder:["Aircraft",aircraft.aircraftName||aircraft.aircraftCode||"Aircraft",subfolder].filter(Boolean).join(" / "),category,brand:"SKANDI",system:"Inventory Control",contextSystem:"Inventory Control",contextRecordType:"AIRCRAFT",contextRecordId:aircraft.id||"",fieldName,role:category};
 }
-function AssetCard({asset,onUse,onOpen,manageOnly=false}){
+function AssetCard({asset,onUse,onOpen,onManage,manageOnly=false}){
   const preview=asset.previewUrl||asset.publicUrl||"";
   return html`<div className="assetcard"><div className="assetthumb">${asset.assetType==="IMAGE"&&preview?html`<img src=${preview} alt=${asset.altText||asset.displayName||""}/>`:html`<span className="assettype">${asset.assetType==="DOCUMENT"?"DOC":asset.assetType||"FILE"}</span>`}</div>
     <div className="assetbody"><div className="assetname" title=${asset.displayName}>${asset.displayName||asset.originalName}</div><div className="assetpath">${asset.folderPath||`${asset.libraryRoot} / ${asset.libraryFolder}`}</div>
       <div className="assetbadges"><span className=${`badge ${asset.visibility==="PRIVATE"?"private":"public"}`}>${asset.visibility}</span><span className="badge">${humanBytes(asset.sizeBytes)}</span>${asset.isKnownDuplicate?html`<span className="badge dup">Duplicate ×${asset.duplicateCount}</span>`:null}${asset.source==="LEGACY_STORAGE_INDEX"?html`<span className="badge">Legacy indexed</span>`:null}</div>
-      <div className="assetactions">${!manageOnly&&onUse?html`<button className="btn small primary" onClick=${()=>onUse(asset)}>Use Asset</button>`:null}${onOpen?html`<button className="btn small" onClick=${()=>onOpen(asset)}>Open</button>`:null}</div>
+      <div className="assetactions">${!manageOnly&&onUse?html`<button className="btn small primary" onClick=${()=>onUse(asset)}>Use Asset</button>`:null}${onOpen?html`<button className="btn small" onClick=${()=>onOpen(asset)}>Open</button>`:null}${onManage?html`<button className="btn small" onClick=${()=>onManage(asset)}>Rename / move</button>`:null}</div>
     </div></div>`
 }
 const ASSET_CATEGORIES=["General","PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL","AIRCRAFT","CABIN","WALKTHROUGH","HOTSPOT","DOCUMENT","FORM"];
@@ -643,7 +643,8 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
   const [root,setRoot]=useState(context?.libraryRoot||"SKANDI"),[folder,setFolder]=useState(context?.libraryFolder||""),[subfolder,setSubfolder]=useState(context?.librarySubfolder||""),[category,setCategory]=useState(context?.category||"");
   const [visibility,setVisibility]=useState(context?.visibility||"PUBLIC"),[assetType,setAssetType]=useState(context?.assetType||"");
   const [file,setFile]=useState(null),[hash,setHash]=useState(""),[dup,setDup]=useState(null),[uploading,setUploading]=useState(false),[page,setPage]=useState(1);
-  const fileSelection=useRef(0);
+  const fileSelection=useRef(0),loadGeneration=useRef(0);
+  const [bulkFiles,setBulkFiles]=useState([]),[bulkReport,setBulkReport]=useState([]),[bulkProgress,setBulkProgress]=useState("");
   const locked=!!context?.lockedContext;
   function selectAsset(asset){
     if(context?.visibility==="PUBLIC"&&(asset.visibility!=="PUBLIC"||!asset.publicUrl)){setToast("This file is private and cannot be used on a public page. Choose a public asset.",true);return false}
@@ -652,8 +653,9 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
     return true
   }
   async function load(){
-    try{const r=await request("INVENTORY_ASSET_LIST",{visibility:visibility||undefined,assetType:assetType||undefined,libraryRoot:root||undefined,...(locked&&folder?{libraryFolder:folder}:{} )});setAssets(r.assets||[]);setPage(1)}
-    catch(e){setToast(e.message,true)}
+    const generation=++loadGeneration.current;
+    try{let offset=0,rows=[];for(let count=0;count<100;count++){const r=await request("INVENTORY_ASSET_LIST",{visibility:visibility||undefined,assetType:assetType||undefined,libraryRoot:root||undefined,...(locked&&folder?{libraryFolder:folder}:{} ),limit:500,offset});if(generation!==loadGeneration.current)return;rows.push(...(r.assets||[]));if(!r.hasMore){setAssets(rows);setPage(1);return}if(!Number.isInteger(r.nextOffset)||r.nextOffset<=offset)throw new Error("Asset list pagination could not be confirmed.");offset=r.nextOffset}throw new Error("Asset list is too large to load completely. Narrow the filters.")}
+    catch(e){if(generation===loadGeneration.current)setToast(e.message,true)}
   }
   useEffect(()=>{load()},[root,visibility,assetType]);
   async function chooseFile(f){
@@ -682,6 +684,42 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
       if(!manageOnly&&onSelect){if(selectAsset(done.asset))onClose()}else{setFile(null);setHash("");setDup(null)}
     }catch(e){setToast(e.message,true)}finally{setBusy("");setUploading(false)}
   }
+  async function organizeAsset(asset){
+    const displayName=window.prompt("Library file name",asset.displayName||asset.originalName);if(displayName===null)return;
+    const newRoot=window.prompt("Library root",asset.libraryRoot);if(newRoot===null)return;
+    const newFolder=window.prompt("Folder",asset.libraryFolder);if(newFolder===null)return;
+    const newSubfolder=window.prompt("Subfolders, separated by /",asset.librarySubfolder||"");if(newSubfolder===null)return;
+    try{setBusy("Updating asset location…");await request("INVENTORY_ASSET_ORGANIZE",{assetId:asset.id,expectedUpdatedAt:asset.updatedAt,displayName,libraryRoot:newRoot,libraryFolder:newFolder,librarySubfolder:newSubfolder});setToast("Library name and location updated. Existing file links remain unchanged.");await load()}
+    catch(e){setToast(e.message,true)}finally{setBusy("")}
+  }
+  async function uploadBatch(){
+    if(!bulkFiles.length)return setToast("Choose files or a folder first.",true);
+    if(!root)return setToast("Choose a library root first.",true);
+    const results=[];setUploading(true);setBulkReport([]);
+    try{
+      for(let i=0;i<bulkFiles.length;i++){
+        const f=bulkFiles[i],relative=String(f.webkitRelativePath||f.name),parts=relative.split("/");parts.pop();
+        const destinationFolder=folder||parts.shift()||"",destinationSubfolder=[subfolder,...parts].filter(Boolean).join(" / ");
+        setBulkProgress(`Uploading ${i+1} of ${bulkFiles.length}: ${relative}`);
+        try{
+          if(!destinationFolder)throw new Error("Choose a destination folder before uploading individual files.");
+          if(destinationSubfolder.length>500)throw new Error("Folder path exceeds the library limit.");
+          const digest=await sha256File(f);
+          const prep=await request("INVENTORY_ASSET_PREPARE_UPLOAD",{file:{name:f.name,type:f.type,size:f.size},sha256:digest,visibility,libraryRoot:root,libraryFolder:destinationFolder,librarySubfolder:destinationSubfolder,category:category||"General",brand:"SKANDI",system:"Inventory Control",contextSystem:"Inventory Control"});
+          if(prep.duplicate){results.push({name:relative,status:"Skipped: exact file already exists"});continue}
+          if(prep.needsReview){results.push({name:relative,status:"Skipped: possible duplicate requires individual review"});continue}
+          if(!prep.upload?.signedUrl)throw new Error("Upload was not prepared.");
+          const response=await fetch(prep.upload.signedUrl,{method:"PUT",headers:{"content-type":f.type,"cache-control":`max-age=${prep.upload.cacheControl||3600}`,"x-upsert":"false"},body:f});
+          if(!response.ok)throw new Error(`Upload failed (${response.status}).`);
+          const done=await request("INVENTORY_ASSET_FINALIZE_UPLOAD",{requestId:prep.requestId});
+          if(!done.asset)throw new Error("Upload completed but registration was not confirmed.");
+          results.push({name:relative,status:done.duplicate?"Skipped: exact file already exists":"Uploaded"});
+        }catch(e){results.push({name:relative,status:`Failed: ${e.message||"Unknown error"}`})}
+        setBulkReport([...results]);
+      }
+      setBulkReport([...results]);setToast(`Batch finished: ${results.filter(r=>r.status==="Uploaded").length} uploaded, ${results.filter(r=>r.status!=="Uploaded").length} require review.`);await load();
+    }finally{setBulkProgress("");setUploading(false)}
+  }
   const folders=[...new Set(assets.map(a=>text(a.libraryFolder).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const subfolders=[...new Set(assets.filter(a=>!folder||a.libraryFolder===folder).map(a=>text(a.librarySubfolder).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const categories=[...new Set([...ASSET_CATEGORIES,...assets.filter(a=>(!folder||a.libraryFolder===folder)&&(!subfolder||a.librarySubfolder===subfolder)).map(a=>text(a.category).trim()).filter(Boolean)])].sort((a,b)=>a.localeCompare(b));
@@ -701,8 +739,9 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
     </div>
     <div className="paneltitle"><span>Available Assets · ${filtered.length}</span><span className="assetfolder">${root}${folder?` → ${folder}`:""}${subfolder?` → ${subfolder}`:""}</span></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${filtered.length} pageSize=${pageSize} onPage=${setPage}/>
-    ${pageAssets.length?html`<div className="assetgrid">${pageAssets.map(a=>html`<${AssetCard} asset=${a} onUse=${selectAsset} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div>`:html`<div className="empty">No existing assets match these filters.</div>`}
+    ${pageAssets.length?html`<div className="assetgrid">${pageAssets.map(a=>html`<${AssetCard} asset=${a} onUse=${selectAsset} onOpen=${openAsset} onManage=${manageOnly&&!locked?organizeAsset:null} manageOnly=${manageOnly}/>` )}</div>`:html`<div className="empty">No existing assets match these filters.</div>`}
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${filtered.length} pageSize=${pageSize} onPage=${setPage}/>
+    ${manageOnly&&!locked?html`<div className="assetsection"><div className="uploadzone"><strong>Bulk upload</strong><p className="sub">Choose files or a folder. Folder uploads retain the selected directory structure in the library. Empty folders are not included by the browser. Existing identical files are listed for review.</p><div className="field"><label>Files</label><input type="file" multiple onChange=${e=>{setBulkFiles(Array.from(e.target.files||[]));setBulkReport([])}}/></div><div className="field"><label>Folder and contents</label><input type="file" multiple webkitdirectory="" directory="" onChange=${e=>{setBulkFiles(Array.from(e.target.files||[]));setBulkReport([])}}/></div><p className="sub">${bulkFiles.length} files selected. ${folder?`Destination: ${root} / ${folder}`:`A folder selection will create its top-level folder under ${root}.`}</p><button className="btn cyan" disabled=${uploading||!bulkFiles.length} onClick=${uploadBatch}>Upload selected files</button>${bulkProgress?html`<p role="status">${bulkProgress}</p>`:null}${bulkReport.length?html`<details open><summary>Batch results (${bulkReport.length})</summary><div style=${{maxHeight:"180px",overflow:"auto"}}>${bulkReport.map(r=>html`<div className="sub">${r.name}: ${r.status}</div>`)}</div></details>`:null}</div></div>`:null}
     <div className="assetsection"><div className="uploadzone"><strong>Upload only if the file is not already available</strong>
       ${manageOnly&&!locked?html`<div className="notice">Choose the business folder above, e.g. AIRLINES → British Airways or SKANDI → Marketing.</div>`:null}
       <input className="fileinput" type="file" accept=${assetType==="IMAGE"?"image/*":undefined} onChange=${e=>chooseFile(e.target.files?.[0]||null)}/>

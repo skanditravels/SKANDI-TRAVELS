@@ -43,6 +43,7 @@ import {
   checkAssetDuplicateCore,
   prepareAssetUploadCore,
   finalizeAssetUploadCore,
+  organizeAssetCore,
   getAssetAccessUrlCore,
   registerAssetUsageCore,
   archiveAssetCore
@@ -132,6 +133,8 @@ const ACTIONS = Object.freeze({
     action("INVENTORY_ASSET_UPLOAD_PREPARED", prepareAssetUploadCore),
   INVENTORY_ASSET_FINALIZE_UPLOAD:
     action("INVENTORY_ASSET_UPLOAD_FINALIZED", finalizeAssetUploadCore),
+  INVENTORY_ASSET_ORGANIZE:
+    action("INVENTORY_ASSET_ORGANIZED", organizeAssetCore),
   INVENTORY_ASSET_ACCESS_URL:
     action("INVENTORY_ASSET_ACCESS_URL_RESULT", getAssetAccessUrlCore),
   INVENTORY_ASSET_REGISTER_USAGE:

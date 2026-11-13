@@ -192,6 +192,10 @@ function errorPayload(error) {
       "That file exceeds the Asset Library size limit.",
     ASSET_FOLDER_REQUIRED:
       "Choose an Asset Library root and folder before uploading.",
+    ASSET_FOLDER_INVALID:
+      "Enter valid folder names without empty segments or parent-directory references.",
+    ASSET_CHANGED_RELOAD:
+      "This asset changed since it was loaded. Refresh the library and try again.",
     INVENTORY_PROVIDER_TYPE_UNSUPPORTED:
       "That Duffel reference type is not supported by Inventory Control.",
     INVENTORY_PROVIDER_IMPORT_TYPE_UNSUPPORTED:

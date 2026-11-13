@@ -5,6 +5,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-13 — Added role-authorized MyRoster to the ALTEA app projection. Info Control is registered but unavailable: its legacy page imports four absent service exports. Existing device-specific EOS/MyRoster routing and server checks remain in force. Live Wix verification remains required.
+
 - 2026-11-06 — The compiled shell adds the branded ALTEA mobile bottom bar and a right-side drawer. Navigation uses the existing Launchpad permission facade and excludes unavailable tools. Application tiles pair the approved raster ALTEA mark with the software name. Master Page now sends operational header and footer state to the active compiled receiver. Staff authentication and launch revalidation are preserved.
 
 

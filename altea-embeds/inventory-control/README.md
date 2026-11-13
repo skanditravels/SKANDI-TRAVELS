@@ -1,5 +1,7 @@
 # INFO / LOG — Inventory Control
 
+2026-11-13 — The active source adds sequential bulk file and directory uploads, preserving relative folder paths in Asset Library metadata and reporting each success, duplicate, review and failure. Empty folders cannot be selected by browser directory uploads; existing hash deduplication and file limits still apply. Rename/move edits library metadata only and retains physical object paths and existing URLs; writes require the existing Asset Library authorization and a matching update timestamp. The legacy full HTML further below is historical and superseded by the active triplet. Asset list pagination now loads beyond the first 1,000 entries. Source and automated verification only; authenticated upload and edits require live verification.
+
 2026-11-12 — Hierarchy work: added Region/State and Area labels, typed related-record dropdowns and inbound references, with separate chain and booking-supplier slots. Existing mismatched relationships are retained for review. Collection levels are Select, Signature and Excelsior; Partner is limited to suppliers and airlines. Backend and published embed must be deployed together; live Wix verification is required.
 
 ## 2026-11-11 — Mobile inventory workspace

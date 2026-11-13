@@ -171,7 +171,7 @@ const MASTER_CONFIG = Object.freeze({
       primaryNav: Object.freeze([
         { id:"home", label:"Book", path:SITE_MAP.home },
         { id:"destinations", label:"Destinations", path:SITE_MAP.destinations },
-        { id:"packages", label:"Packages", path:SITE_MAP.packages },
+        { id:"packages", label:"Packages", path:SITE_MAP.home },
         { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
         { id:"travelInfo", label:"Travel Info", path:SITE_MAP.travelInfo }
       ]),
@@ -191,10 +191,12 @@ const MASTER_CONFIG = Object.freeze({
           title:"BOOK & TRAVEL",
           links:Object.freeze([
             { label:"Book a trip", path:SITE_MAP.home },
+            { label:"Flights", path:SITE_MAP.flights },
             { label:"Manage your booking", path:"/my-profile?tab=trips" },
             { label:"Airport Transfer", path:SITE_MAP.transfers },
             { label:"Our Destinations", path:SITE_MAP.destinations },
-            { label:"Hotels", path:SITE_MAP.hotels },
+            { label:"Hotels", path:SITE_MAP.destinations },
+            { label:"Cruises", path:SITE_MAP.cruises },
             { label:"Tours & Activities", path:SITE_MAP.tours },
             { label:"Car Rental", path:SITE_MAP.carRental },
             { label:"Last Chance", path:APP_ROUTES.bookingFlow }
@@ -216,7 +218,9 @@ const MASTER_CONFIG = Object.freeze({
           title:"SKANDI",
           links:Object.freeze([
             { label:"Join SKANDI Club", path:SITE_MAP.club },
-            { label:"Log In to My Club", path:SITE_MAP.myProfile },
+            { label:"Log In to My Club", path:APP_ROUTES.myProfile },
+            { label:"Club support", path:APP_ROUTES.clubSupport },
+            { label:"Travel assistant", path:APP_ROUTES.travelAssistant },
             { label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
             { label:"THE STORE", path:SITE_MAP.theStore },
             { label:"VOY Magazine", path:SITE_MAP.voy }
@@ -226,7 +230,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"ABOUT SKANDI",
           links:Object.freeze([
             { label:"About SKANDI", path:SITE_MAP.about },
-            { label:"Careers", path:SITE_MAP.careers },
+            { label:"Careers", path:APP_ROUTES.careers },
             { label:"Newsroom", path:SITE_MAP.newsroom },
           ])
         })
@@ -1034,7 +1038,7 @@ async function handleMasterMessage(embed, message = {}) {
       if (type === "EOS_OPS_ACTION") { reply("EOS_OPS_ACTION_RESULT",await submitEosOpsAction(payload)); return true; }
       if (type === "EOS_NAVIGATE") {
         const path=String(payload.path||"");
-        if (path !== SITE_MAP.groupTalk) { reply("EOS_ERROR",{code:"EOS_NAVIGATION_BLOCKED",message:"That ALTEA destination is unavailable."}); return true; }
+        if (path !== APP_ROUTES.groupTalk) { reply("EOS_ERROR",{code:"EOS_NAVIGATION_BLOCKED",message:"That ALTEA destination is unavailable."}); return true; }
         navigate(path); return true;
       }
       if (type === "EOS_LOGOUT") {

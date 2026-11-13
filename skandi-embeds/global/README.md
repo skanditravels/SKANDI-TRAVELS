@@ -2,6 +2,8 @@
 
 ## INFO / LOG
 
+- 2026-11-13 — Corrected account and careers footer route keys, exposed flight/cruise and cookie preference links, and corrected the EOS GroupTalk route comparison. Pending hotel and package destinations link to the existing destination and home experiences until their own sources are ready. Public policy slugs were checked read-only against published active records; live navigation remains to be verified.
+
 - 2026-11-08 — The shared compiled shell lets RIAINTRA and ALTEA desktop pages scroll as a document, so their header and footer are not pinned around the workspace. Mobile navigation is unchanged. Requires live Wix verification across internal applications.
 
 ## Reference documents
