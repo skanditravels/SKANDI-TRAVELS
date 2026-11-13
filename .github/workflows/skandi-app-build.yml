@@ -58,36 +58,6 @@ jobs:
           cache-dependency-path: scripts/package-lock.json
       - name: Install deterministic compiler tooling
         run: npm ci --prefix scripts --ignore-scripts --no-audit --no-fund
-      - name: Resolve Automation Control Wix dependencies
-        if: github.event_name == 'pull_request' && github.event.pull_request.number == 107 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/automation-control-20261113'
-        env:
-          WIX_CLI_API_KEY: ${{ secrets.WIX_CLI_API_KEY }}
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        run: |
-          set -euo pipefail
-          if [ "$(git log -1 --format=%s)" = "Resolve Wix automation dependencies" ]; then
-            echo "The generated dependency lock has already been committed."
-            exit 0
-          fi
-          if [ -z "$WIX_CLI_API_KEY" ]; then
-            echo "::error::The repository's Wix CLI credential is not configured for this pull request."
-            exit 1
-          fi
-          npm ci --ignore-scripts --no-audit --no-fund
-          npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@1.2.8
-          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
-          npm_config_ignore_scripts=true npm_config_audit=false npm_config_fund=false "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" install --npm
-          node --test tests/booking-recovery.test.mjs
-          git add -- wix.lock dependencies-metadata.json
-          if git diff --cached --quiet; then
-            echo "The Wix dependency lock is already current."
-            exit 0
-          fi
-          git commit -m "Resolve Wix automation dependencies"
-          git push origin HEAD:refs/heads/codex/automation-control-20261113
       - name: Validate route inventory and integration evidence
         run: node scripts/build-skandi-app.mjs --inventory
       - name: Run compilation and regression tests
