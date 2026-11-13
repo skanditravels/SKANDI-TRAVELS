@@ -6,6 +6,7 @@
 // canonical Supabase transport. No page routing, booking mutation, support
 // mutation, provider secrets, supplier costs or operational fields live here.
 
+import { inventorySearchPriority } from "backend/SKANDI_CORE/inventoryRanking";
 import { currentMember } from "wix-members-backend";
 import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
@@ -128,7 +129,7 @@ function collectionItem(row = {}, language = "EN") {
     catalogType,
     collectionLabel: clean(first(payload.publicLabel, catalogType === "SKANDI_PARTNER" ? "SKANDI Partners" : "SKANDI Collection"), 180),
     featured: row.featured === true,
-    searchPriority: num(row.search_priority, 100)
+    searchPriority: inventorySearchPriority(row)
   };
 }
 
@@ -162,18 +163,22 @@ export async function getPublicAirlineRecommendationTiersCore() {
 
 export async function getPublicSkandiCollectionCore(input = {}) {
   const language = upper(input.language || "EN", 5) || "EN";
-  const rows = await select("inventory_searchable_catalog_v", {
+  const rows=[];
+  for(let offset=0;offset<20000;offset+=1000){
+    const page=await select("inventory_searchable_catalog_v", {
     select: "id,public_id,entity_type,code,name,slug,status,active,customer_visible,searchable,collection_type,partner_tier,search_priority,featured,details,payload,localized,media",
     status: PUBLISHED,
     active: ACTIVE,
     customer_visible: ACTIVE,
     searchable: ACTIVE,
     collection_type: COLLECTION_TYPES,
-    order: "search_priority.asc,name.asc",
-    limit: MAX_PUBLIC_ROWS
-  });
+    order: "name.asc,id.asc",
+    limit: MAX_PUBLIC_ROWS,offset:String(offset)
+    });
+    rows.push(...page);if(page.length<1000)break;
+  }
 
-  const items = rows.map(row => collectionItem(row, language)).filter(item => item.title);
+  const items = rows.map(row => collectionItem(row, language)).filter(item => item.title).sort((a,b)=>a.searchPriority-b.searchPriority||a.title.localeCompare(b.title));
   const tiers = items.reduce((memo, item) => {
     const key = item.tier || "UNASSIGNED";
     memo[key] = (memo[key] || 0) + 1;
