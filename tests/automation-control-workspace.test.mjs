@@ -73,6 +73,31 @@ test('interface displays system terminology while preserving provider identifier
  assert.doesNotMatch(w.document.body.textContent,/\bwix\b/i);dom.window.close();
 });
 
+test('message previews are created on demand in a fully sandboxed frame',async()=>{
+ const {inventory}=await import('../scripts/lib/inventory.mjs');const {compilePage}=await import('../scripts/lib/compile.mjs');
+ const {fileURLToPath}=await import('node:url');const dir=fileURLToPath(root),{rows}=await inventory(dir);
+ const html=await compilePage(dir,rows.find(row=>row.key==='automationControl'));
+ const dom=new JSDOM(html,{runScripts:'outside-only',url:'https://example.test/'}),w=dom.window,messages=[];
+ const tick=()=>new Promise(resolve=>setImmediate(resolve));
+ const respond=(request,type,payload)=>w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type,requestId:request.requestId,payload}}));
+ try{
+  w.postMessage=m=>messages.push(m);w.eval(w.document.querySelector('script[data-skandi-part="automation-control"]').textContent);w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  assert.equal(w.document.querySelectorAll('iframe').length,0);
+  const refresh=messages.find(m=>m.type==='AUTOMATION_CONSOLE_REFRESH');assert.ok(refresh);
+  respond(refresh,'AUTOMATION_CONSOLE_BOOTSTRAP',{live:{automations:[{id,name:'Test workflow',status:'ACTIVE'}]},workspace:{templates:[],triggers:[],actions:[]},platform:{workflows:[]}});await tick();
+  const workflow=w.document.getElementById('emailAutomation');workflow.value=id;workflow.dispatchEvent(new w.Event('change'));
+  const graph=messages.find(m=>m.type==='AUTOMATION_CONSOLE_GRAPH');assert.ok(graph);
+  respond(graph,'AUTOMATION_CONSOLE_RESULT',{data:{graph:{nodes:[{id:'mail',type:'APP_DEFINED',label:'triggered-emails'}]}}});await tick();
+  w.document.getElementById('emailAction').value='mail';w.document.getElementById('previewEmail').click();
+  const request=messages.find(m=>m.type==='AUTOMATION_CONSOLE_PREVIEW');assert.ok(request);
+  const message='<!doctype html><html><body>Preview</body></html>';
+  respond(request,'AUTOMATION_CONSOLE_RESULT',{data:{ok:true,html:message}});await tick();
+  const preview=w.document.getElementById('emailPreview');
+  assert.equal(preview.tagName,'IFRAME');assert.equal(preview.getAttribute('sandbox'),'');
+  assert.equal(preview.getAttribute('srcdoc'),message);assert.equal(preview.hasAttribute('src'),false);
+ }finally{w.close()}
+});
+
 test('automation snapshot paginates and separates standalone drafts from live counts',async()=>{
  const source=(await read('src/backend/SKANDI_CORE/automationControl.js')).replace(/import[\s\S]*?from\s+["'][^"']+["'];\s*/g,'').replace(/^export /gm,'');
  let calls=0;const rows=Array.from({length:101},(_,i)=>({_id:'entry-'+i,name:'Workflow '+i,origin:'USER',configuration:{status:'ACTIVE',trigger:{triggerKey:'event'},actions:{}}}));

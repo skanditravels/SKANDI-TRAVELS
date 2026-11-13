@@ -76,6 +76,13 @@ function addStep(){const d=definition();d.configuration=d.configuration||{};cons
 function templatePayload(){const trigger=getSelectedTrigger('draftTrigger'),entityId=$('draftTemplate').value;if(!trigger||!entityId)throw new Error('Select a template and an event.');return{entityId,trigger:{appId:trigger.appId,triggerKey:trigger.triggerKey},name:$('draftName').value.trim(),contactPath:$('draftContact').value.trim()||'contactId',notificationTopicId:$('draftTopic').value.trim(),senderDetailsId:$('draftSender').value.trim(),acknowledgeCritical:$('draftCritical').checked}}
 async function loadEmailActions(){const id=$('emailAutomation').value;$('emailAction').innerHTML='<option value="">Select an action</option>';if(!id)return;const response=await call('GRAPH',{automationId:id});const nodes=(response?.graph?.nodes||[]).filter(x=>x.type==='APP_DEFINED'&&x.label==='triggered-emails');selectOptions('emailAction',nodes,n=>n.label,n=>n.id);if(!nodes.length)notice('No supported message action was found for this workflow.')}
 function emailTarget(){const automationId=$('emailAutomation').value,actionId=$('emailAction').value;if(!automationId||!actionId)throw new Error('Select a workflow and a message action.');return{automationId,actionId}}
+function showEmailPreview(html){
+  const preview=document.createElement('iframe');
+  preview.id='emailPreview';preview.className='preview';preview.title='Message preview';
+  preview.setAttribute('sandbox','');
+  preview.srcdoc=String(html||'');
+  $('emailPreview').replaceWith(preview);
+}
 window.addEventListener('message',event=>{
   if(event.source!==window.parent)return;const m=event.data;if(!m||m.source!==PARENT)return;
   if(m.type==='AUTOMATION_CONSOLE_CONTROLLER_ATTACHED'){load();return}
@@ -110,7 +117,7 @@ $('publishDraft').addEventListener('click',()=>perform(async()=>{if(isDirty())th
 $('deleteDraft').addEventListener('click',()=>perform(async()=>{if(!window.confirm('Delete this draft? This cannot be undone.'))return;const r=await call('DELETE_DRAFT',{...draftArgs(),confirm:true});if(!r.ok)throw new Error('The draft was not deleted.');draft=null;$('editorBody').hidden=true;$('editorEmpty').hidden=false;await load();notice('Draft deleted.')}));
 $('emailAutomation').addEventListener('change',()=>perform(loadEmailActions));
 $('inspectEmail').addEventListener('click',()=>perform(async()=>{const r=await call('INSPECT',emailTarget());write('emailResult',r);if(!r.ok)throw new Error(r.reason||'The message could not be inspected.')}));
-$('previewEmail').addEventListener('click',()=>perform(async()=>{const r=await call('PREVIEW',emailTarget());if(!r.ok)throw new Error(r.reason||'The message could not be previewed.');$('emailPreview').srcdoc=String(r.html||'');$('emailPreview').hidden=false;write('emailResult',r.emailSubject||'Preview generated.')}));
+$('previewEmail').addEventListener('click',()=>perform(async()=>{const r=await call('PREVIEW',emailTarget());if(!r.ok)throw new Error(r.reason||'The message could not be previewed.');showEmailPreview(r.html);write('emailResult',r.emailSubject||'Preview generated.')}));
 $('sendTest').addEventListener('click',()=>perform(async()=>{const target=emailTarget(),toEmail=$('testEmail').value.trim();if(!toEmail)throw new Error('Enter a test recipient.');if(!window.confirm(`Send a real test message to ${toEmail}?`))return;const r=await call('SEND_TEST_EMAIL',{...target,toEmail,confirm:true});if(!r.ok)throw new Error('The test message was not confirmed.');notice('The system accepted the test message request.')}));
 $('createEmailDraft').addEventListener('click',()=>perform(async()=>{const p=templatePayload();if(!window.confirm('Prepare message content and create a workflow draft?'))return;const r=await call('CREATE_DRAFT',{...p,confirm:true});write('templateResult',r);if(!r.ok)throw new Error(r.reason||'The draft was not created.');await load();notice('Message draft created. It will not run until published.')}));
 $('syncDesigned').addEventListener('click',()=>perform(async()=>{const p={...templatePayload(),...emailTarget()};if(!window.confirm('Replace the selected message content? Changes to a live message can affect the next send.'))return;const r=await call('SYNC_DESIGNED',{...p,confirm:true});write('templateResult',r);if(!r.ok)throw new Error(r.reason||'The content was not updated.');notice('Message content updated.')}));
