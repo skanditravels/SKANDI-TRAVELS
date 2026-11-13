@@ -6,7 +6,7 @@ import {
   getAutomationGraphCore, createAutomationGraphDraftCore,
   openAutomationDraftCore, createBlankAutomationDraftCore, saveAutomationDraftCore,
   validateAutomationDraftCore, publishAutomationDraftCore, deleteAutomationDraftCore,
-  deleteAutomationCore, sendAutomationTestEmailCore
+  deleteAutomationCore, sendAutomationTestEmailCore, setAutomationArchivedCore
 } from 'backend/SKANDI_CORE/automationWorkspace';
 export const getAutomationWorkspace = webMethod(Permissions.SiteMember, () => getAutomationWorkspaceCore());
 export const saveAutomationTemplate = webMethod(Permissions.SiteMember, input => saveAutomationTemplateCore(input));
@@ -25,3 +25,4 @@ export const publishAutomationDraft = webMethod(Permissions.SiteMember, input =>
 export const deleteAutomationDraft = webMethod(Permissions.SiteMember, input => deleteAutomationDraftCore(input));
 export const deleteAutomation = webMethod(Permissions.SiteMember, input => deleteAutomationCore(input));
 export const sendAutomationTestEmail = webMethod(Permissions.SiteMember, input => sendAutomationTestEmailCore(input));
+export const setAutomationArchived = webMethod(Permissions.SiteMember, input => setAutomationArchivedCore(input));

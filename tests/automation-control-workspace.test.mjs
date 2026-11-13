@@ -17,7 +17,7 @@ async function workspaceHarness({role='OWNER',record,revisionRecord}={}){
  const mock={
   getAutomation:async()=>structuredClone(current),
   getAutomationRevision:async(...args)=>{calls.push(['revision',...args]);return {automation:structuredClone(revisionRecord||current)}},
-  updateAutomation:async(...args)=>{calls.push(['update',...args]);current.configuration=args[1].configuration;return structuredClone(current)},
+  updateAutomation:async(...args)=>{calls.push(['update',...args]);current.configuration=args[1].configuration;if(typeof args[1].archived==='boolean')current.archived=args[1].archived;return structuredClone(current)},
   validateAutomation:async()=>({status:'VALID'}),
   getOrCreateDraftAutomation:async()=>structuredClone(current),
   queryAutomationsWithDrafts:async()=>({automations:[structuredClone(current)],pagingMetadata:{hasNext:false}})
@@ -25,7 +25,7 @@ async function workspaceHarness({role='OWNER',record,revisionRecord}={}){
  const provider=new Proxy(mock,{get:(o,k)=>o[k]||async function(){throw new Error('Unexpected provider call: '+String(k))}});
  const ctx={auth:{elevate:x=>x},automationsV2:provider,triggerCatalog:provider,actionCatalog:provider,automationEmailAction:provider,randomUUID:()=>id,
  requireStaffPortalSessionCore:async()=>({accessRole:role,profile:{}}),getVoyAdminBootstrapCore:async()=>({campaigns:[]}),saveVoyEntityCore:async()=>({ok:true,entity:{}}),deleteVoyEntityCore:async()=>({ok:true}),getAutomationAdminSnapshotCore:async()=>({automations:[]}),EMAIL_PLATFORM:{},EMAIL_WORKFLOWS:{},COMMON_DYNAMIC_VARIABLE_KEYS:[],console};
- vm.createContext(ctx);vm.runInContext(source+'\nthis.exposed={redactDefinition,restoreDefinition,connectionFields,content,setAutomationStatusCore,saveAutomationDraftCore};',ctx);
+ vm.createContext(ctx);vm.runInContext(source+'\nthis.exposed={redactDefinition,restoreDefinition,connectionFields,content,setAutomationStatusCore,setAutomationArchivedCore,saveAutomationDraftCore};',ctx);
  return {api:ctx.exposed,calls,current};
 }
 
@@ -76,11 +76,12 @@ test('interface displays system terminology while preserving provider identifier
 test('automation snapshot paginates and separates standalone drafts from live counts',async()=>{
  const source=(await read('src/backend/SKANDI_CORE/automationControl.js')).replace(/import[\s\S]*?from\s+["'][^"']+["'];\s*/g,'').replace(/^export /gm,'');
  let calls=0;const rows=Array.from({length:101},(_,i)=>({_id:'entry-'+i,name:'Workflow '+i,origin:'USER',configuration:{status:'ACTIVE',trigger:{triggerKey:'event'},actions:{}}}));
- const context={automationsV2:{queryAutomationsWithDrafts:async ({query})=>{calls++;return query.cursorPaging.cursor?{automations:[...rows.slice(100),{_id:'draft',name:'Draft',draftInfo:{},configuration:{}}],pagingMetadata:{hasNext:false}}:{automations:rows.slice(0,100),pagingMetadata:{hasNext:true,cursors:{next:'page-two'}}}}},auth:{elevate:x=>x},requireStaffPortalSessionCore:async()=>({accessRole:'OWNER'}),
+ const archiveBuilder={eq(field,value){assert.equal(field,'archived');assert.equal(value,true);return this},limit(){return this},async find(){return{items:[{_id:'old',name:'Old',archived:true,configuration:{status:'INACTIVE'}}],hasNext(){return false}}}};
+ const context={automationsV2:{queryAutomations:()=>archiveBuilder,queryAutomationsWithDrafts:async ({query})=>{calls++;return query.cursorPaging.cursor?{automations:[...rows.slice(100),{_id:'draft',name:'Draft',draftInfo:{},configuration:{}}],pagingMetadata:{hasNext:false}}:{automations:rows.slice(0,100),pagingMetadata:{hasNext:true,cursors:{next:'page-two'}}}}},auth:{elevate:x=>x},requireStaffPortalSessionCore:async()=>({accessRole:'OWNER'}),
  lower:v=>String(v||'').toLowerCase(),upper:v=>String(v||'').toUpperCase(),text:(v,n)=>String(v||'').slice(0,n),stringArray:v=>Array.isArray(v)?v:[],SkandiError:class extends Error{},
  generateAutomationEmailActionMapping:()=>{},getAutomationEmailPlatformSnapshot:()=>{},inspectAutomationEmailAction:()=>{},previewAutomationEmailAction:()=>{},syncAutomationEmailAction:()=>{},console};
  vm.createContext(context);vm.runInContext(source+'\nthis.snapshot=getAutomationAdminSnapshotCore;',context);const result=await context.snapshot();
- assert.equal(calls,2);assert.equal(result.automations.length,102);assert.equal(result.counts.active,101);assert.equal(result.counts.drafts,1);
+ assert.equal(calls,2);assert.equal(result.automations.length,103);assert.equal(result.counts.active,101);assert.equal(result.counts.drafts,1);assert.equal(result.counts.archived,1);assert.equal(result.archiveError,'');
 });
 
 test('only the audited empty sandbox preview passes the compiler frame policy',async()=>{
@@ -91,4 +92,13 @@ test('only the audited empty sandbox preview passes the compiler frame policy',a
  await normalizeHTML(allowed,'','',opts);
  await assert.rejects(normalizeHTML(allowed.replace('sandbox hidden','sandbox="allow-scripts" hidden'),'','',opts),/nested iframe/);
  await assert.rejects(normalizeHTML(allowed.replace('sandbox hidden','sandbox src="https://example.com" hidden'),'','',opts),/nested iframe/);
+});
+
+
+test('archiving preserves the full revision and requires an inactive workflow',async()=>{
+ const {api,calls}=await workspaceHarness();
+ const result=await api.setAutomationArchivedCore({automationId:id,revision:'4',archived:true,confirm:true});
+ assert.equal(result.archived,true);assert.equal(calls[1][2].archived,true);assert.deepEqual(Array.from(calls[0][2].fields),['OVERRIDE_SCHEMA']);
+ const active={_id:id,revision:'4',origin:'USER',configuration:{status:'ACTIVE',trigger:{appId:id},actions:{},rootActionIds:[]}};
+ const other=await workspaceHarness({record:active});await assert.rejects(other.api.setAutomationArchivedCore({automationId:id,revision:'4',archived:true,confirm:true}),/Pause/);assert.equal(other.calls.length,0);
 });

@@ -269,6 +269,31 @@ export async function setAutomationStatusCore(input={}){
   return{ok:true,automationId:changedId,status,revision:live.revision||'',message:'The status change was confirmed.'};
 }
 
+export async function setAutomationArchivedCore(input={}){
+  await session({manage:true});
+  if(input.confirm!==true||typeof input.archived!=='boolean')problem('AUTOMATION_CONFIRM_REQUIRED','Confirm the requested archive change.');
+  const id=requireId(input.automationId,'Automation ID');
+  const response=await getAutomation(id),current=response?.automation||response;
+  if(current?.settings?.readonly===true)problem('AUTOMATION_CONTROL_RESTRICTED','This workflow is read-only.');
+  if(!current?.revision||String(current.revision)!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The workflow changed. Refresh before continuing.');
+  if(!!current.archived===input.archived)return{ok:true,unchanged:true,automationId:id,archived:input.archived};
+  if(input.archived&&current.configuration?.status==='ACTIVE')problem('AUTOMATION_PAUSE_FIRST','Pause this workflow before moving it to the archive.');
+  let fullResponse;
+  try {fullResponse=await getAutomationRevision(id,{revision:String(current.revision),fields:['OVERRIDE_SCHEMA']});}
+  catch (_) {problem('AUTOMATION_REVISION_UNAVAILABLE','The complete workflow revision could not be retrieved. No change was made.');}
+  const complete=fullResponse?.automation;
+  if(!complete?.configuration?.trigger||!complete?.configuration?.actions||String(complete.revision)!==String(current.revision))
+    problem('AUTOMATION_REVISION_UNAVAILABLE','The complete workflow revision could not be confirmed. No change was made.');
+  const changed=await updateAutomation(id,{...complete,archived:input.archived});
+  const updated=changed?.automation||changed;
+  if(!updated?._id&&!updated?.id)problem('AUTOMATION_ARCHIVE_UNCONFIRMED','The change was submitted but not confirmed. Refresh before trying again.');
+  let verified;
+  try {verified=await getAutomation(updated._id||updated.id);}
+  catch (_) {problem('AUTOMATION_ARCHIVE_UNCONFIRMED','The change was submitted but not confirmed. Refresh before trying again.');}
+  if(!!(verified?.automation||verified)?.archived!==input.archived)problem('AUTOMATION_ARCHIVE_UNCONFIRMED','The archive change could not be confirmed. Refresh before trying again.');
+  return{ok:true,automationId:id,archived:input.archived};
+}
+
 
 
 // Workflow graph support. Read and project Wix's actual action DAG; never expose opaque input mappings.

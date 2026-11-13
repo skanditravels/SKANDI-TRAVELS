@@ -10,7 +10,8 @@ import {
   createAutomationGraphDraft, syncAutomationDesignedEmail, setAutomationStatus,
   openAutomationDraft, createBlankAutomationDraft, saveAutomationDraft,
   validateAutomationDraft, publishAutomationDraft, deleteAutomationDraft,
-  deleteAutomation, sendAutomationTestEmail, saveAutomationTemplate, deleteAutomationTemplate
+  deleteAutomation, sendAutomationTestEmail, saveAutomationTemplate, deleteAutomationTemplate,
+  setAutomationArchived
 } from 'backend/SKANDI_CORE/automationsWorkspace.web';
 
 const EMBED_ID = '#sfAutomationEmbed';
@@ -50,6 +51,7 @@ const methods = {
   AUTOMATION_CONSOLE_PUBLISH_DRAFT: publishAutomationDraft,
   AUTOMATION_CONSOLE_DELETE_DRAFT: deleteAutomationDraft,
   AUTOMATION_CONSOLE_DELETE: deleteAutomation,
+  AUTOMATION_CONSOLE_SET_ARCHIVED: setAutomationArchived,
   AUTOMATION_CONSOLE_SEND_TEST_EMAIL: sendAutomationTestEmail,
   AUTOMATION_CONSOLE_SAVE_TEMPLATE: saveAutomationTemplate,
   AUTOMATION_CONSOLE_DELETE_TEMPLATE: deleteAutomationTemplate

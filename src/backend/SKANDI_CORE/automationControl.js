@@ -17,6 +17,18 @@ import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import { lower, stringArray, text, upper } from "backend/SKANDI_CORE/platformValidation";
 
 const queryAutomationsWithDraftsElevated = auth.elevate(automationsV2.queryAutomationsWithDrafts);
+const queryAutomationsElevated = auth.elevate(automationsV2.queryAutomations);
+async function queryArchived() {
+  const rows = [];
+  let result = await queryAutomationsElevated().eq('archived', true).limit(PAGE_SIZE).find();
+  for (let page = 0; page < MAX_AUTOMATION_PAGES; page++) {
+    if (!Array.isArray(result?.items)) throw new Error('The archive query returned an unexpected response.');
+    rows.push(...result.items.filter(item => item.archived === true));
+    if (!result.hasNext()) return rows;
+    result = await result.next();
+  }
+  throw new Error('Archived results exceeded the supported page limit.');
+}
 const PRIVILEGED_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
 const PAGE_SIZE = 100;
 const MAX_AUTOMATION_PAGES = 100;
@@ -180,7 +192,11 @@ export async function getAutomationAdminSnapshotCore() {
   await requireAutomationAdministrator();
 
   const rows = await queryLiveAutomations();
+  let archivedRows = [], archiveError = '';
+  try { archivedRows = await queryArchived(); }
+  catch (_) { archiveError = 'The archive could not be loaded. Check access and try again.'; }
   const automations = rows
+    .concat(archivedRows)
     .map(normalizeAutomation)
     .filter(item => item.id)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -190,14 +206,16 @@ export async function getAutomationAdminSnapshotCore() {
     ok: true,
     source: "Wix Automations",
     readOnly: true,
+    archiveError,
     retrievedAt: new Date().toISOString(),
     triggers,
     automations,
     counts: {
       triggers: triggers.length,
-      automations: automations.length,
-      active: automations.filter(item => item.enabled).length,
-      inactive: automations.filter(item => item.status === 'INACTIVE').length,
+      automations: automations.filter(item => !item.archived && !item.draft).length,
+      active: automations.filter(item => item.enabled && !item.archived).length,
+      inactive: automations.filter(item => item.status === 'INACTIVE' && !item.archived).length,
+      archived: automations.filter(item => item.archived).length,
       drafts: automations.filter(item => item.draft || item.draftId).length
     }
   };

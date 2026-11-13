@@ -19,14 +19,14 @@ function show(section){document.querySelectorAll('[data-section]').forEach(b=>b.
 function write(id,value){$(id).textContent=clean(typeof value==='string'?value:JSON.stringify(value,null,2))}
 function date(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
 function selectOptions(id,rows,label,value){const el=$(id),old=el.value;el.innerHTML='<option value="">Select</option>'+rows.map((r,i)=>`<option value="${escapeHTML(value?value(r,i):i)}">${esc(label(r,i))}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old}
-function renderCounts(){const live=automations.filter(a=>!a.draft);$('countAutomations').textContent=String(live.length);$('countActive').textContent=String(live.filter(a=>a.status==='ACTIVE').length);$('countTriggers').textContent=String(triggers.length);$('countTemplates').textContent=String(templates.length)}
-function renderList(){const q=$('automationSearch').value.trim().toLowerCase(),f=$('automationFilter').value;const rows=automations.filter(a=>(f==='ALL'||(f==='DRAFT'?(a.draft||a.draftId):a.status===f))&&[a.name,a.triggerKey,a.status].join(' ').toLowerCase().includes(q));$('listCount').textContent=String(rows.length);$('automationList').innerHTML=rows.length?rows.map(a=>`<button type="button" data-automation="${esc(a.id)}" class="${a.id===selected?.id?'selected':''}"><strong>${esc(a.name)}</strong><small>${a.draft?'Draft':esc(a.status==='ACTIVE'?'Active':'Inactive')}${a.draftId?' · draft available':''} · ${esc(a.triggerKey||'No event selected')}</small></button>`).join(''):'<p class="subtle">No matching workflows found.</p>'}
+function renderCounts(){const live=automations.filter(a=>!a.draft&&!a.archived);$('countAutomations').textContent=String(live.length);$('countActive').textContent=String(live.filter(a=>a.status==='ACTIVE').length);$('countTriggers').textContent=String(triggers.length);$('countTemplates').textContent=String(templates.length)}
+function renderList(){const q=$('automationSearch').value.trim().toLowerCase(),f=$('automationFilter').value;const rows=automations.filter(a=>(f==='ARCHIVED'?a.archived:!a.archived&&(f==='ALL'||(f==='DRAFT'?(a.draft||a.draftId):a.status===f)))&&[a.name,a.triggerKey,a.status].join(' ').toLowerCase().includes(q));$('listCount').textContent=String(rows.length);$('automationList').innerHTML=rows.length?rows.map(a=>`<button type="button" data-automation="${esc(a.id)}" class="${a.id===selected?.id?'selected':''}"><strong>${esc(a.name)}</strong><small>${a.archived?'Archived':a.draft?'Draft':esc(a.status==='ACTIVE'?'Active':'Inactive')}${a.draftId?' · draft available':''} · ${esc(a.triggerKey||'No event selected')}</small></button>`).join(''):'<p class="subtle">No matching workflows found.</p>'}
 function renderSources(){
   selectOptions('editorTrigger',triggers,t=>t.displayName);selectOptions('draftTrigger',triggers,t=>t.displayName);selectOptions('triggerPick',triggers,t=>t.displayName);
   selectOptions('editorAction',actions,a=>a.displayName);selectOptions('actionPick',actions,a=>a.displayName);
   selectOptions('draftTemplate',templates,t=>t.title,t=>t.entityId);selectOptions('editTemplate',templates,t=>t.title,t=>t.entityId);
   selectOptions('catalogWorkflow',workflows,w=>`${w.workflowKey} · ${w.category}`,w=>w.workflowKey);
-  selectOptions('emailAutomation',automations.filter(a=>!a.draft),a=>a.name,a=>a.id);
+  selectOptions('emailAutomation',automations.filter(a=>!a.draft&&!a.archived),a=>a.name,a=>a.id);
   $('designList').innerHTML=templates.map(t=>`<div class="panel"><h3>${esc(t.title||'Untitled')}</h3><p>${esc(t.subject||'No subject')}</p><button class="text-action" data-template="${esc(t.entityId)}">Select template →</button></div>`).join('');
 }
 function render(data){
@@ -37,18 +37,19 @@ function render(data){
   workflows=Array.isArray(data?.platform?.workflows)?data.platform.workflows:[];
   if(selected)selected=automations.find(a=>a.id===selected.id)||null;
   renderCounts();renderList();renderSources();
-  const issues=[data?.workspace?.triggerError,data?.workspace?.actionError,data?.workspace?.templateError].filter(Boolean);
+  const issues=[data?.live?.archiveError,data?.workspace?.triggerError,data?.workspace?.actionError,data?.workspace?.templateError].filter(Boolean);
   notice(issues.length?'Some sources could not be loaded: '+issues.map(clean).join('; '):`${automations.length} workflows available.`,!!issues.length);
 }
 async function load(){if(loading)return;loading=true;notice('Loading automation data…');try{render(await call('REFRESH'))}catch(e){notice(e.message,true)}finally{loading=false}}
 async function selectAutomation(id){
   selected=automations.find(a=>a.id===id)||null;if(!selected)return;
   renderList();$('emptyDetail').hidden=true;$('automationDetail').hidden=false;
-  $('detailTitle').textContent=clean(selected.name);$('detailDescription').textContent=clean(selected.description||'');$('detailStatus').textContent=selected.draft?'Draft':selected.status==='ACTIVE'?'Active':'Inactive';
+  $('detailTitle').textContent=clean(selected.name);$('detailDescription').textContent=clean(selected.description||'');$('detailStatus').textContent=selected.archived?'Archived':selected.draft?'Draft':selected.status==='ACTIVE'?'Active':'Inactive';
   $('detailTrigger').textContent=clean(selected.triggerKey||'Not selected');$('detailActions').textContent=String(selected.actionCount||0);$('detailUpdated').textContent=date(selected.updatedAt);
-  $('toggleStatus').hidden=!!selected.draft;$('toggleStatus').disabled=selected.statusChangeAllowed===false;$('toggleStatus').textContent=selected.status==='ACTIVE'?'Pause':'Activate';
+  $('toggleStatus').hidden=!!selected.draft||!!selected.archived;$('toggleStatus').disabled=selected.statusChangeAllowed===false;$('toggleStatus').textContent=selected.status==='ACTIVE'?'Pause':'Activate';
   $('removeAutomation').hidden=!!selected.draft;$('removeAutomation').disabled=selected.deleteAllowed===false;
-  $('openDraft').disabled=selected.editable===false;$('openDraft').textContent=selected.draft?'Open draft':'Edit draft';
+  $('archiveAutomation').hidden=!!selected.draft;$('archiveAutomation').disabled=selected.editable===false;$('archiveAutomation').textContent=selected.archived?'Restore':'Archive';
+  $('openDraft').disabled=selected.editable===false||!!selected.archived;$('openDraft').textContent=selected.draft?'Open draft':'Edit draft';
   $('graphView').textContent=selected.draft?'Open the draft to inspect its definition.':'Loading steps…';
   if(selected.draft)return;
   try{const result=await call('GRAPH',{automationId:id});if(selected?.id!==id)return;const nodes=result?.graph?.nodes||[];$('graphView').innerHTML=nodes.length?nodes.map(n=>`<div><strong>${esc(n.type==='TRIGGER'?'Event':n.type==='APP_DEFINED'?'Action':n.type)}</strong> · ${esc(n.label||'Step')}${n.delayAmount?` · ${esc(n.delayAmount)} ${esc(n.delayUnit)}`:''}</div>`).join(''):'<p>No steps returned.</p>'}
@@ -92,6 +93,13 @@ $('automationList').addEventListener('click',e=>{const b=e.target.closest('[data
 $('newDraft').addEventListener('click',()=>perform(async()=>{const name=window.prompt('Name the new workflow:');if(!name?.trim())return;if(!window.confirm('Create a new workflow draft?'))return;const r=await call('CREATE_BLANK_DRAFT',{name:name.trim(),confirm:true});if(!r.ok)throw new Error(r.reason||'Draft creation failed.');useDraft(r.draft);notice('Draft created. It will not run until published.');await load()}));
 $('openDraft').addEventListener('click',()=>perform(async()=>{if(!selected)return;if(!selected.draft&&!window.confirm('Create or open a draft for this workflow?'))return;const r=await call('OPEN_DRAFT',{automationId:selected.id,standalone:!!selected.draft,confirm:true});if(!r.ok)throw new Error(r.reason||'The draft could not be opened.');useDraft(r.draft);notice('Draft opened.')}));
 $('toggleStatus').addEventListener('click',()=>perform(async()=>{if(!selected)return;const active=selected.status!=='ACTIVE';if(!window.confirm(`${active?'Activate':'Pause'} ${clean(selected.name)}?`))return;let r=await call('SET_STATUS',{automationId:selected.id,revision:selected.revision,active,confirm:true});if(!r.ok&&r.validation?.status==='VALID_WITH_WARNINGS'){write('graphView',r.validation);if(!window.confirm('Validation returned warnings. Review the details. Activate anyway?'))return;r=await call('SET_STATUS',{automationId:selected.id,revision:selected.revision,active,confirm:true,acceptWarnings:true})}if(!r.ok){if(r.validation)write('graphView',r.validation);throw new Error(r.reason||'The status was not changed.')}notice(r.message||'Status changed.');await load();await selectAutomation(r.automationId||selected.id)}));
+$('archiveAutomation').addEventListener('click',()=>perform(async()=>{
+  if(!selected)return;const archived=!selected.archived;
+  if(archived&&selected.status==='ACTIVE')throw new Error('Pause this workflow before moving it to the archive.');
+  if(!window.confirm(`${archived?'Archive':'Restore'} ${clean(selected.name)}? Restoring preserves its current status.`))return;
+  const id=selected.id,r=await call('SET_ARCHIVED',{automationId:id,revision:selected.revision,archived,confirm:true});
+  if(!r.ok)throw new Error('The archive change was not confirmed.');$('automationFilter').value=archived?'ARCHIVED':'ALL';await load();await selectAutomation(id);notice(archived?'Workflow archived.':'Workflow restored.');
+}));
 $('removeAutomation').addEventListener('click',()=>perform(async()=>{if(!selected)return;if(!window.confirm(`Delete ${clean(selected.name)}? For an installed workflow this may restore the original version.`))return;const r=await call('DELETE',{automationId:selected.id,revision:selected.revision,confirm:true});if(!r.ok)throw new Error('The workflow was not deleted.');selected=null;$('emptyDetail').hidden=false;$('automationDetail').hidden=true;await load();notice('Workflow deleted.')}));
 $('stepType').addEventListener('change',()=>{$('editorActionField').hidden=$('stepType').value!=='APP_DEFINED'});
 $('applyTrigger').addEventListener('click',()=>perform(async()=>{const t=getSelectedTrigger('editorTrigger');if(!t)throw new Error('Choose an event.');const d=definition();d.configuration=d.configuration||{};d.configuration.trigger={appId:t.appId,triggerKey:t.triggerKey,filters:[]};updateDefinition(d)}));
