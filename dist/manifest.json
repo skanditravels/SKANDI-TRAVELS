@@ -3321,6 +3321,64 @@
       "bytes": 141260
     },
     {
+      "key": "automationControl",
+      "route": "/riaintra/success-factors/automation-control",
+      "slug": "automation-control",
+      "title": "Automations",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "mobileNavigation": true,
+      "sourceDirectory": "riaintra-embeds/automation-control",
+      "stem": "skandi-automation-control",
+      "controller": "src/pages/Automations.ometk.js",
+      "embedIds": [
+        "#sfAutomationEmbed"
+      ],
+      "sources": [
+        "SKANDI_SF_AUTOMATIONS_EMBED"
+      ],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "BUILT",
+      "files": [
+        "riaintra-embeds/automation-control/skandi-automation-control.html",
+        "riaintra-embeds/automation-control/skandi-automation-control.css",
+        "riaintra-embeds/automation-control/skandi-automation-control.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/automationControl.web.js",
+        "src/backend/SKANDI_CORE/automationsWorkspace.web.js"
+      ],
+      "messages": [
+        "AUTOMATION_CONSOLE_",
+        "AUTOMATION_CONSOLE_BOOTSTRAP",
+        "AUTOMATION_CONSOLE_CONTROLLER_ATTACHED",
+        "AUTOMATION_CONSOLE_DRY_RUN",
+        "AUTOMATION_CONSOLE_ERROR",
+        "AUTOMATION_CONSOLE_READY",
+        "AUTOMATION_CONSOLE_REFRESH",
+        "AUTOMATION_CONSOLE_RESULT",
+        "AUTOMATION_CONSOLE_SYNC",
+        "AUTOMATION_ERROR",
+        "DRY_RUN",
+        "SKANDI_SF_AUTOMATIONS_EMBED",
+        "SKANDI_WIX_PARENT",
+        "SYNC",
+        "UNKNOWN_OPERATION"
+      ],
+      "output": "dist/automation-control/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "receiver": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
+      "receiverFile": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
+      "sha256": "ac14a40d1a7b478cb672a752b1dd505a75b0fd34c2df082ad37fd9ada52d5ef9",
+      "bytes": 116815
+    },
+    {
       "key": "payroll",
       "route": "/riaintra/success-factors/payroll",
       "slug": "payroll",
