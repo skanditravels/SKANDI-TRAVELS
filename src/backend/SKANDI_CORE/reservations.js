@@ -7,6 +7,7 @@
 
 
 import { createHash } from "crypto";
+import { loadInventoryRankings, loadAllInventoryRows, rankInventoryRows } from "backend/SKANDI_CORE/inventoryRanking";
 import { restRequest, rpcRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import {
@@ -844,11 +845,12 @@ export async function searchReservationInventoryCore(input={}){
   await requireReservationsAccessCore();
   const q=lower(input.query,200),type=upper(input.entityType||input.type,80),date=clean(input.serviceDate,20);
   const types=type&&SELLABLE_TYPES.has(type)?new Set([type]):SELLABLE_TYPES;
-  const rows=await select("inventory_master_entities",{
-    select:"id,public_id,entity_type,code,name,slug,status,active,altea_visible,details,commercial,operations,source,source_reference",
-    active:"eq.true",altea_visible:"eq.true",limit:"1500",order:"sort_priority.asc"
+  const rows=await loadAllInventoryRows(select,{
+    select:"id,public_id,entity_type,code,name,slug,status,active,altea_visible,featured,details,commercial,operations,source,source_reference",
+    active:"eq.true",altea_visible:"eq.true",limit:"1500",order:"name.asc,id.asc"
   });
-  const items=rows.filter(r=>types.has(upper(r.entity_type))&&["PUBLISHED","REVIEW"].includes(upper(r.status))&&
+  const rankedRows=rankInventoryRows(rows,await loadInventoryRankings(select));
+  const items=rankedRows.filter(r=>types.has(upper(r.entity_type))&&["PUBLISHED","REVIEW"].includes(upper(r.status))&&
     (!q||`${r.code} ${r.name} ${JSON.stringify(r.details||{})}`.toLowerCase().includes(q))).slice(0,300);
   const ids=items.map(x=>x.id);let dated=[];
   if(ids.length){

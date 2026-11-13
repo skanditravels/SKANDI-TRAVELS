@@ -4,6 +4,7 @@
 // Live offers/orders remain provider transactions; this core only reads canonical Inventory reference/master data.
 
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { loadInventoryRankings, loadAllInventoryRows, rankInventoryRows } from "backend/SKANDI_CORE/inventoryRanking";
 import { requireReservationsAccessCore } from "backend/SKANDI_CORE/reservations";
 
 const ACTIVE = "eq.true";
@@ -124,17 +125,18 @@ export async function getReservationComponentSuggestionsCore(input = {}) {
   const arrivalAirport = finalFlightDestination(booking);
   const destination = clean(booking.destination, 160);
   const context = { arrivalAirport, destination, departureDate: clean(booking.departure_date, 20), returnDate: clean(booking.return_date, 20) };
-  const rows = await select("inventory_master_entities", {
-    select: "id,public_id,entity_type,code,name,status,active,staff_visible,altea_visible,sort_priority,details,commercial,operations,payload",
+  const rows = await loadAllInventoryRows(select, {
+    select: "id,public_id,entity_type,code,name,status,active,staff_visible,altea_visible,featured,sort_priority,details,commercial,operations,payload",
     entity_type: "in.(TRANSFER,HOTEL,GUIDED_TOUR,ACTIVITY,PARTNER_TICKET,CAR_RENTAL)",
     active: ACTIVE,
     altea_visible: ALTEA_VISIBLE,
     status: "eq.PUBLISHED",
-    order: "sort_priority.asc,name.asc",
+    order: "name.asc,id.asc",
     limit: "2000"
   });
 
-  const items = rows.map(row => {
+  const rankedRows = rankInventoryRows(rows, await loadInventoryRankings(select));
+  const items = rankedRows.map(row => {
     const match = inventoryMatch(row, context);
     const commercial = object(row.commercial);
     const details = object(row.details);
@@ -144,10 +146,10 @@ export async function getReservationComponentSuggestionsCore(input = {}) {
       airportIata: upper(details.airportIata || details.searchAirportIata, 8),
       publicPrice: commercial.publicPrice ?? commercial.oneWayPublicPrice ?? null,
       currency: upper(commercial.currency || details.currency || "", 8),
-      priceBasis: commercial.priceBasis || "", reason: match.reasons.join(" · "), score: match.score
+      priceBasis: commercial.priceBasis || "", reason: match.reasons.join(" · "), score: match.score, searchPriority: row.automaticSearchPriority
     };
   }).filter(item => item.score > 0)
-    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+    .sort((a, b) => b.score - a.score || a.searchPriority - b.searchPriority || a.name.localeCompare(b.name))
     .slice(0, 24);
 
   return { ok: true, bookingId, context, items };
