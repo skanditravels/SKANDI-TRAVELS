@@ -3375,8 +3375,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
       "receiverFile": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
-      "sha256": "ac14a40d1a7b478cb672a752b1dd505a75b0fd34c2df082ad37fd9ada52d5ef9",
-      "bytes": 116815
+      "sha256": "458f9ba1034f1b9d8d97e9b4382afeec763e1103cfa1167c1d74157443d935d4",
+      "bytes": 116997
     },
     {
       "key": "payroll",
