@@ -30,6 +30,19 @@ const ACTUAL_TABLES = Object.freeze({
 function clean(value, max = 500) {
   return String(value ?? "").trim().slice(0, max);
 }
+// Navigation visibility alone does not protect finance data: each callable
+// backend action must also verify the employee's existing access projection.
+async function requireFinanceAccess() {
+  const session = await requireStaffPortalSessionCore();
+  const values = [...(session.allowedApps || []), ...(session.permissionKeys || []), ...(session.permissionGroups || [])]
+    .map(value => clean(value, 120).toLowerCase());
+  const role = clean(session.accessRole, 80).toUpperCase();
+  if (!(session.isSystemAdmin === true || ["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"].includes(role) ||
+    values.some(value => ["*", "all", "system-admin", "finance-control", "finance", "finance.manage"].includes(value)))) {
+    throw new SkandiError("FINANCE_ACCESS_DENIED", "Finance access is required.");
+  }
+  return session;
+}
 function number(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -279,7 +292,7 @@ function workflowCases(rows = []) {
 }
 
 export async function getFinanceControlBootstrapCore(input = {}) {
-  const session = await requireStaffPortalSessionCore();
+  const session = await requireFinanceAccess();
   const specs = [
     ["ledger", ACTUAL_TABLES.ledger, "transaction_date.desc"],
     ["invoices", ACTUAL_TABLES.invoices, "created_at.desc"],
@@ -375,7 +388,7 @@ export async function getFinanceControlBootstrapCore(input = {}) {
 }
 
 export async function saveFinanceExpenseReportCore(input = {}) {
-  const session = await requireStaffPortalSessionCore();
+  const session = await requireFinanceAccess();
   const row = {
     expense_id: clean(input.expenseReportId || input.report?.expenseReportId || rowId("EXP"), 100),
     vendor: clean(input.vendor || input.report?.vendor || input.purpose || input.report?.purpose || "Staff expense", 200),
@@ -402,7 +415,7 @@ export async function saveFinanceExpenseReportCore(input = {}) {
 }
 
 export async function saveFinanceInvoiceCore(input = {}) {
-  const session = await requireStaffPortalSessionCore();
+  const session = await requireFinanceAccess();
   const header = input.header || input.invoice || input;
   const line = input.line || {};
   const pdf = input.pdf || {};
@@ -446,7 +459,7 @@ export async function saveFinanceInvoiceCore(input = {}) {
 }
 
 export async function saveFinanceRecordCore({ collection = "", item = {} } = {}) {
-  const session = await requireStaffPortalSessionCore();
+  const session = await requireFinanceAccess();
   const name = clean(collection, 120);
   if (name === "FinanceCorporateSettings") {
     const key = clean(item.settingKey || item.setting_key, 200);
@@ -469,7 +482,7 @@ export async function saveFinanceRecordCore({ collection = "", item = {} } = {})
 }
 
 export async function saveFinancePurchaseRequestCore() {
-  await requireStaffPortalSessionCore();
+  await requireFinanceAccess();
   throw new SkandiError(
     "FINANCE_PURCHASE_STORAGE_NOT_CONFIGURED",
     "Purchase-request storage is not present in the verified V12 Supabase schema. No purchase record was written."
@@ -477,7 +490,7 @@ export async function saveFinancePurchaseRequestCore() {
 }
 
 export async function getFinanceControlDiagnosticsCore() {
-  await requireStaffPortalSessionCore();
+  await requireFinanceAccess();
   return {
     ok: true,
     canonicalTables: ACTUAL_TABLES,

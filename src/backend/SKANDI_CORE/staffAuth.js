@@ -49,7 +49,16 @@ const APP_CATALOG = Object.freeze({
   "media-control": Object.freeze({ id:"media-control", title:"Media Control", subtitle:"Supabase asset library and controlled media uploads", path:SITE_MAP.mediaControl, group:"Administration", icon:"D" }),
   "store-control": Object.freeze({ id:"store-control", title:"Store Control", subtitle:"The Store catalog, inventory and order operations", path:SITE_MAP.storeControl, group:"Administration", icon:"S" }),
   hr: Object.freeze({ id:"hr", title:"SuccessFactors", subtitle:"Staff and organization management", path:SITE_MAP.successFactors, group:"Administration", icon:"H" }),
-  policies: Object.freeze({ id:"policies", title:"Policy Control", subtitle:"Internal policies and controlled documents", path:SITE_MAP.policyControl, group:"Administration", icon:"P" })
+  policies: Object.freeze({ id:"policies", title:"Policy Control", subtitle:"Internal policies and controlled documents", path:SITE_MAP.policyControl, group:"Administration", icon:"P" }),
+  "automation-control": Object.freeze({ id:"automation-control", title:"Automation Control", subtitle:"Workflows and system messages", path:SITE_MAP.automationControl, group:"Administration", icon:"A", systemAdminOnly:true }),
+  "docunet-viewer": Object.freeze({ id:"docunet-viewer", title:"DocuNet", subtitle:"Staff documents and resources", path:SITE_MAP.docunet, group:"Resources", icon:"D", allStaff:true }),
+  "docunet-admin": Object.freeze({ id:"docunet-admin", title:"DocuNet Administration", subtitle:"Manage document resources", path:SITE_MAP.docunetAdmin, group:"Administration", icon:"D", permissionAliases:["docunet","document-control","documents.manage"], managerAccess:true }),
+  "legal-internal": Object.freeze({ id:"legal-internal", title:"Internal Legal", subtitle:"Policies and legal resources", path:SITE_MAP.legalInternal, group:"Resources", icon:"L", allStaff:true }),
+  "service-desk": Object.freeze({ id:"service-desk", title:"Customer Service Desk", subtitle:"Customer service cases", path:SITE_MAP.serviceDesk, group:"Operations", icon:"S", permissionAliases:["customer-support","customer-service","support","support-agent","support-admin","contact-center"] }),
+  helpdesk: Object.freeze({ id:"helpdesk", title:"HelpDesk", subtitle:"Internal support and requests", path:SITE_MAP.helpDesk, group:"Resources", icon:"H", allStaff:true }),
+  "finance-control": Object.freeze({ id:"finance-control", title:"Finance Control", subtitle:"Finance and accounting", path:SITE_MAP.financeControl, group:"Administration", icon:"F", permissionAliases:["finance","finance.manage"] }),
+  "document-control": Object.freeze({ id:"document-control", title:"Document Control", subtitle:"Controlled documents and issue", path:SITE_MAP.documentControl, group:"Administration", icon:"D", permissionAliases:["documents","documents.manage"], managerAccess:true }),
+  "transport-compliance": Object.freeze({ id:"transport-compliance", title:"Transport Compliance", subtitle:"Transport document verification", path:SITE_MAP.transportCompliance, group:"Operations", icon:"T", permissionAliases:["transport-compliance.manage"] })
 });
 
 const ALTEA_APPS = Object.freeze([
@@ -60,6 +69,8 @@ const ALTEA_APPS = Object.freeze([
   Object.freeze({ id:"pss-dcs", title:"Amadeus Altéa Passenger Service System (PSS / DCS)", description:"Run check-in, seating, baggage, boarding and departure-control workflows.", icon:"passenger", code:"PSS / DCS", accent:"#007a64", path:"/riaintra/success-factors/altea/departure-control", available:false, unavailableReason:"Application not yet published", groups:Object.freeze(["airport","operations","occ","system-admin"]) }),
   Object.freeze({ id:"timatic", title:"IATA Timatic (Regulatory & Document Check)", description:"Validate passport, visa, health and destination entry requirements before passenger acceptance.", icon:"passport", code:"DOCUMENT CHECK", accent:"#6650a4", path:SITE_MAP.alteaTimatic, groups:Object.freeze(["sales","airport","destination","operations","occ","system-admin"]) }),
   Object.freeze({ id:"grouptalk", title:"GroupTalk", description:"Operational team communication, voice, field coordination and support channels.", icon:"communication", code:"GROUPTALK", accent:"#005eb8", path:APP_ROUTES.groupTalk, requiredApp:"grouptalk", requiresGroupTalk:true, groups:Object.freeze(["airport","sales","destination","operations","occ","managers","system-admin"]) }),
+  Object.freeze({ id:"myroster", title:"MyRoster", description:"Shifts, duties and assignments.", icon:"passenger", code:"MYROSTER", accent:"#005eb8", path:APP_ROUTES.myRoster, requiredApp:"myroster", groups:Object.freeze([]) }),
+  Object.freeze({ id:"info-control", title:"Info Control", description:"Manage travel information records.", icon:"passport", code:"INFO CONTROL", accent:"#005eb8", path:SITE_MAP.infoControl, available:false, unavailableReason:"The information service requires repair before this app can open.", requiredApp:"info-control", groups:Object.freeze([]) }),
   Object.freeze({ id:"eos", title:"EOS", description:"Mobile and tablet flight operations, personal duties and live station information.", icon:"plane", code:"EOS OPERATIONS", accent:"#0066cc", path:SITE_MAP.eos, groups:Object.freeze(["airport","destination","operations","occ","managers","system-admin"]) }),
   Object.freeze({ id:"occ", title:"OPS Control", description:"Coordinate workforce duties, transfers, tours, standby, disruption recovery, vacation, TripTrade and bidding control.", icon:"arrow", code:"OPERATIONS CONTROL", accent:"#6650a4", path:SITE_MAP.opsControl, groups:Object.freeze(["operations","occ","system-admin"]) })
 ]);
@@ -225,8 +236,17 @@ function isWildcardAllowed(values = []) {
 }
 function portalApps(auth) {
   const allowed = new Set(auth.allowedApps.map(value => lower(value, 100)));
+  const permissions = new Set([...auth.permissionKeys, ...auth.permissionGroups].map(value => lower(value, 100)));
   const privileged = PRIVILEGED_ACCESS_ROLES.has(auth.accessRoleCode) || auth.isSystemAdmin || isWildcardAllowed(auth.allowedApps);
-  return Object.values(APP_CATALOG).filter(app => privileged || allowed.has(app.id)).map(app => ({ ...app }));
+  const systemAdmin = PRIVILEGED_ACCESS_ROLES.has(auth.accessRoleCode) || auth.isSystemAdmin || permissions.has("system-admin");
+  const launchpadApps = alteaApps({ ...auth, accessRole:auth.accessRoleCode });
+  return Object.values(APP_CATALOG).filter(app => {
+    if (app.systemAdminOnly) return systemAdmin;
+    if (app.id === "altea" && launchpadApps.some(item => item.available)) return true;
+    return privileged || app.allStaff || allowed.has(app.id) || permissions.has(app.id) ||
+      (app.managerAccess && auth.canManage) ||
+      (app.permissionAliases || []).some(key => allowed.has(key) || permissions.has(key));
+  }).map(({systemAdminOnly, allStaff, managerAccess, permissionAliases, ...app}) => app);
 }
 function alteaApps(session) {
   const allowedApps = new Set(stringArray(session.allowedApps).map(value => lower(value, 100)));

@@ -160,3 +160,24 @@ test('archiving preserves the full revision and requires an inactive workflow',a
  const active={_id:id,revision:'4',origin:'USER',configuration:{status:'ACTIVE',trigger:{appId:id},actions:{},rootActionIds:[]}};
  const other=await workspaceHarness({record:active});await assert.rejects(other.api.setAutomationArchivedCore({automationId:id,revision:'4',archived:true,confirm:true}),/Pause/);assert.equal(other.calls.length,0);
 });
+
+test('visual workflow editor displays branches and preserves unrelated protected values',async()=>{
+ const html=await read('riaintra-embeds/automation-control/skandi-automation-control.html'),js=await read('riaintra-embeds/automation-control/skandi-automation-control.js');
+ const dom=new JSDOM(html,{runScripts:'outside-only',url:'https://example.test/'}),w=dom.window,messages=[];
+ const tick=()=>new Promise(resolve=>setImmediate(resolve));
+ const reply=(req,type,payload)=>w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type,requestId:req.requestId,payload}}));
+ try{
+  w.postMessage=m=>messages.push(m);w.prompt=()=> 'Test';w.confirm=()=>true;
+  Object.defineProperty(w.crypto,'randomUUID',{value:()=> 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'});
+  w.eval(js);w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  let req=messages.find(m=>m.type==='AUTOMATION_CONSOLE_REFRESH');reply(req,'AUTOMATION_CONSOLE_BOOTSTRAP',{live:{automations:[]},workspace:{triggers:[],actions:[],templates:[]},platform:{workflows:[]}});await tick();
+  w.document.querySelector('#newDraft').click();await tick();req=messages.find(m=>m.type==='AUTOMATION_CONSOLE_CREATE_BLANK_DRAFT');assert.ok(req);
+  const definition={name:'Test',configuration:{status:'INACTIVE',trigger:{triggerKey:'created',filters:[]},rootActionIds:['a'],actions:{a:{id:'a',type:'CONDITION',namespace:'CONDITION-1',conditionInfo:{orExpressionGroups:[{operator:'OR',booleanExpressions:['{{true}}']}],truePostActionIds:['b'],falsePostActionIds:[]}},b:{id:'b',type:'APP_DEFINED',namespace:'action-2',appDefinedInfo:{actionKey:'send',appId:'provider',inputMapping:{apiKey:'[protected]'},postActionIds:[]}}}}};
+  reply(req,'AUTOMATION_CONSOLE_RESULT',{data:{ok:true,draft:{id:draftId,revision:'1',canEditGraph:true,definition}}});await tick();
+  assert.match(w.document.querySelector('#flowGraph').textContent,/If true/);assert.match(w.document.querySelector('#flowGraph').textContent,/Otherwise/);
+  w.document.querySelector('[data-flow-step="a"]').click();assert.equal(w.document.querySelector('#conditionExpressions').value,'{{true}}');
+  const input=w.document.querySelector('#conditionExpressions');input.value='{{false}}';input.dispatchEvent(new w.Event('input',{bubbles:true}));
+  const slot=w.document.querySelector('[data-flow-slot="a"][data-flow-key="falsePostActionIds"]');assert.ok(slot);slot.click();w.document.querySelector('#addStep').click();await tick();
+  const actual=JSON.parse(w.document.querySelector('#draftDefinition').value);assert.equal(actual.configuration.actions.a.conditionInfo.orExpressionGroups[0].booleanExpressions[0],'{{false}}');assert.equal(actual.configuration.actions.b.appDefinedInfo.inputMapping.apiKey,'[protected]');assert.deepEqual(actual.configuration.actions.a.conditionInfo.falsePostActionIds,['cccccccc-cccc-4ccc-8ccc-cccccccccccc']);assert.equal(actual.configuration.actions['cccccccc-cccc-4ccc-8ccc-cccccccccccc'].id,'cccccccc-cccc-4ccc-8ccc-cccccccccccc');
+ }finally{dom.window.close()}
+});

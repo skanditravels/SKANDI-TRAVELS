@@ -55,23 +55,100 @@ async function selectAutomation(id){
   try{const result=await call('GRAPH',{automationId:id});if(selected?.id!==id)return;const nodes=result?.graph?.nodes||[];$('graphView').innerHTML=nodes.length?nodes.map(n=>`<div><strong>${esc(n.type==='TRIGGER'?'Event':n.type==='APP_DEFINED'?'Action':n.type)}</strong> · ${esc(n.label||'Step')}${n.delayAmount?` · ${esc(n.delayAmount)} ${esc(n.delayUnit)}`:''}</div>`).join(''):'<p>No steps returned.</p>'}
   catch(e){$('graphView').textContent=clean(e.message)}
 }
-function useDraft(value){draft=value;savedDefinition=JSON.stringify(value.definition,null,2);$('draftTitle').textContent=clean(value.definition?.name||'Workflow draft');$('draftMeta').textContent='Draft revision '+clean(value.revision||'—');$('draftDefinition').value=savedDefinition;$('editorEmpty').hidden=true;$('editorBody').hidden=false;write('draftResult','');show('editor')}
+function serializedDefinition(value){return JSON.stringify(value,null,2).replace(/wix/gi,match=>[...match].map(char=>'\\u'+char.charCodeAt(0).toString(16).padStart(4,'0')).join(''))}
+function useDraft(value){draft=value;savedDefinition=serializedDefinition(value.definition);$('draftTitle').textContent=clean(value.definition?.name||'Workflow draft');$('draftMeta').textContent='Draft revision '+clean(value.revision||'—');$('draftDefinition').value=savedDefinition;$('workflowName').value=value.definition?.name||'';$('workflowDescription').value=value.definition?.description||'';selectedStep='trigger';addSlot=null;$('editorEmpty').hidden=true;$('editorBody').hidden=false;write('draftResult','');renderFlow();renderInspector();show('editor')}
 function draftArgs(){if(!draft)throw new Error('Open a draft first.');return {draftId:draft.id,originalId:draft.originalId,originalRevision:draft.originalRevision,revision:draft.revision}}
 function definition(){try{const value=JSON.parse($('draftDefinition').value);if(!value||typeof value!=='object'||Array.isArray(value))throw Error();return value}catch(_){throw new Error('The workflow definition is not valid JSON.')}}
-function updateDefinition(value){$('draftDefinition').value=JSON.stringify(value,null,2)}
+function updateDefinition(value){$('draftDefinition').value=serializedDefinition(value)}
 function isDirty(){return $('draftDefinition').value!==savedDefinition}
 async function perform(fn){try{return await fn()}catch(e){notice(e.message,true);return null}}
 function getSelectedTrigger(id){const v=$(id).value;return v===''?null:triggers[Number(v)]}
 function getSelectedAction(id){const v=$(id).value;return v===''?null:actions[Number(v)]}
 function uuid(){if(window.crypto?.randomUUID)return window.crypto.randomUUID();throw new Error('This browser cannot generate a step identifier. Use a secure connection.')}
-function addStep(){const d=definition();d.configuration=d.configuration||{};const config=d.configuration;config.actions=config.actions||{};config.rootActionIds=config.rootActionIds||[];const id=uuid(),type=$('stepType').value;let step={_id:id,type,namespace:'step-'+id.slice(0,8)};
-  if(type==='DELAY')step.delayInfo={offsetExpression:'{{1}}',offsetTimeUnit:'DAYS',postActionIds:[]};
-  else if(type==='CONDITION')step.conditionInfo={orExpressionGroups:[],truePostActionIds:[],falsePostActionIds:[]};
-  else {const a=getSelectedAction('editorAction');if(!a)throw new Error('Choose a system action.');step.appDefinedInfo={appId:a.appId,actionKey:a.actionKey,inputMapping:{},postActionIds:[]}}
-  const existing=Object.values(config.actions);config.actions[id]=step;
-  if(!config.rootActionIds.length)config.rootActionIds=[id];
-  else {const last=existing[existing.length-1];let link=last?.type==='DELAY'?last.delayInfo?.postActionIds:last?.type==='APP_DEFINED'?last.appDefinedInfo?.postActionIds:null;if(Array.isArray(link)&&!link.length)link.push(id);else notice('Step added. Connect it in the workflow definition before validation.')}
-  updateDefinition(d);
+function addStep(){
+ if(draft?.canEditGraph===false)throw new Error('This workflow has provider-controlled connections.');
+ const d=definition(),config=d.configuration=d.configuration||{};config.actions=config.actions||{};config.rootActionIds=config.rootActionIds||[];
+ const target=slotArray(config,addSlot);if(!target||target.length)throw new Error('Select an empty connection first.');
+ if(Object.keys(config.actions).length>=45)throw new Error('This workflow has reached the 45-step limit.');
+ const id=uuid(),type=$('stepType').value,a=type==='APP_DEFINED'?getSelectedAction('editorAction'):null;if(type==='APP_DEFINED'&&!a)throw new Error('Choose a system action.');
+ const seq=1+Object.values(config.actions).reduce((n,x)=>Math.max(n,Number(String(x.namespace||'').match(/-(\d+)$/)?.[1]||0)),0);
+ const step={id,type,namespace:`${type==='APP_DEFINED'?a.actionKey:type}-${seq}`};
+ if(type==='DELAY')step.delayInfo={offsetExpression:'{{1}}',offsetTimeUnit:'DAYS',postActionIds:[]};
+ else if(type==='CONDITION')step.conditionInfo={orExpressionGroups:[],truePostActionIds:[],falsePostActionIds:[]};
+ else step.appDefinedInfo={appId:a.appId,actionKey:a.actionKey,inputMapping:{},postActionIds:[]};
+ config.actions[id]=step;target.push(id);selectedStep=id;addSlot=null;updateDefinition(d);renderFlow();renderInspector();
+}
+let selectedStep='trigger', addSlot=null;
+function graphConnections(step){
+ const info=step?.delayInfo||step?.appDefinedInfo||step?.rateLimitInfo||step?.setVariablesInfo;
+ if(info&&Array.isArray(info.postActionIds))return [{label:'Then',ids:info.postActionIds,key:'postActionIds'}];
+ const cond=step?.conditionInfo||step?.codeConditionInfo;
+ if(cond)return [{label:'If true',ids:Array.isArray(cond.truePostActionIds)?cond.truePostActionIds:[],key:'truePostActionIds'},{label:'Otherwise',ids:Array.isArray(cond.falsePostActionIds)?cond.falsePostActionIds:[],key:'falsePostActionIds'}];
+ if(step?.splitInfo?.paths)return step.splitInfo.paths.map(p=>({label:p.displayName||p.name||'Parallel path',ids:p.postActionId?[p.postActionId]:[],split:true}));
+ return [];
+}
+function slotArray(config,slot){
+ if(!slot)return null;
+ if(slot.id==='trigger')return config.rootActionIds;
+ const a=config.actions?.[slot.id], info=a?.delayInfo||a?.appDefinedInfo||a?.rateLimitInfo||a?.setVariablesInfo||a?.conditionInfo||a?.codeConditionInfo;
+ return info&&Array.isArray(info[slot.key])?info[slot.key]:null;
+}
+function stepLabel(step){return step?.displayName||actions.find(a=>a.actionKey===step?.appDefinedInfo?.actionKey&&a.appId===step?.appDefinedInfo?.appId)?.displayName||step?.appDefinedInfo?.actionKey||({DELAY:'Delay',CONDITION:'Condition',CODE_CONDITION:'Condition',SPLIT:'Parallel paths',RATE_LIMIT:'Rate limit',SET_VARIABLES:'Set variables'}[step?.type])||step?.type||'Unknown step'}
+function renderFlow(){
+ let d;try{d=definition()}catch(e){$('flowGraph').textContent=e.message;$('flowWarnings').textContent='Fix the advanced definition before using the visual editor.';return}
+ const c=d.configuration||{},map=c.actions||{},visited=new Set(),warnings=[];const canEdit=draft?.canEditGraph!==false;
+ const branch=(id,key,label,ids,depth)=>{
+  const path=Array.isArray(ids)?ids:[];
+  const parentLocked=(draft?.readonlyActionIds||[]).includes(id);
+  const add=canEdit&&!parentLocked&&!path.length&&key?`<button type="button" class="flow-add" data-flow-slot="${escapeHTML(id)}" data-flow-key="${escapeHTML(key)}" aria-label="Add step to ${esc(label)}">+ Add step</button>`:'';
+  return `<div class="flow-branch"><div class="flow-branch-label">${esc(label)}</div>${path.length?path.map(child=>node(child,depth+1)).join(''):add||'<span class="flow-end">End</span>'}</div>`;
+ };
+ const node=(id,depth)=>{
+  if(depth>60||visited.has(id)){warnings.push('A repeated or circular connection needs review.');return `<div class="flow-issue">Repeated connection: ${esc(id)}</div>`}
+  const a=map[id];if(!a){warnings.push('A connection points to a missing step.');return `<div class="flow-issue">Missing step: ${esc(id)}</div>`}
+  visited.add(id);const details=a.type==='DELAY'?`${a.delayInfo?.offsetExpression||''} ${a.delayInfo?.offsetTimeUnit||''}`:a.type==='CONDITION'?'Choose a path based on a condition':a.type==='SPLIT'?'Runs paths in parallel':a.appDefinedInfo?.actionKey||a.type||'';
+  const children=graphConnections(a).map(b=>branch(id,b.split?'':b.key,b.label,b.ids,depth)).join('');
+  return `<div class="flow-node"><button type="button" class="flow-step ${selectedStep===id?'selected':''}" data-flow-step="${escapeHTML(id)}"><span class="flow-kind">${esc(a.type==='APP_DEFINED'?'ACTION':a.type||'STEP')}</span><strong>${esc(stepLabel(a))}</strong><small>${esc(details)}</small></button>${children?`<div class="flow-branches">${children}</div>`:''}</div>`;
+ };
+ const trigger=c.trigger||{},root=Array.isArray(c.rootActionIds)?c.rootActionIds:[];
+ $('flowGraph').innerHTML=`<button type="button" class="flow-step flow-trigger ${selectedStep==='trigger'?'selected':''}" data-flow-step="trigger"><span class="flow-kind">EVENT</span><strong>${esc(triggers.find(t=>t.appId===trigger.appId&&t.triggerKey===trigger.triggerKey)?.displayName||trigger.triggerKey||'Choose an event')}</strong><small>Starts this workflow</small></button>${branch('trigger','rootActionIds','Then',root,0)}`;
+ const orphan=Object.keys(map).filter(id=>!visited.has(id));if(orphan.length){warnings.push(`${orphan.length} step(s) are not connected to the event. They are retained in the draft.`);$('flowGraph').insertAdjacentHTML('beforeend',`<div class="flow-orphans"><h4>Unconnected steps</h4>${orphan.map(id=>node(id,0)).join('')}</div>`)}
+ if(root.length>1)warnings.push('More than one root is present; review the definition before publishing.');
+ $('flowWarnings').textContent=warnings.join(' ');
+ $('addTarget').textContent=addSlot?`Selected connection: ${addSlot.label}`:'Select an empty connection in the flow.';
+ $('addStep').disabled=!canEdit||!addSlot;
+ $('stepAddPanel').hidden=!canEdit;
+}
+function renderInspector(){
+ const d=definition(),step=d.configuration?.actions?.[selectedStep];const event=selectedStep==='trigger';
+ $('eventEditor').hidden=!event;$('stepInspector').hidden=event||!step;
+ $('flowInspector').innerHTML=event?'<p>Choose the event that starts this workflow. Existing event settings are retained until you change the event.</p>':step?`<p>${esc(step.type||'Step')} · ${esc(step.namespace||'No namespace')}</p>`:'<p>Select an event or step.</p>';
+ $('applyTrigger').disabled=draft?.canEditGraph===false;
+ if(!step)return;
+ const locked=(draft?.readonlyActionIds||[]).includes(selectedStep);
+ $('stepName').value=step.displayName||'';$('stepName').disabled=locked;
+ $('delayEditor').hidden=step.type!=='DELAY';$('delayExpression').value=step.delayInfo?.offsetExpression||'';$('delayExpression').disabled=locked;
+ $('delayUnit').value=step.delayInfo?.offsetTimeUnit||'';$('delayUnit').disabled=locked;
+ const input=step.appDefinedInfo?.inputMapping;
+ const mapping=input&&typeof input==='object'&&!Array.isArray(input)?input:{};
+ const schema=actions.find(a=>a.actionKey===step.appDefinedInfo?.actionKey&&a.appId===step.appDefinedInfo?.appId)?.inputSchema?.properties||{};
+ const names=[...new Set([...Object.keys(mapping),...Object.keys(schema)])];
+ const rows=names.map(key=>[key,mapping[key],schema[key]]);
+ const conditions=step.conditionInfo?.orExpressionGroups;
+ const simpleCondition=Array.isArray(conditions)&&conditions.length<=1&&(!conditions.length||(conditions[0]?.operator==='OR'&&Array.isArray(conditions[0]?.booleanExpressions)&&conditions[0].booleanExpressions.every(v=>typeof v==='string'&&v!=='[protected]')));
+ $('actionInputs').innerHTML=rows.length?`<h4>Action inputs</h4>${rows.map(([key,val,spec])=>(typeof val==='string'&&val!=='[protected]')||(val===undefined&&spec?.type==='string')?`<div class="field"><label>${esc(spec?.title||key)}</label><input data-mapping-key="${escapeHTML(key)}" value="${escapeHTML(val||'')}" ${locked?'disabled':''}></div>`:`<p class="subtle">${esc(key)}: ${val==='[protected]'?'Protected':'Configured value; use advanced definition to review.'}</p>`).join('')}`:step.type==='CONDITION'?(simpleCondition?`<div class="field"><label for="conditionExpressions">Condition expressions, one per line (any may match)</label><textarea id="conditionExpressions" rows="4" ${locked?'disabled':''}>${escapeHTML((conditions[0]?.booleanExpressions||[]).join('\n'))}</textarea><span class="subtle">Use fields available to this step. Validate the saved draft before publishing.</span></div>`:'<p class="subtle">This condition has a complex structure. Review it in the advanced definition.</p>'):'';
+ if(draft?.canEditGraph!==false&&!locked&&!graphConnections(step).some(b=>b.ids.length))$('actionInputs').insertAdjacentHTML('beforeend','<button class="button danger" id="removeFlowStep" type="button">Remove this end step</button>');
+}
+function updateSelected(mutator){const d=definition(),step=d.configuration?.actions?.[selectedStep];if(!step||(draft?.readonlyActionIds||[]).includes(selectedStep))return;mutator(step);updateDefinition(d);renderFlow()}
+function removeFlowStep(){
+ const d=definition(),c=d.configuration,map=c?.actions||{},step=map[selectedStep];if(!step||draft?.canEditGraph===false||(draft?.readonlyActionIds||[]).includes(selectedStep))return;
+ if(graphConnections(step).some(b=>b.ids.length))throw new Error('Remove downstream steps first.');
+ if(!window.confirm('Remove this end step from the draft?'))return;
+ const lockedParents=Object.entries(map).filter(([id,item])=>id!==selectedStep&&(draft?.readonlyActionIds||[]).includes(id)&&graphConnections(item).some(b=>b.ids.includes(selectedStep)));
+ if(lockedParents.length)throw new Error('The connection belongs to a protected step.');
+ const removeFrom=arr=>{if(Array.isArray(arr)){const i=arr.indexOf(selectedStep);if(i>=0)arr.splice(i,1)}};removeFrom(c.rootActionIds);
+ for(const item of Object.values(map)){for(const b of graphConnections(item))if(!b.split)removeFrom(b.ids);for(const path of item.splitInfo?.paths||[])if(path.postActionId===selectedStep)delete path.postActionId}
+ delete map[selectedStep];selectedStep='trigger';addSlot=null;updateDefinition(d);renderFlow();renderInspector();
 }
 function templatePayload(){const trigger=getSelectedTrigger('draftTrigger'),entityId=$('draftTemplate').value;if(!trigger||!entityId)throw new Error('Select a template and an event.');return{entityId,trigger:{appId:trigger.appId,triggerKey:trigger.triggerKey},name:$('draftName').value.trim(),contactPath:$('draftContact').value.trim()||'contactId',notificationTopicId:$('draftTopic').value.trim(),senderDetailsId:$('draftSender').value.trim(),acknowledgeCritical:$('draftCritical').checked}}
 async function loadEmailActions(){const id=$('emailAutomation').value;$('emailAction').innerHTML='<option value="">Select an action</option>';if(!id)return;const response=await call('GRAPH',{automationId:id});const nodes=(response?.graph?.nodes||[]).filter(x=>x.type==='APP_DEFINED'&&x.label==='triggered-emails');selectOptions('emailAction',nodes,n=>n.label,n=>n.id);if(!nodes.length)notice('No supported message action was found for this workflow.')}
@@ -108,8 +185,18 @@ $('archiveAutomation').addEventListener('click',()=>perform(async()=>{
   if(!r.ok)throw new Error('The archive change was not confirmed.');$('automationFilter').value=archived?'ARCHIVED':'ALL';await load();await selectAutomation(id);notice(archived?'Workflow archived.':'Workflow restored.');
 }));
 $('removeAutomation').addEventListener('click',()=>perform(async()=>{if(!selected)return;if(!window.confirm(`Delete ${clean(selected.name)}? For an installed workflow this may restore the original version.`))return;const r=await call('DELETE',{automationId:selected.id,revision:selected.revision,confirm:true});if(!r.ok)throw new Error('The workflow was not deleted.');selected=null;$('emptyDetail').hidden=false;$('automationDetail').hidden=true;await load();notice('Workflow deleted.')}));
+$('flowGraph').addEventListener('click',e=>{const step=e.target.closest('[data-flow-step]'),slot=e.target.closest('[data-flow-slot]');if(step){selectedStep=step.dataset.flowStep;addSlot=null;renderFlow();renderInspector()}else if(slot){addSlot={id:slot.dataset.flowSlot,key:slot.dataset.flowKey,label:slot.parentElement.querySelector('.flow-branch-label')?.textContent||'Then'};renderFlow()}});
+$('workflowName').addEventListener('input',e=>{const d=definition();d.name=e.target.value;updateDefinition(d);$('draftTitle').textContent=clean(d.name||'Workflow draft')});
+$('workflowDescription').addEventListener('input',e=>{const d=definition();d.description=e.target.value;updateDefinition(d)});
+$('stepName').addEventListener('input',e=>updateSelected(s=>{s.displayName=e.target.value}));
+$('delayExpression').addEventListener('input',e=>updateSelected(s=>{s.delayInfo.offsetExpression=e.target.value}));
+$('delayUnit').addEventListener('change',e=>updateSelected(s=>{s.delayInfo.offsetTimeUnit=e.target.value}));
+$('actionInputs').addEventListener('input',e=>{const key=e.target.dataset.mappingKey;if(key)updateSelected(s=>{s.appDefinedInfo.inputMapping[key]=e.target.value})});
+$('actionInputs').addEventListener('input',e=>{if(e.target.id==='conditionExpressions')updateSelected(s=>{const values=e.target.value.split('\n').map(v=>v.trim()).filter(Boolean);const old=s.conditionInfo.orExpressionGroups[0]||{};s.conditionInfo.orExpressionGroups=values.length?[{...old,operator:'OR',booleanExpressions:values}]:[]})});
+$('actionInputs').addEventListener('click',e=>{if(e.target.id==='removeFlowStep')perform(async()=>removeFlowStep())});
+$('draftDefinition').addEventListener('input',()=>{try{const d=definition();$('workflowName').value=d.name||'';$('workflowDescription').value=d.description||'';renderFlow();renderInspector()}catch(_){renderFlow()}});
 $('stepType').addEventListener('change',()=>{$('editorActionField').hidden=$('stepType').value!=='APP_DEFINED'});
-$('applyTrigger').addEventListener('click',()=>perform(async()=>{const t=getSelectedTrigger('editorTrigger');if(!t)throw new Error('Choose an event.');const d=definition();d.configuration=d.configuration||{};d.configuration.trigger={appId:t.appId,triggerKey:t.triggerKey,filters:[]};updateDefinition(d)}));
+$('applyTrigger').addEventListener('click',()=>perform(async()=>{const t=getSelectedTrigger('editorTrigger');if(!t)throw new Error('Choose an event.');if(draft?.canEditGraph===false)throw new Error('The event is controlled by the provider.');const d=definition();d.configuration=d.configuration||{};const old=d.configuration.trigger||{};if(old.appId===t.appId&&old.triggerKey===t.triggerKey)return;if(old.triggerKey&&!window.confirm('Changing the event removes its existing filters and event-specific settings. Continue?'))return;d.configuration.trigger={appId:t.appId,triggerKey:t.triggerKey,filters:[]};updateDefinition(d);renderFlow();renderInspector()}));
 $('addStep').addEventListener('click',()=>perform(async()=>addStep()));
 $('saveDraft').addEventListener('click',()=>perform(async()=>{const r=await call('SAVE_DRAFT',{...draftArgs(),definition:definition()});if(!r.ok)throw new Error(r.reason||'The draft was not saved.');useDraft(r.draft);notice('Draft saved.')}));
 $('validateDraft').addEventListener('click',()=>perform(async()=>{if(isDirty())throw new Error('Save the draft before validating it.');const r=await call('VALIDATE_DRAFT',draftArgs());write('draftResult',r.validation||r);notice(r.valid?(r.hasWarnings?'Validation returned warnings. Review them before publishing.':'Validation passed.'):'Validation found issues. Review the details.',!r.valid)}));

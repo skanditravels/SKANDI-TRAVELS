@@ -24,6 +24,12 @@ export const SITE_MAP = Object.freeze({
   docunetAdmin: "/riaintra/success-factors/docunet/admin", serviceDesk: "/riaintra/success-factors/service-desk", policyControl: "/riaintra/success-factors/policy-control",
   mediaControl: "/riaintra/success-factors/media-control", storeControl: "/riaintra/success-factors/store-control",
   automationControl: "/riaintra/success-factors/automation-control",
+  helpDesk: "/riaintra/success-factors/helpdesk",
+  financeControl: "/riaintra/success-factors/finance-control",
+  documentControl: "/riaintra/success-factors/document-control",
+  transportCompliance: "/riaintra/success-factors/document-control-1",
+  internalPolicies: "/riaintra/success-factors/legal-internal/policies-internal",
+  infoControl: "/riaintra/success-factors/altea/info-control",
   payroll: "/riaintra/success-factors/payroll"
 });
 
@@ -31,6 +37,7 @@ export const APP_ROUTES = Object.freeze({
   country: "/destinations/explore", hotelList: "/destinations/explore/hotel-list", bookingFlow: "/booking",
   myProfile: "/my-profile",
   myTrips: "/my-profile?tab=trips", careers: "/about/careers",
+  clubSupport: "/my-profile/club-support", travelAssistant: "/my-profile/travel-assistant",
   myRoster: "/riaintra/success-factors/altea/my-roster", groupTalk: "/riaintra/success-factors/altea/grouptalk",
   passportVisa: "/travel-info/passport-visa", baggageAllowance: "/travel-info/baggage-allowance",
   travelInsurance: "/travel-info/insurance", specialAssistance: "/travel-info/special-assistance",

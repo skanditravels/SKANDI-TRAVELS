@@ -12,6 +12,8 @@ The active source triplet adds responsive workspace, offer-editor and labeled HR
 
 ## INFO / LOG
 
+- 2026-11-13 — The canonical staff application projection includes Automation Control for its existing system-administrator boundary, the document and help workspaces and the other verified internal routes. ALTEA applications appear in the Launchpad. Finance service actions now enforce role-derived access. No role presets were changed. Wix session and legacy page availability remain unverified.
+
 - 2026-11-10 — Prepared employee deployment details, date validation, explicit ownership of onboarding tasks for a linked hire, and evidence references for document verification. Required pre-access tasks still need Recruiting review before Wix staff access is granted; no access is granted by assigning a task. Source tests only; Wix publication is pending.
 
 - 2026-11-06 — Success Factors derives the visible application catalog, quick actions and favorite validation from the same staff session projection, with application routes owned by ALTEA Launchpad excluded. The Launchpad itself remains an authorized gateway. Policy Control now opens its registered route.
