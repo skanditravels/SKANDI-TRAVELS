@@ -3340,43 +3340,25 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "BUILT",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "riaintra-embeds/automation-control/skandi-automation-control.html",
         "riaintra-embeds/automation-control/skandi-automation-control.css",
         "riaintra-embeds/automation-control/skandi-automation-control.js"
       ],
       "missing": [],
-      "issues": [],
-      "backend": [
-        "src/backend/SKANDI_CORE/automationControl.web.js",
-        "src/backend/SKANDI_CORE/automationsWorkspace.web.js"
+      "issues": [
+        "Missing controller src/pages/Automations.ometk.js"
       ],
-      "messages": [
-        "AUTOMATION_CONSOLE_",
-        "AUTOMATION_CONSOLE_BOOTSTRAP",
-        "AUTOMATION_CONSOLE_CONTROLLER_ATTACHED",
-        "AUTOMATION_CONSOLE_DRY_RUN",
-        "AUTOMATION_CONSOLE_ERROR",
-        "AUTOMATION_CONSOLE_READY",
-        "AUTOMATION_CONSOLE_REFRESH",
-        "AUTOMATION_CONSOLE_RESULT",
-        "AUTOMATION_CONSOLE_SYNC",
-        "AUTOMATION_ERROR",
-        "DRY_RUN",
-        "SKANDI_SF_AUTOMATIONS_EMBED",
-        "SKANDI_WIX_PARENT",
-        "SYNC",
-        "UNKNOWN_OPERATION"
-      ],
-      "output": "dist/automation-control/index.html",
+      "backend": [],
+      "messages": [],
+      "output": null,
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [],
-      "receiver": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
-      "receiverFile": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
-      "sha256": "458f9ba1034f1b9d8d97e9b4382afeec763e1103cfa1167c1d74157443d935d4",
-      "bytes": 116997
+      "blockers": [
+        "Missing controller src/pages/Automations.ometk.js"
+      ],
+      "retainedArtifact": true
     },
     {
       "key": "payroll",

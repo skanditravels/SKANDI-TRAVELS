@@ -52,7 +52,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | policyControl | /riaintra/success-factors/policy-control | riaintra-embeds/policy-control/skandi-policy-control.{html,css,js} | riaintra / riaintra | src/pages/Policy Control.ec9p4.js | BUILT |
 | mediaControl | /riaintra/success-factors/media-control | riaintra-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
 | storeControl | /riaintra/success-factors/store-control | riaintra-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
-| automationControl | /riaintra/success-factors/automation-control | riaintra-embeds/automation-control/skandi-automation-control.{html,css,js} | riaintra / riaintra | src/pages/Automations.ometk.js | BUILT |
+| automationControl | /riaintra/success-factors/automation-control | riaintra-embeds/automation-control/skandi-automation-control.{html,css,js} | riaintra / riaintra | src/pages/Automations.ometk.js | BLOCKED INTEGRATION |
 | payroll | /riaintra/success-factors/payroll | riaintra-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
 | country | /destinations/explore | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Explore.nxtpn.js | BUILT |
 | hotelList | /destinations/explore/hotel-list | skandi-embeds/hotel-list/skandi-hotel-list.{html,css,js} | public / public | src/pages/Hotel List.iqhpp.js | BUILT |
@@ -78,6 +78,7 @@ These actual repository controllers are preserved. No new route or build is inve
 
 - `src/pages/ADMIN OVERVIEW.wkr95.js`
 - `src/pages/Account Settings.cnh00.js`
+- `src/pages/Automation Control.ometk.js`
 - `src/pages/Cart Page.yke8o.js`
 - `src/pages/Category Page.agxr7.js`
 - `src/pages/Checkout.lof54.js`
@@ -114,3 +115,4 @@ These actual repository controllers are preserved. No new route or build is inve
 - **hotels**: NOT READY: No verified canonical controller mapping.
 - **packages**: NOT READY: No verified canonical controller mapping.
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
+- **automationControl**: NOT READY: Missing controller src/pages/Automations.ometk.js
