@@ -264,6 +264,7 @@ const MASTER_CONFIG = Object.freeze({
       ]),
       managementNav:Object.freeze([
         { id:"magazine-manager", label:"Media Control", path:SITE_MAP.mediaControl },
+        { id:"automation-control", label:"Automation Control", path:SITE_MAP.automationControl },
         { id:"payroll", label:"Payroll", path:SITE_MAP.payroll }
       ])
     }),

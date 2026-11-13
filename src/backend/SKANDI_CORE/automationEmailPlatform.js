@@ -90,7 +90,10 @@ export async function generateAutomationEmailActionMapping({
   const compiled = compileAutomationEmailContent({ workflowKey, audience, copyOverrides });
   const action = {
     emailType: compiled.emailType,
-    triggerSchemaContactIdPath: clean(triggerSchemaContactIdPath, 240) || "contactId"
+    recipients: {
+      recipientType: "TRIGGER_CONTACT",
+      triggerContactOptions: { contactIdPath: clean(triggerSchemaContactIdPath, 240) || "contactId" }
+    }
   };
 
   const topicId = clean(notificationTopicId, 120);

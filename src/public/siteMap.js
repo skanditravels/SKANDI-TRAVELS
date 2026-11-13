@@ -23,6 +23,7 @@ export const SITE_MAP = Object.freeze({
   mail: "/riaintra/success-factors/mail", docunet: "/riaintra/success-factors/docunet",
   docunetAdmin: "/riaintra/success-factors/docunet/admin", serviceDesk: "/riaintra/success-factors/service-desk", policyControl: "/riaintra/success-factors/policy-control",
   mediaControl: "/riaintra/success-factors/media-control", storeControl: "/riaintra/success-factors/store-control",
+  automationControl: "/riaintra/success-factors/automation-control",
   payroll: "/riaintra/success-factors/payroll"
 });
 
@@ -438,6 +439,12 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
       "#mediaControlEmbed"
     ],
     "sources": []
+  },
+  "automationControl": {
+    "controller": "src/pages/Automations.ometk.js",
+    "embedIds": ["#sfAutomationEmbed"],
+    "sources": ["SKANDI_SF_AUTOMATIONS_EMBED"],
+    "note": "Install the universal receiver in #sfAutomationEmbed on the Automation Control page. Backend administrator authorization remains authoritative."
   },
   "storeControl": {
     "controller": "src/pages/The Store Control.y10le.js",
