@@ -496,8 +496,7 @@ function publicEntity(row = {}) {
   };
 }
 function entitySort(a, b) {
-  return Number(b?.featured === true) - Number(a?.featured === true)
-    || Number(a?.sortPriority || 9999) - Number(b?.sortPriority || 9999)
+  return Number(a?.sortPriority ?? 9999) - Number(b?.sortPriority ?? 9999)
     || text(a?.title).localeCompare(text(b?.title));
 }
 export async function getFlightStatusAirportContextCore(payload = {}) {
