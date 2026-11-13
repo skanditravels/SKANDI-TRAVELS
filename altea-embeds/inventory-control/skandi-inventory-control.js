@@ -57,7 +57,8 @@ function employeeAuditMessage(value){
 function request(type,payload={}){
   const requestId=`INV-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
   return new Promise((resolve,reject)=>{
-    const timer=setTimeout(()=>{requests.delete(requestId);logInventoryIssue("request-timeout",{action:type,requestId});reject(new Error("The request took too long. Please try again."))},REQUEST_TIMEOUT_MS);
+    const timeoutMs=type.startsWith("INVENTORY_V9_TRANSLATE_")?90000:REQUEST_TIMEOUT_MS;
+    const timer=setTimeout(()=>{requests.delete(requestId);logInventoryIssue("request-timeout",{action:type,requestId});reject(new Error("The request took too long. Please try again."))},timeoutMs);
     requests.set(requestId,{resolve,reject,timer,type});
     window.parent.postMessage({source:SOURCE,type,payload,requestId,timestamp:new Date().toISOString()},"*");
   });
