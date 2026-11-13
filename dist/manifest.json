@@ -88,8 +88,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
       "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "3bd2da2326c51d76b7ab17831d4e3c38420e1d2cc9266ccff5b120fb67e49fa3",
-      "bytes": 472582
+      "sha256": "474d1824d46b231d83e143abe884a65488b46597476fd15f7935a950457dee18",
+      "bytes": 472789
     },
     {
       "key": "search",
@@ -137,8 +137,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/search/skandi-search.receiver.html",
       "receiverFile": "skandi-embeds/search/skandi-search.receiver.html",
-      "sha256": "2da649607b355e70b15bb2ae329f03518c43459a7c125cfe1784abec0efd144e",
-      "bytes": 189504
+      "sha256": "a04cc8822d32d0920365f0c93149a0b06d1850d48522a57c27a8c8cf298dfee2",
+      "bytes": 189711
     },
     {
       "key": "flights",
@@ -311,8 +311,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flights/skandi-flights.receiver.html",
       "receiverFile": "skandi-embeds/flights/skandi-flights.receiver.html",
-      "sha256": "0eb10914b27ee6f8e5e5a4e514055206d280144b9341818db30fd410f3a8cae7",
-      "bytes": 207515
+      "sha256": "e81009914cce0ba5b4e6f3c67dcda14f4236353022d394a4aea3e8065779b63a",
+      "bytes": 207722
     },
     {
       "key": "carRental",
@@ -382,8 +382,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/car-rental/skandi-car-rental.receiver.html",
       "receiverFile": "skandi-embeds/car-rental/skandi-car-rental.receiver.html",
-      "sha256": "57e648f7085fd557d5b4fae6d84ddd58aadeb1824cde8522e57742cae91fb798",
-      "bytes": 225096
+      "sha256": "16db47b6460205fc11ae8053805d86b5dab0c0923a8dfe40c0972f7ede79e2fb",
+      "bytes": 225303
     },
     {
       "key": "hotels",
@@ -636,8 +636,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/cruises/skandi-cruises.receiver.html",
       "receiverFile": "skandi-embeds/cruises/skandi-cruises.receiver.html",
-      "sha256": "bd5c5ec5522980e883bbf228f081960e836f8507fc4fa71c8ef92acf9b301d30",
-      "bytes": 219665
+      "sha256": "1f82d0af8687e6fc353a6288dbbebca36be125b30e101227430f61cc6cb19a9d",
+      "bytes": 219872
     },
     {
       "key": "tours",
@@ -700,8 +700,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/tours/skandi-tours.receiver.html",
       "receiverFile": "skandi-embeds/tours/skandi-tours.receiver.html",
-      "sha256": "1902e42989bc715a289448eb179fd51f9ce5d32a8443795990cda01dd2ed0b4b",
-      "bytes": 314245
+      "sha256": "58cc82b1481da4fef681d3946673844a86b680c4ef986eba48ed75f8897bf863",
+      "bytes": 314452
     },
     {
       "key": "activities",
@@ -768,8 +768,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "003a8c79d3f1f2dc4dd065fd9e4914743be4ee442070c234cfdec08fd6bd9463",
-      "bytes": 326136
+      "sha256": "5d2587b143158aba79b85de4508002981bffb06317e38181ff20ad4eb1dae796",
+      "bytes": 326343
     },
     {
       "key": "travelInfo",
@@ -859,8 +859,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "cf870c896ac3d3b322d6e3ce72df6f3dc1c1f2be8684465a7fdece67f53aaddf",
-      "bytes": 500912
+      "sha256": "5661dfd4843f84aaa979def186f046219b9c2f4dbc5481a01b00793988acb217",
+      "bytes": 501119
     },
     {
       "key": "transfers",
@@ -941,8 +941,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html",
       "receiverFile": "skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html",
-      "sha256": "85b86b9bdbb99924d31d6a8a024d182e95c42b5ac391814250d9e4e3a1929f8b",
-      "bytes": 253309
+      "sha256": "f8fdd9b738e22f7f393cea90430c3bf3593c2e26224f0feb1886a17c39b51079",
+      "bytes": 253516
     },
     {
       "key": "voy",
@@ -1001,8 +1001,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/voy/skandi-voy.receiver.html",
       "receiverFile": "skandi-embeds/voy/skandi-voy.receiver.html",
-      "sha256": "7624433b57e282b559cec7fa4f280e207cdc76dfbd04d4ad0e6d47fa12c3e844",
-      "bytes": 275074
+      "sha256": "ac4c82a24720fb98e92a82ed9b9dd1762079f810f1fd553fcfa8990ec3f9f59b",
+      "bytes": 275281
     },
     {
       "key": "club",
@@ -1057,8 +1057,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/club/skandi-club.receiver.html",
       "receiverFile": "skandi-embeds/club/skandi-club.receiver.html",
-      "sha256": "e586df2575777034d2c61cd655ae2eec01e29b410bc85ecaa650eaa75ee70ef9",
-      "bytes": 208658
+      "sha256": "0dc5e78c45162a8d8ed0a35edf37382f20bda0ef5ad3ec34f40f898e97122c06",
+      "bytes": 208865
     },
     {
       "key": "clubLogin",
@@ -1118,8 +1118,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/club-login/skandi-club-login.receiver.html",
       "receiverFile": "skandi-embeds/club-login/skandi-club-login.receiver.html",
-      "sha256": "40d6279e91ccac4f61fda4d8fba98d740514e475854e767ea278382ba77900a8",
-      "bytes": 177878
+      "sha256": "b4da1854efb5aa3f00ad00a7dfcf181b889da1440b796178a827502fc0e3336e",
+      "bytes": 178085
     },
     {
       "key": "forgotPassword",
@@ -1164,8 +1164,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
       "receiverFile": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
-      "sha256": "96b3a346953458d8ed731e9c2407bc43270907d22ce42cda8de8b67f6e4f5b78",
-      "bytes": 164065
+      "sha256": "0ebd91efb018b792d45cc16ebdf44dcc877b0d695f08cfe17579738d827721b3",
+      "bytes": 164272
     },
     {
       "key": "about",
@@ -1219,8 +1219,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/about/skandi-about.receiver.html",
       "receiverFile": "skandi-embeds/about/skandi-about.receiver.html",
-      "sha256": "1cec8c956a7bed8a37ddf0a384e1be846562a703c0f8d8ff693919bd1a545603",
-      "bytes": 234838
+      "sha256": "eafe3708ddb4554e1d0cf377f77c0092cf84b49eba0598f48ac4546e48f807c4",
+      "bytes": 235045
     },
     {
       "key": "support",
@@ -1312,8 +1312,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/support/skandi-support.receiver.html",
       "receiverFile": "skandi-embeds/support/skandi-support.receiver.html",
-      "sha256": "74d39b2f62607a6f6bb63b216face40c99b619c1c808fc81d03ae9b1180808ac",
-      "bytes": 235603
+      "sha256": "824498d9c218245085e757216ba25b4fd6be9b26f1462c648a9fd597da194abe",
+      "bytes": 235810
     },
     {
       "key": "newsroom",
@@ -1365,8 +1365,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/newsroom/skandi-newsroom.receiver.html",
       "receiverFile": "skandi-embeds/newsroom/skandi-newsroom.receiver.html",
-      "sha256": "ec130cb9088172fdd24ea3725e7d49b1b017b1b4c36e6a4881b4c4175bfdffd2",
-      "bytes": 194692
+      "sha256": "264343d1e549e938370c7748ae8ae9487b059e147d4310fa632813f1e631016a",
+      "bytes": 194899
     },
     {
       "key": "accessRestricted",
@@ -1409,8 +1409,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/access-restricted/skandi-access-restricted.receiver.html",
       "receiverFile": "skandi-embeds/access-restricted/skandi-access-restricted.receiver.html",
-      "sha256": "b0692fa44cce674c83c0e728cb9e5db909063b1db65958bcb59f85e9ff113928",
-      "bytes": 166659
+      "sha256": "efa1cdcd04c2287bf32d4f1c51151d9e4f8661253b82ecad5566f184e09e4023",
+      "bytes": 166866
     },
     {
       "key": "expiredResetLink",
@@ -1458,8 +1458,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/expired-reset-link/skandi-expired-reset-link.receiver.html",
       "receiverFile": "skandi-embeds/expired-reset-link/skandi-expired-reset-link.receiver.html",
-      "sha256": "b1ff00618195df222ff9d58a39ad7b93c5e1202d73df6f0aa4af97d699bf8753",
-      "bytes": 168207
+      "sha256": "f1519aceedfa67a9a2225f9f52835b9f84a928b2286c4e4105f1a1e31a072cdf",
+      "bytes": 168414
     },
     {
       "key": "theStore",
@@ -1713,8 +1713,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/legal/skandi-legal.receiver.html",
       "receiverFile": "skandi-embeds/legal/skandi-legal.receiver.html",
-      "sha256": "887480303c03caa57ad0d49a73d4635a327c584940d82fc7db2829537c3e5965",
-      "bytes": 182467
+      "sha256": "6d5f3514e50f88d72f8adb15e5d78b4f8f47e6472de00d8189e6e8421d81dfd0",
+      "bytes": 182674
     },
     {
       "key": "policies",
@@ -1772,8 +1772,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/policies/skandi-policies.receiver.html",
       "receiverFile": "skandi-embeds/policies/skandi-policies.receiver.html",
-      "sha256": "4a36e98ffaa3bb62a81f430a1f096dcf1c8923aeacca16bd337c81f4bf8c2816",
-      "bytes": 211092
+      "sha256": "6a19af4ef329205016939c965a0c02fc897882a1192ded44988583e4ef3a5f04",
+      "bytes": 211299
     },
     {
       "key": "cookiePreferences",
@@ -1946,8 +1946,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
       "receiverFile": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
-      "sha256": "001d55517e292975416fbeeec75db69984f677615f779e37af5287836d207e37",
-      "bytes": 169190
+      "sha256": "d53674e1c854d5ed5b1b086ccedb054c3b359fde71bd6e140dfe4508b9a2049f",
+      "bytes": 169397
     },
     {
       "key": "riaintra",
@@ -2595,8 +2595,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "17222c31cdae9538f3475d4a0e083956d9c148fdf6f20229825d397c31809301",
-      "bytes": 372011
+      "sha256": "39ff313a05a0dc32fb1ce00b84183c39f7e5fdd97d0a00f10c45d15f1e327011",
+      "bytes": 377523
     },
     {
       "key": "uniformCenter",
@@ -3375,8 +3375,248 @@
       "blockers": [],
       "receiver": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
       "receiverFile": "riaintra-embeds/automation-control/skandi-automation-control.receiver.html",
-      "sha256": "458f9ba1034f1b9d8d97e9b4382afeec763e1103cfa1167c1d74157443d935d4",
-      "bytes": 116997
+      "sha256": "5fed0376be00f205db851e405be126e6cb02d3025c285d34d1263a764829d8a6",
+      "bytes": 133128
+    },
+    {
+      "key": "helpDesk",
+      "route": "/riaintra/success-factors/helpdesk",
+      "slug": "help-desk",
+      "title": "helpDesk",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "mobileNavigation": true,
+      "sourceDirectory": "riaintra-embeds/help-desk",
+      "stem": "skandi-help-desk",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "riaintra-embeds/help-desk/skandi-help-desk.html",
+        "riaintra-embeds/help-desk/skandi-help-desk.css",
+        "riaintra-embeds/help-desk/skandi-help-desk.js"
+      ],
+      "missing": [
+        "riaintra-embeds/help-desk/skandi-help-desk.html",
+        "riaintra-embeds/help-desk/skandi-help-desk.css",
+        "riaintra-embeds/help-desk/skandi-help-desk.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "financeControl",
+      "route": "/riaintra/success-factors/finance-control",
+      "slug": "finance-control",
+      "title": "financeControl",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "mobileNavigation": true,
+      "sourceDirectory": "riaintra-embeds/finance-control",
+      "stem": "skandi-finance-control",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "riaintra-embeds/finance-control/skandi-finance-control.html",
+        "riaintra-embeds/finance-control/skandi-finance-control.css",
+        "riaintra-embeds/finance-control/skandi-finance-control.js"
+      ],
+      "missing": [
+        "riaintra-embeds/finance-control/skandi-finance-control.html",
+        "riaintra-embeds/finance-control/skandi-finance-control.css",
+        "riaintra-embeds/finance-control/skandi-finance-control.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "documentControl",
+      "route": "/riaintra/success-factors/document-control",
+      "slug": "document-control",
+      "title": "documentControl",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "mobileNavigation": true,
+      "sourceDirectory": "riaintra-embeds/document-control",
+      "stem": "skandi-document-control",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "riaintra-embeds/document-control/skandi-document-control.html",
+        "riaintra-embeds/document-control/skandi-document-control.css",
+        "riaintra-embeds/document-control/skandi-document-control.js"
+      ],
+      "missing": [
+        "riaintra-embeds/document-control/skandi-document-control.html",
+        "riaintra-embeds/document-control/skandi-document-control.css",
+        "riaintra-embeds/document-control/skandi-document-control.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "transportCompliance",
+      "route": "/riaintra/success-factors/document-control-1",
+      "slug": "transport-compliance",
+      "title": "transportCompliance",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "mobileNavigation": true,
+      "sourceDirectory": "riaintra-embeds/transport-compliance",
+      "stem": "skandi-transport-compliance",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "riaintra-embeds/transport-compliance/skandi-transport-compliance.html",
+        "riaintra-embeds/transport-compliance/skandi-transport-compliance.css",
+        "riaintra-embeds/transport-compliance/skandi-transport-compliance.js"
+      ],
+      "missing": [
+        "riaintra-embeds/transport-compliance/skandi-transport-compliance.html",
+        "riaintra-embeds/transport-compliance/skandi-transport-compliance.css",
+        "riaintra-embeds/transport-compliance/skandi-transport-compliance.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "internalPolicies",
+      "route": "/riaintra/success-factors/legal-internal/policies-internal",
+      "slug": "internal-policies",
+      "title": "internalPolicies",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "mobileNavigation": true,
+      "sourceDirectory": "riaintra-embeds/internal-policies",
+      "stem": "skandi-internal-policies",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "riaintra-embeds/internal-policies/skandi-internal-policies.html",
+        "riaintra-embeds/internal-policies/skandi-internal-policies.css",
+        "riaintra-embeds/internal-policies/skandi-internal-policies.js"
+      ],
+      "missing": [
+        "riaintra-embeds/internal-policies/skandi-internal-policies.html",
+        "riaintra-embeds/internal-policies/skandi-internal-policies.css",
+        "riaintra-embeds/internal-policies/skandi-internal-policies.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "infoControl",
+      "route": "/riaintra/success-factors/altea/info-control",
+      "slug": "info-control",
+      "title": "infoControl",
+      "family": "altea",
+      "chrome": "altea",
+      "mobileNavigation": true,
+      "sourceDirectory": "altea-embeds/info-control",
+      "stem": "skandi-info-control",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "altea-embeds/info-control/skandi-info-control.html",
+        "altea-embeds/info-control/skandi-info-control.css",
+        "altea-embeds/info-control/skandi-info-control.js"
+      ],
+      "missing": [
+        "altea-embeds/info-control/skandi-info-control.html",
+        "altea-embeds/info-control/skandi-info-control.css",
+        "altea-embeds/info-control/skandi-info-control.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
     },
     {
       "key": "payroll",
@@ -3507,8 +3747,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/country/skandi-country.receiver.html",
       "receiverFile": "skandi-embeds/country/skandi-country.receiver.html",
-      "sha256": "724a44e4368cdf055e86bed2f300413f28bff5ae4e8e181168706bfd80ab98f6",
-      "bytes": 397168
+      "sha256": "a0acc8a00e7a863efe2154fd0ba35b5ff12765a27fe96aaf817d2870fb87a189",
+      "bytes": 397375
     },
     {
       "key": "hotelList",
@@ -3550,8 +3790,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
       "receiverFile": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
-      "sha256": "cf2584eb3232e5a36ed740162c6da95e3d3ac97bd8fb1c429155130842f9271c",
-      "bytes": 178434
+      "sha256": "01f251503a5b60cb7e788f80fb153071408057ff0b48559ee67d9c12f231a48d",
+      "bytes": 178641
     },
     {
       "key": "bookingFlow",
@@ -3691,8 +3931,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
       "receiverFile": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
-      "sha256": "e5fccbfeae545339e366bb841243431f1bbb99797403e798d0b7c4dcacbc6c9b",
-      "bytes": 299021
+      "sha256": "3d11e61ec84ae1f71c92295ae840f1444c3d67199fb30510ebd3dd85a6e2df98",
+      "bytes": 299228
     },
     {
       "key": "myTrips",
@@ -3780,8 +4020,88 @@
       "blockers": [],
       "receiver": "skandi-embeds/careers/skandi-careers.receiver.html",
       "receiverFile": "skandi-embeds/careers/skandi-careers.receiver.html",
-      "sha256": "2255cb0a3f2dabd8d41a9e863482b69c28310a522b4c5572156303952ff119fc",
-      "bytes": 233607
+      "sha256": "5f7e2163630baa9f0728ec32bbb5d566e8dd4cb8db33a89060501884f74ed980",
+      "bytes": 233814
+    },
+    {
+      "key": "clubSupport",
+      "route": "/my-profile/club-support",
+      "slug": "club-support",
+      "title": "clubSupport",
+      "family": "public",
+      "chrome": "public",
+      "mobileNavigation": true,
+      "sourceDirectory": "skandi-embeds/club-support",
+      "stem": "skandi-club-support",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/club-support/skandi-club-support.html",
+        "skandi-embeds/club-support/skandi-club-support.css",
+        "skandi-embeds/club-support/skandi-club-support.js"
+      ],
+      "missing": [
+        "skandi-embeds/club-support/skandi-club-support.html",
+        "skandi-embeds/club-support/skandi-club-support.css",
+        "skandi-embeds/club-support/skandi-club-support.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "travelAssistant",
+      "route": "/my-profile/travel-assistant",
+      "slug": "travel-assistant",
+      "title": "travelAssistant",
+      "family": "public",
+      "chrome": "public",
+      "mobileNavigation": true,
+      "sourceDirectory": "skandi-embeds/travel-assistant",
+      "stem": "skandi-travel-assistant",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/travel-assistant/skandi-travel-assistant.html",
+        "skandi-embeds/travel-assistant/skandi-travel-assistant.css",
+        "skandi-embeds/travel-assistant/skandi-travel-assistant.js"
+      ],
+      "missing": [
+        "skandi-embeds/travel-assistant/skandi-travel-assistant.html",
+        "skandi-embeds/travel-assistant/skandi-travel-assistant.css",
+        "skandi-embeds/travel-assistant/skandi-travel-assistant.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
     },
     {
       "key": "myRoster",
@@ -3993,8 +4313,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/passport-visa/skandi-passport-visa.receiver.html",
       "receiverFile": "skandi-embeds/passport-visa/skandi-passport-visa.receiver.html",
-      "sha256": "d9e0069d7d3df1151162f524bafa8420649c1de7ba66d4eef27306c4667ae14b",
-      "bytes": 199235
+      "sha256": "3477f99aeffa2b5c522dd00736f308e6ff261f93a9c60d392cfe2659e42d3f8a",
+      "bytes": 199442
     },
     {
       "key": "baggageAllowance",
@@ -4044,8 +4364,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
       "receiverFile": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
-      "sha256": "af868c9447b5b67a6bc8a367ae33930b1d8aefc45c9a8701bb94262e66f98bcb",
-      "bytes": 197533
+      "sha256": "7c182d7cd8f73a9175e09003339695293d5d4b877e254848cb8c7f61eb846600",
+      "bytes": 197740
     },
     {
       "key": "travelInsurance",
@@ -4097,8 +4417,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html",
       "receiverFile": "skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html",
-      "sha256": "f641304a1b978d231247d9dbd4212bb60d2013caa383bbe179b8e30274f8e7e2",
-      "bytes": 187363
+      "sha256": "6a5a46dd5d4881cc66a4dee0a8f99d062239525cffaff273cfa1909096c59c04",
+      "bytes": 187570
     },
     {
       "key": "specialAssistance",
@@ -4269,8 +4589,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
       "receiverFile": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
-      "sha256": "a2cf4a430d5740379a5f66cd4f52b8ff45d8558016419d680a661b2ce2487b0e",
-      "bytes": 194158
+      "sha256": "a0918610fcd573b5b3db6b4626f6ddfeb73943bc0762f4c7c5f45dbeb0fc021a",
+      "bytes": 194365
     },
     {
       "key": "flightStatus",
@@ -4333,8 +4653,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flight-status/flight-status.receiver.html",
       "receiverFile": "skandi-embeds/flight-status/flight-status.receiver.html",
-      "sha256": "4b9787bab85b4d01a3ee0ea7837a25a8f91afc66f1f6bce92ca85a041e15eb88",
-      "bytes": 337300
+      "sha256": "2455a9f23bff41de089945285ca3456b3df3f63a490616b32539a912e61697fb",
+      "bytes": 337507
     }
   ],
   "globalComponents": {

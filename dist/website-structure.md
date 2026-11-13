@@ -53,6 +53,12 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | mediaControl | /riaintra/success-factors/media-control | riaintra-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
 | storeControl | /riaintra/success-factors/store-control | riaintra-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
 | automationControl | /riaintra/success-factors/automation-control | riaintra-embeds/automation-control/skandi-automation-control.{html,css,js} | riaintra / riaintra | src/pages/Automation Control.ometk.js | BUILT |
+| helpDesk | /riaintra/success-factors/helpdesk | riaintra-embeds/help-desk/skandi-help-desk.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| financeControl | /riaintra/success-factors/finance-control | riaintra-embeds/finance-control/skandi-finance-control.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| documentControl | /riaintra/success-factors/document-control | riaintra-embeds/document-control/skandi-document-control.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| transportCompliance | /riaintra/success-factors/document-control-1 | riaintra-embeds/transport-compliance/skandi-transport-compliance.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| internalPolicies | /riaintra/success-factors/legal-internal/policies-internal | riaintra-embeds/internal-policies/skandi-internal-policies.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| infoControl | /riaintra/success-factors/altea/info-control | altea-embeds/info-control/skandi-info-control.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
 | payroll | /riaintra/success-factors/payroll | riaintra-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
 | country | /destinations/explore | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Explore.nxtpn.js | BUILT |
 | hotelList | /destinations/explore/hotel-list | skandi-embeds/hotel-list/skandi-hotel-list.{html,css,js} | public / public | src/pages/Hotel List.iqhpp.js | BUILT |
@@ -60,6 +66,8 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
 | careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | BUILT |
+| clubSupport | /my-profile/club-support | skandi-embeds/club-support/skandi-club-support.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
+| travelAssistant | /my-profile/travel-assistant | skandi-embeds/travel-assistant/skandi-travel-assistant.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | myRoster | /riaintra/success-factors/altea/my-roster | altea-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BUILT |
 | groupTalk | /riaintra/success-factors/altea/grouptalk | altea-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | BUILT |
 | passportVisa | /travel-info/passport-visa | skandi-embeds/passport-visa/skandi-passport-visa.{html,css,js} | public / public | src/pages/Passport & Visa.zohjw.js | BUILT |
@@ -114,3 +122,11 @@ These actual repository controllers are preserved. No new route or build is inve
 - **hotels**: NOT READY: No verified canonical controller mapping.
 - **packages**: NOT READY: No verified canonical controller mapping.
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
+- **helpDesk**: NOT READY: No verified canonical controller mapping.
+- **financeControl**: NOT READY: No verified canonical controller mapping.
+- **documentControl**: NOT READY: No verified canonical controller mapping.
+- **transportCompliance**: NOT READY: No verified canonical controller mapping.
+- **internalPolicies**: NOT READY: No verified canonical controller mapping.
+- **infoControl**: NOT READY: No verified canonical controller mapping.
+- **clubSupport**: NOT READY: No verified canonical controller mapping.
+- **travelAssistant**: NOT READY: No verified canonical controller mapping.

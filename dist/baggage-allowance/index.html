@@ -2674,6 +2674,8 @@ function render() {
       if (anchor) bottom.appendChild(anchor);
     }
     if (legal) { const anchor = link('Legal', legal); if (anchor) bottom.appendChild(anchor); }
+    const cookiePreferences = safePath(master.routes?.cookiePreferences);
+    if (cookiePreferences) { const anchor = link('Cookie preferences', cookiePreferences); if (anchor) bottom.appendChild(anchor); }
     // Existing footer navigation also exposes Staff Login as a separate link.
     const staffPath = safePath(master.routes?.staffLogin || master.routes?.riaintra);
     if (staffPath) { const anchor = link('Staff Login', staffPath); if (anchor) bottom.appendChild(anchor); }
