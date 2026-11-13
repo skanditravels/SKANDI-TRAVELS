@@ -8,6 +8,7 @@ import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { inventorySearchPriority } from "backend/SKANDI_CORE/inventoryRanking";
 
 const TABLES = Object.freeze({
   cruises: "travel_info_cruises",
@@ -634,7 +635,7 @@ async function readTravelInfoRows(region) {
         active: "eq.true",
         published: "eq.true",
         customer_visible: "eq.true",
-        order: "featured.desc,sort_order.asc,title.asc",
+        order: "featured.desc,title.asc",
         limit: "2500"
       }
     }),
@@ -708,7 +709,7 @@ function publicCruise(row, sailingRows) {
     imageUrl: clean(row.image_url, 1800),
     gallery: arr(row.gallery),
     featured: row.featured === true,
-    searchPriority: finite(row.sort_order, 999),
+    searchPriority: inventorySearchPriority({featured:row.featured}),
     shipName: clean(row.ship_name, 300),
     shipId: clean(row.ship_code, 120),
     destinationLabel: destinations[0]?.title || "",
@@ -741,7 +742,7 @@ function assembleCruises(cruiseRows, sailingRows) {
     byCruise.get(key).push(sailing);
   }
   return cruiseRows.map(row => publicCruise(row, byCruise.get(clean(row.id, 120)) || [])).filter(Boolean)
-    .sort((a, b) => Number(b.featured) - Number(a.featured) || (a.searchPriority || 999) - (b.searchPriority || 999) || String(a.nextSailing?.serviceDate || "9999").localeCompare(String(b.nextSailing?.serviceDate || "9999")));
+    .sort((a, b) => a.searchPriority-b.searchPriority || a.title.localeCompare(b.title));
 }
 function filtersFromCruises(cruises = []) {
   const destinationMap = new Map();
