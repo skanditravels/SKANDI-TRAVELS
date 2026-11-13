@@ -700,8 +700,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/tours/skandi-tours.receiver.html",
       "receiverFile": "skandi-embeds/tours/skandi-tours.receiver.html",
-      "sha256": "5721138205e80decc23cc8acb1ec3fe6fc3b5fe1bb82bdd1f29636b5d365a813",
-      "bytes": 314271
+      "sha256": "1902e42989bc715a289448eb179fd51f9ce5d32a8443795990cda01dd2ed0b4b",
+      "bytes": 314245
     },
     {
       "key": "activities",
@@ -768,8 +768,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "85084c39b8c9c642726f64748827321bb421c64a25970d3bb8ab5e61d04c1319",
-      "bytes": 325671
+      "sha256": "003a8c79d3f1f2dc4dd065fd9e4914743be4ee442070c234cfdec08fd6bd9463",
+      "bytes": 326136
     },
     {
       "key": "travelInfo",
@@ -2595,8 +2595,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "c50ae4f426ea37c75403926f42bc9ea98fcb562c46c6a8a357d063c4c65efef0",
-      "bytes": 372008
+      "sha256": "17222c31cdae9538f3475d4a0e083956d9c148fdf6f20229825d397c31809301",
+      "bytes": 372011
     },
     {
       "key": "uniformCenter",

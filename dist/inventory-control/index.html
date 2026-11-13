@@ -2912,7 +2912,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Assigned by SKANDI TRAVELS.":"Assigned when the record is saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
-      <${Field} label="Sort Priority" type="number" value=${rec.sortPriority} onChange=${v=>update("sortPriority",v)}/>
+      <div className="notice full">Search order is automatic: Collection level first, then featured status and name.</div>
       <${Toggle} label="Active" value=${rec.active!==false} onChange=${v=>update("active",v)}/>
       <${Toggle} label="Customer Visible" value=${rec.customerVisible===true} onChange=${v=>update("customerVisible",v)}/>
       <${Toggle} label="Staff Visible" value=${rec.staffVisible!==false} onChange=${v=>update("staffVisible",v)}/>
