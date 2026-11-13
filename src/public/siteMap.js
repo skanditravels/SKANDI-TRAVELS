@@ -441,7 +441,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "sources": []
   },
   "automationControl": {
-    "controller": "src/pages/Automations.ometk.js",
+    "controller": "src/pages/Automation Control.ometk.js",
     "embedIds": ["#sfAutomationEmbed"],
     "sources": ["SKANDI_SF_AUTOMATIONS_EMBED"],
     "note": "Install the universal receiver in #sfAutomationEmbed on the Automation Control page. Backend administrator authorization remains authoritative."

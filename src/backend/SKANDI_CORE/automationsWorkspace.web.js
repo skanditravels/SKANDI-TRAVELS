@@ -7,7 +7,7 @@ import {
   openAutomationDraftCore, createBlankAutomationDraftCore, saveAutomationDraftCore,
   validateAutomationDraftCore, publishAutomationDraftCore, deleteAutomationDraftCore,
   deleteAutomationCore, sendAutomationTestEmailCore, setAutomationArchivedCore
-} from 'backend/SKANDI_CORE/automationWorkspace';
+} from 'backend/SKANDI_CORE/automationsWorkspace';
 export const getAutomationWorkspace = webMethod(Permissions.SiteMember, () => getAutomationWorkspaceCore());
 export const saveAutomationTemplate = webMethod(Permissions.SiteMember, input => saveAutomationTemplateCore(input));
 export const deleteAutomationTemplate = webMethod(Permissions.SiteMember, input => deleteAutomationTemplateCore(input));

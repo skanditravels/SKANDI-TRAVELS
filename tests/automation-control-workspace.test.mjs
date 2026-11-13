@@ -5,10 +5,43 @@ import vm from 'node:vm';
 import { createRequire } from 'node:module';
 const require=createRequire(import.meta.url);
 const {JSDOM}=require('../scripts/node_modules/jsdom');
+const {parse}=require('../scripts/node_modules/acorn');
 const root=new URL('../',import.meta.url);
 const read=async path=>fs.readFile(new URL(path,root),'utf8');
 const id='13b7f361-f47e-4a28-93bf-1cbcc8ce6624';
 const draftId='2fd786f7-9ae9-4383-9ce6-675569a22657';
+
+test('Automation Control backend imports resolve to existing exported symbols',async()=>{
+ const queue=['src/pages/Automation Control.ometk.js'],seen=new Set();
+ const namedExports=source=>{
+  const names=new Set();
+  for(const node of parse(source,{ecmaVersion:'latest',sourceType:'module'}).body){
+   if(node.type!=='ExportNamedDeclaration')continue;
+   if(node.declaration?.id?.name)names.add(node.declaration.id.name);
+   for(const declaration of node.declaration?.declarations||[])if(declaration.id?.type==='Identifier')names.add(declaration.id.name);
+   for(const specifier of node.specifiers||[])names.add(specifier.exported.name);
+  }
+  return names;
+ };
+ while(queue.length){
+  const file=queue.pop();if(seen.has(file))continue;seen.add(file);
+  const ast=parse(await read(file),{ecmaVersion:'latest',sourceType:'module'});
+  for(const node of ast.body.filter(n=>n.type==='ImportDeclaration'&&n.source.value.startsWith('backend/SKANDI_CORE/'))){
+   const target='src/'+node.source.value+'.js';
+   let source;try{source=await read(target)}catch(error){assert.fail(`${file} imports missing ${target}: ${error.code}`)}
+   const exports=namedExports(source);
+   for(const specifier of node.specifiers.filter(x=>x.type==='ImportSpecifier'))assert.ok(exports.has(specifier.imported.name),`${target} does not export ${specifier.imported.name} (imported by ${file})`);
+   queue.push(target);
+  }
+ }
+});
+
+test('Automation Control registry points to the current page controller',async()=>{
+ const {inventory}=await import('../scripts/lib/inventory.mjs'),{fileURLToPath}=await import('node:url');
+ const {rows}=await inventory(fileURLToPath(root)),row=rows.find(item=>item.key==='automationControl');
+ assert.equal(row.controller,'src/pages/Automation Control.ometk.js');
+ assert.deepEqual(row.issues,[]);
+});
 
 async function workspaceHarness({role='OWNER',record,revisionRecord}={}){
  const source=(await read('src/backend/SKANDI_CORE/automationsWorkspace.js')).replace(/^import .*;\s*$/gm,'').replace(/^export /gm,'');
