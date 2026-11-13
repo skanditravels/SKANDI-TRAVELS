@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import { inventorySearchPriority } from '../src/backend/SKANDI_CORE/inventoryRanking.js';
 import { createRequire } from 'node:module';
 const require=createRequire(new URL('../scripts/package.json',import.meta.url));
 const {parse}=require('acorn');
@@ -70,7 +71,7 @@ test('catalog owns merchandising and recognized collection tier remains aligned'
 
 
 test('SKANDI Partner is limited to suppliers and airlines and collection levels are valid',()=>{
- const ctx=vm.createContext({...base,CATALOG_TYPES:new Set(['NONE','SKANDI_COLLECTION','SKANDI_PARTNER']),REFERENCE_TYPES:new Set(['AIRLINE']),bool:(v,d)=>v===undefined?d:!!v,nullableNumber:()=>100,uniqueStrings:()=>[]});
+ const ctx=vm.createContext({...base,CATALOG_TYPES:new Set(['NONE','SKANDI_COLLECTION','SKANDI_PARTNER']),REFERENCE_TYPES:new Set(['AIRLINE']),bool:(v,d)=>v===undefined?d:!!v,nullableNumber:()=>100,uniqueStrings:()=>[],inventorySearchPriority});
  vm.runInContext(functionCode('catalogBody')+'\nthis.catalogBody=catalogBody',ctx);
  assert.throws(()=>ctx.catalogBody({entityType:'HOTEL',id:'h'},{catalogType:'SKANDI_PARTNER'}),/only for suppliers/);
  assert.doesNotThrow(()=>ctx.catalogBody({entityType:'SUPPLIER',id:'s'},{catalogType:'SKANDI_PARTNER'}));

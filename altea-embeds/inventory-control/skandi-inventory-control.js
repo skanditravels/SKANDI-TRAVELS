@@ -57,7 +57,8 @@ function employeeAuditMessage(value){
 function request(type,payload={}){
   const requestId=`INV-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
   return new Promise((resolve,reject)=>{
-    const timer=setTimeout(()=>{requests.delete(requestId);logInventoryIssue("request-timeout",{action:type,requestId});reject(new Error("The request took too long. Please try again."))},REQUEST_TIMEOUT_MS);
+    const timeoutMs=type.startsWith("INVENTORY_V9_TRANSLATE_")?90000:REQUEST_TIMEOUT_MS;
+    const timer=setTimeout(()=>{requests.delete(requestId);logInventoryIssue("request-timeout",{action:type,requestId});reject(new Error("The request took too long. Please try again."))},timeoutMs);
     requests.set(requestId,{resolve,reject,timer,type});
     window.parent.postMessage({source:SOURCE,type,payload,requestId,timestamp:new Date().toISOString()},"*");
   });
@@ -415,7 +416,7 @@ function RepeatSchemaEditor({field,record,update,records}){
   if(Array.isArray(parsed)&&parsed.length&&parsed.every(v=>typeof v==="string"))return html`<${ListField} label=${field.label+" — one per line"} value=${parsed} onChange=${v=>update(field.path,v)} full=${true}/>`;
   if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))return html`<${SmartValueEditor} label=${field.label} path=${field.path} value=${parsed} onChange=${v=>update(field.path,v)} full=${true}/>`;
   const rows=normalizeStructuredRows(raw,field.fields);
-  const add=()=>{const item={};for(const f of field.fields)item[f.path]=f.type==="boolean"?false:f.type==="number"?null:"";update(field.path,[...rows,item])};
+  const add=()=>{const item={};for(const f of field.fields)item[f.path]=f.type==="boolean"?false:f.type==="number"?null:f.type==="list"?[]:"";if(field.path==="details.boarding.procedure_sequence")item.sequence_number=Math.max(0,...rows.map(row=>Number(row.sequence_number)||0))+1;update(field.path,[...rows,item])};
   return html`<div className="smartgroup full"><div className="paneltitle"><span>${field.label}</span><button className="btn small" onClick=${add}>+ Add</button></div>${field.help?html`<div className="sub">${field.help}</div>`:null}
     ${rows.length?rows.map((row,i)=>html`<div className="smartobject"><div className="paneltitle"><span>${field.label} ${i+1}</span><button className="btn small danger" onClick=${()=>update(field.path,rows.filter((_,x)=>x!==i))}>Remove</button></div><div className="formgrid three">${field.fields.map(f=>html`<${SchemaScalar} field=${f} records=${records} value=${row?.[f.path]} onChange=${v=>update(field.path,rows.map((x,idx)=>idx===i?{...x,[f.path]:v}:x))}/>` )}</div><${SmartObjectEditor} value=${row} exclude=${field.fields.map(f=>f.path)} onChange=${v=>update(field.path,rows.map((x,idx)=>idx===i?v:x))}/></div>`):html`<div className="smartempty">No ${field.label.toLowerCase()} yet. Add the first one here.</div>`}
   </div>`;
@@ -446,13 +447,32 @@ function AirlineBaggageEditor({value,onChange}){
     ${!rows.length?html`<div className="smartempty">No cabin allowances added.</div>`:null}
   </div>`;
 }
+function AirlineBoardingEditor({value,onChange}){
+  const parsed=parseStructuredInput(value);
+  if(Array.isArray(parsed))return html`<${SmartValueEditor} label="Boarding information" path="boarding" value=${parsed} onChange=${onChange} full=${true}/>`;
+  if(parsed&&typeof parsed!=="object")return html`<${Field} label="Boarding information" type="textarea" value=${parsed} onChange=${onChange} full=${true} help="Existing narrative information is preserved."/>`;
+  const data=parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:{};
+  if(data.gate_deadlines!=null&&(typeof data.gate_deadlines!=="object"||Array.isArray(data.gate_deadlines)||["domestic_flights","international_flights"].some(k=>data.gate_deadlines[k]!=null&&(typeof data.gate_deadlines[k]!=="object"||Array.isArray(data.gate_deadlines[k])))))return html`<${SmartValueEditor} label="Boarding information" path="boarding" value=${data} onChange=${onChange} full=${true}/>`;
+  const deadlines=data.gate_deadlines||{};
+  const set=(key,val)=>onChange({...data,[key]:val});
+  function deadline(kind,key,val){set("gate_deadlines",{...deadlines,[kind]:{...(deadlines[kind]||{}),[key]:val}})}
+  const sequence={label:"Boarding groups",path:"details.boarding.procedure_sequence",type:"repeat",fields:[SF("Group name","group_name"),SF("Boarding lane","lane_type"),SF("Order","sequence_number","number"),SF("Zones included","zones_included","list"),SF("Eligible passengers","eligible_passengers","list")]};
+  return html`<div className="smartgroup full"><div className="sectiontitle">Boarding</div><div className="formgrid three"><${Field} label="Boarding method" value=${data.boarding_system||""} onChange=${v=>set("boarding_system",v)} placeholder="e.g. by zone"/>${[["domestic_flights","Domestic"],["international_flights","International"]].map(([kind,label])=>html`<div className="smartgroup"><b>${label} flights</b><${Field} label="Gate opens — minutes before departure" type="number" value=${deadlines[kind]?.gate_opens_minutes_before_departure??""} onChange=${v=>deadline(kind,"gate_opens_minutes_before_departure",v)}/><${Field} label="Gate closes — minutes before departure" type="number" value=${deadlines[kind]?.gate_closes_minutes_before_departure??""} onChange=${v=>deadline(kind,"gate_closes_minutes_before_departure",v)}/></div>`)}</div>${data.policy_notes==null||Array.isArray(data.policy_notes)?html`<${ListField} label="Boarding guidance — one per line" value=${data.policy_notes||[]} onChange=${v=>set("policy_notes",v)} full=${true}/>`:html`<${SmartValueEditor} label="Boarding guidance" path="policy_notes" value=${data.policy_notes} onChange=${v=>set("policy_notes",v)} full=${true}/>`}<${RepeatSchemaEditor} field=${sequence} record=${{details:{boarding:{procedure_sequence:data.procedure_sequence}}}} update=${(_path,val)=>set("procedure_sequence",val)} records=${[]}/><${SmartObjectEditor} value=${data} exclude=${["boarding_system","gate_deadlines","policy_notes","procedure_sequence"]} onChange=${onChange}/></div>`;
+}
+function AirlineQuickFactsEditor({value,record,onChange}){
+  const parsed=parseStructuredInput(value),rows=Array.isArray(parsed)?parsed:[];
+  if(parsed&&(!Array.isArray(parsed)||parsed.some(x=>!x||typeof x!=="object")))return html`<${SmartValueEditor} label="Additional facts" path="quickFacts" value=${parsed} onChange=${onChange} full=${true}/>`;
+  const isDerived=item=>/^(iata|iata code|icao|icao code|alliance)$/i.test(text(item.label||item.name).trim());
+  const extras=rows.map((item,index)=>({item,index})).filter(x=>!isDerived(x.item));
+  return html`<div className="smartgroup full"><div className="paneltitle"><span>Additional airline facts</span><button type="button" className="btn small" onClick=${()=>onChange([...rows,{label:"",value:""}])}>+ Add fact</button></div><div className="sub">IATA, ICAO and alliance come from the airline profile and do not need to be entered again.</div>${extras.map(({item,index})=>html`<div className="smartobject"><div className="formgrid"><${Field} label="Fact" value=${item.label||""} onChange=${v=>onChange(rows.map((x,i)=>i===index?{...x,label:v}:x))}/><${Field} label="Value" value=${item.value||""} onChange=${v=>onChange(rows.map((x,i)=>i===index?{...x,value:v}:x))}/></div><button type="button" className="btn small danger" onClick=${()=>onChange(rows.filter((_,i)=>i!==index))}>Remove fact</button></div>`)}</div>`;
+}
 function AirlineDetailsEditor({record,update,records,relations=[]}){
   const [group,setGroup]=useState("profile");
   const selected=AIRLINE_GROUPS.find(x=>x.id===group)||AIRLINE_GROUPS[0];
   const fields=schemaFields("AIRLINE","details").filter(f=>selected.paths.includes(f.path.split(".").pop()));
   return html`<div><div className="notice">Maintain the airline profile by topic. Link its country, supplier and primary hub under Related inventory. Check fare and baggage information against the operating airline.</div>
     <div className="tabs">${AIRLINE_GROUPS.map(g=>html`<button type="button" className=${`tab ${group===g.id?"active":""}`} onClick=${()=>setGroup(g.id)}>${g.label}</button>`)}</div>
-    <div className="formgrid three">${fields.map(field=>{const value=airlineFieldValue(record,field);const withValue={...record,details:{...(record.details||{}),[field.path.split(".").pop()]:value}};return field.path==="details.baggageAllowance"?html`<${AirlineBaggageEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.country"&&relations.some(r=>r.relationType==="COUNTRY"&&r.active!==false&&r.targetEntityId)?html`<${Field} label="Country (linked)" value=${value||""} disabled=${true} help="Change the country in Related inventory."/>`:field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${withValue} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} value=${value} onChange=${v=>update(field.path,v)} records=${records}/>`})}</div>
+    <div className="formgrid three">${group==="profile"?html`<${Field} label="IATA code" value=${record.code||""} onChange=${v=>update("code",v.toUpperCase())}/>`:null}${fields.map(field=>{const value=airlineFieldValue(record,field);const withValue={...record,details:{...(record.details||{}),[field.path.split(".").pop()]:value}};return field.path==="details.boarding"?html`<${AirlineBoardingEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.quickFactsJson"?html`<${AirlineQuickFactsEditor} value=${value} record=${record} onChange=${v=>update(field.path,v)}/>`:field.path==="details.baggageAllowance"?html`<${AirlineBaggageEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.country"&&relations.some(r=>r.relationType==="COUNTRY"&&r.active!==false&&r.targetEntityId)?html`<${Field} label="Country (linked)" value=${value||""} disabled=${true} help="Change the country in Related inventory."/>`:field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${withValue} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} value=${value} onChange=${v=>update(field.path,v)} records=${records}/>`})}</div>
   </div>`;
 }
 function ExplicitSchemaEditor({type,section,record,update,records}){
@@ -499,7 +519,7 @@ function SmartValueEditor({label,path,value,onChange,full=false}){
       return html`<${ListField} label=${label+" — one per line"} value=${value} onChange=${onChange} full=${full}/>`
     }
     return html`<div className="smartgroup"><div className="paneltitle"><span className="smarttitle">${label}</span><button type="button" className="btn small" onClick=${()=>onChange([...value,emptyStructuredTemplate(value.find(v=>v&&typeof v==="object")||{})])}>+ Add</button></div>
-      ${value.length?value.map((item,i)=>html`<div className="smartobject"><div className="paneltitle"><span>Item ${i+1}</span><button className="btn small danger" onClick=${()=>onChange(value.filter((_,x)=>x!==i))}>Remove</button></div><${SmartValueEditor} label=${`Item ${i+1}`} path=${path} value=${item} onChange=${next=>onChange(value.map((x,idx)=>idx===i?next:x))} full=${true}/></div>`):html`<div className="smartempty">No list items.</div>`}
+      ${value.length?value.map((item,i)=>html`<div className="smartobject"><div className="paneltitle"><span>${item?.group_name||item?.title||item?.name||item?.label||`Item ${i+1}`}</span><button className="btn small danger" onClick=${()=>onChange(value.filter((_,x)=>x!==i))}>Remove</button></div><${SmartValueEditor} label=${`Item ${i+1}`} path=${path} value=${item} onChange=${next=>onChange(value.map((x,idx)=>idx===i?next:x))} full=${true}/></div>`):html`<div className="smartempty">No list items.</div>`}
     </div>`
   }
   if(value&&typeof value==="object"){
@@ -713,18 +733,38 @@ function AssetLibraryPanel({setBusy,setToast}){
 }
 
 
+const INVENTORY_MARKETS=[{code:"US",label:"United States"},{code:"SE",label:"Sweden"},{code:"NO",label:"Norway"},{code:"DK",label:"Denmark"},{code:"FI",label:"Finland"}];
+function MarketSelector({value,onChange}){
+  const selected=Array.isArray(value)?value:[],extra=selected.filter(code=>code!=="ALL"&&!INVENTORY_MARKETS.some(m=>m.code===code));
+  const toggle=(code,checked)=>{if(code==="ALL"){onChange(checked?["ALL"]:[]);return}const next=selected.filter(x=>x!=="ALL"&&x!==code);onChange(checked?[...next,code]:next)};
+  return html`<div className="field full"><label>Markets</label><small>Choose where this inventory may be offered. All markets overrides individual choices.</small><div className="toolbar" style=${{flexWrap:"wrap",gap:"12px"}}>${[{code:"ALL",label:"All markets"},...INVENTORY_MARKETS,...extra.map(code=>({code,label:`${code} (existing)`}))].map(m=>html`<label><input type="checkbox" checked=${selected.includes(m.code)} onChange=${e=>toggle(m.code,e.target.checked)}/> ${m.label}</label>`)}</div></div>`;
+}
 function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast}){
   const [draft,setDraft]=useState(()=>hydrateHierarchy(bundle,records));
   const [tab,setTab]=useState("identity");
   const [lang,setLang]=useState(languages?.[0]||"EN");
   const [assetPicker,setAssetPicker]=useState(null);
+  const [translationBusy,setTranslationBusy]=useState(false);
+  const [translationReview,setTranslationReview]=useState({});
   const rec=draft.record;
   const refs=records||[];
   const update=(path,value)=>setDraft(d=>{const n=clone(d);setPath(n.record,path,value);return n});
   const localized=useMemo(()=>{const a=(draft.localizedContent||[]).map(normalizeLocalized);for(const l of languages||[])if(!a.some(x=>x.language===l))a.push(normalizeLocalized({language:l}));return a},[draft.localizedContent,languages]);
   const currentLang=localized.find(x=>x.language===lang)||localized[0]||normalizeLocalized({language:lang});
-  const updateLang=(key,value)=>setDraft(d=>{const rows=(d.localizedContent||[]).map(normalizeLocalized);let i=rows.findIndex(x=>x.language===lang);if(i<0){rows.push(normalizeLocalized({language:lang}));i=rows.length-1}rows[i]={...rows[i],[key]:value};return{...d,localizedContent:rows}});
-  const updateLocalizedSeo=(key,value)=>setDraft(d=>{const rows=(d.localizedContent||[]).map(normalizeLocalized);let i=rows.findIndex(x=>x.language===lang);if(i<0){rows.push(normalizeLocalized({language:lang}));i=rows.length-1}rows[i]={...rows[i],[key]:value};const record=lang==="EN"?{...d.record,seo:{...(d.record.seo||{}),[key==="seoTitle"?"title":"description"]:value}}:d.record;return{...d,record,localizedContent:rows}});
+  const updateLang=(key,value)=>{if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(k=>[k,true])));setDraft(d=>{const rows=(d.localizedContent||[]).map(normalizeLocalized);let i=rows.findIndex(x=>x.language===lang);if(i<0){rows.push(normalizeLocalized({language:lang}));i=rows.length-1}rows[i]={...rows[i],[key]:value};return{...d,localizedContent:rows}})};
+  const updateLocalizedSeo=(key,value)=>{if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(k=>[k,true])));setDraft(d=>{const rows=(d.localizedContent||[]).map(normalizeLocalized);let i=rows.findIndex(x=>x.language===lang);if(i<0){rows.push(normalizeLocalized({language:lang}));i=rows.length-1}rows[i]={...rows[i],[key]:value};const record=lang==="EN"?{...d.record,seo:{...(d.record.seo||{}),[key==="seoTitle"?"title":"description"]:value}}:d.record;return{...d,record,localizedContent:rows}})};
+  async function translateFromEnglish(){
+    const source=normalizeLocalized((draft.localizedContent||[]).find(x=>String(x.language).toUpperCase()==="EN")||{});
+    const keys=["title","eyebrow","shortDescription","fullDescription","importantInformation","seoTitle","seoDescription","highlights","included","notIncluded"],input={};
+    for(const key of keys){const value=source[key];if(Array.isArray(value)&&value.length)input[key]=value;else if(typeof value==="string"&&value.trim())input[key]=value}
+    if(!Object.keys(input).length){setToast("Enter English page content first.",true);return}
+    const existing=(draft.localizedContent||[]).find(x=>String(x.language).toUpperCase()===lang);
+    if(existing&&keys.some(key=>Array.isArray(existing[key])?existing[key].length:typeof existing[key]==="string"&&existing[key].trim())&&!confirm(`Replace existing ${lang} text with a new translation?`))return;
+    try{setTranslationBusy(true);setBusy(`Translating ${lang} content…`);const result=await request("INVENTORY_V9_TRANSLATE_CONTENT",{entityType:rec.entityType,targetLanguage:lang,source:input});
+      if(result?.ok!==true||result.targetLanguage!==lang||result.reviewRequired!==true||!Object.keys(input).every(key=>Object.prototype.hasOwnProperty.call(result.translated||{},key)))throw new Error("The translation was incomplete. Try again.");
+      setDraft(old=>{const rows=(old.localizedContent||[]).map(normalizeLocalized),i=rows.findIndex(x=>x.language===lang),row={...normalizeLocalized(i<0?{language:lang}:rows[i]),...result.translated,language:lang};if(i<0)rows.push(row);else rows[i]=row;return{...old,localizedContent:rows}});setTranslationReview(old=>({...old,[lang]:true}));setToast(`${lang} translation generated. Review it before saving.`)
+    }catch(e){setToast(e.message||"Translation unavailable.",true)}finally{setTranslationBusy(false);setBusy("")}
+  }
   const media=(draft.media||[]).map(normalizeMedia);
   const relations=(draft.relations||[]).map(normalizeRelation);
   const catalog=draft.catalog||{catalogType:"NONE",partnerTier:"",searchable:false,featured:false,homepageFeatured:false,searchPriority:rec.sortPriority||100,searchKeywords:[],marketCodes:["ALL"],salesChannels:["WEB"],publicLabel:"",badge:"",validFrom:"",validTo:"",notes:"",active:true};
@@ -749,6 +789,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     setAssetPicker(null);
   }
   async function save(status){
+    if(Object.values(translationReview).some(Boolean)){setToast("Review generated translations before saving.",true);return}
     try{
       setBusy("Saving complete record bundle…");
       const payload=clone(draft);
@@ -775,7 +816,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     <div className="tabs">${tabs.map(t=>html`<button className=${`tab ${tab===t?"active":""}`} onClick=${()=>setTab(t)}>${tabNames[t]||t[0].toUpperCase()+t.slice(1)}</button>`)}</div>
     ${tab==="identity"?html`<div className="formgrid three">
       <${Field} label="Record Type" value=${rec.entityType} disabled=${true}/>
-      <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>
+      ${rec.entityType!=="AIRLINE"?html`<${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>`:null}
       <${Field} label=${rec.entityType==="AIRLINE"?"Airline name":"Master Name / Title"} value=${rec.name} onChange=${v=>update("name",v)}/>
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Assigned by SKANDI TRAVELS.":"Assigned when the record is saved."}/>
@@ -803,6 +844,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     </div>`:null}
     ${tab==="content"?html`<div>
       <div className="langtabs">${languages.map(l=>html`<button className=${`lang ${lang===l?"active":""}`} onClick=${()=>setLang(l)}>${l}</button>`)}</div>
+      ${lang!=="EN"?html`<div className="notice">Translate the English draft into ${lang}; review names and facts before saving. Translation uses the configured writing service.</div><button type="button" className="btn cyan" disabled=${translationBusy} onClick=${translateFromEnglish}>${translationBusy?"Translating…":`Generate ${lang} translation`}</button>`:null}
+      ${translationReview[lang]?html`<div className="notice warn">Review the generated content before saving. <button type="button" className="btn small" onClick=${()=>setTranslationReview(old=>({...old,[lang]:false}))}>Confirm ${lang} reviewed</button></div>`:null}
       <div className="formgrid">
         <${Field} label="Page Title" value=${currentLang.title} onChange=${v=>updateLang("title",v)}/>
         <${Field} label="Eyebrow" value=${currentLang.eyebrow} onChange=${v=>updateLang("eyebrow",v)}/>
@@ -831,14 +874,14 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     ${tab==="catalog"?html`<div className="formgrid three">
       <${Field} label="Website Placement" type="select" options=${[{value:"NONE",label:"None"},{value:"SKANDI_COLLECTION",label:"SKANDI Collection"},...(["SUPPLIER","AIRLINE"].includes(rec.entityType)?[{value:"SKANDI_PARTNER",label:"SKANDI Partner"}]:[])]} value=${catalog.catalogType||"NONE"} onChange=${v=>setCatalog("catalogType",v)}/>
       <${Field} label="SKANDI Collection Level" type="select" options=${[{value:"",label:"None"},...(["SELECT","SIGNATURE","EXCELSIOR"].map(value=>({value,label:value[0]+value.slice(1).toLowerCase()}))),...(!["","SELECT","SIGNATURE","EXCELSIOR"].includes(hotelTierForDisplay("",catalog.partnerTier))?[{value:hotelTierForDisplay("",catalog.partnerTier),label:`Previous value: ${hotelTierForDisplay("",catalog.partnerTier)} — review`,disabled:true}]:[])]} value=${hotelTierForDisplay("",catalog.partnerTier)} onChange=${v=>setCatalog("partnerTier",v)}/>
-      <${Field} label="Search Priority" type="number" value=${catalog.searchPriority??100} onChange=${v=>setCatalog("searchPriority",v)}/>
+      <div className="field"><label>Search order</label><small>Automatic: Excelsior, Signature, Select, Partner, then other inventory. Featured items appear first within each level.</small></div>
       <${Toggle} label="Searchable" value=${catalog.searchable===true} onChange=${v=>setCatalog("searchable",v)}/>
       <${Toggle} label="Featured" value=${catalog.featured===true} onChange=${v=>setCatalog("featured",v)}/>
       <${Toggle} label="Homepage Featured" value=${catalog.homepageFeatured===true} onChange=${v=>setCatalog("homepageFeatured",v)}/>
       <${Field} label="Public Label" value=${catalog.publicLabel||""} onChange=${v=>setCatalog("publicLabel",v)}/>
       <${Field} label="Badge" value=${catalog.badge||""} onChange=${v=>setCatalog("badge",v)}/>
       <${ListField} label="Search Keywords — comma separated" value=${catalog.searchKeywords} separator=", " onChange=${v=>setCatalog("searchKeywords",v)} full=${true}/>
-      <${ListField} label="Market Codes — comma separated" value=${catalog.marketCodes} separator=", " onChange=${v=>setCatalog("marketCodes",v)}/>
+      <${MarketSelector} value=${catalog.marketCodes} onChange=${v=>setCatalog("marketCodes",v)}/>
       <${ListField} label="Sales Channels — comma separated" value=${catalog.salesChannels} separator=", " onChange=${v=>setCatalog("salesChannels",v)}/>
       <${Toggle} label="Active Placement" value=${catalog.active!==false} onChange=${v=>setCatalog("active",v)}/>
     </div>`:null}

@@ -9,6 +9,7 @@ import { Permissions, webMethod } from "@wix/web-methods";
 
 import {
   getInventoryBootstrapCore,
+  translateInventoryContentCore,
   getInventoryRecordCore,
   saveInventoryBundleCore,
   archiveInventoryRecordCore,
@@ -58,6 +59,11 @@ const action = (responseType, handler, { refreshBootstrap = false } = {}) =>
 const ACTIONS = Object.freeze({
   INVENTORY_V9_REFRESH:
     action("INVENTORY_V9_BOOTSTRAP", getInventoryBootstrapCore),
+
+  INVENTORY_V9_TRANSLATE_HOTEL_CONTENT:
+    action("INVENTORY_V9_HOTEL_TRANSLATION", translateInventoryContentCore),
+  INVENTORY_V9_TRANSLATE_CONTENT:
+    action("INVENTORY_V9_TRANSLATION", translateInventoryContentCore),
 
   INVENTORY_V9_GET_RECORD:
     action("INVENTORY_V9_RECORD", getInventoryRecordCore),
