@@ -134,7 +134,7 @@ function normalizeDestination(item={},derived=false){
     routeIds:unique(toArray(firstDefined(item.routeIds,item.routes))),
     airlineIds:unique(toArray(firstDefined(item.airlineIds,item.airlines))),
     featured:Boolean(firstDefined(item.featured,item.homepageFeatured,item.homepage_featured,false)),
-    priority:Number(firstDefined(item.displayPriority,item.sortPriority,item.sort_priority,item.searchPriority,9999))||9999,
+    priority:Number(firstDefined(item.searchPriority,item.displayPriority,item.sortPriority,item.sort_priority,9999))||9999,
     derived
   };
 }
@@ -149,6 +149,7 @@ function normalizeAirport(item={}){
   return {
     id:cleanId(firstDefined(item.id,item.publicId,iata,item._id))||iata,
     iata,
+    searchPriority:Number.isFinite(Number(item.searchPriority))?Number(item.searchPriority):51,
     icao:cleanString(firstDefined(item.icao,item.ICAO),8).toUpperCase(),
     name:cleanString(firstDefined(item.airportName,item.title,item.name,iata),180),
     city:cleanString(firstDefined(item.city,item.locationCity,item.destination,item.name),140),
@@ -180,6 +181,7 @@ function normalizeHotel(item={}){
     pageUrl:pageUrl(item),image:imageUrl(item),
     starRating:cleanString(firstDefined(item.starRating,item.stars),20),
     tier:cleanString(firstDefined(item.collectionTier,item.tier,item.category),80),
+    searchPriority:Number.isFinite(Number(item.searchPriority))?Number(item.searchPriority):51,
     isCollection
   };
 }
@@ -190,6 +192,7 @@ function normalizeAirline(item={}){
     iata,
     icao:cleanString(firstDefined(item.icao,item.ICAO),8).toUpperCase(),
     name:cleanString(firstDefined(item.name,item.title,item.shortName,iata),160),
+    searchPriority:Number.isFinite(Number(item.searchPriority))?Number(item.searchPriority):51,
     logo:safeUrl(firstDefined(item.logo,item.logoUrl,item.logoFile,item.logoIcon,item.logoIconUrl)),
     pageUrl:pageUrl(item),
     partnerStatus:Boolean(firstDefined(item.partnerStatus,item.partner,item.isPartner,item.selected,true))
@@ -796,7 +799,7 @@ function renderSearchResults(query="",restrictTypes=null){
   ];
   defs.forEach(([type,label,list,haystack])=>{
     if(restrictTypes&&!restrictTypes.includes(type))return;
-    const matched=list.filter(item=>!q||haystack(item).join(" ").toLowerCase().includes(q)).slice(0,8);if(matched.length)groups.push({type,label,items:matched})
+    const matched=list.filter(item=>!q||haystack(item).join(" ").toLowerCase().includes(q)).sort((a,b)=>(a.searchPriority??a.priority??51)-(b.searchPriority??b.priority??51)||String(a.name||a.label||a.iata||"").localeCompare(String(b.name||b.label||b.iata||""))).slice(0,8);if(matched.length)groups.push({type,label,items:matched})
   });
   el.searchResults.replaceChildren();
   if(!groups.length){const empty=document.createElement("div");empty.className="search-empty";empty.textContent=q?"No published network result matches that search.":"Start typing to search destinations, Collection stays, airports and partner airlines.";el.searchResults.append(empty);return}
@@ -822,7 +825,7 @@ function searchSecondary(type,item){if(type==="destination")return [item.country
 function renderEditorial(){renderFeatured();renderCollection()}
 function renderFeatured(){
   el.featuredDestinations.replaceChildren();
-  const items=[...state.model.destinations].sort((a,b)=>(Number(b.featured)-Number(a.featured))||a.priority-b.priority||a.name.localeCompare(b.name)).slice(0,3);
+  const items=[...state.model.destinations].sort((a,b)=>a.priority-b.priority||a.name.localeCompare(b.name)).slice(0,3);
   if(!items.length){const p=document.createElement("p");p.className="chapter-intro";p.textContent="Published destination stories will appear here as the network is updated.";el.featuredDestinations.append(p);return}
   items.forEach(d=>{
     const b=document.createElement("button");b.type="button";b.className="feature-card";
@@ -860,7 +863,7 @@ function renderDirectory(){
       label.append(name,select);label.style.display="grid";label.style.gap="6px";label.style.marginBottom="12px";panel.append(label);
     });
     const list=document.createElement("div");list.className="directory-list";
-    const choices=hierarchy.filter(row=>["DESTINATION","AREA","HOTEL"].includes(row.type)&&types.every(t=>under(row,selected[t]))).sort((a,b)=>a.name.localeCompare(b.name));
+    const choices=hierarchy.filter(row=>["DESTINATION","AREA","HOTEL"].includes(row.type)&&types.every(t=>under(row,selected[t]))).sort((a,b)=>(a.searchPriority??51)-(b.searchPriority??51)||a.name.localeCompare(b.name));
     if(!choices.length){const p=document.createElement("p");p.textContent="No published destinations or properties match this selection.";list.append(p)}
     choices.forEach(row=>{const button=document.createElement("button");button.type="button";button.className="directory-link";button.textContent=`${row.name} · ${row.type.toLowerCase()}`;button.addEventListener("click",()=>{const type=row.type==="HOTEL"?"hotel":"destination",mapItems=type==="hotel"?state.model.hotels:state.model.destinations,match=mapItems.find(x=>[row.id,row.publicId,row.code,row.slug].includes(x.id));if(match){scrollToMap();selectObject(type,match.id,{camera:true,history:true});return}const chain=[row,...ancestors(row)],country=chain.find(x=>x.type==="COUNTRY"),destination=chain.find(x=>x.type==="DESTINATION"),area=chain.find(x=>x.type==="AREA"),params=new URLSearchParams();if(country)params.set("country",country.slug||slugify(country.name));if(destination)params.set("destination",destination.slug||slugify(destination.name));if(area)params.set("area",area.slug||slugify(area.name));if(row.type==="HOTEL")params.set("hotelId",row.id);navigate(`${row.type==="HOTEL"?paths.hotels:paths.atlas}?${params.toString()}${row.type==="HOTEL"?"&view=hotel":""}`)});list.append(button)});
     panel.append(list);el.directoryGrid.append(panel);
