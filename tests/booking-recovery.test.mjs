@@ -72,10 +72,11 @@ test('a failed search request stays retryable without claiming no offers exist',
 test('the booking confirmation dependency is declared and locked', async () => {
   const pkg = JSON.parse(await read('package.json'));
   const lock = JSON.parse(await read('package-lock.json'));
-  assert.equal(pkg.dependencies['@wix/automations'], '1.0.503');
+  assert.equal(pkg.dependencies['@wix/automations'], '1.0.512');
   assert.equal(lock.packages[''].dependencies['@wix/automations'], pkg.dependencies['@wix/automations']);
   assert.equal(lock.packages['node_modules/@wix/automations'].version, pkg.dependencies['@wix/automations']);
   const wixLock = (await read('wix.lock')).replace(/\\\r?\n/g, '');
   const siteDependencies = wixLock.slice(wixLock.indexOf('["user-code", ['));
-  assert.match(siteDependencies, /\["@wix\/automations", "npm:1\.0\.503"\]/);
+  assert.ok(/\["@wix\/automations", "npm:1\.0\.512"\]/.test(siteDependencies),
+    'The generated Wix site lock must be refreshed to @wix/automations 1.0.512.');
 });

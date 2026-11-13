@@ -1,7 +1,7 @@
 // SKANDI V12 — email designer and site-wide Wix Automations workspace.
 // Canonical drafts: existing VOY editorial campaign records; Wix remains the live automation authority.
 // No secrets, member-contact data, provider credentials, or automation input mappings are stored in templates.
-import { automationsV2, triggerCatalog } from '@wix/automations';
+import { automationsV2, triggerCatalog, actionCatalog } from '@wix/automations';
 import { automationEmailAction } from '@wix/automations-email-actions';
 import { auth } from '@wix/essentials';
 import { randomUUID } from 'crypto';
@@ -11,12 +11,22 @@ import { getAutomationAdminSnapshotCore } from 'backend/SKANDI_CORE/automationCo
 import { EMAIL_PLATFORM, EMAIL_WORKFLOWS, COMMON_DYNAMIC_VARIABLE_KEYS } from 'backend/SKANDI_CORE/automationEmailConfig';
 
 const resolveTriggers = auth.elevate(triggerCatalog.resolveTriggers);
+const resolveActions = auth.elevate(actionCatalog.resolveActions);
 const getAutomation = auth.elevate(automationsV2.getAutomation);
+const getAutomationRevision = auth.elevate(automationsV2.getAutomationRevision);
 const createAutomation = auth.elevate(automationsV2.createAutomation);
 const updateAutomation = auth.elevate(automationsV2.updateAutomation);
 const validateAutomation = auth.elevate(automationsV2.validateAutomation);
+const queryWithDrafts = auth.elevate(automationsV2.queryAutomationsWithDrafts);
+const createDraftAutomation = auth.elevate(automationsV2.createDraftAutomation);
+const getOrCreateDraftAutomation = auth.elevate(automationsV2.getOrCreateDraftAutomation);
+const updateDraftAutomation = auth.elevate(automationsV2.updateDraftAutomation);
+const publishDraftAutomation = auth.elevate(automationsV2.publishDraftAutomation);
+const deleteDraftAutomation = auth.elevate(automationsV2.deleteDraftAutomation);
+const deleteAutomation = auth.elevate(automationsV2.deleteAutomation);
 const getEmailContent = auth.elevate(automationEmailAction.getEmailContent);
 const setEmailContent = auth.elevate(automationEmailAction.setEmailContent);
+const sendTestEmail = auth.elevate(automationEmailAction.sendTestEmail);
 const generateActionInputMapping = auth.elevate(automationEmailAction.generateActionInputMapping);
 const PRIVILEGED = new Set(['SUPER_ADMIN','OWNER','COMPANY_OWNER']);
 const PREFIX = 'EMAIL-TEMPLATE-';
@@ -31,6 +41,7 @@ const safe = (v,n=1000) => String(v??'').trim().slice(0,n);
 const dict = x => x && typeof x==='object' && !Array.isArray(x) ? x : {};
 const arr = x => Array.isArray(x) ? x : [];
 function problem(code, message) { const e = new Error(message); e.code = code; e.publicMessage=message; throw e; }
+function validationPasses(value,acceptWarnings=false) { return value?.status==='VALID'||(acceptWarnings&&value?.status==='VALID_WITH_WARNINGS')||(value?.status==null&&value?.valid===true); }
 function admin(session) {
   const role=safe(session?.accessRole,80).toUpperCase();
   const tags=[...arr(session?.permissionGroups),...arr(session?.permissionKeys)].map(x=>safe(x,100).toLowerCase());
@@ -94,7 +105,7 @@ function compileMJML(template){
   const logo=safeUrl(EMAIL_PLATFORM?.assets?.employeeLogoUrl)||safeUrl(EMAIL_PLATFORM?.assets?.customerLogoUrl);
   return `<mjml><mj-head><mj-attributes><mj-all font-family="Arial,Helvetica,sans-serif" /><mj-text color="#26354a" /></mj-attributes></mj-head><mj-body background-color="#eef3f8"><mj-section background-color="#022e64" padding="19px 16px"><mj-column>${logo?`<mj-image src="${escapeXml(logo)}" alt="SKANDI" width="132px" align="left" padding="0 10px" />`:'<mj-text color="#ffffff" font-weight="700" font-size="22px">SKANDI</mj-text>'}</mj-column></mj-section><mj-section background-color="#ffffff" padding="15px 12px"><mj-column>${body}</mj-column></mj-section><mj-section background-color="#eef3f8"><mj-column><mj-text color="#6b7280" align="center" font-size="11px">${escapeXml(EMAIL_PLATFORM.companyLegalName||'SKANDI GROUP')}</mj-text></mj-column></mj-section></mj-body></mjml>`;
 }
-function content(template){const raw=template.sourceMode==='HTML';return {editorType:raw?'HTML':'MJML', emailSubject:template.subject, emailPreheader:template.preheader, composer:{composerDataJson:raw?template.htmlSource:JSON.stringify({mjml:compileMJML(template)})}};}
+function content(template){const raw=template.sourceMode==='HTML';return {editorType:raw?'HTML':'MJML', emailSubject:template.subject, emailPreheader:template.preheader, composer:{composerDataJson:JSON.stringify(raw?{html:template.htmlSource}:{mjml:compileMJML(template)})}};}
 function schemaPaths(node,prefix='',set=new Set(),depth=0){
   if(depth>8||!node||typeof node!=='object') return set;
   for(const [key,value] of Object.entries(dict(node.properties))){
@@ -119,6 +130,20 @@ async function siteTriggers(){
     // Server keeps schema out of iframe, only safe field names are exposed.
   }));
 }
+async function siteActions(){
+  const items=[];
+  for(let offset=0;offset<MAX_TRIGGERS;offset+=100){
+    const response=await resolveActions({query:{paging:{limit:100,offset}}});
+    if(!Array.isArray(response?.actions))problem('AUTOMATION_ACTION_CATALOG_INVALID','The action catalog returned an unexpected response.');
+    items.push(...response.actions);
+    if(response.actions.length<100||response?.paging?.hasNext===false)break;
+  }
+  return items.filter(x=>x?.appId&&x?.actionKey).map(a=>({
+    appId:safe(a.appId,120), actionKey:safe(a.actionKey,160),
+    displayName:safe(a.displayName||a.actionKey,240), description:safe(a.description,500),
+    inputSchema:dict(a.inputSchema)
+  }));
+}
 async function allTemplates(){
   const base=await getVoyAdminBootstrapCore();
   return arr(base?.campaigns).filter(x=>x?.purpose==='SKANDI_AUTOMATION_EMAIL_TEMPLATE'&&String(x?.entityId||'').startsWith(PREFIX)).map(x=>({
@@ -131,14 +156,15 @@ function validTrigger(t, available){const record=available.find(x=>x.appId===saf
 function verifyVariables(template,trigger){const avail=new Set(trigger.variablePaths);const used=extractVariables(template);const invalid=used.filter(p=>!avail.has(p));if(invalid.length)problem('EMAIL_VARIABLE_UNAVAILABLE',`These placeholders are not in the selected Wix trigger schema: ${invalid.join(', ')}. Custom draft variables are not live Wix variables.`);return used;}
 export async function getAutomationWorkspaceCore(){
   await session();
-  const [templates,triggers,automations] = await Promise.allSettled([allTemplates(),siteTriggers(),getAutomationAdminSnapshotCore()]);
+  const [templates,triggers,automations,actions] = await Promise.allSettled([allTemplates(),siteTriggers(),getAutomationAdminSnapshotCore(),siteActions()]);
   const savedTemplates=templates.status==='fulfilled'?templates.value:[];
   const variableDefinitions=[...new Map(savedTemplates.flatMap(t=>arr(t.customVariables)).filter(v=>v?.path).map(v=>[v.path,{...v,source:'SKANDI_EDITORIAL_DRAFT'}])).values()];
   return {ok:true,templates:savedTemplates,variableDefinitions,templateError:templates.status==='rejected'?safe(templates.reason?.message||'Templates unavailable',300):'',
     triggers:triggers.status==='fulfilled'?triggers.value:[],triggerError:triggers.status==='rejected'?safe(triggers.reason?.message||'Wix trigger registry unavailable',300):'',
     catalogVariables:COMMON_DYNAMIC_VARIABLE_KEYS.map(path=>({path,source:'SKANDI_CATALOG_ONLY'})),
     workflows:Object.entries(EMAIL_WORKFLOWS).map(([key,v])=>({key,category:v.category,audiences:v.audiences,referenceCode:v.referenceCode,emailType:v.emailType})),
-    automations:automations.status==='fulfilled'?automations.value.automations:[],automationError:automations.status==='rejected'?safe(automations.reason?.message||'Wix automations unavailable',300):'',
+    automations:automations.status==='fulfilled'?automations.value.automations:[],automationError:automations.status==='rejected'?safe(automations.reason?.message||'Automations unavailable',300):'',
+    actions:actions.status==='fulfilled'?actions.value:[],actionError:actions.status==='rejected'?safe(actions.reason?.message||'Action catalog unavailable',300):'',
     retrievedAt:new Date().toISOString()};
 }
 export async function saveAutomationTemplateCore(input={}){
@@ -172,7 +198,8 @@ export async function createAutomationDraftCore(input={}){
   const contactPath=safe(input.contactPath||'contactId',160);
   if(!trigger.variablePaths.includes(contactPath))problem('EMAIL_CONTACT_MAPPING_INVALID','The selected trigger does not supply this Wix contact ID property.');
   if(template.emailType==='BUSINESS_CRITICAL' && input.acknowledgeCritical!==true)problem('EMAIL_CRITICAL_APPROVAL','Business-critical classification requires explicit administrator confirmation.');
-  const action={emailType:template.emailType,triggerSchemaContactIdPath:contactPath};
+  if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm that the system may create a draft and its message content.');
+  const action={emailType:template.emailType,recipients:{recipientType:'TRIGGER_CONTACT',triggerContactOptions:{contactIdPath:contactPath}}};
   if(template.emailType==='BUSINESS_TRANSACTIONAL')action.notificationTopicId=requireId(input.notificationTopicId,'Notification topic ID');
   if(input.senderDetailsId)action.senderDetailsId=requireId(input.senderDetailsId,'Sender details ID');
   const mapping=await generateActionInputMapping({action,content:content(template)});
@@ -180,11 +207,11 @@ export async function createAutomationDraftCore(input={}){
   const aid=randomUUID();
   const automation={name:safe(input.name||template.title,240),description:`SKANDI Media Control email template ${template.entityId}`,origin:'USER',configuration:{status:'INACTIVE',trigger:{appId:trigger.appId,triggerKey:trigger.triggerKey,filters:[]},rootActionIds:[aid],actions:{[aid]:{id:aid,type:'APP_DEFINED',namespace:'triggered-emails-1',appDefinedInfo:{appId:mapping.appId,actionKey:mapping.actionKey,inputMapping:mapping.inputMapping,postActionIds:[],skipConditionOrExpressionGroups:[]}}}}};
   const validation=await validateAutomation(automation);
-  if(validation?.valid!==true) return {ok:false,created:false,validation,reason:'Wix rejected this automation configuration; no Wix automation was created.'};
-  const created=await createAutomation(automation);
+  if(!validationPasses(validation,input.acceptWarnings===true)) return {ok:false,created:false,validation,reason:'Validation did not pass; no automation was created. The prepared email content may remain.'};
+  const created=await createDraftAutomation({automation});
   const record=created?.automation||created;
   if(!record?._id)problem('EMAIL_WIX_CREATE_NOT_CONFIRMED','Wix did not return an automation ID. Review the Wix dashboard before retrying.');
-  return {ok:true,created:true,active:false,automationId:record._id,actionId:aid,triggerKey:trigger.triggerKey,variables,revision:record.revision||'',message:'Inactive automation created in Wix. Build conditions, approval steps and activation in the native Wix Automations builder.'};
+  return {ok:true,created:true,draft:true,active:false,automationId:record._id,actionId:aid,triggerKey:trigger.triggerKey,variables,revision:record.revision||'',message:'Draft created. It will not run until published.'};
 }
 export async function syncAutomationDesignedEmailCore(input={}){
   await session({manage:true});
@@ -211,20 +238,60 @@ export async function setAutomationStatusCore(input={}){
   if(input.confirm!==true) problem('AUTOMATION_STATUS_CONFIRM','Confirm the requested automation status change.');
   const found=await getAutomation(id);
   const current=found?.automation||found;
-  if(current?.origin!=='USER'||current?.settings?.readonly===true||current?.settings?.disableStatusChange===true)
-    problem('AUTOMATION_CONTROL_RESTRICTED','Only editable user-created Wix automations can be activated or paused here.');
+  if(current?.settings?.readonly===true||current?.settings?.disableStatusChange===true)
+    problem('AUTOMATION_CONTROL_RESTRICTED','The provider does not permit changing this automation’s status.');
   if(!current?.revision||!current?.configuration?.trigger||!current?.configuration?.actions)
     problem('AUTOMATION_CONFIG_UNAVAILABLE','Wix did not supply complete configuration and revision information.');
   const status=input.active?'ACTIVE':'INACTIVE';
   if(current.configuration.status===status)return{ok:true,unchanged:true,automationId:id,status};
-  const update={_id:id,revision:current.revision,name:current.name,description:current.description||'',origin:'USER',configuration:{...current.configuration,status}};
+  if(input.revision&&String(input.revision)!==String(current.revision))problem('AUTOMATION_REVISION_CHANGED','This automation changed since it was opened. Refresh and review it again.');
+  // A normal GET omits optional trigger/action override schemas. Fetch this exact
+  // revision with those fields before a full update so they are not cleared.
+  let revisionResponse;
+  try { revisionResponse=await getAutomationRevision(id,{revision:String(current.revision),fields:['OVERRIDE_SCHEMA']}); }
+  catch (_) { problem('AUTOMATION_REVISION_UNAVAILABLE','The complete workflow revision could not be retrieved. Its status was not changed.'); }
+  const complete=revisionResponse?.automation;
+  if(!complete?.configuration?.trigger||!complete?.configuration?.actions||String(complete.revision)!==String(current.revision))
+    problem('AUTOMATION_REVISION_UNAVAILABLE','The complete workflow revision could not be confirmed. Its status was not changed.');
+  const update={...complete,configuration:{...complete.configuration,status}};
   if(status==='ACTIVE'){
     const verification=await validateAutomation(update);
-    if(verification?.valid!==true)return{ok:false,validation:verification,reason:'Wix validation did not pass; automation remains unchanged.'};
+    if(!validationPasses(verification,input.acceptWarnings===true))return{ok:false,validation:verification,reason:'Validation did not pass; the automation remains unchanged.'};
   }
   const changed=await updateAutomation(id,update);
   if(!changed?._id&&!changed?.automation?._id)problem('AUTOMATION_STATUS_UNCONFIRMED','Wix did not confirm the update. Check Wix before retrying.');
-  return{ok:true,automationId:id,status,revision:changed?.revision||changed?.automation?.revision||'',message:'Wix acknowledged the automation status change.'};
+  const record=changed?.automation||changed;const changedId=record?._id||record?.id;
+  let verified;
+  try { verified=await getAutomation(changedId); }
+  catch (_) { problem('AUTOMATION_STATUS_UNCONFIRMED','The change was submitted but could not be confirmed. Refresh before trying again.'); }
+  const live=verified?.automation||verified;
+  if(live?.configuration?.status!==status)problem('AUTOMATION_STATUS_UNCONFIRMED','The requested status could not be confirmed. Refresh before trying again.');
+  return{ok:true,automationId:changedId,status,revision:live.revision||'',message:'The status change was confirmed.'};
+}
+
+export async function setAutomationArchivedCore(input={}){
+  await session({manage:true});
+  if(input.confirm!==true||typeof input.archived!=='boolean')problem('AUTOMATION_CONFIRM_REQUIRED','Confirm the requested archive change.');
+  const id=requireId(input.automationId,'Automation ID');
+  const response=await getAutomation(id),current=response?.automation||response;
+  if(current?.settings?.readonly===true)problem('AUTOMATION_CONTROL_RESTRICTED','This workflow is read-only.');
+  if(!current?.revision||String(current.revision)!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The workflow changed. Refresh before continuing.');
+  if(!!current.archived===input.archived)return{ok:true,unchanged:true,automationId:id,archived:input.archived};
+  if(input.archived&&current.configuration?.status==='ACTIVE')problem('AUTOMATION_PAUSE_FIRST','Pause this workflow before moving it to the archive.');
+  let fullResponse;
+  try {fullResponse=await getAutomationRevision(id,{revision:String(current.revision),fields:['OVERRIDE_SCHEMA']});}
+  catch (_) {problem('AUTOMATION_REVISION_UNAVAILABLE','The complete workflow revision could not be retrieved. No change was made.');}
+  const complete=fullResponse?.automation;
+  if(!complete?.configuration?.trigger||!complete?.configuration?.actions||String(complete.revision)!==String(current.revision))
+    problem('AUTOMATION_REVISION_UNAVAILABLE','The complete workflow revision could not be confirmed. No change was made.');
+  const changed=await updateAutomation(id,{...complete,archived:input.archived});
+  const updated=changed?.automation||changed;
+  if(!updated?._id&&!updated?.id)problem('AUTOMATION_ARCHIVE_UNCONFIRMED','The change was submitted but not confirmed. Refresh before trying again.');
+  let verified;
+  try {verified=await getAutomation(updated._id||updated.id);}
+  catch (_) {problem('AUTOMATION_ARCHIVE_UNCONFIRMED','The change was submitted but not confirmed. Refresh before trying again.');}
+  if(!!(verified?.automation||verified)?.archived!==input.archived)problem('AUTOMATION_ARCHIVE_UNCONFIRMED','The archive change could not be confirmed. Refresh before trying again.');
+  return{ok:true,automationId:id,archived:input.archived};
 }
 
 
@@ -249,6 +316,176 @@ export async function getAutomationGraphCore({automationId}={}){
   if(!row||!row.configuration)problem('AUTOMATION_NOT_FOUND','Wix did not return this automation.');
   return {ok:true,graph:safeGraphProjection(row)};
 }
+
+// Draft changes are made against a freshly retrieved provider revision. Sensitive
+// values stay on the server and are restored when a retained field is saved.
+const PROTECTED_VALUE='[protected]';
+const SENSITIVE_KEY=/(?:authorization|password|passphrase|secret|credential|api[_-]?key|access[_-]?token|refresh[_-]?token|private[_-]?key)/i;
+function protectedString(value){return typeof value==='string'&&(/\bBearer\s+\S+/i.test(value)||/[?&](?:token|secret|api[_-]?key|password)=/i.test(value)||/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value));}
+function redactDefinition(value,key='',depth=0){
+  if(depth>30)problem('AUTOMATION_DEFINITION_DEPTH','The workflow definition is too deeply nested.');
+  if(SENSITIVE_KEY.test(key)||protectedString(value))return PROTECTED_VALUE;
+  if(Array.isArray(value))return value.map(v=>redactDefinition(v,'',depth+1));
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,redactDefinition(v,k,depth+1)]));
+  return value;
+}
+function restoreDefinition(value,old,key='',depth=0){
+  if(depth>30)problem('AUTOMATION_DEFINITION_DEPTH','The workflow definition is too deeply nested.');
+  if(SENSITIVE_KEY.test(key)||value===PROTECTED_VALUE){
+    if(value!==PROTECTED_VALUE||old===undefined)problem('AUTOMATION_PROTECTED_FIELD','Protected values cannot be added or changed in this editor.');
+    return old;
+  }
+  if(protectedString(value))problem('AUTOMATION_PROTECTED_FIELD','Credentials cannot be entered in this editor.');
+  if(Array.isArray(value)){
+    const original=Array.isArray(old)?old:[];
+    const redacted=redactDefinition(original);
+    if(JSON.stringify(redacted).includes(PROTECTED_VALUE)&&JSON.stringify(value)!==JSON.stringify(redacted))
+      problem('AUTOMATION_PROTECTED_FIELD','A list containing protected values cannot be changed in this editor.');
+    return value.map((v,i)=>restoreDefinition(v,original[i],'',depth+1));
+  }
+  if(value&&typeof value==='object'){
+    const result={};
+    for(const [k,v] of Object.entries(value)){
+      if(['__proto__','constructor','prototype'].includes(k))problem('AUTOMATION_FIELD_INVALID','The definition contains an invalid field.');
+      result[k]=restoreDefinition(v,old?.[k],k,depth+1);
+    }
+    for(const [k,v] of Object.entries(dict(old)))if(SENSITIVE_KEY.test(k)&&!(k in result))result[k]=v;
+    return result;
+  }
+  return value;
+}
+function connectionFields(value,path='',out={}){
+  if(!value||typeof value!=='object')return out;
+  for(const [key,item] of Object.entries(value)){
+    const child=path?path+'.'+key:key;
+    if(/^(?:postActionIds|truePostActionIds|falsePostActionIds|rootActionIds)$/.test(key))out[child]=item;
+    else if(item&&typeof item==='object')connectionFields(item,child,out);
+  }
+  return out;
+}
+function draftView(row,originalRevision=''){
+  return {id:safe(row?._id||row?.id,120),revision:safe(row?.revision,80),originalId:safe(row?.draftInfo?.originalAutomationId,120),originalRevision,
+    definition:redactDefinition({name:row?.name||'',description:row?.description||'',configuration:row?.configuration||{}})};
+}
+async function standaloneDraft(id){
+  let cursor='';const seen=new Set();
+  for(let page=0;page<100;page++){
+    const paging={limit:100};if(cursor)paging.cursor=cursor;
+    const response=await queryWithDrafts({query:{cursorPaging:paging}});
+    if(!Array.isArray(response?.automations))problem('AUTOMATION_QUERY_INVALID','The draft list returned an unexpected response.');
+    const found=response.automations.find(x=>String(x?._id||x?.id)===id&&x?.draftInfo);
+    if(found)return found;
+    const next=safe(response?.pagingMetadata?.cursors?.next,64000);
+    if(!next&&response?.pagingMetadata?.hasNext!==true)break;
+    if(!next||seen.has(next))problem('AUTOMATION_QUERY_INCOMPLETE','The draft list could not be fully loaded.');
+    seen.add(next);cursor=next;
+  }
+  problem('AUTOMATION_DRAFT_NOT_FOUND','The selected draft was not found. Refresh the list.');
+}
+async function currentDraft({draftId,originalId}={}){
+  const id=requireId(draftId,'Draft ID');
+  if(originalId){
+    const original=requireId(originalId,'Automation ID');
+    const response=await getOrCreateDraftAutomation(original);const row=response?.automation||response;
+    if(String(row?._id||row?.id)!==id)problem('AUTOMATION_DRAFT_CHANGED','The selected draft changed. Refresh before continuing.');
+    return row;
+  }
+  // The list response is used only to verify that this is a standalone draft.
+  // Fetch the complete draft before an update; list projections may omit fields.
+  await standaloneDraft(id);
+  const response=await getOrCreateDraftAutomation(id),row=response?.automation||response;
+  if(String(row?._id||row?.id)!==id||!row?.draftInfo)
+    problem('AUTOMATION_DRAFT_CHANGED','The selected draft changed. Refresh before continuing.');
+  return row;
+}
+export async function openAutomationDraftCore(input={}){
+  await session({manage:true});
+  const id=requireId(input.automationId,'Automation ID');
+  if(input.standalone===true){const row=await standaloneDraft(id);return {ok:true,draft:draftView(row)};}
+  const originalResponse=await getAutomation(id),original=originalResponse?.automation||originalResponse;
+  if(!original?.configuration)problem('AUTOMATION_NOT_FOUND','The selected automation was not found.');
+  if(original?.settings?.readonly===true)problem('AUTOMATION_CONTROL_RESTRICTED','This automation is read-only.');
+  if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm creating or opening a draft.');
+  const response=await getOrCreateDraftAutomation(id),row=response?.automation||response;
+  if(!row?._id&&!row?.id)problem('AUTOMATION_DRAFT_UNCONFIRMED','The draft could not be confirmed. Refresh before trying again.');
+  return {ok:true,draft:draftView(row,safe(original.revision,80))};
+}
+export async function createBlankAutomationDraftCore(input={}){
+  await session({manage:true});
+  const name=safe(input.name,240);if(!name)problem('AUTOMATION_NAME_REQUIRED','Enter a workflow name.');
+  if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm creating a draft.');
+  const response=await createDraftAutomation({automation:{name,origin:'USER'}}),row=response?.automation||response;
+  if(!row?._id&&!row?.id)problem('AUTOMATION_DRAFT_UNCONFIRMED','Draft creation was not confirmed. Refresh before trying again.');
+  return {ok:true,draft:draftView(row)};
+}
+export async function saveAutomationDraftCore(input={}){
+  await session({manage:true});const current=await currentDraft(input);
+  if(!current?.revision||String(current.revision)!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The draft changed since it was opened. Reload before saving.');
+  if(current?.settings?.readonly===true)problem('AUTOMATION_CONTROL_RESTRICTED','This draft is read-only.');
+  const submitted=dict(input.definition);
+  if(JSON.stringify(submitted).length>250000||!submitted.name||!submitted.configuration||Array.isArray(submitted.configuration))problem('AUTOMATION_DEFINITION_INVALID','Enter a name and a valid workflow configuration.');
+  const config=restoreDefinition(submitted.configuration,current.configuration);
+  config.status=current.configuration?.status||'INACTIVE';
+  if(current.origin!=='USER'){
+    if(JSON.stringify(config.trigger)!==JSON.stringify(current.configuration?.trigger))problem('AUTOMATION_TRIGGER_RESTRICTED','The event for this installed workflow is controlled by its provider.');
+    const beforeActions=dict(current.configuration?.actions),afterActions=dict(config.actions);
+    if(JSON.stringify(Object.keys(beforeActions).sort())!==JSON.stringify(Object.keys(afterActions).sort())||JSON.stringify(config.rootActionIds)!==JSON.stringify(current.configuration?.rootActionIds))
+      problem('AUTOMATION_GRAPH_RESTRICTED','Adding, removing or reconnecting steps in this installed workflow is not supported here.');
+    if(JSON.stringify(connectionFields(beforeActions))!==JSON.stringify(connectionFields(afterActions)))
+      problem('AUTOMATION_GRAPH_RESTRICTED','Reconnecting steps in this installed workflow is not supported here.');
+    for(const id of arr(current?.settings?.actionSettings?.permanentActionIds)){
+      if(!afterActions[id]||afterActions[id].skipActionExpression!==beforeActions[id]?.skipActionExpression)problem('AUTOMATION_ACTION_PERMANENT','A permanent action or its skip condition was changed.');
+    }
+  }
+  const restricted=arr(current?.settings?.actionSettings?.readonlyActionIds);
+  for(const id of restricted)if(JSON.stringify(config.actions?.[id])!==JSON.stringify(current.configuration?.actions?.[id]))problem('AUTOMATION_ACTION_READONLY','A protected action was changed.');
+  const update={...current,name:safe(submitted.name,500),description:safe(submitted.description,2000),configuration:config,origin:current.origin,draftInfo:current.draftInfo};
+  const response=await updateDraftAutomation(String(current._id||current.id),update),row=response?.automation||response;
+  if(!row?._id&&!row?.id)problem('AUTOMATION_DRAFT_UNCONFIRMED','The system did not confirm the save. Reload before trying again.');
+  return {ok:true,draft:draftView(row,safe(input.originalRevision,80))};
+}
+export async function validateAutomationDraftCore(input={}){
+  await session({manage:true});const draft=await currentDraft(input);
+  if(String(draft?.revision||'')!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The draft changed since it was opened. Reload before validating.');
+  const validation=await validateAutomation(draft);
+  return {ok:true,valid:validationPasses(validation,true),hasWarnings:validation?.status==='VALID_WITH_WARNINGS',validation:redactDefinition(validation)};
+}
+export async function publishAutomationDraftCore(input={}){
+  await session({manage:true});if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm publishing and activating this workflow.');
+  const draft=await currentDraft(input);
+  if(String(draft?.revision||'')!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The draft changed since it was opened. Reload before publishing.');
+  if(draft?.draftInfo?.originalAutomationId){
+    const found=await getAutomation(draft.draftInfo.originalAutomationId),original=found?.automation||found;
+    if(original?.settings?.readonly||original?.settings?.disableStatusChange)problem('AUTOMATION_CONTROL_RESTRICTED','This workflow cannot be published or activated by this account.');
+    if(input.originalRevision&&String(input.originalRevision)!==String(original?.revision))problem('AUTOMATION_REVISION_CHANGED','The live workflow changed since the draft was opened. Review it again.');
+  }
+  const validation=await validateAutomation(draft);
+  if(!validationPasses(validation,input.acceptWarnings===true))return {ok:false,hasWarnings:validation?.status==='VALID_WITH_WARNINGS',validation:redactDefinition(validation),reason:validation?.status==='VALID_WITH_WARNINGS'?'Review the validation warnings before publishing.':'Validation did not pass; the draft was not published.'};
+  const response=await publishDraftAutomation(String(draft._id||draft.id)),row=response?.automation||response;
+  if(!row?._id&&!row?.id)problem('AUTOMATION_PUBLISH_UNCONFIRMED','Publication was not confirmed. Refresh before trying again.');
+  return {ok:true,automationId:row._id||row.id,status:row?.configuration?.status||'',message:'The draft was published.'};
+}
+export async function deleteAutomationDraftCore(input={}){
+  await session({manage:true});if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm deleting the draft.');
+  const draft=await currentDraft(input);if(String(draft?.revision||'')!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The draft changed. Reload before deleting.');
+  await deleteDraftAutomation(String(draft._id||draft.id));return {ok:true,deleted:true};
+}
+export async function deleteAutomationCore(input={}){
+  await session({manage:true});if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm deleting the automation.');
+  const id=requireId(input.automationId,'Automation ID');const response=await getAutomation(id),row=response?.automation||response;
+  if(row?.settings?.readonly||row?.settings?.disableDelete)problem('AUTOMATION_CONTROL_RESTRICTED','This automation cannot be deleted.');
+  if(!row?.revision||String(row.revision)!==String(input.revision||''))problem('AUTOMATION_REVISION_CHANGED','The automation changed. Refresh before deleting.');
+  await deleteAutomation(id);return {ok:true,deleted:true};
+}
+export async function sendAutomationTestEmailCore(input={}){
+  await session({manage:true});if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm sending the test email.');
+  const automationId=requireId(input.automationId,'Automation ID'),actionId=requireId(input.actionId,'Action ID');
+  const toEmail=safe(input.toEmail,254);if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail))problem('AUTOMATION_EMAIL_INVALID','Enter a valid recipient email address.');
+  const response=await getAutomation(automationId),row=response?.automation||response;
+  const action=dict(row?.configuration?.actions)[actionId];
+  if(action?.type!=='APP_DEFINED'||action?.appDefinedInfo?.actionKey!=='triggered-emails')problem('AUTOMATION_EMAIL_ACTION_INVALID','Select a supported email action.');
+  await sendTestEmail({automationId,actionId},{toEmail});return {ok:true,sent:true};
+}
 const NODE_TYPE=new Set(['EMAIL','DELAY','CONDITION']);
 const TIME_UNIT=new Set(['MINUTES','HOURS','DAYS']);
 const IF_OPERATOR=new Set(['eq','gte']);
@@ -263,6 +500,7 @@ function compileCondition(n,verifiedTrigger){
 }
 export async function createAutomationGraphDraftCore(input={}){
   await session({manage:true});
+  if(input.confirm!==true)problem('AUTOMATION_CONFIRM_REQUIRED','Confirm that the system may prepare message content and create a draft.');
   const available=await siteTriggers(),trigger=validTrigger(input.trigger,available);
   const nodes=arr(input.nodes),edges=arr(input.edges);
   if(!nodes.length||nodes.length>30||edges.length>60)problem('AUTOMATION_GRAPH_SIZE','Build a workflow with 1–30 steps and 60 connections or fewer.');
@@ -278,7 +516,7 @@ export async function createAutomationGraphDraftCore(input={}){
     const template=await findTemplate(safe(n.templateId,110));verifyVariables(template,trigger);
     if(!trigger.variablePaths.includes(contactPath))problem('AUTOMATION_CONTACT_NOT_IN_TRIGGER','Choose a valid contactId property in this Wix trigger.');
     if(template.emailType==='BUSINESS_CRITICAL'&&input.acknowledgeCritical!==true)problem('AUTOMATION_CRITICAL_APPROVAL','Explicit administrator confirmation is required for business-critical emails.');
-    const setup={emailType:template.emailType,triggerSchemaContactIdPath:contactPath};
+    const setup={emailType:template.emailType,recipients:{recipientType:'TRIGGER_CONTACT',triggerContactOptions:{contactIdPath:contactPath}}};
     if(template.emailType==='BUSINESS_TRANSACTIONAL')setup.notificationTopicId=requireId(input.notificationTopicId,'Notification topic');
     if(input.senderDetailsId)setup.senderDetailsId=requireId(input.senderDetailsId,'Sender ID');
     const mapping=await generateActionInputMapping({action:setup,content:content(template)});
@@ -288,9 +526,8 @@ export async function createAutomationGraphDraftCore(input={}){
   if(!emailActionCount)problem('AUTOMATION_GRAPH_NO_EMAIL','The first workflow draft creator requires at least one configured Send Email action. Other Wix action types can be inspected without modification.');
   const request={name:safe(input.name,240)||'SKANDI Workflow',description:'Created in RIAINTRA Automation Control with approved trigger and email template records.',origin:'USER',configuration:{status:'INACTIVE',trigger:{appId:trigger.appId,triggerKey:trigger.triggerKey,filters:[]},rootActionIds:[root],actions}};
   const validation=await validateAutomation(request);
-  if(validation?.valid!==true)return{ok:false,created:false,validation,reason:'Wix rejected the workflow graph. No automation was created.'};
-  if(input.confirm!==true)return{ok:true,created:false,validation,readyToCreate:true,actionCount:nodes.length,reason:'Wix validation passed. Confirm to create an inactive draft.'};
-  const response=await createAutomation(request),record=response?.automation||response;
+  if(!validationPasses(validation,input.acceptWarnings===true))return{ok:false,created:false,validation,reason:'Validation rejected the workflow. No automation was created; prepared message content may remain.'};
+  const response=await createDraftAutomation({automation:request}),record=response?.automation||response;
   if(!record?._id)problem('AUTOMATION_GRAPH_CREATE_UNCONFIRMED','Wix did not confirm the automation ID; check your Wix account before retrying.');
-  return{ok:true,created:true,active:false,automationId:record._id,actionCount:nodes.length,revision:record.revision||'',message:'Wix created an inactive automation. Activate only after reviewing conditions and recipients.'};
+  return{ok:true,created:true,draft:true,active:false,automationId:record._id,actionCount:nodes.length,revision:record.revision||'',message:'Draft created. It will not run until published.'};
 }

@@ -122,6 +122,13 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
     attr(n,'title')==='Document preview' && !attr(n,'src') &&
     (n.attrs||[]).every(a=>['id','class','title'].includes(a.name)) &&
     (n.childNodes||[]).length===0
+  ) || (
+    relativeFile==='riaintra-embeds/automation-control/skandi-automation-control.html' &&
+    attr(n,'id')==='emailPreview' && attr(n,'class')==='preview' &&
+    attr(n,'title')==='Message preview' &&
+    (n.attrs||[]).some(a=>a.name==='sandbox' && a.value==='') &&
+    (n.attrs||[]).every(a=>['id','class','title','sandbox','hidden'].includes(a.name)) &&
+    (n.childNodes||[]).length===0
   )));
   if(unsupportedFrame) throw new Error(`${file}: nested iframe is not supported; retain the existing Wix integration`);
   if(nodes.some(n=>n.tagName==='base')) throw new Error(`${file}: <base> changes receiver/navigation ownership; use explicit asset URLs`);

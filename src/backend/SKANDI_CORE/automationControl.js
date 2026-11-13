@@ -16,9 +16,22 @@ import {
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import { lower, stringArray, text, upper } from "backend/SKANDI_CORE/platformValidation";
 
+const queryAutomationsWithDraftsElevated = auth.elevate(automationsV2.queryAutomationsWithDrafts);
 const queryAutomationsElevated = auth.elevate(automationsV2.queryAutomations);
+async function queryArchived() {
+  const rows = [];
+  let result = await queryAutomationsElevated().eq('archived', true).limit(PAGE_SIZE).find();
+  for (let page = 0; page < MAX_AUTOMATION_PAGES; page++) {
+    if (!Array.isArray(result?.items)) throw new Error('The archive query returned an unexpected response.');
+    rows.push(...result.items.filter(item => item.archived === true));
+    if (!result.hasNext()) return rows;
+    result = await result.next();
+  }
+  throw new Error('Archived results exceeded the supported page limit.');
+}
 const PRIVILEGED_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
-const MAX_AUTOMATIONS = 100;
+const PAGE_SIZE = 100;
+const MAX_AUTOMATION_PAGES = 100;
 const ENTRYPOINT_TEST_ACTION = "SKANDI_AUTOMATION_ENTRYPOINT_TEST";
 
 function objectOf(value) {
@@ -75,7 +88,8 @@ async function requireAutomationAdministrator() {
 
 function normalizeAutomation(value = {}) {
   const id = automationId(value);
-  const status = automationStatus(value);
+  const isDraft = !!value?.draftInfo;
+  const status = isDraft ? 'DRAFT' : automationStatus(value);
   const key = triggerKey(value);
   const actions = actionCount(value);
   const origin = upper(value?.origin, 40);
@@ -96,7 +110,14 @@ function normalizeAutomation(value = {}) {
     triggerAppId: triggerAppId(value),
     actionCount: actions,
     archived: value?.archived === true,
-    updatedAt: value?._updatedDate || value?.updatedDate || null
+    updatedAt: value?._updatedDate || value?.updatedDate || null,
+    revision: text(value?.revision, 80),
+    draft: isDraft,
+    originalAutomationId: text(value?.draftInfo?.originalAutomationId, 120),
+    draftId: text(value?.skandiDraftId, 120),
+    editable: value?.settings?.readonly !== true,
+    statusChangeAllowed: value?.settings?.readonly !== true && value?.settings?.disableStatusChange !== true,
+    deleteAllowed: value?.settings?.readonly !== true && value?.settings?.disableDelete !== true
   };
 }
 
@@ -143,21 +164,39 @@ function automationActionName(payload = {}) {
 }
 
 async function queryLiveAutomations() {
-  const query = queryAutomationsElevated();
-  const result = await query.limit(MAX_AUTOMATIONS).find();
-  const rows = Array.isArray(result?.items)
-    ? result.items
-    : Array.isArray(result?.automations)
-      ? result.automations
-      : [];
-  return rows.filter(row => row?.archived !== true);
+  const rows = [];
+  const draftIds = {};
+  const seen = new Set();
+  let cursor = '';
+  for (let page = 0; page < MAX_AUTOMATION_PAGES; page++) {
+    const cursorPaging = { limit: PAGE_SIZE };
+    if (cursor) cursorPaging.cursor = cursor;
+    const result = await queryAutomationsWithDraftsElevated({ query: { cursorPaging } });
+    if (!Array.isArray(result?.automations)) throw new Error('Automation query returned an unexpected response.');
+    rows.push(...result.automations);
+    Object.assign(draftIds, objectOf(result.originalAutomationIdToDrafts));
+    const next = text(result?.pagingMetadata?.cursors?.next, 64000);
+    if (!next && result?.pagingMetadata?.hasNext !== true) {
+      return rows.filter(row => row?.archived !== true).map(row => ({
+        ...row, skandiDraftId: draftIds[automationId(row)]?.draftAutomationIds?.[0] || ''
+      }));
+    }
+    if (!next || seen.has(next)) throw new Error('Automation pagination did not finish. Please try again.');
+    seen.add(next);
+    cursor = next;
+  }
+  throw new Error('Automation results exceeded the supported page limit.');
 }
 
 export async function getAutomationAdminSnapshotCore() {
   await requireAutomationAdministrator();
 
   const rows = await queryLiveAutomations();
+  let archivedRows = [], archiveError = '';
+  try { archivedRows = await queryArchived(); }
+  catch (_) { archiveError = 'The archive could not be loaded. Check access and try again.'; }
   const automations = rows
+    .concat(archivedRows)
     .map(normalizeAutomation)
     .filter(item => item.id)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -167,14 +206,17 @@ export async function getAutomationAdminSnapshotCore() {
     ok: true,
     source: "Wix Automations",
     readOnly: true,
+    archiveError,
     retrievedAt: new Date().toISOString(),
     triggers,
     automations,
     counts: {
       triggers: triggers.length,
-      automations: automations.length,
-      active: automations.filter(item => item.enabled).length,
-      inactive: automations.filter(item => !item.enabled).length
+      automations: automations.filter(item => !item.archived && !item.draft).length,
+      active: automations.filter(item => item.enabled && !item.archived).length,
+      inactive: automations.filter(item => item.status === 'INACTIVE' && !item.archived).length,
+      archived: automations.filter(item => item.archived).length,
+      drafts: automations.filter(item => item.draft || item.draftId).length
     }
   };
 }

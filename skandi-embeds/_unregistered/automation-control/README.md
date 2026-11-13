@@ -1,5 +1,8 @@
 # Unregistered component
 
+> **Historical reference, 2026-11-13:** This unregistered payload is superseded by the active source in `riaintra-embeds/automation-control/`. It is retained for the existing HTML reference import and must not replace the current source.
+
+
 > Current document: `skandi-embeds/_unregistered/automation-control/README.md`. Original reference: `HTML_REF/riaintra/Automation Control.md`.
 
 
