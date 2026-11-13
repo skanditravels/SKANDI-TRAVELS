@@ -76,6 +76,7 @@ function publicExperience(entry, entities, schedule, lang) {
     code: clean(entry.code, 100), entityType: clean(entry.entity_type, 50),
     destination: clean(dest?.slug || dest?.id || '', 200), destinationId: clean(dest?.id || '', 80),
     destinationName: nameOf(dest), country: iso || 'unassigned', countryName: countryName(iso, entities),
+    searchPriority: Number.isFinite(Number(entry.sort_priority)) ? Number(entry.sort_priority) : 51,
     category, collection: clean(details.skandiTier || '', 50).toUpperCase() === 'SIGNATURE' ? 'signature' : '',
     title: clean(loc.title || entry.name, 500),
     description: clean(loc.shortDescription || loc.short_description || loc.seoDescription || loc.seo_description || '', 2500),
