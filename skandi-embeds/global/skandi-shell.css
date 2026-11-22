@@ -120,3 +120,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   [data-skandi-family="riaintra"] .skmn-btn { min-height:54px; }
   [data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color:#8fe0e4; }
 }
+
+/* A repeated card photo falls back to a neutral surface, not another entity's photo. */
+#skandi-shell-root img.skandi-duplicate-card-image { visibility: hidden !important; }
+#skandi-shell-root :not(img).skandi-duplicate-card-image { background-image: linear-gradient(135deg, #071b44, #315a78) !important; }
