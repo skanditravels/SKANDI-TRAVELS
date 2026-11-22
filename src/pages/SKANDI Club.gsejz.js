@@ -4,10 +4,11 @@
 // HTML Component: #skandiClubInfoEmbed
 
 import wixLocationFrontend from "wix-location-frontend";
+import wixWindowFrontend from "wix-window-frontend";
 import { currentMember } from "wix-members-frontend";
 import { getSkandiClubPublicPayload } from "backend/SKANDI_CORE/clubPublic.web";
 import { openCustomerLogin, openCustomerSignup } from "public/customerAuthUi";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute, normalizeSitePath } from "public/siteMap";
 
 const EMBED_ID = "#skandiClubInfoEmbed";
 const SOURCE = "SKANDI_CLUB_INFO";
@@ -19,6 +20,7 @@ const TERMS_PATH = `${SITE_MAP.policies}?slug=booking-terms`;
 
 let embed = null;
 let publicPayload = null;
+let authOpening = false;
 
 function parseMessage(value) {
   if (typeof value === "string") {
@@ -88,6 +90,8 @@ async function sendPayload(force = false) {
 }
 
 async function openAuth(mode = "signup") {
+  if (authOpening) return;
+  authOpening = true;
   try {
     const context = { sourcePage:"SKANDI_CLUB", returnTo:SITE_MAP.club };
     if (String(mode).toLowerCase() === "login") await openCustomerLogin(context);
@@ -96,7 +100,26 @@ async function openAuth(mode = "signup") {
     if ((await currentMember.getMember())?._id) wixLocationFrontend.to(PROFILE_PATH);
   } catch (_) {
     // The customer may close the Wix authentication flow.
+  } finally {
+    authOpening = false;
   }
+}
+
+function loginRequested() {
+  if (wixLocationFrontend.query?.login === "1") return true;
+  try {
+    return normalizeSitePath(new URL(wixLocationFrontend.url).pathname) === SITE_MAP.clubLogin;
+  } catch (_) {
+    return normalizeSitePath("/" + (wixLocationFrontend.path || []).join("/")) === SITE_MAP.clubLogin;
+  }
+}
+
+async function openRequestedLogin() {
+  if ((await getMemberStatus()).loggedIn) {
+    navigate(PROFILE_PATH);
+    return;
+  }
+  await openAuth("login");
 }
 
 function navigate(path) {
@@ -107,6 +130,10 @@ function navigate(path) {
 }
 
 $w.onReady(() => {
+  if (wixWindowFrontend.rendering.env === "browser" && loginRequested()) {
+    void openRequestedLogin();
+  }
+
   try {
     embed = $w(EMBED_ID);
   } catch (error) {

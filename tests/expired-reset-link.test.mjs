@@ -104,5 +104,5 @@ test('page controller uses existing Wix recovery and Club login, prevents duplic
   assert.equal(loginContexts[0].sourcePage, 'EXPIRED_RESET_LINK');
   assert.deepEqual(destinations, ['/skandi-club']);
   await send('SKANDI_EXPIRED_RESET_LINK', 'EXPIRED_RESET_BACK', '', '');
-  assert.deepEqual(destinations, ['/skandi-club','/forgot-password']);
+  assert.deepEqual(destinations, ['/skandi-club','/travel-info/um-form']);
 });

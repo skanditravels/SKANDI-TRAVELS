@@ -8,7 +8,7 @@ export const SITE_MAP = Object.freeze({
   hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours-activities",
   activities: "/tours-activities", destinations: "/destinations",
   travelInfo: "/travel-info", transfers: "/travel-info?section=transfers", skandiCollection: "/skandi-collection",
-  voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/forgot-password",
+  voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/travel-info/um-form",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
   accessRestricted: "/auth/access-restricted", expiredResetLink: "/auth/expired-reset-link",
   theStore: "/the-store", storeCheckout: "/the-store/store-checkout",
@@ -704,6 +704,7 @@ export function hasPageMobileNavigation(route) {
 export function resolveBuildRoute(value) {
   if (!isSafeInternalRoute(value)) return null;
   const pathname = normalizeSitePath(value);
+  if (pathname === "/forgot-password") return { key:"forgotPassword", route:SITE_MAP.forgotPassword };
   const routes = { ...SITE_MAP, ...APP_ROUTES };
   const entries = Object.entries(routes).filter(([, route]) => !/[?#]/.test(route));
   const exact = entries.find(([, route]) => normalizeSitePath(route) === pathname);
