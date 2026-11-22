@@ -3333,7 +3333,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 
       if (action?.dataset.action === "forgot-password") {
         setClubMessage("");
-        navTo(master?.routes?.forgotPassword || "/forgot-password");
+        post("HEADER_FORGOT_PASSWORD");
         return;
       }
 

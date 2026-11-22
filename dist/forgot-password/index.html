@@ -2416,7 +2416,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 
       if (action?.dataset.action === "forgot-password") {
         setClubMessage("");
-        navTo(master?.routes?.forgotPassword || "/forgot-password");
+        post("HEADER_FORGOT_PASSWORD");
         return;
       }
 
@@ -3238,7 +3238,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
 
 })();</script>
-<script data-skandi-part="website-design">window.SKANDI_WEBSITE_DESIGN_CONFIG={"pageKey":"forgotPassword","path":"/forgot-password"};window.SKANDIWebsiteDesignRuntime = function () {
+<script data-skandi-part="website-design">window.SKANDI_WEBSITE_DESIGN_CONFIG={"pageKey":"forgotPassword","path":"/travel-info/um-form"};window.SKANDIWebsiteDesignRuntime = function () {
   'use strict';
   if (window.__skandiWebsiteDesign) return;
   window.__skandiWebsiteDesign = true;
