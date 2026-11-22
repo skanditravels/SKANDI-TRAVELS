@@ -98,3 +98,79 @@ function startCompiledShell() {
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
 else startCompiledShell();
+
+// Keep automatically populated photo cards distinct on the currently visible
+// public page. Leave the card and its actions intact when no unique image exists.
+if (shellRoot.dataset.skandiFamily === 'public') {
+  (() => {
+    const selectors = [
+      '.mixed-card', '.dest-card .card-img', '.hotel-card .hotel-img',
+      '.offer-card .offer-img', '.inspo-card', '.route-feature',
+      '.route-stack-card', '.recent-card .recent-img', '.season-card',
+      '.flight-card .flight-card-image', '.destination-card .destination-image',
+      '.feature-card .feature-image', '.cruise-card .cruise-media > img',
+      '.ta-dest-card > img', '.ta-exp-card .ta-exp-img > img', '.hs-card > img',
+      '.product-card .product-media > img', '.category-orb-media',
+      '.campaign-card', '.editorial-card', '.spotlight-card .spotlight-image',
+      '.story-card .story-image', '.region-card > img', '.inspire-card > img',
+      '.offer > img', '.collection-card-media > img',
+      '#featuredDestinations .feature-card > img', '.saved-card > img',
+      '.commerce-card .commerce-card-media',
+      '.ti-entity-media:not(.ti-logo-media) > img', '.result-card .result-image'
+    ].join(',');
+    const duplicateClass = 'skandi-duplicate-card-image';
+    const identity = raw => {
+      if (!raw) return '';
+      try {
+        const u = new URL(raw, document.baseURI);
+        if (u.protocol === 'data:') return raw;
+        if (!['http:', 'https:'].includes(u.protocol)) return '';
+        // Wix and Supabase can deliver the same asset at multiple image sizes.
+        if (u.hostname === 'static.wixstatic.com') u.pathname = u.pathname.replace(/(\/media\/[^/]+)\/v1\/.*$/, '$1');
+        const supabaseImage = u.pathname.includes('/storage/v1/render/image/public/') || u.pathname.includes('/storage/v1/object/public/');
+        u.pathname = u.pathname.replace('/storage/v1/render/image/public/', '/storage/v1/object/public/');
+        if (supabaseImage || u.hostname === 'static.wixstatic.com' || u.hostname === 'images.unsplash.com') {
+          for (const key of ['width','height','quality','format','resize','fit','auto','w','h','q']) u.searchParams.delete(key);
+        }
+        u.searchParams.sort();
+        u.hash = '';
+        return u.href;
+      } catch (_) { return ''; }
+    };
+    const visible = el => {
+      for (let node = el; node && node !== shellRoot; node = node.parentElement) {
+        if (node.hidden || getComputedStyle(node).display === 'none' || getComputedStyle(node).visibility === 'hidden' && !node.classList.contains(duplicateClass)) return false;
+      }
+      return true;
+    };
+    const source = el => {
+      if (el.tagName === 'IMG') return el.currentSrc || el.getAttribute('src') || '';
+      const value = el.style.backgroundImage || '';
+      const match = value.match(/url\(\s*["']?([^"')]+)["']?\s*\)/i);
+      return match ? match[1] : '';
+    };
+    let scheduled = false;
+    const observer = new MutationObserver(schedule);
+    function schedule() {
+      if (scheduled) return;
+      scheduled = true;
+      (window.requestAnimationFrame || (callback => window.setTimeout(callback, 0)))(reconcile);
+    }
+    function reconcile() {
+      scheduled = false;
+      observer.disconnect();
+      const used = new Set();
+      shellRoot.querySelectorAll(selectors).forEach(el => {
+        const key = identity(source(el));
+        const show = visible(el);
+        const duplicate = !!key && show && used.has(key);
+        if (key && show && !duplicate) used.add(key);
+        el.classList.toggle(duplicateClass, duplicate);
+      });
+      observer.observe(shellRoot, {subtree:true, childList:true, attributes:true, attributeFilter:['src','srcset','style','class','hidden']});
+    }
+    shellRoot.addEventListener('load', schedule, true);
+    window.addEventListener('resize', schedule, {passive:true});
+    schedule();
+  })();
+}
