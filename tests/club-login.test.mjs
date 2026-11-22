@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
+import { APP_ROUTES, SITE_MAP, isSafeInternalRoute, normalizeSitePath } from '../src/public/siteMap.js';
 const require = createRequire(new URL('../scripts/package.json', import.meta.url));
 const { JSDOM } = require('jsdom');
 
@@ -48,4 +49,70 @@ test('popup sends credentials only to the verified site origin and requires CAPT
   assert.equal(request.origin,'https://www.skanditravels.com');
   assert.equal(doc.querySelector('#clubPassword').value,'');
   assert.equal(doc.querySelector('#clubSubmit').disabled,true);
+});
+
+
+test('Club login links open the existing Wix lightbox for guests and the profile for members', async () => {
+  const source = (await readFile(new URL('../src/pages/SKANDI Club.gsejz.js', import.meta.url), 'utf8'))
+    .replace(/^import .*;$/gm, '');
+  async function openPage(path, member, env = 'browser') {
+    let ready;
+    const login = [];
+    const destinations = [];
+    const url = new URL(path, 'https://www.skanditravels.com');
+    const $w = Object.assign(() => ({ onMessage() {}, postMessage() {} }), { onReady: fn => { ready = fn; } });
+    vm.runInNewContext(source, {
+      $w, URL, console, APP_ROUTES, SITE_MAP, isSafeInternalRoute, normalizeSitePath,
+      wixLocationFrontend: {
+        url: url.href,
+        query: Object.fromEntries(url.searchParams),
+        to: path => destinations.push(path)
+      },
+      wixWindowFrontend: { rendering: { env } },
+      currentMember: { getMember: async () => member },
+      getSkandiClubPublicPayload: async () => ({}),
+      openCustomerLogin: async context => login.push(context.sourcePage)
+    });
+    ready();
+    await new Promise(resolve => setImmediate(resolve));
+    return { login, destinations };
+  }
+
+  assert.deepEqual(await openPage('/skandi-club/login'), { login: ['SKANDI_CLUB'], destinations: [] });
+  assert.deepEqual(await openPage('/skandi-club?login=1'), { login: ['SKANDI_CLUB'], destinations: [] });
+  assert.deepEqual(await openPage('/skandi-club/login', { _id: 'member' }), {
+    login: [], destinations: [APP_ROUTES.myProfile]
+  });
+  assert.deepEqual(await openPage('/skandi-club'), { login: [], destinations: [] });
+  assert.deepEqual(await openPage('/skandi-club/login', null, 'backend'), { login: [], destinations: [] });
+});
+
+test('the shared header opens Wix password recovery instead of navigating to a reset page', async t => {
+  const [markup, source] = await Promise.all(['html', 'js'].map(extension =>
+    readFile(new URL('../skandi-embeds/global/skandi-header.' + extension, import.meta.url), 'utf8')));
+  const requests = [];
+  const dom = new JSDOM(markup, {
+    url: 'https://www-skanditravels-com.filesusr.com/html/header',
+    runScripts: 'outside-only',
+    beforeParse(window) {
+      Object.defineProperty(window, 'parent', { value: { postMessage: message => requests.push(message) } });
+    }
+  });
+  t.after(() => dom.window.close());
+  dom.window.eval(source);
+  requests.length = 0;
+  dom.window.document.querySelector('[data-action="forgot-password"]').click();
+  assert.deepEqual(requests.map(message => message.type), ['HEADER_FORGOT_PASSWORD']);
+});
+
+test('the branded login recovery action uses native Wix Members recovery', async () => {
+  const source = (await readFile(new URL('../src/public/customerAuthUi.js', import.meta.url), 'utf8'))
+    .replace(/^import .*;$/gm, '')
+    .replace(/^export /gm, '');
+  let opened = false;
+  const reset = vm.runInNewContext(source + '\nopenCustomerResetPassword', {
+    authentication: { promptForgotPassword() { opened = true; } }
+  });
+  await reset();
+  assert.equal(opened, true);
 });

@@ -1,4 +1,5 @@
 import wixWindowFrontend from "wix-window-frontend";
+import { authentication } from "wix-members-frontend";
 import { getCustomerAuthPopup } from "public/siteMap";
 
 function openPopup(key, context = {}) {
@@ -18,6 +19,6 @@ export function openCustomerSignup(context = {}) {
   return openPopup("signUp", context);
 }
 
-export function openCustomerResetPassword(context = {}) {
-  return openPopup("resetPassword", context);
+export function openCustomerResetPassword() {
+  return authentication.promptForgotPassword();
 }

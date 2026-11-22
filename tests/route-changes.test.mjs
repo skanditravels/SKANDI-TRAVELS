@@ -16,6 +16,13 @@ test('canonical merged routes and transfers resolve to their intended pages',()=
   assert.equal(routes.resolveBuildRoute(routes.SITE_MAP.transfers).key,'travelInfo');
 });
 
+test('the published password reset route is canonical and the old path resolves to the same build',()=>{
+  const reset = {key:'forgotPassword',route:'/travel-info/um-form'};
+  assert.equal(routes.SITE_MAP.forgotPassword,reset.route);
+  assert.deepEqual(routes.resolveBuildRoute(reset.route),reset);
+  assert.deepEqual(routes.resolveBuildRoute('/forgot-password'),reset);
+});
+
 test('airport actions preserve the transfer section when adding airport information',async()=>{
   for(const filename of ['Travel Info.m43d6.js','Flight Status.cn7ah.js']) {
     let source=await fs.readFile(new URL('../src/pages/'+filename,import.meta.url),'utf8');

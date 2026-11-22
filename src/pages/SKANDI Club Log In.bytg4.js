@@ -27,7 +27,17 @@ function parse(value) {
   return value && typeof value === "object" ? value : null;
 }
 
+async function hideLegacyLoginEmbed() {
+  try {
+    const legacy = $w("#skandiClubLoginEmbed");
+    if (!legacy) return;
+    await legacy.hide();
+    await legacy.collapse();
+  } catch (_) { /* The lightbox may no longer contain the legacy component. */ }
+}
+
 $w.onReady(function () {
+  void hideLegacyLoginEmbed();
   try { embed = $w("#html1"); } catch (_) { embed = null; }
   try { captcha = $w("#clubLoginCaptcha"); } catch (_) { captcha = null; }
   if (!embed || typeof embed.onMessage !== "function") return;
