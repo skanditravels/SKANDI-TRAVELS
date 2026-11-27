@@ -9,6 +9,7 @@ import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { requireSupportAgentCore } from "backend/SKANDI_CORE/customerSupport";
+import { sendTwilioWhatsAppReply } from "backend/SKANDI_CORE/twilioWhatsApp";
 
 const getSecret = elevate(secrets.getSecretValue);
 const CASES = "customer_support_cases";
@@ -45,7 +46,7 @@ async function getCase(caseId) {
   return rows(found)[0] || null;
 }
 async function getCaseById(caseId) {
-  if (!/^wa_[a-f0-9]{64}$/.test(clean(caseId, 120))) throw failure("WHATSAPP_CASE_INVALID");
+  if (typeof caseId !== "string" || !/^wa_(?:twilio_)?[a-f0-9]{64}$/.test(caseId)) throw failure("WHATSAPP_CASE_INVALID");
   const item = await getCase(caseId);
   if (!item || item.source !== PROVIDER_SOURCE) throw failure("WHATSAPP_CASE_NOT_FOUND");
   return item;
@@ -167,11 +168,14 @@ export async function receiveWhatsAppWebhookCore(rawBody, signatureHeader) {
   return { ok: true, accepted: true, inboundStored: received };
 }
 
-export async function replyAgentWhatsAppCore({ caseId = "", content = "" } = {}) {
+export async function replyAgentWhatsAppCore({ caseId = "", content = "", replyId = "" } = {}) {
   const agent = await requireSupportAgentCore();
+  const record = await getCaseById(caseId);
+  if (record.payload?.whatsappProvider === "twilio") {
+    return sendTwilioWhatsAppReply({ record, agent, content, replyId });
+  }
   const text = clean(content, MAX_TEXT);
   if (!text) throw failure("WHATSAPP_REPLY_TEXT_REQUIRED");
-  const record = await getCaseById(caseId);
   const attributes = obj(record.payload);
   const waId = clean(attributes.whatsappWaId, 25);
   const phoneId = await secret("SKANDI_WHATSAPP_PHONE_NUMBER_ID");

@@ -18,7 +18,7 @@ const db = {
     { id: "booking-team", name: "Booking Team", description: "Cases routed from SKANDI Customer Service for booking review", filter: t => t.group === "booking-team" && !["solved", "closed"].includes(t.status) },
     { id: "duffel", name: "Duffel Assistant", description: "Customer Service cases linked to Duffel Assistant", filter: t => Boolean(t.customAttributes?.duffelAssistant?.customerUserId) && !["solved", "closed"].includes(t.status) },
     { id: "alexandra", name: "Alexandra", description: "Human follow-ups and requests created by Alexandra", filter: t => (String(t.source || "").toLowerCase()==="alexandra" || String(t.sourceChannel || "").toUpperCase()==="ALEXANDRA") && !["solved", "closed"].includes(t.status) },
-    { id: "whatsapp", name: "WhatsApp", description: "Meta WhatsApp Cloud API messages handled by SKANDI Customer Service", filter: t => (String(t.source || "").toLowerCase()==="whatsapp" || String(t.sourceChannel || "").toUpperCase()==="WHATSAPP") && !["solved", "closed"].includes(t.status) },
+    { id: "whatsapp", name: "WhatsApp", description: "WhatsApp conversations handled by SKANDI Customer Service", filter: t => isWhatsAppCase(t) && !["solved", "closed"].includes(t.status) },
     { id: "nordic", name: "Nordic Ops", description: "Destination and package operations", filter: t => t.queue === "nordic" && !["solved", "closed"].includes(t.status) },
     { id: "vendor", name: "Vendor Relations", description: "Waiting on hotels, transfers and activities", filter: t => t.queue === "vendor" && !["solved", "closed"].includes(t.status) },
     { id: "aviation", name: "Flight Operations", description: "Flight disruption and protection cases", filter: t => t.queue === "aviation" && !["solved", "closed"].includes(t.status) },
@@ -47,6 +47,7 @@ const S = {
   modes: {},
   submit: {},
   pending: new Map(),
+  whatsappAttempts: new Map(),
   presence: "online",
   kb: "",
   session: { agentId: DEFAULT_AGENT_ID, agentName: "", agentInitials: "" },
@@ -154,6 +155,10 @@ function normalizeChannel(value) {
   return "email";
 }
 
+function isWhatsAppCase(item) {
+  return String(item.source || "").toLowerCase() === "whatsapp" || String(item.sourceChannel || "").toUpperCase() === "WHATSAPP";
+}
+
 function resolveAgentId(value) {
   if (value == null || value === "") return null;
   if (typeof value === "number" && user(value)) return value;
@@ -192,19 +197,21 @@ function ensureRequester(raw = {}) {
   const requester = typeof raw.requester === "object" ? raw.requester : {};
   const name = requester.name || customer.name || (typeof raw.requester === "string" ? raw.requester : "Unknown traveler");
   const email = requester.email || customer.email || customer.additional_attributes?.email || raw.email || "";
+  const phone = requester.phone || customer.phone || customer.phone_number || raw.phone || "";
+  const whatsappKey = isWhatsAppCase(raw) ? String(raw.caseId || raw.case_id || raw.id || phone) : "";
   let found = db.users.find(u =>
     u.role === "requester" &&
-    (
+    (whatsappKey ? u.whatsappKey === whatsappKey : !u.whatsappKey && (
       (email && String(u.email || "").toLowerCase() === String(email).toLowerCase()) ||
       String(u.name || "").toLowerCase() === String(name).toLowerCase()
-    )
+    ))
   );
   if (!found) {
     const suppliedId = Number(requester.id || customer.id || raw.requesterId || raw.customerId);
     const nextId = Number.isSafeInteger(suppliedId) && suppliedId > 0 ? suppliedId : nextGeneratedId(db.users);
     found = {
       id: nextId, role: "requester", name, initials: initials(name), email,
-      phone: requester.phone || customer.phone || customer.phone_number || raw.phone || "",
+      phone, whatsappKey,
       organization: requester.organization || customer.organization || raw.organization || "",
       vip: Boolean(requester.vip ?? customer.vip ?? raw.vip),
       plan: requester.plan || customer.plan || raw.tier || "",
@@ -219,7 +226,7 @@ function ensureRequester(raw = {}) {
       name: name || found.name,
       initials: initials(name || found.name),
       email: email || found.email,
-      phone: requester.phone || customer.phone || customer.phone_number || found.phone,
+      phone: phone || found.phone,
       organization: requester.organization || customer.organization || found.organization,
       vip: Boolean(requester.vip ?? customer.vip ?? found.vip),
       plan: requester.plan || customer.plan || raw.tier || found.plan,
@@ -300,9 +307,11 @@ function normalizeIncomingCase(raw = {}) {
     authorName: m.authorName || m.author?.name || m.sender?.name || (typeof m.sender === "string" ? m.sender : ""),
     authorInitials: m.author?.initials || "",
     kind: m.private || m.kind === "internal" || String(m.type || "").includes("internal") ? "internal" : "public",
-    channel: m.private || m.kind === "internal" || String(m.type || "").includes("internal") ? "internal" : normalizeChannel(m.channel || m.kind || raw.channel),
+    channel: m.private || m.kind === "internal" || String(m.type || "").includes("internal") ? "internal" : m.channel === "whatsapp" ? "whatsapp" : normalizeChannel(m.channel || m.kind || raw.channel),
     at: m.at || m.createdAt || m.created_at || m.timestamp || new Date().toISOString(),
-    body: Array.isArray(m.body) ? m.body.join("\n\n") : String(m.body || m.content || m.text || m.message || "")
+    body: Array.isArray(m.body) ? m.body.join("\n\n") : String(m.body || m.content || m.text || m.message || ""),
+    deliveryStatus: m.deliveryStatus || "",
+    deliveryErrorCode: m.deliveryErrorCode || ""
   }));
 
   return {
@@ -495,7 +504,7 @@ function openTicket(id, notifyParent = true) {
   S.dashboard = false;
   S.nav = "views";
   t.unread = false;
-  if (!S.modes[id]) S.modes[id] = String(t.sourceChannel || "").toUpperCase() === "WHATSAPP" ? "whatsapp" : ["chat", "messaging"].includes(t.channel) ? "chat" : "email";
+  if (!S.modes[id]) S.modes[id] = isWhatsAppCase(t) ? "whatsapp" : ["chat", "messaging"].includes(t.channel) ? "chat" : "email";
   if (!S.submit[id]) S.submit[id] = ["pending", "solved"].includes(t.status) ? t.status : "open";
   $$('[data-nav]').forEach(b => b.classList.toggle("active", b.dataset.nav === "views"));
   renderAll();
@@ -534,6 +543,13 @@ function sla(t) {
   return { breach, text: `${breach ? "−" : ""}${h ? h + "h " : ""}${String(m).padStart(2, "0")}m ${String(sec).padStart(2, "0")}s` };
 }
 
+const WHATSAPP_DELIVERY_LABELS = new Map([
+  ["submitting", "Awaiting Twilio"], ["uncertain", "Send unconfirmed"], ["rejected", "Rejected"],
+  ["accepted", "Accepted"], ["scheduled", "Scheduled"], ["queued", "Queued"], ["sending", "Sending"],
+  ["sent", "Sent"], ["delivered", "Delivered"], ["read", "Read"],
+  ["undelivered", "Undelivered"], ["failed", "Failed"], ["canceled", "Canceled"]
+]);
+
 function messageHtml(m) {
   const u = user(m.authorId) || {
     name: m.authorName || (m.kind === "internal" ? "Support Agent" : "Traveler"),
@@ -544,12 +560,15 @@ function messageHtml(m) {
   const agent = u.role === "agent";
   const cls = note ? "note" : agent ? "agent" : "customer";
   const body = esc(m.body).replace(/\n/g, "<br>").replace(/(https?:\/\/[^\s<]+)/g, '<a target="_blank" rel="noopener" href="$1">$1</a>');
-  return `<article class="msg ${cls}">${note ? "" : `<div class="avatar">${esc(u.initials || initials(u.name))}</div>`}<div class="bubble"><div class="mmeta"><b>${esc(u.name)}</b><span>${fmt(m.at)}</span><span class="mkind">${note ? "Internal note" : tc(m.channel)}</span></div><div class="mtext">${body}</div></div></article>`;
+  const delivery = WHATSAPP_DELIVERY_LABELS.get(m.deliveryStatus);
+  const deliveryCode = m.deliveryErrorCode ? ` (${esc(m.deliveryErrorCode)})` : "";
+  const channelLabel = m.channel === "whatsapp" ? "WhatsApp" : tc(m.channel);
+  return `<article class="msg ${cls}">${note ? "" : `<div class="avatar">${esc(u.initials || initials(u.name))}</div>`}<div class="bubble"><div class="mmeta"><b>${esc(u.name)}</b><span>${fmt(m.at)}</span><span class="mkind">${note ? "Internal note" : channelLabel}</span>${delivery ? `<span class="mkind">${delivery}${deliveryCode}</span>` : ""}</div><div class="mtext">${body}</div></div></article>`;
 }
 
 function ticketHtml(t) {
   const u = user(t.requesterId) || { name: "Unknown traveler", email: "" };
-  const isWhatsApp = String(t.sourceChannel || "").toUpperCase() === "WHATSAPP" || String(t.source || "").toLowerCase() === "whatsapp";
+  const isWhatsApp = isWhatsAppCase(t);
   const mode = isWhatsApp && S.modes[t.id] !== "internal" ? "whatsapp" : S.modes[t.id] || "email";
   const draft = S.drafts[t.id] || "";
   const submitStatus = S.submit[t.id] || "open";
@@ -586,7 +605,7 @@ function ticketHtml(t) {
       <div class="cshell ${mode === "internal" ? "note-mode" : ""}">
         <div class="ctool">
           <select id="mode">${isWhatsApp ? `<option value="whatsapp" ${mode === "whatsapp" ? "selected" : ""}>Public reply · WhatsApp</option>` : `<option value="email" ${mode === "email" ? "selected" : ""}>Public reply · Email</option><option value="chat" ${mode === "chat" ? "selected" : ""}>Public reply · Live chat</option>`}<option value="internal" ${mode === "internal" ? "selected" : ""}>Internal note</option></select>
-          <button class="fmt" data-fmt="b"><b>B</b></button><button class="fmt" data-fmt="i"><i>I</i></button><button class="fmt" data-fmt="list">•≡</button><button class="fmt" id="attach">📎</button>
+          <button class="fmt" data-fmt="b"><b>B</b></button><button class="fmt" data-fmt="i"><i>I</i></button><button class="fmt" data-fmt="list">•≡</button>${mode === "whatsapp" ? "" : '<button class="fmt" id="attach">📎</button>'}
         </div>
         <textarea class="editor" id="editor" placeholder="${mode === "internal" ? "Internal note visible only to agents…" : "Write a reply…"}">${esc(draft)}</textarea>
         <div class="cfoot">
@@ -696,12 +715,18 @@ function wireTicket(t) {
     if (S.pending.has(t.id)) return;
     const body = ed.value.trim();
     if (!body) return toast("Nothing to submit", "Write a reply or internal note first");
-    const isWhatsApp = String(t.sourceChannel || "").toUpperCase() === "WHATSAPP" || String(t.source || "").toLowerCase() === "whatsapp";
-  const mode = isWhatsApp && S.modes[t.id] !== "internal" ? "whatsapp" : S.modes[t.id] || "email";
+    const mode = isWhatsAppCase(t) && S.modes[t.id] !== "internal" ? "whatsapp" : S.modes[t.id] || "email";
     const submitAs = S.submit[t.id] || "open";
     const assigneeId = t.assigneeId || currentAgentId();
+    let replyId;
+    if (mode === "whatsapp" && t.customAttributes.whatsappProvider === "twilio") {
+      if (body.length > 1600) return toast("WhatsApp reply is too long", "Shorten the reply to 1,600 characters.");
+      const attempt = S.whatsappAttempts.get(t.id);
+      replyId = attempt?.body === body ? attempt.replyId : window.crypto.randomUUID();
+      S.whatsappAttempts.set(t.id, { body, replyId });
+    }
     const message = {
-      id: "m" + Date.now(),
+      id: replyId ? `twilio-out:${replyId}` : "m" + Date.now(),
       authorId: ensureSessionAgent(),
       authorName: S.session.agentName || "Support Agent",
       authorInitials: S.session.agentInitials || initials(S.session.agentName),
@@ -721,12 +746,13 @@ function wireTicket(t) {
         pnr: t.pnr,
         content: body,
         channel: mode,
+        replyId,
         submitAs,
         message,
         updates: { status: submitAs, assigneeId }
       });
     }
-    S.pending.set(t.id, { requestId, message, submitAs, assigneeId, mode });
+    S.pending.set(t.id, { requestId, message, submitAs, assigneeId, mode, replyId });
     renderWorkspace();
     toast(mode === "internal" ? "Saving internal note…" : "Sending reply…", `${tid(t)} · ${tc(submitAs)}`);
     setTimeout(() => {
@@ -764,7 +790,8 @@ function wireTicket(t) {
       ed.focus();
     });
   };
-  $("#attach").onclick = () => {
+  const attach = $("#attach");
+  if (attach) attach.onclick = () => {
     toast("Opening attachment selector…");
     post("AGENT_ATTACHMENT_PICK", { ticketId: t.externalId || t.id, caseId: t.caseId });
   };
@@ -787,7 +814,7 @@ function contextHtml() {
         <div class="detail"><span>Email</span><span>${esc(u.email)}</span></div><div class="detail"><span>Phone</span><span>${esc(u.phone)}</span></div><div class="detail"><span>Service tier</span><span>${esc(t.tier || u.plan)}</span></div><div class="detail"><span>Locale</span><span>${esc(u.locale)}</span></div><div class="detail"><span>Time zone</span><span>${esc(u.timezone)}</span></div><div class="detail"><span>Booking value</span><span>${esc(t.booking?.total || u.value)}</span></div>
       </div></section>
       ${String(t.source || "").toLowerCase()==="alexandra" || String(t.sourceChannel || "").toUpperCase()==="ALEXANDRA" ? `<section class="section"><h3>Alexandra handoff</h3><p class="muted">An Alexandra-origin support case. Agent handoff notes and confirmed conversation details appear in the ticket history; live AI chat transcripts are not mirrored unless the Alexandra provider submits them through the authenticated support gateway.</p></section>` : ""}
-      ${String(t.source || "").toLowerCase()==="whatsapp" || String(t.sourceChannel || "").toUpperCase()==="WHATSAPP" ? `<section class="section"><h3>WhatsApp Customer Care</h3><p class="muted">Verified Meta webhook messages, but the sender is not verified for SKANDI bookings. Reply here through Meta Cloud API within 24 hours of the last customer message. Delivery status is confirmed separately by Meta; outside the window requires an approved template.</p></section>` : ""}
+      ${isWhatsAppCase(t) ? `<section class="section"><h3>WhatsApp Customer Care</h3><p class="muted">Reply within 24 hours of the traveler’s last WhatsApp message. An approved template is required after that window. Verify the traveler separately before sharing booking details.</p></section>` : ""}
       <section class="section"><h3>Travel profile</h3><div class="details"><div class="detail"><span>PNR</span><b>${esc(t.pnr || "—")}</b></div><div class="detail"><span>Trip</span><span>${esc(t.travel?.trip || "—")}</span></div><div class="detail"><span>Vendor</span><span>${esc(t.travel?.vendor || "—")}</span></div><div class="detail"><span>SLA</span><span>${esc(t.travel?.sla || "—")}</span></div></div></section>
       <section class="section"><h3>Customer notes</h3><div>${esc(u.notes || "No notes.")}</div></section>
       <section class="section"><h3>Recent interactions <span>${recent.length}</span></h3>${recent.map(x => `<button class="recent" data-open="${x.id}"><b>${esc(tid(x))} · ${esc(x.subject)}</b><small>${tc(x.status)} · ${short(x.updatedAt)}</small></button>`).join("") || `<span class="muted">No previous tickets.</span>`}</section>
@@ -1294,7 +1321,7 @@ function applyBootstrapData(value) {
   if (payload.activeQueue && db.views.some(item => item.id === payload.activeQueue)) S.view = payload.activeQueue;
 }
 
-function settlePendingRequest(requestId, succeeded) {
+function settlePendingRequest(requestId, succeeded, sentMessage, hasCaseData = false) {
   if (!requestId) return null;
   const match = [...S.pending.entries()].find(([, pending]) => pending.requestId === requestId);
   if (!match) return null;
@@ -1302,19 +1329,21 @@ function settlePendingRequest(requestId, succeeded) {
   const target = ticket(ticketId);
 
   if (succeeded && target) {
-    if (!target.history.some(message => String(message.id) === String(pending.message.id))) {
-      target.history.push(pending.message);
+    if (!hasCaseData) {
+      const sent = { ...pending.message, ...sentMessage };
+      if (!target.history.some(message => String(message.id) === String(sent.id))) target.history.push(sent);
+      target.status = pending.submitAs;
+      target.assigneeId = pending.assigneeId;
+      target.updatedAt = new Date().toISOString();
+      target.typing = false;
+      target.unread = false;
     }
-    target.status = pending.submitAs;
-    target.assigneeId = pending.assigneeId;
-    target.updatedAt = new Date().toISOString();
-    target.typing = false;
-    target.unread = false;
-    S.drafts[target.id] = "";
+    if (String(S.drafts[ticketId] || "").trim() === pending.message.body) S.drafts[ticketId] = "";
+    if (pending.replyId === S.whatsappAttempts.get(ticketId)?.replyId) S.whatsappAttempts.delete(ticketId);
   }
 
   S.pending.delete(ticketId);
-  return pending;
+  return { ...pending, ticketId };
 }
 
 document.addEventListener("click", event => {
@@ -1446,13 +1475,16 @@ window.addEventListener("message", event => {
   if (["AGENT_REPLY_SENT", "AGENT_CASE_UPDATED", "AGENT_CASE_CREATED"].includes(message.type)) {
     const caseData = extractSingleCase(payload);
     if (caseData) upsertCase(caseData, message.type === "AGENT_CASE_CREATED");
-    const settled = settlePendingRequest(String(message.requestId || envelope.requestId || ""), true);
+    const settled = settlePendingRequest(String(message.requestId || envelope.requestId || ""), true, payload.sentMessage, Boolean(caseData));
     if (message.type === "AGENT_REPLY_SENT" && !caseData && !settled && envelope.caseId) {
       post("AGENT_OPEN_CASE", { caseId: envelope.caseId });
     }
     renderAll();
+    const delivery = payload.sentMessage?.deliveryStatus;
+    const whatsappLabel = payload.deliveryConfirmed ? "WhatsApp reply delivered" :
+      ["failed", "undelivered", "canceled"].includes(delivery) ? "WhatsApp reply failed" : "WhatsApp reply submitted";
     const labels = {
-      AGENT_REPLY_SENT: payload.providerAccepted === true ? "WhatsApp accepted by Meta (delivery pending)" : "Reply sent",
+      AGENT_REPLY_SENT: payload.providerAccepted === true ? whatsappLabel : "Reply sent",
       AGENT_CASE_UPDATED: "Case updated",
       AGENT_CASE_CREATED: "Case created"
     };
@@ -1468,7 +1500,8 @@ window.addEventListener("message", event => {
       toast("Booking / Duffel action failed", envelope.message || "The backend did not complete this action.");
       return;
     }
-    settlePendingRequest(String(message.requestId || envelope.requestId || ""), false);
+    const failed = settlePendingRequest(String(message.requestId || envelope.requestId || ""), false);
+    if (failed?.replyId && payload.retryWithNewId === true) S.whatsappAttempts.delete(failed.ticketId);
     renderAll();
     if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) $("#topSub").textContent = "Couldn’t load support cases. Reload to try again.";
     toast("Customer service action failed", envelope.message || message.message || "The backend did not complete the request.");

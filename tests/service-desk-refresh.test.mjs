@@ -29,6 +29,47 @@ test('background support updates preserve the reply editor and display new messa
   assert.doesNotMatch(doc.querySelector('#toasts').textContent,/Case loaded|Cases refreshed/);
 });
 
+test('Twilio cases keep travelers distinct and show delivery updates on one sent reply', async t => {
+  const { rows } = await inventory(root);
+  const html = await compilePage(root, rows.find(row => row.key === 'serviceDesk'));
+  const sent = [];
+  const parent = { postMessage: message => sent.push(message) };
+  const dom = new JSDOM(html, { url: 'https://embed.example', runScripts: 'dangerously', pretendToBeVisual: true,
+    beforeParse(window) { Object.defineProperty(window, 'parent', { value: parent }); } });
+  t.after(() => dom.window.close());
+  const { window } = dom;
+  const { document } = window;
+  function receive(type, payload, requestId) {
+    window.dispatchEvent(new window.MessageEvent('message', { source: parent, data: { source: 'SKANDI_WIX_PARENT', type, payload, requestId } }));
+  }
+  function conversation(id, phone) {
+    return { id, caseId: id, externalId: id, status: 'open', subject: id, source: 'whatsapp', sourceChannel: 'WHATSAPP',
+      custom_attributes: { whatsappProvider: 'twilio' }, requester: { name: 'WhatsApp traveler', phone } };
+  }
+  const first = conversation('case-1', '+12025550101');
+  const second = conversation('case-2', '+12025550102');
+  receive('AGENT_BOOTSTRAP', { cases: [first, second], session: { agentId: 1, agentName: 'Agent' } });
+  [...document.querySelectorAll('#queueList [data-open]')].find(row => row.textContent.includes('case-1')).click();
+  assert.match(document.querySelector('.cfoot').textContent, /\+12025550101/);
+  assert.doesNotMatch(document.querySelector('.cfoot').textContent, /\+12025550102/);
+  const editor = document.querySelector('#editor');
+  editor.value = 'How can I help?';
+  editor.dispatchEvent(new window.Event('input'));
+  document.querySelector('#submit').click();
+  const request = sent.find(message => message.type === 'AGENT_REPLY');
+  assert.match(request.payload.replyId, /^[\da-f-]{36}$/);
+  assert.equal(request.payload.caseId, first.caseId);
+  const message = { id: `twilio-out:${request.payload.replyId}`, body: editor.value, senderType: 'agent', channel: 'whatsapp' };
+  receive('AGENT_ERROR', { action: 'AGENT_REPLY', message: 'Twilio has not confirmed this send' }, request.requestId);
+  document.querySelector('#submit').click();
+  const retry = sent.filter(message => message.type === 'AGENT_REPLY').at(-1);
+  assert.equal(retry.payload.replyId, request.payload.replyId);
+  receive('AGENT_REPLY_SENT', { case: { ...first, history: [{ ...message, deliveryStatus: 'queued' }] }, providerAccepted: true }, retry.requestId);
+  receive('AGENT_CASE_DETAIL', { backgroundSync: true, case: { ...first, history: [{ ...message, deliveryStatus: 'delivered' }] } });
+  assert.equal(document.querySelectorAll('#conversation .msg').length, 1);
+  assert.match(document.querySelector('#conversation').textContent, /Delivered/);
+});
+
 test('media toolbar no longer contains obsolete counters or updater calls',async()=>{
   const html=await fs.readFile(new URL('../riaintra-embeds/media-control/skandi-media-control.html',import.meta.url),'utf8');
   const js=await fs.readFile(new URL('../riaintra-embeds/media-control/skandi-media-control.js',import.meta.url),'utf8');
