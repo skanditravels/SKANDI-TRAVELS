@@ -117,8 +117,25 @@ export function toDuffelOfferSearch(input = {}) {
   };
 }
 
-export function mapOfferForHome(offer = {}, searchContext = {}) {
-  const slices = arr(offer.slices);
+function publicCarrierBrand(carrier, brands) {
+  const brand = brands?.get(upper(carrier?.iataCode,4));
+  if (!carrier || !brand) return carrier;
+  return {
+    ...carrier,
+    logoSymbolUrl: brand.thumbnailUrl || carrier.logoSymbolUrl,
+    logoLockupUrl: brand.logoUrl || carrier.logoLockupUrl
+  };
+}
+
+export function mapOfferForHome(offer = {}, searchContext = {}, brands) {
+  const slices = brands?.size ? arr(offer.slices).map(slice => ({
+    ...slice,
+    segments: arr(slice.segments).map(segment => ({
+      ...segment,
+      marketingCarrier: publicCarrierBrand(segment.marketingCarrier, brands),
+      operatingCarrier: publicCarrierBrand(segment.operatingCarrier, brands)
+    }))
+  })) : arr(offer.slices);
   const first = slices[0] || {};
   const segments = slices.flatMap(slice => arr(slice.segments));
   return {
@@ -129,7 +146,7 @@ export function mapOfferForHome(offer = {}, searchContext = {}) {
     totalEmissionsKg: offer.totalEmissionsKg ?? null,
     conditions: offer.conditions || {},
     expiresAt: offer.expiresAt,
-    owner: offer.owner,
+    owner: publicCarrierBrand(offer.owner, brands),
     origin: first.origin,
     destination: first.destination,
     slices,

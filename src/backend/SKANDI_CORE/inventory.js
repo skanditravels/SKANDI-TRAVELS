@@ -7,6 +7,7 @@
 import { randomUUID } from "crypto";
 import { generateText } from "ai";
 import { openai } from "@wix/ai";
+import { inventoryMediaUrl, isSupplierInventoryMedia, referenceInventoryBrand, referenceInventoryMedia } from "public/inventoryMedia";
 import { inventorySearchPriority } from "backend/SKANDI_CORE/inventoryRanking";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
@@ -597,7 +598,7 @@ async function getReferenceBundle(type,id){
     select:"*",target_record_type:qeq(type),target_record_id:qeq(id),limit:"1"
   });
   const localizedContent=array(raw.localized_content);
-  const media=array(raw.media_assets);
+  const media=referenceInventoryMedia(raw);
   return{record,localizedContent,media,relations,incoming:await getIncomingRelations(type,id),catalog:cat[0]?normalizeCatalog(cat[0]):null};
 }
 
@@ -845,7 +846,8 @@ function referenceBody(type,record,catalog){
     source:clean(record.source||"SKANDI",120),source_reference:clean(record.sourceReference||record.source_reference,800)||null,
     inventory_details:details,commercial:object(record.commercial),operations:object(record.operations),
     seo:object(record.seo),publication:object(record.publication),payload:object(record.payload),
-    localized_content:array(record.localizedContent),media_assets:array(record.media)
+    ...(Array.isArray(record.localizedContent)?{localized_content:record.localizedContent}:{}),
+    ...(Array.isArray(record.media)?{media_assets:record.media}:{})
   };
   if(type==="AIRLINE"){
     return{
@@ -938,14 +940,18 @@ async function resolveAssetBackedMedia(entityId,row={},index=0){
   return mediaBody(entityId,{...row,sourceKind:upper(row.sourceKind??row.source_kind??"MIGRATED",40)},index);
 }
 
-async function resolveReferenceMediaRows(type,id,rows=[]){
-  const sourceTable=type==="AIRLINE"?"travel_info_airlines":"travel_info_airports";
-  const current=(await select(sourceTable,{select:"media_assets",ID:qeq(id),limit:"1"}))[0];
-  const existingUrls=new Set(array(current?.media_assets).map(x=>clean(x?.url,3000)).filter(Boolean));
+async function resolveReferenceMediaRows(current,rows){
+  const existing=referenceInventoryMedia(current);
+  const protectedRows=existing.filter(item=>isSupplierInventoryMedia(item)||item.sourceKind==="LEGACY_PROJECTION_BACKFILL");
+  const existingByUrl=new Map(existing.filter(item=>!protectedRows.includes(item)).map(item=>[inventoryMediaUrl(item),item]));
   const resolved=[];
-  for(let i=0;i<array(rows).length;i++){
-    const row=array(rows)[i];
-    const payload=object(row?.payload);
+  for(const row of rows){
+    const url=inventoryMediaUrl(row);
+    const role=upper(row?.role,40);
+    // The current record owns defaults. An open editor may contain an older
+    // supplier URL, and its copy must never replace the current supplier row.
+    if(isSupplierInventoryMedia(row)||row?.sourceKind==="LEGACY_PROJECTION_BACKFILL")continue;
+    const payload={...object(row?.payload)};
     const assetId=clean(row?.assetId??row?.platformAssetId??payload.assetId,80);
     if(assetId){
       if(!isUuid(assetId))throw new Error("INVENTORY_ASSET_ID_INVALID");
@@ -955,18 +961,18 @@ async function resolveReferenceMediaRows(type,id,rows=[]){
       if(upper(row.mediaType??row.media_type??"IMAGE",40)==="IMAGE"&&upper(asset.asset_type,40)!=="IMAGE")throw new Error("INVENTORY_IMAGE_ASSET_REQUIRED");
       if(!clean(asset.public_url,3000))throw new Error("INVENTORY_ASSET_PUBLIC_URL_MISSING");
       resolved.push({
-        ...row,url:clean(asset.public_url,3000),storageBucket:clean(asset.bucket,180),
+        ...row,role:MEDIA_ROLES.has(role)||role==="ICON"?role:"GALLERY",
+        url:clean(asset.public_url,3000),assetId:asset.id,storageBucket:clean(asset.bucket,180),
         storagePath:clean(asset.storage_path,1000),mimeType:clean(asset.mime_type,160),
         fileSizeBytes:nullableNumber(asset.size_bytes,{integer:true,min:0}),sourceKind:"UPLOAD",
         payload:{...payload,assetId:asset.id,assetCode:asset.asset_code}
       });
       continue;
     }
-    const url=clean(row?.url,3000);
-    if(url&&existingUrls.has(url)){resolved.push({...row,sourceKind:"MIGRATED"});continue;}
+    if(url&&existingByUrl.has(url)){resolved.push({...row,sourceKind:existingByUrl.get(url).sourceKind||"MIGRATED"});continue;}
     throw new Error("INVENTORY_ASSET_LIBRARY_REQUIRED");
   }
-  return resolved;
+  return [...resolved,...protectedRows];
 }
 
 async function resolvePublicAssetUrl(assetRef,currentUrl="",desiredUrl="",{required=false}={}){
@@ -1152,13 +1158,15 @@ async function syncMasterChildren(session,record,bundle){
     }
   }
   if(Array.isArray(bundle.media)){
-    const existing=await select("inventory_media_assets",{select:"id,url",entity_id:qeq(entityId),limit:"500"});
+    const existing=await select("inventory_media_assets",{select:"id,url,source_kind,payload",entity_id:qeq(entityId),limit:"500"});
     const existingById=new Map(existing.map(item=>[clean(item.id,80),item]));
     const keep=new Set();
     for(let i=0;i<bundle.media.length;i++){
       const item=bundle.media[i];
       const id=clean(item.id,80);
       if(id&&!existingById.has(id))throw new Error("INVENTORY_MEDIA_RECORD_MISMATCH");
+      if(isSupplierInventoryMedia(existingById.get(id))){keep.add(id);continue}
+      if(isSupplierInventoryMedia(item))throw new Error("INVENTORY_ASSET_LIBRARY_REQUIRED");
       const assetId=clean(item.assetId??item.platformAssetId??item.payload?.assetId,80);
       if(id&&!assetId&&clean(item.url,3000)!==clean(existingById.get(id)?.url,3000))throw new Error("INVENTORY_ASSET_LIBRARY_REQUIRED");
       const body=await resolveAssetBackedMedia(entityId,item,i);
@@ -1171,7 +1179,7 @@ async function syncMasterChildren(session,record,bundle){
         if(saved?.id)keep.add(saved.id);
       }
     }
-    for(const old of existing)if(!keep.has(clean(old.id,80))){
+    for(const old of existing)if(!keep.has(clean(old.id,80))&&!isSupplierInventoryMedia(old)){
       await restRequest({table:"inventory_media_assets",method:"PATCH",query:{id:qeq(old.id)},body:{active:false},prefer:"return=minimal"});
     }
   }
@@ -1203,10 +1211,8 @@ async function syncReferenceChildren(session,record,bundle){
     if(rows.length)await restRequest({table:"inventory_entity_relations",method:"POST",body:rows,prefer:"return=representation"});
   }
   const catalog=await saveCatalog(session,record,bundle.catalog);
-  const resolvedMedia=Array.isArray(bundle.media)?await resolveReferenceMediaRows(type,id,bundle.media):array(record.media);
   const patch={
-    localized_content:Array.isArray(bundle.localizedContent)?bundle.localizedContent:array(record.localizedContent),
-    media_assets:resolvedMedia,
+    ...(Array.isArray(bundle.localizedContent)?{localized_content:bundle.localizedContent}:{}),
     featured:catalog?.featured===true||catalog?.homepageFeatured===true,
     homepage_featured:catalog?.homepageFeatured===true
   };
@@ -1328,7 +1334,7 @@ function airlineLegacyPatch(details={},existing={}){
   }
   return patch;
 }
-async function savePrimary(session,bundle){
+async function savePrimary(session,bundle,referenceBase){
   const r=object(bundle.record),type=upper(r.entityType||r.entity_type,40);
   if(MASTER_TYPES.has(type)){
     const canonical=validateMasterRecord(await canonicalizeMasterRecord(r),bundle);
@@ -1349,15 +1355,26 @@ async function savePrimary(session,bundle){
     const record={...r,id,localizedContent:bundle.localizedContent,media:bundle.media};
     const preCatalog=bundle.catalog?normalizeCatalog(bundle.catalog):null;
     const body=referenceBody(type,record,preCatalog);
+    if(Array.isArray(record.media)){
+      const brand=referenceInventoryBrand({media_assets:record.media});
+      body[isAirline?"logoFile":"logoUrl"]=brand.logoUrl||null;
+      body[isAirline?"logoIcon":"logoIconUrl"]=brand.thumbnailUrl||null;
+    }
     if(id){
-      const exists=(await select(table,{select:isAirline?"*":"ID",ID:qeq(id),limit:"1"}))[0];
+      const exists=referenceBase||(await select(table,{select:isAirline?"*":"ID",ID:qeq(id),limit:"1"}))[0];
       if(isAirline){
         if((!exists||upper(exists.iataCode,8)!==body.iataCode)&&!/^[A-Z0-9]{2}$/.test(body.iataCode))throw new Error("Airline IATA code must contain two letters or digits.");
         if(body.icaoCode&&(!exists||upper(exists.icaoCode,8)!==body.icaoCode)&&!/^[A-Z]{3}$/.test(body.icaoCode))throw new Error("Airline ICAO code must contain three letters.");
         Object.assign(body,airlineLegacyPatch(object(record.details),exists||{}));
       }
       if(exists){
-        const saved=(await restRequest({table,method:"PATCH",query:{ID:qeq(id)},body,prefer:"return=representation"}))?.[0];
+        const query={ID:qeq(id),...(isAirline&&exists.updated_at?{updated_at:qeq(exists.updated_at)}:{})};
+        const saved=(await restRequest({table,method:"PATCH",query,body,prefer:"return=representation"}))?.[0];
+        if(!saved&&query.updated_at){
+          const error=new Error("INVENTORY_AIRLINE_RECORD_CHANGED");
+          error.publicMessage="This airline was updated while your changes were being saved. Reopen the record and try again.";
+          throw error;
+        }
         return isAirline?normalizeAirline(saved||{...body,ID:id}):normalizeAirport(saved||{...body,ID:id});
       }
     }
@@ -1369,7 +1386,7 @@ async function savePrimary(session,bundle){
   throw new Error("INVENTORY_RECORD_TYPE_UNSUPPORTED");
 }
 
-export async function saveInventoryBundleCore(input={}){
+export async function saveInventoryBundleCore(input={},{supplierRefresh=false}={}){
   const session=await requireInventoryAccess({write:true});
   const bundle=object(input.bundle||input);
   const type=upper(bundle?.record?.entityType||bundle?.record?.entity_type,40);
@@ -1378,13 +1395,27 @@ export async function saveInventoryBundleCore(input={}){
   if(bundle.catalog)catalogBody({...bundle.record,id:bundle.record.id||"pending"},bundle.catalog);
   await validateHierarchyRelations(bundle);
   const rollback=await snapshotBundleForRollback(bundle.record);
+  const isReference=REFERENCE_TYPES.has(type);
+  const previous=rollback.primary;
+  let validated=bundle;
+  if(isReference){
+    const record=bundle.record;
+    const supplier=previous?.payload?.duffel;
+    // Ordinary edits use the last confirmed supplier snapshot, even when
+    // staff opened the record before another session refreshed its supplier.
+    validated={...bundle,record:!supplierRefresh&&supplier?{
+      ...record,source:previous.source,sourceReference:previous.source_reference,
+      payload:{...object(record.payload),duffel:supplier}
+    }:record};
+    if(Array.isArray(bundle.media))validated.media=await resolveReferenceMediaRows(previous||{},bundle.media);
+  }
   let record=null;
 
   try{
     // One public server operation owns the complete save. If a later child/catalog
     // write fails, the previous state is restored before the error returns.
-    record=await savePrimary(session,bundle);
-    const normalizedBundle={...bundle,record};
+    record=await savePrimary(session,validated,isReference?previous:null);
+    const normalizedBundle={...validated,record};
     const catalog=MASTER_TYPES.has(type)
       ? await syncMasterChildren(session,record,normalizedBundle)
       : await syncReferenceChildren(session,record,normalizedBundle);
@@ -1395,6 +1426,7 @@ export async function saveInventoryBundleCore(input={}){
 
     return{ok:true,bundle:{...(await getInventoryRecordCore({id:record.id,entityType:type})),catalog}};
   }catch(error){
+    if(!record&&error?.message==="INVENTORY_AIRLINE_RECORD_CHANGED")throw error;
     const restored=await compensateBundleSave(rollback,record);
     await audit(session,restored?"INVENTORY_BUNDLE_ROLLED_BACK":"INVENTORY_BUNDLE_RESTORE_FAILED",record?.sourceTable||type,record?.id||rollback?.id||null,
       restored?`Inventory save was rolled back: ${clean(error?.message||error,500)}`:"Inventory save failed and restoration could not be confirmed.",{type});
@@ -1578,7 +1610,7 @@ function newProviderBundle(type,resource,raw,input={}){
     base.details=providerDetails(type,resource,{});
   }
   base.payload=providerPayload({},type,resource,raw);
-  return{record:base,localizedContent:[],media:[],relations:[],catalog:defaultProviderCatalog()};
+  return{record:base,localizedContent:[],relations:[],catalog:defaultProviderCatalog()};
 }
 function mergeProviderIntoExisting(bundle,type,resource,raw){
   const record={...object(bundle.record)};
@@ -1589,7 +1621,6 @@ function mergeProviderIntoExisting(bundle,type,resource,raw){
   return{
     record,
     localizedContent:array(bundle.localizedContent),
-    media:array(bundle.media),
     relations:array(bundle.relations),
     catalog:defaultProviderCatalog(bundle.catalog||null)
   };
@@ -1658,7 +1689,7 @@ export async function importInventoryProviderResourceCore(input={}){
   }else{
     saveBundle=newProviderBundle(type,resource,result.raw,input);
   }
-  const saved=await saveInventoryBundleCore({bundle:saveBundle});
+  const saved=await saveInventoryBundleCore({bundle:saveBundle},{supplierRefresh:true});
   await audit(session,linked?"INVENTORY_DUFFEL_LINKED":"INVENTORY_DUFFEL_IMPORTED",saved.bundle?.record?.sourceTable||type,saved.bundle?.record?.id||null,
     `${type} linked/imported from Duffel.`,{providerId,linked});
   return{...saved,provider:"DUFFEL",providerId,linked,alreadyExists:false};
@@ -1675,7 +1706,7 @@ export async function refreshInventoryProviderResourceCore(input={}){
   if(upper(record.source,120)!=="DUFFEL"||!record.sourceReference)throw new Error("INVENTORY_DUFFEL_SOURCE_REQUIRED");
   const result=await providerResource(type,record.sourceReference,{includeRaw:true});
   const merged=mergeProviderIntoExisting(existing,type,result.item,result.raw);
-  const saved=await saveInventoryBundleCore({bundle:merged});
+  const saved=await saveInventoryBundleCore({bundle:merged},{supplierRefresh:true});
   await audit(session,"INVENTORY_DUFFEL_REFRESHED",saved.bundle?.record?.sourceTable||type,id,`${type} Duffel source snapshot refreshed.`,{providerId:record.sourceReference});
   return{
     ...saved,provider:"DUFFEL",providerId:record.sourceReference,

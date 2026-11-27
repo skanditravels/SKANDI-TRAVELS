@@ -26,6 +26,8 @@ STATICALLY VERIFIED: JavaScript syntax, core public export names, embed message 
 
 ## Historical INFO / LOG (preserved)
 
+- 2026-11-27 — The active source displays the carrier logo returned by the existing flight-status controller, including operating-carrier logos when the board switches codeshares. See the [active page notes](../../README.md).
+
 Earlier route, component, controller and status claims below are historical; the current INFO above supersedes conflicting metadata.
 
 

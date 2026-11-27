@@ -2,6 +2,7 @@
 // V12 — shared public-catalog presentation functions, extracted from Our Destinations.
 // Both Wix controllers use the same projections; data still comes from destinationFlow.web.
 import { SITE_MAP, APP_ROUTES } from "public/siteMap";
+import { inventoryCardImage } from "public/inventoryMedia";
 
 export function createDestinationContent(getCatalog, getFlowState = () => ({}), languages = ["EN", "SV", "NO", "DA"]) {
 function clean(value, max = 5000) { return String(value ?? "").trim().slice(0, max); }
@@ -138,14 +139,15 @@ function mediaUrl(value) {
   return clean(first(value?.url, value?.publicUrl, value?.public_url, value?.src, value?.imageUrl), 1800);
 }
 function imagesOf(record) {
-  const rows = mediaRows(record), hero = rows.filter(r => r.isHero === true || clean(r.role,60).toUpperCase() === "HERO");
+  const rows = mediaRows(record).filter(row => clean(row.role,60).toUpperCase() !== "THUMBNAIL");
+  const hero = rows.filter(r => r.isHero === true || clean(r.role,60).toUpperCase() === "HERO");
   const rest = rows.filter(r => !hero.includes(r)); const d = obj(record?.details);
   return [...new Set([...hero.map(mediaUrl), ...rest.map(mediaUrl), mediaUrl(d.heroImage), mediaUrl(d.image), mediaUrl(record?.heroImage), mediaUrl(record?.image)].filter(Boolean))];
 }
 function imageOf(record) { return imagesOf(record)[0] || ""; }
 function cardImageOf(record) {
   const card = mediaRows(record).find(r => r.isCard === true || clean(r.role,60).toUpperCase() === "CARD");
-  return mediaUrl(card) || imageOf(record);
+  return inventoryCardImage(record?.media) || mediaUrl(card) || imageOf(record);
 }
 function summaryOf(record, language = "EN") {
   const l = localized(record, language), d = obj(record?.details), seo = obj(record?.seo);

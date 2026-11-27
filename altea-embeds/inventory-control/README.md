@@ -1,5 +1,12 @@
 # INFO / LOG — Inventory Control
 
+### Logo and thumbnail selections — 2026-11-27
+
+- In **Media**, use **Logo** for the full airline or airport mark and **Thumbnail** for the compact mark. Inventory products and **Property Director → Content & media** use **Card thumbnail**. Choose a public Asset Library image or upload one from that placement, then save the record.
+- An attached manual image takes priority over the supplied one for its placement. A manual logo also appears in compact branding when the record has no manual thumbnail. **Use default** clears the custom link and restores the supplied image. The file remains in Asset Library.
+- Supplier imports and refreshes retain their original images as read-only attachments. The reference-media migration makes the airline refresh update only its supplier rows and preserves the active manual selection. The same saved roles feed the Travel Info directory, flight boards, flight search, and inventory cards.
+- Apply the reference-media migration before publishing the Wix code. The existing receivers pick up the GitHub builds. Verify a logo save, supplier refresh, thumbnail selection, and reset on an authorized test record.
+
 ### Travel Info authoring and inventory workspace — 2026-11-27
 
 - Use **Travel Inventory** to choose a record type. **Record & access** holds identity, status and visibility. **Page content**, **Media**, **Related inventory**, **Pricing**, **Operations**, **Catalog placement** and **Review & SEO** hold their respective fields.

@@ -4,6 +4,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
 import * as routes from '../src/public/siteMap.js';
+import { inventoryCardImage } from '../src/public/inventoryMedia.js';
 
 const require = createRequire(new URL('../scripts/package.json', import.meta.url));
 const { JSDOM } = require('jsdom');
@@ -14,7 +15,7 @@ test('hotel and destination links resolve to their dedicated public pages', asyn
   const h = { id:'hotel-1', entityType:'HOTEL', slug:'lake-house', name:'Lake House', details:{} };
   const c = { id:'sweden', entityType:'COUNTRY', slug:'sweden', name:'Sweden', details:{latitude:62,longitude:15} };
   const place = { id:'stockholm', parentEntityId:c.id, entityType:'DESTINATION', slug:'stockholm', name:'Stockholm', details:{latitude:59.3,longitude:18.1} };
-  const context = vm.createContext({ ...routes, URLSearchParams });
+  const context = vm.createContext({ ...routes, inventoryCardImage, URLSearchParams });
   vm.runInContext(withoutImports(await source('src/public/destinationContent.js')), context);
   const content = context.createDestinationContent(()=>[h,c,place]);
   assert.equal(content.previewHotel(h).bookable,false);
@@ -77,7 +78,7 @@ test('Hotel List links directly to an unlinked property and its detail blocks bo
 
 test('geography links narrow descendants through region and area, including existing details',async()=>{
  const records=[{id:'us',entityType:'COUNTRY',name:'United States'}, {id:'fl',entityType:'REGION',name:'Florida',parentEntityId:'us'}, {id:'orl',entityType:'DESTINATION',name:'Orlando',parentEntityId:'fl'}, {id:'disney',entityType:'AREA',name:'Disney Area',parentEntityId:'orl'}, {id:'hotel',entityType:'HOTEL',name:'Hotel',details:{areaId:'disney'}}];
- const context=vm.createContext({...routes,URLSearchParams});vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
+ const context=vm.createContext({...routes,inventoryCardImage,URLSearchParams});vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
  const c=context.createDestinationContent(()=>records);const hotel=records.at(-1);
  for(const ancestor of records.slice(0,4))assert.equal(c.isUnder(hotel,ancestor),true,ancestor.name);
  assert.equal(c.regionOf(hotel).name,'Florida');assert.equal(c.countryOf(hotel).name,'United States');

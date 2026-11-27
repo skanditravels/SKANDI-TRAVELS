@@ -625,6 +625,16 @@ h1 { margin: 4px 0 0; font-size: 20px; font-weight: normal; color: var(--navy); 
 .ic-stored-fields{margin-top:13px;padding:9px 12px;border:1px solid #dbe5ee;border-radius:7px;background:#fff}
 .ic-stored-fields summary{font-weight:670;cursor:pointer;padding-block:3px}
 .ic-stored-fields[open] summary{margin-bottom:9px}
+.ic-display-media{margin:0 0 16px}
+.ic-display-media h3,.ic-display-media h4{margin:0 0 6px;color:var(--navy)}
+.ic-display-media p{margin:5px 0 9px}
+.ic-display-media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+.ic-display-media-slot{min-width:0;border:1px solid var(--line);border-radius:7px;padding:11px;background:#fff}
+.ic-display-media-preview{display:grid;place-items:center;min-height:82px;border:1px solid var(--line2);border-radius:5px;background:#f5f8fb;color:#40566a}
+.ic-display-media-preview img{display:block;width:100%;height:82px;object-fit:cover}
+.ic-display-media-preview.is-brand img{box-sizing:border-box;object-fit:contain;padding:8px}
+.ic-supplier-media{display:flex;align-items:center;gap:10px}
+.ic-supplier-media img{width:68px;height:42px;object-fit:contain;background:#fff}
 @media(max-width:650px){
   .ic-editor-fieldset{padding:8px 10px 10px}
   .ic-editor-tabs,.ic-topic-tabs{padding-bottom:3px}

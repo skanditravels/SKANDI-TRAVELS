@@ -4,6 +4,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
 import * as routes from '../src/public/siteMap.js';
+import * as inventoryMedia from '../src/public/inventoryMedia.js';
 
 const require=createRequire(new URL('../scripts/package.json',import.meta.url));
 const {JSDOM}=require('jsdom');
@@ -27,7 +28,7 @@ test('Inventory structured editors preserve nested values instead of serializing
 test('hotel projection keeps localised details, images, units and assigned airport',async()=>{
   const airport={id:'airport-1',entityType:'AIRPORT',code:'ARN',name:'Arlanda',details:{}};
   const h={id:'hotel-1',entityType:'HOTEL',name:'Hotel One',details:{nearestAirportId:'airport-1',providerAccommodationId:'acc_123',distanceToBeach:1.5,address:{line1:'Main St 2',line2:'Floor 1'},postalCode:'123',city:'Town',facilities:['Wi-Fi','Pool'],boardOptions:['Breakfast'],checkinTime:'15:00',checkoutTime:'11:00',petsAllowed:false,rooms:[{code:'STD',name:'Standard',roomType:'City view',description:'A quiet room',maxGuests:2}]},localized:[{language:'EN',highlights:['Central'],included:['Breakfast'],notIncluded:['Parking']}],media:[{url:'https://example.com/hotel.jpg',role:'HERO',altText:'Front',caption:'The hotel'}]};
-  const context=vm.createContext({...routes,URLSearchParams});
+  const context=vm.createContext({...routes,...inventoryMedia,URLSearchParams});
   vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
   const page=context.createDestinationContent(()=>[h,airport]).hotelPage(h,'EN');
   assert.equal(page.flightsAvailable,true);
@@ -57,7 +58,7 @@ test('hotel page renders structured content as readable labelled details',async 
 test('Travel Info receives public hotel details and omits operational fields',async()=>{
   const master={id:'h-1',entity_type:'HOTEL',name:'Hotel One',details:{address:{line1:'Main Street 2',line2:'Entrance B',privateNote:'private'},postalCode:'10001',facilities:['Pool','FREE_WIFI'],rooms:[{name:'Standard',description:'Comfortable',internalNotes:'private'}],checkinTime:'15:00',petsAllowed:false,internalNotes:'private'},localized:[{language:'EN',shortDescription:'A stay',highlights:['Central'],included:['Breakfast']},{language:'SV',shortDescription:''}],media:[]};
   const restRequest=async({table})=>table==='inventory_public_entities_v'?[master]:[];
-  const ctx=vm.createContext({restRequest,URLSearchParams});vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/publicContentInventoryProjection.js')),ctx);
+  const ctx=vm.createContext({restRequest,URLSearchParams,...inventoryMedia});vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/publicContentInventoryProjection.js')),ctx);
   const out=await ctx.applyInventoryAuthorityToTravelInfoCore({language:'SV',airlines:[],airports:[]});
   const hotel=out.hotels[0];
   assert.equal(hotel.summary,'A stay');assert.equal(hotel.address,'Main Street 2, Entrance B, 10001');assert.equal(hotel.sections.facilities.body[0],'Pool');assert.equal(hotel.sections.facilities.body[1],'FREE WIFI');
@@ -66,4 +67,41 @@ test('Travel Info receives public hotel details and omits operational fields',as
   assert.equal(hotel.sections.rooms.body[0].internalNotes,undefined);
   assert.equal(hotel.internalNotes,undefined);
   assert.match(hotel.path,/hotelId=h-1/);
+});
+
+test('Travel Info shares the selected brand asset while keeping card thumbnails separate from hero photos',async()=>{
+  const suppliedLogo='https://assets.example/sas.svg',suppliedThumb='https://assets.example/sas-icon.svg';
+  const customLogo='https://library.example/sas.svg',customThumb='https://library.example/sas-icon.svg';
+  const view={
+    AIRLINE:{ID:'sas',iataCode:'SK',Title:'SAS',media_assets:[
+      {role:'LOGO',url:suppliedLogo,payload:{provider:'DUFFEL'},sortOrder:10},
+      {role:'THUMBNAIL',url:suppliedThumb,sourceKind:'DUFFEL',sortOrder:20},
+      {role:'LOGO',url:customLogo,sourceKind:'UPLOAD',sortOrder:300}
+    ]},
+    HOTEL:{id:'hotel',name:'Hotel Example',entity_type:'HOTEL',media:[
+      {role:'THUMBNAIL',url:'https://assets.example/thumb.jpg'},
+      {role:'THUMBNAIL',url:'https://library.example/thumb.jpg',sourceKind:'UPLOAD'},
+      {role:'HERO',url:'https://assets.example/hero.jpg'}
+    ]}
+  };
+  const restRequest=async({table})=>table==='travel_info_airlines'?[view.AIRLINE]:table==='inventory_public_entities_v'?[view.HOTEL]:[];
+  const ctx=vm.createContext({restRequest,...inventoryMedia});
+  vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/publicContentInventoryProjection.js')),ctx);
+  const project=()=>ctx.applyInventoryAuthorityToTravelInfoCore({airlines:[{id:'sas'}]});
+  let projected=await project();
+  assert.equal(projected.airlines[0].logo,customLogo);
+  assert.equal(projected.airlines[0].logoIcon,customLogo);
+  assert.equal(projected.airlines[0].heroImage,'');
+  assert.equal(projected.hotels[0].thumbnail,'https://library.example/thumb.jpg');
+  assert.equal(projected.hotels[0].heroImage,'https://assets.example/hero.jpg');
+  view.AIRLINE.media_assets.push({role:'THUMBNAIL',url:customThumb,sourceKind:'UPLOAD',sortOrder:900});
+  projected=await project();
+  assert.equal(projected.airlines[0].logo,customLogo);
+  assert.equal(projected.airlines[0].logoIcon,customThumb);
+  view.AIRLINE.media_assets.splice(2);
+  const fallback=(await project()).airlines[0];
+  assert.equal(fallback.logo,suppliedLogo);
+  assert.equal(fallback.logoIcon,suppliedThumb);
+  const snapshot=inventoryMedia.referenceInventoryBrand({inventory_details:{duffel:{logoLockupUrl:suppliedLogo,logoSymbolUrl:suppliedThumb}}});
+  assert.deepEqual(snapshot,{logoUrl:suppliedLogo,thumbnailUrl:suppliedThumb});
 });

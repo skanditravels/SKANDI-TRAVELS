@@ -1,5 +1,11 @@
 # Dynamic card images and inventory media audit
 
+## Logo and thumbnail update — 2026-11-27
+
+Logo and thumbnail precedence now comes from the record's attached media in `src/public/inventoryMedia.js`. For the matching placement, a manual Asset Library selection takes precedence over supplier and legacy images. Airline and airport guides use Logo for the full mark and Thumbnail for compact branding. A manual logo fills compact branding when there is no manual thumbnail. Product thumbnails feed cards while hero photos retain their existing roles.
+
+The migration `supabase/migrations/20261127180000_inventory_reference_media_precedence.sql` updates the existing reference-media functions. Apply it before publishing the Wix code. It changes how future saves and supplier refreshes resolve attached images. Inventory Control keeps supplier attachments read-only and clears a custom image by removing its placement link.
+
 Source baseline: main b596f6f1c45baa1922f802ec465fa6563b39cd31, 2026-11-22. A compiled build is not evidence that Wix is published or that the corresponding live bridge works.
 
 The shared public shell checks the currently visible, source-mapped dynamic photo card surfaces after content and visibility changes. The first card keeps its image; later cards with the same normalized source use a neutral fallback while retaining their content and actions. This is not image fingerprinting: independently hosted copies or differently edited versions can still be duplicates. New card structures must be added to the shell selectors. Logos and galleries are intentionally outside the rule. The feature changes compiled GitHub page output; it does not require changing the global receiver.
