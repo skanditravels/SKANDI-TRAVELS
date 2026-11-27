@@ -278,15 +278,16 @@ export async function getCustomerProfileBootstrapCore(context, input = {}) {
 
 export async function updateCustomerProfileCore(context, input = {}) {
   const profile = await resolveProfile(context, { create: true });
-  const currentPayload = obj(profile.payload), changes = obj(input.profile || input);
+  const changes = obj(input.profile || input);
   const body = { updated_at: now() };
   for (const [key, column, max] of [["firstName","first_name",160],["lastName","last_name",160],["displayName","display_name",300],["email","email",254],["phone","phone",40],["preferredCurrency","preferred_currency",3],["accessibilityNeeds","accessibility_needs_general",2000]]) if (Object.prototype.hasOwnProperty.call(changes,key)) body[column] = clean(changes[key],max) || null;
   for (const [key,column] of [["countryOfResidenceId","country_of_residence_id"],["preferredLanguageId","preferred_language_id"],["preferredDepartureAirportId","preferred_departure_airport_id"]]) if (Object.prototype.hasOwnProperty.call(changes,key)) body[column] = isUuid(changes[key]) ? changes[key] : null;
-  const preferencePayload = { ...currentPayload };
+  const preferencePayload = {};
   for (const [key,max] of [["seatPreference",100],["dietaryPrefs",1000]]) if (Object.prototype.hasOwnProperty.call(changes,key)) preferencePayload[key] = clean(changes[key],max);
   for (const key of ["mealPreferences","frequentFlyerPrograms","hotelLoyaltyPrograms","carRentalLoyaltyPrograms","emergencyContacts"]) if (Object.prototype.hasOwnProperty.call(changes,key)) preferencePayload[key] = arr(changes[key]).slice(0,20);
-  body.payload = preferencePayload;
-  let updated = (await patch("customer_profiles", { id: qeq(profile.id) }, body))[0] || { ...profile, ...body };
+  if (Object.keys(preferencePayload).length) body.payload = { ...obj(profile.payload), ...preferencePayload };
+  let updated = (await patch("customer_profiles", { id: qeq(profile.id) }, body))[0];
+  if (!updated?.id) throw fail("PROFILE_SAVE_NOT_CONFIRMED", "The profile update could not be confirmed. Refresh before trying again.", 409);
   let providerSync = { ok: false, skipped: true, reason: "Profile needs first name, last name and email before supplier identity can be synchronized." };
   if (updated.first_name && updated.last_name && updated.email) {
     try {
@@ -294,7 +295,9 @@ export async function updateCustomerProfileCore(context, input = {}) {
       const language = refs.languages.find(x => x.id === updated.preferred_language_id)?.code || "";
       const synced = await ensureDuffelCustomerUserCore({ customerUserId: clean(obj(updated.payload).duffelCustomerUserId,220), email: updated.email, givenName: updated.first_name, familyName: updated.last_name, phoneNumber: updated.phone || "", preferredLanguage: language ? lower(language,2) : "" });
       const nextPayload = { ...obj(updated.payload), duffelCustomerUserId: synced.user.id, duffelCustomerUserSyncedAt: now() };
-      updated = (await patch("customer_profiles", { id: qeq(updated.id) }, { payload: nextPayload, updated_at: now() }))[0] || { ...updated, payload: nextPayload };
+      const savedIdentity = (await patch("customer_profiles", { id: qeq(updated.id) }, { payload: nextPayload, updated_at: now() }))[0];
+      if (!savedIdentity?.id) throw fail("SUPPLIER_PROFILE_SAVE_NOT_CONFIRMED", "The travel supplier update could not be confirmed.", 409);
+      updated = savedIdentity;
       providerSync = { ok: true, customerUserId: synced.user.id, provider: "Duffel" };
     } catch (error) { providerSync = { ok: false, skipped: false, error: safeError(error) }; }
   }
@@ -305,36 +308,54 @@ export async function updateCustomerProfileCore(context, input = {}) {
 export async function saveCustomerTravelerCore(context, input = {}) {
   const profile = await resolveProfile(context, { create: true });
   const t = obj(input.traveler || input), id = clean(t.id, 80);
+  const ownedQuery = { id: qeq(id), member_id: qeq(profile.member_id) };
+  if (id && !isUuid(id)) throw fail("TRAVELER_NOT_FOUND", "The saved traveler reference is invalid.");
+  const existing = id ? (await select("customer_travelers", { select: "*", ...ownedQuery, limit: "1" }))[0] : null;
+  if (id && !existing) throw fail("TRAVELER_NOT_FOUND", "The saved traveler could not be found.", 404);
+
   const body = {
-    member_id: profile.member_id,
-    wix_member_id: profile.wix_member_id || context.memberId,
-    traveler_type: clean(t.travelerType || "Companion", 40),
-    first_name: clean(t.firstName,160)||null, middle_name: clean(t.middleName,160)||null, last_name: clean(t.lastName,160)||null,
-    display_name: clean(t.displayName,300)||[clean(t.firstName,160),clean(t.middleName,160),clean(t.lastName,160)].filter(Boolean).join(" ")||null,
-    date_of_birth: /^\d{4}-\d{2}-\d{2}$/.test(clean(t.dateOfBirth,10)) ? clean(t.dateOfBirth,10) : null,
-    gender: clean(t.gender,40)||null,
-    nationality_id: isUuid(t.nationalityId) ? t.nationalityId : null,
-    email: lower(t.email,254)||null, phone: clean(t.phone,40)||null,
-    passport_expiry: /^\d{4}-\d{2}-\d{2}$/.test(clean(t.passportExpiry,10)) ? clean(t.passportExpiry,10) : null,
-    passport_country_id: isUuid(t.passportCountryId) ? t.passportCountryId : null,
-    dietary_prefs: clean(t.dietaryPrefs,1000)||null,
-    accessibility_needs: clean(t.accessibilityNeeds,2000)||null,
-    is_primary: t.isPrimary === true,
-    active: true,
-    payload: obj(t.payload),
     updated_at: now()
   };
-  let row;
-  if (isUuid(id)) {
-    const owned=(await select("customer_travelers",{select:"id",id:qeq(id),member_id:qeq(profile.member_id),limit:"1"}))[0];
-    if(!owned) throw fail("TRAVELER_NOT_FOUND","The saved traveler could not be found.",404);
-    row=(await patch("customer_travelers",{id:qeq(id),member_id:qeq(profile.member_id)},body))[0];
-  } else row=await insert("customer_travelers",{...body,created_at:now()});
-  if(body.is_primary===true && row?.id) {
+  const supplied = key => Object.prototype.hasOwnProperty.call(t, key);
+  for (const [key, column, max] of [
+    ["firstName", "first_name", 160], ["middleName", "middle_name", 160], ["lastName", "last_name", 160],
+    ["gender", "gender", 40], ["phone", "phone", 40], ["dietaryPrefs", "dietary_prefs", 1000],
+    ["accessibilityNeeds", "accessibility_needs", 2000]
+  ]) {
+    if (supplied(key)) body[column] = clean(t[key], max) || null;
+  }
+  for (const [key, column] of [["dateOfBirth", "date_of_birth"], ["passportExpiry", "passport_expiry"]]) {
+    if (supplied(key)) {
+      const value = clean(t[key], 10);
+      body[column] = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+    }
+  }
+  for (const [key, column] of [["nationalityId", "nationality_id"], ["passportCountryId", "passport_country_id"]]) {
+    if (supplied(key)) body[column] = isUuid(t[key]) ? t[key] : null;
+  }
+  if (supplied("travelerType")) body.traveler_type = clean(t.travelerType, 40) || "Companion";
+  if (supplied("email")) body.email = lower(t.email, 254) || null;
+  if (supplied("isPrimary")) body.is_primary = t.isPrimary === true;
+  if (supplied("payload")) body.payload = obj(t.payload);
+
+  const fields = ["first_name", "middle_name", "last_name"];
+  const merged = { ...existing, ...body };
+  if (!existing || supplied("displayName") || fields.some(field => merged[field] !== existing[field])) {
+    body.display_name = clean(t.displayName, 300) || fields.map(field => merged[field]).filter(Boolean).join(" ") || null;
+  }
+
+  const row = existing
+    ? (await patch("customer_travelers", ownedQuery, body))[0]
+    : await insert("customer_travelers", {
+        member_id: profile.member_id, wix_member_id: profile.wix_member_id || context.memberId,
+        traveler_type: "Companion", is_primary: false, active: true, payload: {}, created_at: now(), ...body
+      });
+  if (!row?.id) throw fail("TRAVELER_SAVE_NOT_CONFIRMED", "The traveler update could not be confirmed. Refresh before trying again.", 409);
+  if(body.is_primary===true) {
     const others=await select("customer_travelers",{select:"id",member_id:qeq(profile.member_id),active:"eq.true",limit:"100"});
     for(const other of others) if(other.id!==row.id) await patch("customer_travelers",{id:qeq(other.id)},{is_primary:false,updated_at:now()});
   }
-  return { ok:true, traveler: travelerView(row||body) };
+  return { ok:true, traveler: travelerView(row) };
 }
 export async function removeCustomerTravelerCore(context,input={}) {
   const profile=await resolveProfile(context,{create:false}); if(!profile) throw fail("PROFILE_NOT_FOUND","Customer profile not found.",404);

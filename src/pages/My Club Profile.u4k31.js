@@ -6,6 +6,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import { getCustomerSupportBootstrap, listCustomerSupportCases, getCustomerSupportCase, addCustomerSupportMessage, createCustomerSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
 import { getCustomerEmailPreferences, updateCustomerEmailPreferences } from "backend/SKANDI_CORE/customerSession.web";
 import { authentication } from "wix-members-frontend";
+import { isSafeInternalRoute } from "public/siteMap";
 import {
   getCustomerProfileBootstrap,
   updateCustomerProfile,
@@ -46,6 +47,7 @@ let inboundSeen = false;
 let bootstrapPromise = null;
 let bootstrapCache = null;
 let bootstrapCacheAt = 0;
+let bootstrapRevision = 0;
 
 function post(type, payload = {}) {
   try {
@@ -67,8 +69,16 @@ function safeError(error) {
 
 function safePath(value) {
   const path = String(value || "").trim();
-  if (!path.startsWith("/") || path.startsWith("//") || /[\r\n]/.test(path)) return "";
-  return path.slice(0, 1200);
+  if (path.length > 1200) return "";
+  if (isSafeInternalRoute(path)) return path;
+  try {
+    const url = new URL(path);
+    if (!["https://www.skanditravels.com", "https://skanditravels.com"].includes(url.origin) || url.username || url.password) return "";
+    const localPath = url.pathname + url.search + url.hash;
+    return isSafeInternalRoute(localPath) ? localPath : "";
+  } catch (_) {
+    return "";
+  }
 }
 
 function requestId(payload = {}) {
@@ -120,12 +130,12 @@ const LEGACY_TABS = Object.freeze({
   support: ["support", "cases"]
 });
 
-function resolvePage(payload = {}) {
+function resolvePage() {
   const q = wixLocationFrontend.query || {};
-  let section = String(payload.section || q.section || "").toLowerCase().slice(0, 40);
-  let view = String(payload.view || q.view || "").toLowerCase().slice(0, 40);
+  let section = String(q.section || "").toLowerCase().slice(0, 40);
+  let view = String(q.view || "").toLowerCase().slice(0, 40);
   if (!VALID_PAGES[section]?.has(view)) {
-    const legacy = String(payload.tab || q.tab || "overview").toLowerCase().slice(0, 40);
+    const legacy = String(q.tab || "overview").toLowerCase().slice(0, 40);
     [section, view] = LEGACY_TABS[legacy] || ["club", "overview"];
   }
   return { section, view };
@@ -146,34 +156,36 @@ function legacyTab(section, view) {
 function invalidateBootstrapCache() {
   bootstrapCache = null;
   bootstrapCacheAt = 0;
+  bootstrapRevision += 1;
 }
 
 async function loadBootstrap(tab, { force = false } = {}) {
+  if (force) bootstrapCache = null;
   if (!force && bootstrapCache && Date.now() - bootstrapCacheAt <= BOOTSTRAP_CACHE_MS) {
     return bootstrapCache;
   }
 
-  if (bootstrapPromise) {
-    if (!force) return bootstrapPromise;
-    try { await bootstrapPromise; } catch (_) {}
+  const revision = bootstrapRevision;
+  if (bootstrapPromise?.revision !== revision) {
+    const promise = withTimeout(
+      getCustomerProfileBootstrap({ tab }),
+      BOOTSTRAP_TIMEOUT_MS,
+      "MY_PROFILE_BOOTSTRAP_TIMEOUT",
+      "Your profile is taking too long to load. Please retry."
+    ).then((data) => {
+      if (revision === bootstrapRevision) {
+        bootstrapCache = data;
+        bootstrapCacheAt = Date.now();
+      }
+      return data;
+    });
+    bootstrapPromise = { revision, promise };
   }
 
-  if (force) invalidateBootstrapCache();
-
-  const load = withTimeout(
-    getCustomerProfileBootstrap({ tab }),
-    BOOTSTRAP_TIMEOUT_MS,
-    "MY_PROFILE_BOOTSTRAP_TIMEOUT",
-    "Your profile is taking too long to load. Please retry."
-  ).then((data) => {
-    bootstrapCache = data;
-    bootstrapCacheAt = Date.now();
-    return data;
-  });
-
-  bootstrapPromise = load;
+  const load = bootstrapPromise;
   try {
-    return await load;
+    const data = await load.promise;
+    return revision === bootstrapRevision ? data : loadBootstrap(tab);
   } finally {
     if (bootstrapPromise === load) bootstrapPromise = null;
   }
@@ -196,11 +208,11 @@ function replayStartupMessage(type, payload) {
   }
 }
 
-async function bootstrap(payload = {}, { force = false, startupReplay = false } = {}) {
-  const page = resolvePage(payload);
-  const tab = legacyTab(page.section, page.view);
-  const data = await loadBootstrap(tab, { force });
-  const shaped = shapeBootstrap(data, page, tab);
+async function bootstrap({ force = false, startupReplay = false } = {}) {
+  const initialPage = resolvePage();
+  const data = await loadBootstrap(legacyTab(initialPage.section, initialPage.view), { force });
+  const page = resolvePage();
+  const shaped = shapeBootstrap(data, page, legacyTab(page.section, page.view));
   post("MY_PROFILE_DATA", shaped);
   if (startupReplay) replayStartupMessage("MY_PROFILE_DATA", shaped);
   return shaped;
@@ -225,10 +237,10 @@ async function run(type, payload = {}) {
     let result;
     switch (type) {
       case "MY_PROFILE_READY":
-        await bootstrap(payload);
+        await bootstrap();
         return;
       case "MY_PROFILE_REFRESH":
-        result = await bootstrap(payload, { force: true });
+        result = await bootstrap({ force: true });
         post("MY_PROFILE_RESULT", { requestId: request, action: type, result });
         return;
       case "MY_PROFILE_SUPPORT_LOAD": {
@@ -355,11 +367,13 @@ async function run(type, payload = {}) {
       }
       case "MY_PROFILE_NAVIGATE": {
         const path = safePath(payload.path);
-        if (path) wixLocationFrontend.to(path);
+        if (!path) throw new Error("This link is unavailable.");
+        wixLocationFrontend.to(path);
         return;
       }
       case "MY_PROFILE_LOGOUT":
-        try { await authentication.logout(); } catch (_) {}
+        await authentication.logout();
+        post("MY_PROFILE_RESULT", { requestId: request, action: type, result: { ok: true } });
         wixLocationFrontend.to("/");
         return;
       default:
@@ -383,15 +397,16 @@ async function run(type, payload = {}) {
       "MY_PROFILE_CAR_CANCEL"
     ].includes(type)) {
       invalidateBootstrapCache();
-      await bootstrap(payload, { force: true });
+      try {
+        await bootstrap({ force: true });
+      } catch (error) {
+        post("MY_PROFILE_ERROR", { action: "MY_PROFILE_REFRESH", ...safeError(error) });
+      }
     }
   } catch (error) {
     const safe = safeError(error);
     const errorPayload = { requestId: request, action: type, ...safe };
-    post("MY_PROFILE_ERROR", errorPayload);
-    if (type.startsWith("CUSTOMER_DOCUMENT_")) {
-      post("CUSTOMER_DOCUMENT_ERROR", { requestId: request, ...safe });
-    }
+    post(type.startsWith("CUSTOMER_DOCUMENT_") ? "CUSTOMER_DOCUMENT_ERROR" : "MY_PROFILE_ERROR", errorPayload);
   }
 }
 
@@ -409,11 +424,11 @@ function announceHostReady(page) {
   }
 }
 
-async function startupFallback(page) {
+async function startupFallback() {
   await delay(STARTUP_BOOTSTRAP_DELAY_MS);
   if (inboundSeen) return;
   try {
-    await bootstrap(page, { startupReplay: true });
+    await bootstrap({ startupReplay: true });
   } catch (error) {
     const safe = safeError(error);
     const payload = { requestId: "", action: "MY_PROFILE_READY", ...safe };
@@ -433,17 +448,19 @@ $w.onReady(() => {
     if (!message || typeof message !== "object") return;
     if (message.source && message.source !== HTML_SOURCE && message.source !== DOCUMENT_SOURCE) return;
 
+    const type = String(message.type || "");
+    if (!type.startsWith("MY_PROFILE_") && !type.startsWith("CUSTOMER_DOCUMENT_")) return;
     inboundSeen = true;
-    run(String(message.type || ""), message.payload || {});
+    run(type, message.payload || {});
   });
 
   if (typeof wixLocationFrontend.onChange === "function") {
     wixLocationFrontend.onChange(() => {
-      post("MY_PROFILE_SET_PAGE", resolvePage({}));
+      post("MY_PROFILE_SET_PAGE", resolvePage());
     });
   }
 
-  const page = resolvePage({});
+  const page = resolvePage();
   announceHostReady(page);
-  startupFallback(page);
+  startupFallback();
 });

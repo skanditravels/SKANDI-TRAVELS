@@ -2,6 +2,15 @@
 
 > Current document: `skandi-embeds/my-profile/README.md`. Original reference: `HTML_REF/skandi/SKANDI Club My Profile.md`.
 
+## 2026-11-27 · Account navigation and profile actions
+
+- The active source is the adjacent HTML, CSS, and JavaScript triplet. Wix continues to load that build in `#htmlMyProfile` on `/my-profile`. The HTML later in this reference records the earlier layout.
+- A single greeting introduces the account. Mobile shows a compact section selector built from the profile navigation, and the current section is reflected in the Wix URL.
+- The host chooses the initial view from the actual Wix query, including `?tab=trips`. A profile refresh keeps the selected view and unsaved form edits. Startup and refresh failures offer recovery on the page.
+- Personal Information saves contact details. Preferences saves travel choices and retains the existing, separate Wix marketing email control. The controller refreshes the account once after confirmed changes. Traveler edits preserve stored fields outside the form.
+- Support cases open the corresponding trip when it is linked to the account. The trip drawer first checks document access using the existing member-only backend and then displays a link the traveler can open.
+- Use the existing Wix receiver and Git integration for the rebuilt profile, page controller and customer profile core. Use a signed-in member account in Wix Preview to check deep links and read-only navigation. Use a test account for writes.
+
 Date: 2026-10-14
 Canonical HTML_REF: /HTML_REF/skandi/SKANDI Club My Profile.md
 Runtime page: /src/pages/My Club Profile.u4k31.js
