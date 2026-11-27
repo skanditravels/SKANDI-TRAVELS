@@ -328,7 +328,7 @@ export async function compilePage(root,page) {
     try {
       const part=await normalizeHTML(html,css,js,{root,file:input.files[0],mount:d.mount});
       if(d.key==='mobile-nav')privateIds(part,'skandi-mobile',['status','closeBtn']);
-      if(page.key==='support'&&d.key==='support-chat') {
+      if(d.key==='support-chat') {
         privateIds(part,'support-chat',['bagBrand','bagColor','bagTag','bagType','hasPir','pirNumber','closeBtn']);
         part.html=part.html.replace(/(<main class="messages" id="messages" aria-live="polite">)[\s\S]*?(<\/main>)/,'$1$2');
       }
@@ -349,7 +349,10 @@ export async function compilePage(root,page) {
   }
   const pagePart=parts.find(p=>p.key===page.slug);if(!pagePart)throw new Error(`[${page.key}] Main page source did not compile.`);const style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
   let shellCSS=await read(root,'skandi-embeds/global/skandi-shell.css');
-  if(page.key==='support')shellCSS+='\n#skandi-support-chat-root{position:fixed;inset:0;z-index:999;pointer-events:none}\n';
+  if(parts.some(part=>part.key==='support-chat')) {
+    shellCSS+='\n#skandi-support-chat-root{position:fixed;inset:0;z-index:999;pointer-events:none}\n';
+    if(page.key!=='support')shellCSS+='@media(max-width:1020px){#skandi-support-chat-root{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}\n';
+  }
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
   const render=p=>{
     if(!p)return '';

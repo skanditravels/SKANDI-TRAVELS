@@ -77,7 +77,7 @@ div:has(> .skandi-alexandra-host) {
   height: 100% !important;
 }
 .skandi-alexandra-host-open {
-  width: min(456px, 100vw) !important;
+  width: min(456px, 100%) !important;
   height: min(736px, 100dvh) !important;
 }
 @media (max-width: 1020px) {
@@ -85,7 +85,7 @@ div:has(> .skandi-alexandra-host) {
   .skandi-alexandra-host-open { height: min(678px, calc(100dvh - 100px - env(safe-area-inset-bottom, 0px))) !important; }
 }
 @media (max-width: 699px) {
-  .skandi-alexandra-host-open { width: 100vw !important; }
+  .skandi-alexandra-host-open { width: 100% !important; }
 }
 @layer skandi-form-size {
   input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {

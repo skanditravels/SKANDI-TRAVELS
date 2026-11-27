@@ -218,6 +218,10 @@ export function isSafeInternalRoute(value){const path=String(value||"").trim();c
 
 // Compiler integration bindings. No route strings are duplicated here.
 // Source-verified controller contracts; Wix element installation still requires live verification.
+const ALEXANDRA_CHAT_COMPONENT = Object.freeze({
+  key: 'support-chat', sourceDirectory: 'skandi-embeds/global/alexandra',
+  stem: 'skandi-alexandra-chat', mount: 'skandi-support-chat-root', shared: true
+});
 export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   "expiredResetLink": {
     "controller": "src/pages/Expired Reset Link.anxhe.js",
@@ -531,7 +535,8 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     ],
     "sources": [
       "SKANDI_MY_PROFILE"
-    ]
+    ],
+    "components": [ALEXANDRA_CHAT_COMPONENT]
   },
   "newsroom": {
     "controller": "src/pages/Newsroom.vn46g.js",
@@ -652,7 +657,8 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     ],
     "sources": [
       "SKANDI_STORE_CHECKOUT"
-    ]
+    ],
+    "components": [ALEXANDRA_CHAT_COMPONENT]
   },
   "storeConfirmation": {
     "controller": "src/pages/Order Confirmation.u5zzl.js",
@@ -661,7 +667,8 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     ],
     "sources": [
       "SKANDI_STORE_CONFIRMATION"
-    ]
+    ],
+    "components": [ALEXANDRA_CHAT_COMPONENT]
   },
   "support": {
     "controller": "src/pages/Support.k0iqp.js",
@@ -673,7 +680,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
       "help-center",
       "SKANDI_SUPPORT_PUBLIC"
     ],
-    "components": [{ "key": "support-chat", "sourceDirectory": "skandi-embeds/global/alexandra", "stem": "skandi-alexandra-chat", "mount": "skandi-support-chat-root" }],
+    "components": [ALEXANDRA_CHAT_COMPONENT],
     "note": "The shared support chat is compiled into the Help Center component."
   }
 });

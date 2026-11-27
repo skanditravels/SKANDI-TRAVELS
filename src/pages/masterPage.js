@@ -1063,6 +1063,7 @@ async function handleMasterMessage(embed, message = {}) {
     }
     return true;
   }
+  if (source === 'SKANDI_SUPPORT_CHAT' && await alexandraGlobal?.handlePageChatMessage(embed, message)) return true;
 
   if (isGlobalMobileNavMessage(embed, message)) {
     if (type === 'SKANDI_SUPPORT_CHAT' && !isInternalPath()) {
