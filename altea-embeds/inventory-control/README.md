@@ -2333,3 +2333,14 @@ Aircraft details are grouped into identity and seats, display and walkthrough, i
 Cabin records and the aircraft's configuration summary are separate stored values. The “Use active cabin records” action prepares the summary from active cabins; Save Aircraft persists the result. It does not overwrite the airline's fleet template. Review cabin-seat totals and source information for the specific aircraft configuration before publishing. Existing images must remain linked through Asset Library.
 
 Deploy the Inventory Control embed and Wix backend together. In an authenticated preview, test creating an aircraft for an existing airline, adding cabins, selecting a view's cabin, saving a hotspot position, connecting scenes, preserving unsaved aircraft edits while saving a child, and checking the public aircraft view. Verify the airline fleet template separately before using Sync Airline Fleet.
+
+
+### Airline guide and Walkaround — 2026-11-27
+
+The previous sections document the historical editor. In the active Inventory Control embed, **Airline information** groups baggage and check-in, onboard services, and fleet information to match Travel Info. **Fleet & walkaround** opens Aircraft & Cabin Studio filtered to that airline.
+
+1. Open the aircraft and select **Walkaround**. Add a scene, choose an image from the Asset Library, enter a passenger-facing title and save. Older cabin images appear alongside scenes.
+2. Select a scene and choose **Add point**. Pick **Move to another scene**, **Show a note** or **Inspect a seat row**. Use the full-size scene image to position the point by click or the arrow keys. Save and confirm the point appears in the selected scene. A seat-row point zooms into the authored image and shows its label and notes.
+3. Set **Starting scene** and use **Save Aircraft**. Existing forward and back scene links remain editable from **Edit scene**. Verify the linked destinations, active flags and aircraft visibility before publication.
+
+Scenes and points use the existing aircraft child records and authenticated save action. New movement points use the existing action field with a destination scene or saved cabin image ID. The inventory core validates that it belongs to the same aircraft and has an active image. The staff embed and `src/backend/SKANDI_CORE/inventory.js` must both be available for authoring. Test a linked scene, a note and a seat inspection in Travel Info after the build is delivered.

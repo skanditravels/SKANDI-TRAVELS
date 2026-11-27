@@ -1961,9 +1961,18 @@ async function validateAircraftChildLinks(kind,body,current={}){
     const cabin=(await select("travel_info_aircraft_cabins",{select:"id,aircraft_id",id:qeq(body.cabin_id),limit:"1"}))[0];
     if(!cabin||clean(cabin.aircraft_id,80)!==aircraftId)throw new Error("Choose a cabin belonging to this aircraft.");
   }
-  if(kind==="hotspot"&&body.target_cabin_code&&upper(body.target_cabin_code,80)!==upper(current.target_cabin_code,80)){
+  if((kind==="hotspot"||kind==="sceneHotspot")&&body.target_cabin_code&&upper(body.target_cabin_code,80)!==upper(current.target_cabin_code,80)){
     const cabin=(await select("travel_info_aircraft_cabins",{select:"id",aircraft_id:qeq(aircraftId),cabin_code:qeq(body.target_cabin_code),limit:"1"}))[0];
     if(!cabin)throw new Error("Choose a target cabin belonging to this aircraft.");
+  }
+  if((kind==="hotspot"||kind==="sceneHotspot")&&body.action?.startsWith("MOVE:")&&body.active!==false){
+    const move=body.action.match(/^MOVE:(SCENE|VIEW):([0-9A-F-]+)$/);
+    if(!move||!isUuid(move[2]))throw new Error("Choose a destination scene.");
+    const targetId=move[2].toLowerCase();
+    const targetTable=move[1]==="SCENE"?"travel_info_aircraft_walk_scenes":"travel_info_aircraft_views";
+    if(targetTable===table&&targetId===parentId.toLowerCase())throw new Error("A point cannot move to its own scene.");
+    const target=(await select(targetTable,{select:"id,image_url,mobile_image_url",id:qeq(targetId),aircraft_id:qeq(aircraftId),active:"eq.true",limit:"1"}))[0];
+    if(!target||!(target.image_url||target.mobile_image_url))throw new Error("Choose an active destination scene with an image belonging to this aircraft.");
   }
   if(kind==="scene")for(const key of ["forward_scene_code","back_scene_code"]){
     if(!body[key]||upper(body[key],120)===upper(current[key],120))continue;
