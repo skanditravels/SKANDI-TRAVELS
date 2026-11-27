@@ -23,6 +23,6 @@ Customer Service Desk → WhatsApp uses the existing RIA INTRA case and message 
 3. Add an internal note and verify it appears only inside the case. An inbound attachment appears as a notice in the case. Outbound replies from this connection are text only.
 4. Check a conversation whose last customer message is more than 24 hours old. The composer returns a window-closed message. Sending approved WhatsApp Content Templates is a separate workflow and requires a configured `ContentSid` for each approved template.
 
-The public webhook returns HTTP 403 for a form request without a valid Twilio signature. Check Twilio's message logs for live delivery errors and webhook response codes. If Twilio has not confirmed a send, check the conversation and Twilio logs before repeating it.
+The Wix backend validates Twilio form signatures with Node's built-in crypto module. The public webhook returns HTTP 403 for a form request without a valid Twilio signature. Check Twilio's message logs for live delivery errors and webhook response codes. If Twilio has not confirmed a send, check the conversation and Twilio logs before repeating it.
 
 [Twilio sender configuration](https://help.twilio.com/articles/55716185417627) · [Messaging Service integration](https://help.twilio.com/articles/55716100212635) · [WhatsApp customer service windows](https://www.twilio.com/docs/whatsapp/key-concepts)
