@@ -1,5 +1,11 @@
 # INFO / LOG — Hotel List
 
+## 2026-11-27 — Scoped hotel list and property guide
+
+- The list uses the published country, region or state, destination and area. Direct property visits resolve the published Inventory ID. Breadcrumbs link to each published place and back to the scoped hotel list.
+- A shared Explore and Hotels layout keeps the property name, location and availability at the top. Overview, rooms, facilities, location and policies, and photos appear when the property has that information. The existing Inventory media choices, dates, party fields, optional flights and Duffel booking handoff remain the owners of their respective content and actions.
+- The page continues to use `#hotelsEmbed` and the existing receiver. The notes below record the initial route and property implementation.
+
 - Route `/destinations/explore/hotel-list`, registered in `src/public/siteMap.js`.
 - Wix HTML component `#hotelsEmbed`. `Hotel List.iqhpp.js` binds the existing destination flow bridge for this route. The shared receiver loads the generated Hotel List build.
 - The supplied Area Hotels reference informs the list layout. The current embed uses global chrome and published inventory, including the catalog's images, property information and scopes. The supplied preview properties and preview prices were excluded.

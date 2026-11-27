@@ -26,7 +26,7 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
   const content = createDestinationContent(()=>catalog,()=>flowState,LANGUAGES);
   function initialState() {
     const q = obj(wixLocation.query);
-    const state = {countrySlug:slug(q.country),destinationSlug:slug(q.destination),areaSlug:slug(q.area),hotelSlug:slug(q.hotel),hotelId:clean(q.hotelId,160)};
+    const state = {countrySlug:slug(q.country),regionSlug:slug(q.region),destinationSlug:slug(q.destination),areaSlug:slug(q.area),hotelSlug:slug(q.hotel),hotelId:clean(q.hotelId,160)};
     const level = q.view === "hotel" || state.hotelSlug || state.hotelId ? "hotel" : q.view === "hotels" ? "hotels" : state.areaSlug ? "area" : state.destinationSlug ? "destination" : state.countrySlug ? "country" : entry;
     return {...state,level};
   }
@@ -47,7 +47,7 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
     if (path==="/home") path=SITE_MAP.home;
     if (!isSafeInternalRoute(path)||/[\\\u0000-\u0020]/.test(path)||/%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(path)) throw fail("DESTINATION_INVALID_ROUTE","This link is unavailable.");
     const u=new URL(path,"https://www.skanditravels.com"),parts=u.pathname.split("/").filter(Boolean);
-    if(u.pathname!==APP_ROUTES.hotelList&&["destinations","our-destinations","hotels"].includes(parts[0])&&parts.length>1&&!u.search&&!parts.includes("map")&&parts[1]!=="country"){
+    if(![APP_ROUTES.country,APP_ROUTES.hotelList].includes(u.pathname)&&["destinations","our-destinations","hotels"].includes(parts[0])&&parts.length>1&&!u.search&&!parts.includes("map")&&parts[1]!=="country"){
       const hotels=parts[0]==="hotels"||parts[parts.length-1]==="hotels";
       if(parts[parts.length-1]==="hotels")parts.pop();
       path=content.customPath(hotels?"hotels":"destination",{countrySlug:slug(decodeURIComponent(parts[1]||"")),destinationSlug:slug(decodeURIComponent(parts[2]||"")),areaSlug:slug(decodeURIComponent(parts[3]||""))});
@@ -62,18 +62,29 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
   }
   function context(p={}) {
     const q=obj(p.query), outer=merged?flowState:initialState();
-    return {...outer,countrySlug:slug(p.countrySlug||q.country||outer.countrySlug),destinationSlug:slug(p.destinationSlug||q.destination||outer.destinationSlug),areaSlug:slug(p.areaSlug||q.area||outer.areaSlug),hotelSlug:slug(p.hotelSlug||q.hotel||outer.hotelSlug),hotelId:clean((embedId&&outer.hotelId)||p.hotelId||q.hotelId||outer.hotelId,160)};
+    return {...outer,countrySlug:slug(p.countrySlug||q.country||outer.countrySlug),regionSlug:slug(p.regionSlug||q.region||outer.regionSlug),destinationSlug:slug(p.destinationSlug||q.destination||outer.destinationSlug),areaSlug:slug(p.areaSlug||q.area||outer.areaSlug),hotelSlug:slug(p.hotelSlug||q.hotel||outer.hotelSlug),hotelId:clean((embedId&&outer.hotelId)||p.hotelId||q.hotelId||outer.hotelId,160)};
+  }
+  function geographicScope(c) {
+    const scope=content.resolveGeography(c);
+    if(scope===undefined)throw fail("DESTINATION_SCOPE_MISMATCH","This location is unavailable. Choose another place from the destinations map.");
+    return scope;
   }
   function recordFor(kind,p={}) {
-    const c=context(p),key=kind==="country"?p.slug||c.countrySlug:kind==="destination"?p.slug||c.destinationSlug:kind==="area"?p.slug||c.areaSlug:c.hotelSlug;
-    const r=kind==="hotel"&&c.hotelId?content.byId(c.hotelId):content.byTypeSlug(kind.toUpperCase(),key);
-    if (!r || r.entityType!==kind.toUpperCase()) throw fail("DESTINATION_NOT_FOUND","This item is not currently published. Choose another destination.");
-    const country=c.countrySlug?content.byTypeSlug("COUNTRY",c.countrySlug):null;
-    if (kind!=="country"&&c.countrySlug&&(!country||!content.isUnder(r,country))) throw fail("DESTINATION_SCOPE_MISMATCH","This item does not belong to the selected country.");
-    const destination=c.destinationSlug?content.byTypeSlug("DESTINATION",c.destinationSlug):null;
-    if(["area","hotel"].includes(kind)&&c.destinationSlug&&(!destination||!content.isUnder(r,destination)))throw fail("DESTINATION_SCOPE_MISMATCH","This item does not belong to the selected destination.");
-    const area=c.areaSlug?content.byTypeSlug("AREA",c.areaSlug):null;
-    if(kind==="hotel"&&c.areaSlug&&(!area||!content.isUnder(r,area)))throw fail("DESTINATION_SCOPE_MISMATCH","This hotel does not belong to the selected area.");
+    const c=context(p);
+    let r;
+    if(kind==="hotel") {
+      const scope=geographicScope(c);
+      r=c.hotelId?content.byId(c.hotelId):content.hotelsForScope(scope).find(h=>
+        [h.slug,h.name,h.publicId].some(value=>slug(value)===c.hotelSlug));
+      if(r&&scope&&!content.isUnder(r,scope))throw fail("DESTINATION_SCOPE_MISMATCH","This hotel does not belong to the selected place.");
+    } else {
+      const levels=["country","region","destination","area"];
+      const keys=levels.slice(0,levels.indexOf(kind)+1).map(level=>level+"Slug");
+      const scope=Object.fromEntries(keys.map(key=>[key,c[key]]));
+      if(p.slug)scope[kind+"Slug"]=slug(p.slug);
+      r=geographicScope(scope);
+    }
+    if(!r||r.entityType!==kind.toUpperCase())throw fail("DESTINATION_NOT_FOUND","This item is not currently published. Choose another destination.");
     return r;
   }
   function directory() {return content.records("COUNTRY").map(c=>({slug:slug(c.slug||c.name),name:c.name,code:c.code}));}
@@ -111,9 +122,9 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
           result={page:kind==="destination"?content.destinationPage(r,settings.language):content.areaPage(r,settings.language)};
         } else if(kind==="hotels") {
           const c=context(p);
-          for(const [k,v] of [["country",c.countrySlug],["destination",c.destinationSlug],["area",c.areaSlug]])if(v)recordFor(k,{...p,slug:v});
-          const page=content.hotelListPage(c.countrySlug,c.destinationSlug,c.areaSlug,settings.language);
-          if(c.countrySlug&&!c.destinationSlug&&!c.areaSlug)page.arrivalAirports=arrivals(recordFor("country",{...p,slug:c.countrySlug}));
+          const scope=geographicScope(c);
+          const page=content.hotelListPage(c.countrySlug,c.destinationSlug,c.areaSlug,settings.language,c.regionSlug);
+          if(scope?.entityType==="COUNTRY")page.arrivalAirports=arrivals(scope);
           type="HOTEL_SEARCH_PAGE_RESULT";result={page};
         } else if(kind==="hotel") {
           type="HOTEL_DETAIL_DATA";result={page:content.hotelPage(recordFor(kind,p),settings.language,obj(p.query))};
@@ -126,7 +137,7 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
   async function search(kind,m) {
     await ensureCatalog();const p=obj(m.payload),raw=obj(p.search||p.searchContext||p.offer?.searchContext),c=context(p);
     if(embedId&&kind==="hotels"&&p.hotelId)kind="hotel";
-    let scope=kind==="hotels"?(c.areaSlug?recordFor("area",p):c.destinationSlug?recordFor("destination",p):c.countrySlug?recordFor("country",p):null):recordFor(kind,p);
+    let scope=kind==="hotels"?geographicScope(c):recordFor(kind,p);
     if(kind==="hotels"&&(!scope||scope.entityType==="COUNTRY")){
       const arrival=scope&&arrivals(scope).find(a=>a.iata===clean(raw.destinationIata,3).toUpperCase());
       if(!arrival)throw fail("HOTEL_LOCATION_REQUIRED","Choose where you want to stay before searching.");

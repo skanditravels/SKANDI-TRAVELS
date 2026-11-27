@@ -49,15 +49,16 @@ test('Explore renders the selected country even when Wix keeps the current page 
   for(const node of parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.filter(n=>n.type==='ImportDeclaration').reverse()) {
     source=source.slice(0,node.start)+source.slice(node.end);
   }
-  const records=[{id:'gr',slug:'greece',name:'Greece'},{id:'se',slug:'sweden',name:'Sweden'}];
+  const records=[{id:'gr',slug:'greece',name:'Greece',entityType:'COUNTRY'},{id:'se',slug:'sweden',name:'Sweden',entityType:'COUNTRY'}];
   const posted=[],navigated=[];
   const context={
     ...routes,console,setTimeout,clearTimeout,$w:{onReady:()=>{}},
     wixLocationFrontend:{query:{country:'greece'},to:path=>navigated.push(path)},
     getDestinationFlowCatalog:async()=>({ok:true,records}),
     createDestinationContent:()=>({
-      records:()=>records,byTypeSlug:(_,slug)=>records.find(row=>row.slug===slug),
-      countryPage:record=>({...record}),isUnder:()=>false,airportDirectory:()=>[]
+      records:()=>records,resolveGeography:scope=>records.find(row=>row.slug===scope.countrySlug),
+      countryPage:record=>({...record,paths:{}}),countryOf:record=>record,airportFor:()=>null,
+      isUnder:()=>false,airportDirectory:()=>[]
     })
   };
   vm.createContext(context);vm.runInContext(source,context);

@@ -89,7 +89,7 @@ test('About controller loads the existing network facade independently and can r
   const result=sent.findLast(item=>item.type==='ABOUT_NETWORK_DATA');assert.equal(result.payload.destinations[0].id,'sto');
 });
 
-test('Map controls remain operable after the directory and airline chapter move',async t=>{
+test('Map controls and directory are contained within the map workspace',async t=>{
   const dom=new JSDOM(await read('skandi-embeds/destinations/skandi-destinations.html'),{url:'https://www.skanditravels.com/destinations',runScripts:'outside-only',pretendToBeVisual:true});
   t.after(()=>dom.window.close());const w=dom.window,d=w.document;
   w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});
@@ -99,20 +99,22 @@ test('Map controls remain operable after the directory and airline chapter move'
     constructor(){this.sources={};this.canvas=d.createElement('canvas')}
     addControl(){} on(type,fn){if(type==='load')setTimeout(()=>fn(),0);return this} getStyle(){return {layers:[]}}
     getSource(id){return this.sources[id]} addSource(id){this.sources[id]={setData(){}}} addLayer(){} getLayer(){return true}
-    setPaintProperty(){} setLayoutProperty(){} setFeatureState(){} getCanvas(){return this.canvas} easeTo(){} fitBounds(){} resize(){} remove(){}
+    setPaintProperty(){} setLayoutProperty(){} setFeatureState(){} getCanvas(){return this.canvas} easeTo(){} jumpTo(){} fitBounds(){} resize(){} remove(){}
   }
   w.maplibregl={Map:MapMock,LngLatBounds:Bounds,AttributionControl:class{}};
   w.eval(await read('skandi-embeds/destinations/skandi-destinations.js'));
   d.dispatchEvent(new w.Event('DOMContentLoaded'));await tick();
   w.loadMapData({destinations:[{id:'sto',name:'Stockholm',country:'Sweden',latitude:59,longitude:18},{id:'nyc',name:'New York',country:'United States',latitude:40,longitude:-74}],airports:[],airlines:[],routes:[],hotels:[]});
-  assert(d.querySelector('.map-interface .map-toolbar'));assert(d.querySelector('.map-interface .map-key'));
-  assert.equal(d.getElementById('destinationsListPage'),null);assert.equal(d.getElementById('airlineChapter'),null);
-  assert.equal(d.getElementById('networkDirectory').open,false);
+  assert(d.querySelector('.map-interface .map-toolbar'));assert(d.querySelector('.map-utilities .map-key'));
+  assert.equal(d.getElementById('editorialContent'),null);
+  assert(d.getElementById('networkHero').contains(d.getElementById('directoryGrid')));
+  assert.equal(d.getElementById('directoryGrid').hidden,true);
   d.querySelector('[data-mode="destinations"]').click();assert.equal(d.querySelector('[data-mode="destinations"]').getAttribute('aria-pressed'),'true');
-  const sweden=[...d.querySelectorAll('.region-btn')].find(button=>button.textContent==='Sweden');sweden.click();
-  assert.equal([...d.querySelectorAll('.region-btn')].find(button=>button.textContent==='Sweden').getAttribute('aria-pressed'),'true');
+  const area=d.querySelector('#regionStrip select');area.value='Sweden';area.dispatchEvent(new w.Event('change'));
+  assert.equal(area.value,'Sweden');
   d.getElementById('searchOpen').click();assert(d.getElementById('searchLayer').classList.contains('open'));
   d.getElementById('searchClose').click();assert(!d.getElementById('searchLayer').classList.contains('open'));
+  d.getElementById('browseOpen').click();assert.equal(d.getElementById('directoryGrid').hidden,false);
   assert(d.getElementById('directoryGrid').querySelectorAll('button').length>=2);
 });
 
@@ -120,11 +122,13 @@ test('Published network links remain available when the map library fails',async
   const dom=new JSDOM(await read('skandi-embeds/destinations/skandi-destinations.html'),{url:'https://www.skanditravels.com/destinations',runScripts:'outside-only',pretendToBeVisual:true});
   t.after(()=>dom.window.close());const w=dom.window,d=w.document;
   w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});
+  w.eval(await read('skandi-embeds/destinations/skandi-destinations-fallback.js'));
   w.eval(await read('skandi-embeds/destinations/skandi-destinations.js'));
   d.dispatchEvent(new w.Event('DOMContentLoaded'));
   w.loadMapData({destinations:[{id:'sto',name:'Stockholm',country:'Sweden'}],airports:[],airlines:[],routes:[],hotels:[]});
-  assert.equal(d.querySelector('.directory-link').textContent,'Stockholm');
-  assert.equal(d.getElementById('networkDirectory').open,true);
-  assert.match(d.getElementById('mapStatusText').textContent,/couldn’t start/);
+  d.getElementById('browseOpen').click();
+  assert.match(d.querySelector('#directoryGrid button').textContent,/Stockholm/);
+  assert.equal(d.getElementById('directoryGrid').hidden,false);
+  assert.match(d.getElementById('mapStatusText').textContent,/Search or browse places/);
   assert.equal(d.getElementById('mapStatus').hidden,false);
 });

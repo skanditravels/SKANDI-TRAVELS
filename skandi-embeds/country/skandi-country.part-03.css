@@ -6,6 +6,6 @@
 button:disabled{cursor:default;opacity:.55}
 .search-grid{grid-template-columns:minmax(140px,1.3fr) minmax(140px,1.3fr) minmax(120px,1fr) minmax(120px,1fr) minmax(85px,.7fr) auto}
 .search-grid>*,.search-field input,.search-field select{min-width:0}
-.offer-status.error{color:#ffd9dc}.region-card,.inspire-card{background:#e8eef4}
+.offer-status.error{color:#8c2e26}
 @media(max-width:1100px){.search-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:620px){.search-grid{grid-template-columns:1fr 1fr}.search-grid>.search-field:nth-of-type(-n+2){grid-column:1/-1}}

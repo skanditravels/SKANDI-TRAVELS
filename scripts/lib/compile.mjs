@@ -306,7 +306,8 @@ export const chromeParts = family => family==='none'?[]:family==='public'?[
 export async function compilePage(root,page) {
   // Media Control preserves its script order and isolated email editor.
   if(page.key==='mediaControl')return compileMediaControl(root,page);
-  const chrome = chromeParts(page.chrome);
+  const viewport = page.layout==='viewport';
+  const chrome = chromeParts(page.chrome).filter(part => !viewport || part.key!=='footer');
   if(page.chrome==='none' && page.mobileNavigation) chrome.push(mobileNavigationPart);
   const descriptors=[...chrome,{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'},
     ...(page.components||[]).map(component=>({key:component.key,directory:component.sourceDirectory,stem:component.stem,mount:component.mount}))];
@@ -349,6 +350,10 @@ export async function compilePage(root,page) {
   }
   const pagePart=parts.find(p=>p.key===page.slug);if(!pagePart)throw new Error(`[${page.key}] Main page source did not compile.`);const style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
   let shellCSS=await read(root,'skandi-embeds/global/skandi-shell.css');
+  if(viewport) shellCSS+=`
+    #skandi-shell-root { height:100vh; height:100dvh; min-height:0; grid-template-rows:auto minmax(0,1fr); overflow:hidden; }
+    #skandi-shell-root #skandi-app-root { overflow:hidden !important; }
+  `;
   if(parts.some(part=>part.key==='support-chat')) {
     shellCSS+='\n#skandi-support-chat-root{position:fixed;inset:0;z-index:999;pointer-events:none}\n';
     if(page.key!=='support')shellCSS+='@media(max-width:1020px){#skandi-support-chat-root{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}\n';

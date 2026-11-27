@@ -1,79 +1,109 @@
-<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#022e64" name="theme-color"/><title>SKANDI Destinations</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="skandi-country.css"><link rel="stylesheet" href="skandi-country.part-02.css"><link rel="stylesheet" href="skandi-country.part-03.css">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
-<script defer src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
-</head><body>
-
-<!-- Welcome/First Visit Settings Modal -->
-<div class="welcome-modal-layer" id="welcomeSettingsModal">
-<div class="welcome-backdrop" id="welcomeBackdrop"></div>
-<div class="welcome-card">
-<div class="globe-icon">
-<svg viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
-</div>
-<h2 data-i18n="welcome.title">Welcome to SKANDI</h2>
-<p data-i18n="welcome.copy">Please confirm your preferred language and currency before continuing.</p>
-<div class="settings-group">
-<select id="welcomeLang">
-<option value="EN">United States - English</option>
-<option value="SV">Sweden - Svenska</option>
-<option value="NO">Norway - Norsk</option>
-<option value="DA">Denmark - Dansk</option>
-<option value="ES">Spain - Español</option>
-<option value="FI">Finland - Suomi</option>
-<option value="FR-FR">France - Français</option>
-<option value="FR-CA">Canada - Français Canadien</option>
-<option value="DE">Germany - Deutch</option>
-<option value="TH">Thailand / ประเทศ - Thai ภาษาไทย</option>
-</select>
-</div>
-<div class="settings-group">
-<select id="welcomeCurr">
-<option value="USD">USD ($)</option>
-<option value="SEK">SEK (kr)</option>
-<option value="NOK">NOK (kr)</option>
-<option value="DKK">DKK (kr)</option>
-<option value="EUR">EUR (€)</option>
-</select>
-</div>
-<button class="btn" data-i18n="welcome.btn" id="welcomeSaveBtn" style="width:100%; margin-top: 12px;">Continue to Site</button>
-</div>
-</div>
-<!-- Mobile Menu Layer -->
-
-<main class="country-page" id="countryPage" aria-busy="true">
-<div class="country-shell"><nav class="country-breadcrumb"><button data-nav="/home">SKANDI</button><span>›</span><button data-i18n="country.destinations" data-nav="/destinations">Destinations</button><span>›</span><span class="current" id="breadcrumbCountry">—</span></nav></div>
-<div class="country-shell"><div id="countryStatus" class="country-status" role="status" aria-live="polite"><span id="countryStatusText">Loading country information…</span><button type="button" id="countryRetry" class="c-btn" hidden>Retry</button></div></div>
-<section class="country-hero" id="overview">
-<div aria-hidden="true" class="hero-grid"><img alt="" class="primary" id="hero1"/><img alt="" class="secondary" id="hero2"/><img alt="" class="secondary" id="hero3"/></div>
-<div class="country-shell hero-content">
-<div class="country-picker"><label data-i18n="country.choose" for="countrySelector">Choose country</label><select id="countrySelector"></select></div>
-<div class="hero-kicker" id="heroKicker">SKANDI DESTINATIONS</div><h1 id="heroTitle">—</h1><p class="hero-summary" id="heroSummary"></p>
-<div class="hero-actions"><button class="c-btn light" data-i18n="country.plan" id="planBtn">Plan your trip</button><button class="c-btn ghost" data-i18n="country.hotels" id="hotelBtn">Find hotels</button><button class="c-btn ghost" data-i18n="country.packages" id="packageBtn">View holidays</button></div>
-</div>
-<button class="c-btn ghost gallery-btn" data-i18n="country.gallery" id="galleryBtn">View gallery</button>
-</section>
-<div class="country-shell facts-wrap"><div class="facts" id="facts"></div></div>
-<nav class="country-subnav"><div class="country-shell subnav-inner">
-<button class="active" data-i18n="country.nav.overview" data-scroll="overview">Overview</button><button data-i18n="country.nav.deals" data-scroll="deals">Trips &amp; prices</button><button data-i18n="country.nav.regions" data-scroll="regions">Destinations</button><button data-i18n="country.nav.weather" data-scroll="weather">Weather</button><button data-i18n="country.nav.info" data-scroll="travelInfo">Travel information</button><button data-i18n="country.nav.inspiration" data-scroll="inspiration">Inspiration</button><button data-i18n="country.nav.faq" data-scroll="faq">FAQ</button>
-</div></nav>
-<section class="c-section"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.guide">The SKANDI guide</div><h2 id="introTitle">—</h2></div><p data-i18n="country.section.guideCopy">Places, flavours and experiences worth travelling for.</p></div><div class="intro-grid"><article class="editorial" id="introCopy"></article><aside class="signature"><small>SKANDI SIGNATURE VIEW</small><h3>Signature Travels, Unforgettable Moments</h3><p id="signatureCopy"></p><div class="signature-list" id="signatureList"></div></aside></div><div class="story-grid" id="storyGrid"></div></div></section>
-<section class="c-section dark" id="deals"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.find">Find your trip</div><h2 id="dealsTitle">—</h2></div><p data-i18n="country.section.findCopy">Search current flights, hotels and packages.</p></div>
-<form class="search-panel" id="searchForm"><div class="search-grid"><div class="search-field"><label data-i18n="country.search.from">Flying from</label><input data-i18n-placeholder="country.search.fromPh" id="origin" list="countryOrigins" required autocomplete="off" placeholder="City or airport"/></div><datalist id="countryOrigins"></datalist><div class="search-field"><label for="arrival" id="arrivalLabel">Flying to</label><select id="arrival" required><option value="">Choose an arrival airport</option></select></div><div class="search-field"><label data-i18n="country.search.depart">Departure</label><input id="depart" type="date" required/></div><div class="search-field"><label data-i18n="country.search.return">Return</label><input id="return" type="date" required/></div><div class="search-field"><label data-i18n="country.search.travelers">Travellers</label><select id="travelers"><option>1</option><option selected="">2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div><button class="c-btn" id="searchButton" type="submit" data-i18n="country.search.button">Search trips</button></div></form>
-<div class="offer-status" data-i18n="country.search.empty" id="offerStatus">Start a search to see current SKANDI options.</div><div class="offer-grid" id="offerGrid"></div></div></section>
-<section class="c-section alt" id="regions"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.stay">Discover where to stay</div><h2 id="regionsTitle">—</h2></div><p data-i18n="country.section.stayCopy">Explore regions, islands and cities before choosing your base.</p></div><div class="region-grid" id="regionGrid"></div><div class="country-atlas" aria-labelledby="mapTitle">
-<div class="country-atlas-heading"><div><h3 id="mapTitle">—</h3><p id="countryMapStatus" role="status"></p></div><button class="c-btn" id="mapBtn">Open full map</button></div>
-<div id="countryMapCanvas" class="country-map-canvas" aria-label="Map of published places" hidden></div>
-<ul class="country-atlas-links" id="countryMapLinks"></ul>
-</div></div></section>
-<section class="c-section" id="weather"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.weather">Weather &amp; best time to travel</div><h2 id="weatherTitle">—</h2></div><p data-i18n="country.section.weatherCopy">Compare monthly temperature and rainfall before choosing dates.</p></div><div class="climate-layout"><div class="climate" id="climate"></div><aside class="weather-note"><h3 id="weatherNoteTitle">—</h3><p id="weatherCopy"></p><button class="c-btn light" data-i18n="country.read" id="weatherBtn">Read more</button></aside></div></div></section>
-<section class="c-section alt" id="travelInfo"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.good">Good to know before you travel</div><h2 id="infoTitle">—</h2></div><p data-i18n="country.section.goodCopy">Entry, health, money, transport and practical information.</p></div><div class="info-grid" id="infoGrid"></div></div></section>
-<section class="c-section" id="inspiration"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.inspire">Travel ideas &amp; inspiration</div><h2 id="inspireTitle">—</h2></div><p data-i18n="country.section.guideCopy">Places, flavours and experiences worth travelling for.</p></div><div class="inspire-grid" id="inspireGrid"></div></div></section>
-<section class="c-section alt"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.airlines">Airline options</div><h2 id="airlineTitle">—</h2></div><p data-i18n="country.section.findCopy">Search current flights, hotels and packages.</p></div><div class="airline-grid" id="airlineGrid"></div></div></section>
-<section class="c-section" id="faq"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.faq">Frequently asked questions</div><h2 id="faqTitle">—</h2></div><p data-i18n="country.section.goodCopy">Entry, health, money, transport and practical information.</p></div><div class="faq-list" id="faqList"></div></div></section>
-</main><div aria-live="polite" class="country-toast" id="countryToast" role="status"></div>
-<div aria-hidden="true" class="gallery-modal" id="galleryModal"><div class="gallery-head"><strong id="galleryTitle">SKANDI Gallery</strong><button aria-label="Close" class="gallery-close" data-i18n-aria-label="country.close" id="galleryClose" type="button">×</button></div><div class="gallery-stage"><img alt="" id="galleryMain"/></div><div class="gallery-thumbs" id="galleryThumbs"></div></div>
-
-<div aria-live="polite" class="skandi-toast" id="skandiToast" role="status"></div>
-<script src="skandi-country.js"></script>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Explore Destinations | SKANDI Travels</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../shared/skandi-travel-discovery.css">
+  <link rel="stylesheet" href="skandi-country.css">
+  <link rel="stylesheet" href="skandi-country.part-02.css">
+  <link rel="stylesheet" href="skandi-country.part-03.css">
+</head>
+<body>
+  <main class="sj-page country-page" id="countryPage" aria-busy="true">
+    <div class="sj-shell">
+      <div class="sj-top">
+        <nav class="sj-breadcrumb" id="countryBreadcrumb" aria-label="Breadcrumb">
+          <a href="https://www.skanditravels.com/destinations" target="_top" data-nav="/destinations" data-i18n="country.destinations">Destinations</a>
+        </nav>
+        <label class="country-picker"><span data-i18n="country.choose">Choose country</span><select id="countrySelector"></select></label>
+      </div>
+      <div id="countryStatus" class="sj-status country-status" role="status">
+        <span id="countryStatusText">Loading destination information…</span>
+        <button type="button" id="countryRetry" class="sj-button" hidden>Retry</button>
+      </div>
+      <div id="countryMain" hidden>
+        <header class="sj-hero" aria-labelledby="heroTitle">
+          <div class="sj-hero-copy">
+            <p class="sj-context" id="heroKicker" hidden></p>
+            <h1 id="heroTitle"></h1>
+            <p id="heroSummary"></p>
+            <div class="sj-actions">
+              <button class="sj-button primary" data-i18n="country.hotels" id="hotelBtn" type="button">Find hotels</button>
+              <button class="sj-button" data-i18n="country.plan" id="planBtn" type="button">Plan your trip</button>
+              <button class="sj-button" data-i18n="country.gallery" id="galleryBtn" type="button">View gallery</button>
+            </div>
+          </div>
+          <div class="sj-visual" id="countryVisual" hidden>
+            <img alt="" id="hero1">
+          </div>
+        </header>
+        <nav class="sj-controls" id="countryViews" aria-label="Destination information">
+          <button type="button" data-view="overview" aria-pressed="true" data-i18n="country.nav.overview">Overview</button>
+          <button type="button" data-view="deals" aria-pressed="false" data-i18n="country.nav.deals">Trips &amp; prices</button>
+          <button type="button" data-view="info" aria-pressed="false" data-i18n="country.nav.info">Travel information</button>
+        </nav>
+        <div id="countryOverview" class="country-content">
+          <section id="regions" aria-labelledby="regionsTitle">
+            <h2 class="sj-heading" id="regionsTitle" data-i18n="country.section.stay">Discover where to stay</h2>
+            <div class="sj-grid" id="regionGrid"></div>
+          </section>
+          <section id="countryAbout" class="sj-section" aria-labelledby="introTitle">
+            <h2 class="sj-heading" id="introTitle" data-i18n="country.section.guide">The SKANDI guide</h2>
+            <div class="country-facts" id="facts"></div>
+            <div class="country-description" id="introCopy"></div>
+            <div class="country-description" id="signatureCopy"></div>
+            <div id="storyGrid"></div>
+          </section>
+        </div>
+        <section class="sj-section country-content" id="deals" aria-labelledby="dealsTitle" hidden>
+          <h2 class="sj-heading" id="dealsTitle"></h2>
+          <form id="searchForm">
+            <div class="search-grid">
+              <label class="search-field"><span data-i18n="country.search.from">Flying from</span><input data-i18n-placeholder="country.search.fromPh" id="origin" list="countryOrigins" required autocomplete="off" placeholder="City or airport"></label>
+              <datalist id="countryOrigins"></datalist>
+              <label class="search-field"><span id="arrivalLabel">Flying to</span><select id="arrival" required></select></label>
+              <label class="search-field"><span data-i18n="country.search.depart">Departure</span><input id="depart" type="date" required></label>
+              <label class="search-field"><span data-i18n="country.search.return">Return</span><input id="return" type="date" required></label>
+              <label class="search-field"><span data-i18n="country.search.travelers">Travellers</span><select id="travelers"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></label>
+              <button class="sj-button primary" id="searchButton" type="submit" data-i18n="country.search.button">Search trips</button>
+            </div>
+          </form>
+          <div class="offer-status" id="offerStatus" role="status"></div>
+          <div class="sj-grid" id="offerGrid"></div>
+        </section>
+        <div id="countryInfo" class="country-content" hidden>
+          <section id="travelInfo" class="sj-section" aria-labelledby="infoTitle">
+            <h2 class="sj-heading" id="infoTitle" data-i18n="country.section.good">Good to know before you travel</h2>
+            <div class="sj-grid" id="infoGrid"></div>
+          </section>
+          <section id="weather" class="sj-section" aria-labelledby="weatherTitle">
+            <h2 class="sj-heading" id="weatherTitle" data-i18n="country.section.weather">Weather &amp; best time to travel</h2>
+            <p id="weatherCopy"></p>
+            <div class="climate" id="climate"></div>
+          </section>
+          <section id="airlineInfo" class="sj-section" aria-labelledby="airlineTitle">
+            <h2 class="sj-heading" id="airlineTitle" data-i18n="country.section.airlines">Airline options</h2>
+            <div class="sj-grid" id="airlineGrid"></div>
+          </section>
+          <section id="inspiration" class="sj-section" aria-labelledby="inspireTitle">
+            <h2 class="sj-heading" id="inspireTitle" data-i18n="country.section.inspire">Travel ideas &amp; inspiration</h2>
+            <div class="sj-grid" id="inspireGrid"></div>
+          </section>
+          <section id="faq" class="sj-section" aria-labelledby="faqTitle">
+            <h2 class="sj-heading" id="faqTitle" data-i18n="country.section.faq">Frequently asked questions</h2>
+            <div id="faqList"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <dialog class="gallery-modal" id="galleryModal" aria-labelledby="galleryTitle">
+    <div class="gallery-head"><strong id="galleryTitle"></strong><button aria-label="Close" class="sj-button" data-i18n-aria-label="country.close" id="galleryClose" type="button">×</button></div>
+    <div class="gallery-stage"><img alt="" id="galleryMain"></div>
+    <div class="gallery-thumbs" id="galleryThumbs"></div>
+  </dialog>
+  <script src="skandi-country.js"></script>
+</body>
+</html>

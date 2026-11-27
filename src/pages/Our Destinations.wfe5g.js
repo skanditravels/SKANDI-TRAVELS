@@ -8,13 +8,25 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const TYPES = ["destination", "hotel", "airport", "airline", "route"];
 
 function selection(query = {}) {
-  const [type, id] = String(query.pin || "").split(":");
+  const [type, ...parts] = String(query.pin || "").split(":");
+  const id=parts.join(":");
   if (TYPES.includes(type) && id) return { type, id };
   const legacy = TYPES.find(key => query[key]);
   return legacy ? { type:legacy, id:String(query[legacy]) } : {};
 }
 
 $w.onReady(function () {
+  const query=wixLocation.query||{};
+  // Earlier Explore links used the map route with geographic query parameters.
+  if(!query.pin&&(query.country||query.region||query.area)) {
+    const params=new URLSearchParams();
+    for(const key of ["country","region","destination","area","hotel","hotelId","view"]) {
+      if(typeof query[key]==="string"&&query[key].trim())params.set(key,query[key].trim().slice(0,160));
+    }
+    const route=params.has("hotel")||params.has("hotelId")||["hotels","hotel"].includes(params.get("view"))?APP_ROUTES.hotelList:APP_ROUTES.country;
+    wixLocation.to(route+"?"+params.toString());
+    return;
+  }
   const mapHtml = $w(HTML_ID);
   let request;
   const send = (type, payload) => mapHtml.postMessage({ source:PARENT_SOURCE, type, payload });
@@ -40,7 +52,7 @@ $w.onReady(function () {
     if (message.type === "SKANDI_MAP_READY" || message.type === "SKANDI_MAP_REFRESH") await sendMapData();
     if (message.type === "SKANDI_MAP_STATE") {
       const { type, id } = message.state || {};
-      if (TYPES.includes(type) && typeof id === "string" && /^[a-z0-9_-]{1,160}$/i.test(id)) {
+      if (TYPES.includes(type) && typeof id === "string" && /^[a-z0-9_:-]{1,160}$/i.test(id)) {
         const pin = type + ":" + id;
         if (wixLocation.query?.pin !== pin) wixLocation.queryParams.add({ pin });
       } else if (!type && !id) {

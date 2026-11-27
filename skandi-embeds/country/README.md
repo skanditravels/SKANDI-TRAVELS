@@ -1,5 +1,11 @@
 # SKANDI INFO / LOG — V12 journey integration
 
+## 2026-11-27 — Explore by geographic scope
+
+- The existing `/destinations/explore` page and `#exploreEmbed` render the published place selected by `country`, `region`, `destination` and `area`. The path skips levels without a published relationship. The breadcrumbs and hotel links retain the verified scope.
+- Overview shows the next places to explore and the location guide. Trips & prices uses the existing package search and booking handoff. Weather, practical information, airlines and FAQs remain available when published. The destinations map is the geographic entry point.
+- Source remains the split HTML, CSS and JavaScript; the shared discovery stylesheet also serves Hotel List. The `COUNTRY_*` message contracts and published Inventory source are retained. The older inline-map and route notes below are historical.
+
 ## 2026-11-06 — Explore map and hotel-list route
 
 Explore renders a MapLibre map under Destinations with the selected country's published coordinates. The map pins show catalog destinations and areas with coordinates. When those places have no coordinates, the map can show linked published airports. A list of links remains available if the map cannot start. Hotels opens the new `/destinations/explore/hotel-list` route, scoped to the selected country, destination or area.

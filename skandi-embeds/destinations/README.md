@@ -1,5 +1,14 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+## 2026-11-27 — Destinations map and place navigation
+
+- `/destinations` uses the full viewport. Search, the country directory, the legend and the selected-place panel live over the map. The page has no editorial chapters or footer. The public desktop header and mobile navigation use the shared shell.
+- Browse starts with published countries and narrows by region or state, destination and area. A mapped place opens the matching Explore page and offers a shortcut to its hotels when available. Collection pins open the published property. Older geography-query links on the map route forward to Explore or the scoped hotel page, and shared pin links still select on the map.
+- The map uses MapLibre with OpenFreeMap. When WebGL or the basemap is unavailable, an interactive Canvas overview uses the same published positions and routes over Natural Earth land. This low-resolution land outline comes from `world-atlas@2.0.2`, `land-110m.json`. License and provenance are in [WORLD-ATLAS-LICENSE.txt](WORLD-ATLAS-LICENSE.txt) and the [upstream data reference](https://github.com/topojson/world-atlas#file-reference).
+- Current inputs are the split source in this folder and the existing Wix component `#htmlSkandiMap`. The public network facade combines the existing RPC and published Inventory catalog. The map bridge and installed receiver keep their message contracts. Deploy the Wix controllers, public modules, backend projection and host CSS through the Git integration after the builder publishes the new output. Verify viewport sizing and navigation on the published site.
+
+The sections below record earlier map layouts and route mappings.
+
 2026-11-12 — The accessible network directory can narrow published inventory by Country, Region/State, Destination and Area. It reads the public inventory hierarchy and keeps existing map links as a fallback. Requires coordinated Wix backend deployment and live verification.
 
 ## 2026-11-11 — Mobile map detail and presentation
