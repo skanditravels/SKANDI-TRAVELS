@@ -1530,7 +1530,22 @@
       "sources": [
         "SKANDI_STORE_CHECKOUT"
       ],
-      "components": [],
+      "components": [
+        {
+          "key": "support-chat",
+          "sourceDirectory": "skandi-embeds/global/alexandra",
+          "stem": "skandi-alexandra-chat",
+          "mount": "skandi-support-chat-root",
+          "sources": [],
+          "status": "COMPLETE SOURCE",
+          "files": [
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.html",
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.css",
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.js"
+          ],
+          "missing": []
+        }
+      ],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1575,8 +1590,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/store-checkout/skandi-store-checkout.receiver.html",
       "receiverFile": "skandi-embeds/store-checkout/skandi-store-checkout.receiver.html",
-      "sha256": "552294f5981303b1fa2d49e1d8262120a519c861f0331419deb89d8233de2b4b",
-      "bytes": 64775
+      "sha256": "47ba3bbdcf9f3ee0607a28e5fc67b89c99cde02fc6f086f95960da18eb5673d8",
+      "bytes": 97640
     },
     {
       "key": "storeConfirmation",
@@ -1595,7 +1610,22 @@
       "sources": [
         "SKANDI_STORE_CONFIRMATION"
       ],
-      "components": [],
+      "components": [
+        {
+          "key": "support-chat",
+          "sourceDirectory": "skandi-embeds/global/alexandra",
+          "stem": "skandi-alexandra-chat",
+          "mount": "skandi-support-chat-root",
+          "sources": [],
+          "status": "COMPLETE SOURCE",
+          "files": [
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.html",
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.css",
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.js"
+          ],
+          "missing": []
+        }
+      ],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1629,8 +1659,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/store-confirmation/skandi-store-confirmation.receiver.html",
       "receiverFile": "skandi-embeds/store-confirmation/skandi-store-confirmation.receiver.html",
-      "sha256": "1563f30c97324796d60f1fb2378298ffa1cbe990abb6f4ae358f2594280ec282",
-      "bytes": 50480
+      "sha256": "81bd08a7e16416d92aa361d5cd074033d9bfcf86dc65fce01ccb76bb4b2c61cd",
+      "bytes": 83345
     },
     {
       "key": "ourNetwork",
@@ -3838,7 +3868,22 @@
       "sources": [
         "SKANDI_MY_PROFILE"
       ],
-      "components": [],
+      "components": [
+        {
+          "key": "support-chat",
+          "sourceDirectory": "skandi-embeds/global/alexandra",
+          "stem": "skandi-alexandra-chat",
+          "mount": "skandi-support-chat-root",
+          "sources": [],
+          "status": "COMPLETE SOURCE",
+          "files": [
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.html",
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.css",
+            "skandi-embeds/global/alexandra/skandi-alexandra-chat.js"
+          ],
+          "missing": []
+        }
+      ],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -3918,8 +3963,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
       "receiverFile": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
-      "sha256": "cf82936794c3999701dcb3f318c4ed5328370244bd619ca7430551389ab58444",
-      "bytes": 303378
+      "sha256": "25096ab6aabe137f775e6d929f98248ec729d7ac25af53a24a3800c310ad408d",
+      "bytes": 336243
     },
     {
       "key": "myTrips",

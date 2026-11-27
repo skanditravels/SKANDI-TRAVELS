@@ -18,6 +18,13 @@
 
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js"></script>
 <style data-skandi-part="store-checkout">
 #skandi-app-root{
   --navy:#022e64;
@@ -301,6 +308,16 @@
 }
 
 </style>
+<style data-skandi-part="support-chat">
+#skandi-support-chat-root{--navy:#022e64;--teal:#5fc7cf;--ink:#111827;--muted:#687386;--line:#dfe5ef;--soft:#f5f7fa;--white:#fff;--green:#14805e;--red:#b42318;--vvh:100dvh;--safe-bottom:env(safe-area-inset-bottom,0px)}
+#skandi-support-chat-root *{box-sizing:border-box}#skandi-support-chat-root,#skandi-support-chat-root{margin:0;width:100%;height:100%;overflow:hidden;font:14px/1.45 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:transparent}#skandi-support-chat-root button,#skandi-support-chat-root input,#skandi-support-chat-root textarea,#skandi-support-chat-root select{font:inherit}#skandi-support-chat-root button{cursor:pointer}#skandi-support-chat-root .host{position:relative;width:100%;height:100%;pointer-events:none}#skandi-support-chat-root .launcher{pointer-events:auto;position:absolute;right:18px;bottom:max(18px,var(--safe-bottom));width:58px;height:58px;border:0;border-radius:50%;background:var(--navy);color:#fff;box-shadow:0 14px 34px #022e6440;font-size:24px;display:grid;place-items:center}#skandi-support-chat-root .panel{pointer-events:auto;position:absolute;right:18px;bottom:max(18px,var(--safe-bottom));width:min(420px,calc(100vw - 36px));height:min(700px,calc(var(--vvh) - 36px));background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 28px 80px #022e6433;display:none;overflow:hidden}#skandi-support-chat-root .panel.open{display:grid}#skandi-support-chat-root .chat-shell{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:#fff}#skandi-support-chat-root .head{background:var(--navy);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}#skandi-support-chat-root .avatar-wrap{width:44px;height:44px;border-radius:50%;overflow:hidden;background:#eaf2fb;display:grid;place-items:center;flex:0 0 44px;border:2px solid #ffffff66}#skandi-support-chat-root .avatar-wrap video{width:100%;height:100%;object-fit:cover;display:none}#skandi-support-chat-root .avatar-fallback{font-weight:900;color:var(--navy);font-size:17px}#skandi-support-chat-root .who{min-width:0;flex:1}#skandi-support-chat-root .who b,#skandi-support-chat-root .who small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#skandi-support-chat-root .who small{font-size:13px;color:#d7e6fa}#skandi-support-chat-root .presence{display:inline-flex;align-items:center;gap:5px;font-size:13px;margin-top:2px}#skandi-support-chat-root .dot{width:7px;height:7px;border-radius:50%;background:#55d69d}#skandi-support-chat-root .head-btn{width:34px;height:34px;border:0;border-radius:8px;background:#ffffff16;color:#fff;font-size:20px}#skandi-support-chat-root .messages{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:linear-gradient(#f8fafc,#fff);padding:16px 12px 20px;display:flex;flex-direction:column;gap:10px}#skandi-support-chat-root .msg{max-width:84%;padding:10px 12px;border-radius:14px;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 2px #0000000c}#skandi-support-chat-root .msg.remote{align-self:flex-start;background:#fff;border:1px solid var(--line);border-top-left-radius:5px}#skandi-support-chat-root .msg.mine{align-self:flex-end;background:#e8f1fb;color:#082b52;border-top-right-radius:5px}#skandi-support-chat-root .msg.system{align-self:center;max-width:94%;background:#eef7f7;color:#31575a;font-size:13px;text-align:center;box-shadow:none}#skandi-support-chat-root .msg strong{display:block;font-size:13px;margin-bottom:3px;color:var(--navy)}#skandi-support-chat-root .typing{align-self:flex-start;border:1px solid var(--line);background:#fff;border-radius:14px;padding:9px 12px;color:var(--muted);font-size:13px}#skandi-support-chat-root .composer{border-top:1px solid var(--line);background:#fff;padding:9px 10px calc(9px + var(--safe-bottom));display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:end}#skandi-support-chat-root .composer textarea{min-width:0;min-height:42px;max-height:112px;resize:none;border:1px solid #cbd5e1;border-radius:18px;padding:10px 12px;outline:none;background:#fafbfd}#skandi-support-chat-root .composer textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px #5fc7cf28}#skandi-support-chat-root .circle{width:42px;height:42px;border:0;border-radius:50%;display:grid;place-items:center}#skandi-support-chat-root .tool{background:#edf2f7;color:var(--navy)}#skandi-support-chat-root .send{background:var(--navy);color:#fff;font-weight:900}#skandi-support-chat-root .send:disabled,#skandi-support-chat-root .circle:disabled{opacity:.45;cursor:not-allowed}#skandi-support-chat-root .sheet{position:absolute;inset:0;background:#fff;z-index:20;display:none;grid-template-rows:auto minmax(0,1fr) auto}#skandi-support-chat-root .sheet.open{display:grid}#skandi-support-chat-root .sheet-head{padding:14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}#skandi-support-chat-root .sheet-head h2{font-size:16px;margin:0;flex:1;color:var(--navy)}#skandi-support-chat-root .sheet-body{overflow:auto;padding:14px;overscroll-behavior:contain}#skandi-support-chat-root .field{display:grid;gap:6px;margin-bottom:13px}#skandi-support-chat-root .field label{font-size:13px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--muted)}#skandi-support-chat-root .field input,#skandi-support-chat-root .field select,#skandi-support-chat-root .field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;background:#fafbfc}#skandi-support-chat-root .field textarea{min-height:100px;resize:vertical}#skandi-support-chat-root .sheet-foot{border-top:1px solid var(--line);padding:10px 12px calc(10px + var(--safe-bottom));display:flex;gap:8px}#skandi-support-chat-root .btn{min-height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 14px;font-weight:800}#skandi-support-chat-root .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;flex:1}#skandi-support-chat-root .notice{padding:9px 10px;border-radius:8px;background:#fff7ed;color:#9a3412;font-size:13px;line-height:1.5;margin-bottom:12px}#skandi-support-chat-root .hidden{display:none!important}
+@media(max-width:699px){#skandi-support-chat-root .host{height:var(--vvh)}#skandi-support-chat-root .launcher{right:14px;bottom:max(14px,var(--safe-bottom))}#skandi-support-chat-root .panel,#skandi-support-chat-root .panel.open{position:fixed;inset:0;width:100vw;height:var(--vvh);max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none}#skandi-support-chat-root .head{padding-top:max(10px,env(safe-area-inset-top,0px))}#skandi-support-chat-root .messages{padding-bottom:18px}#skandi-support-chat-root .composer{position:relative}#skandi-support-chat-root .panel:not(.open){display:none}}
+#skandi-support-chat-root .host[hidden]{display:none}
+@media(max-width:699px){
+  #skandi-support-chat-root .host.sitewide{height:100%}
+  #skandi-support-chat-root .sitewide .panel,#skandi-support-chat-root .sitewide .panel.open{position:absolute;inset:8px;width:auto;height:auto;border:1px solid var(--line);border-radius:20px;box-shadow:0 5px 18px #022e6426}
+}
+</style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
   --sk-shell-navy: #022e64;
@@ -427,6 +444,9 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 /* A repeated card photo falls back to a neutral surface, not another entity's photo. */
 #skandi-shell-root img.skandi-duplicate-card-image { visibility: hidden !important; }
 #skandi-shell-root :not(img).skandi-duplicate-card-image { background-image: linear-gradient(135deg, #071b44, #315a78) !important; }
+
+#skandi-support-chat-root{position:fixed;inset:0;z-index:999;pointer-events:none}
+@media(max-width:1020px){#skandi-support-chat-root{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}
 </style>
 </head>
 <body>
@@ -495,7 +515,55 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 </div>
 
 
+<div id="skandi-support-chat-root">
+<div class="host" hidden="">
+  <button class="launcher" id="launcher" type="button" aria-label="Chat with Alexandra" aria-controls="panel" aria-expanded="false">💬</button>
+  <section class="panel" id="panel" aria-label="SKANDI Support chat">
+    <div class="chat-shell">
+      <header class="head">
+        <button class="head-btn hidden" id="backBtn" type="button" aria-label="Back">‹</button>
+        <div class="avatar-wrap" data-asset-key="alexandra-support-avatar"><video id="avatarVideo" muted="" loop="" autoplay="" playsinline="" preload="metadata"></video><span class="avatar-fallback" id="avatarFallback">A</span></div>
+        <div class="who"><b id="agentName">Alexandra</b><small id="agentRole">Digital Customer Service Agent</small><span class="presence"><i class="dot"></i><span id="presenceText" role="status">Ready</span></span></div>
+        <button class="head-btn" id="humanBtn" type="button" title="Human Customer Service">♙</button>
+        <button class="head-btn" id="support-chat-closeBtn" type="button" aria-label="Minimize chat">×</button>
+      </header>
+      <main class="messages" id="messages" aria-live="polite"></main>
+      <footer class="composer">
+        <button class="circle tool" id="formBtn" type="button" title="Support form">＋</button>
+        <textarea id="input" rows="1" placeholder="Type a message…" enterkeyhint="send" style="height: 40px"></textarea>
+        <button class="circle send" id="sendBtn" type="button" aria-label="Send">➤</button>
+      </footer>
+    </div>
+    <section class="sheet" id="formSheet">
+      <header class="sheet-head"><button class="btn" id="formClose" type="button">Back</button><h2>Support request</h2></header>
+      <div class="sheet-body">
+        <div id="formNotice" class="notice hidden"></div>
+        <div class="field"><label for="contactName">Full name</label><input id="contactName" maxlength="200" autocomplete="name" required=""></div>
+        <div class="field"><label for="contactEmail">Email</label><input id="contactEmail" type="email" maxlength="254" autocomplete="email" required=""></div>
+        <div class="field"><label>Category</label><select id="category"><option value="general">General Support</option></select></div>
+        <div class="field"><label>Topic</label><select id="topic"><option value="general-question">General Question</option></select></div>
+        <div class="field"><label>Booking reference / PNR</label><input id="bookingRef" maxlength="80" placeholder="Optional"></div>
+        <div class="field"><label>Subject</label><input id="subject" maxlength="240" required="" placeholder="What do you need help with?"></div>
+        <div id="baggageFields" class="hidden">
+          <div class="field"><label>Have you already filed a PIR?</label><select id="support-chat-hasPir"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+          <div class="field hidden" id="pirWrap"><label>PIR number</label><input id="support-chat-pirNumber" maxlength="80"></div>
+          <div class="field"><label>Baggage tag</label><input id="support-chat-bagTag" maxlength="80"></div>
+          <div class="field"><label>Baggage type</label><input id="support-chat-bagType" maxlength="120"></div>
+          <div class="field"><label>Color</label><input id="support-chat-bagColor" maxlength="120"></div>
+          <div class="field"><label>Brand / distinguishing features</label><input id="support-chat-bagBrand" maxlength="300"></div>
+        </div>
+        <div class="field"><label>Description</label><textarea id="description" required="" placeholder="Describe what happened or what you need."></textarea></div>
+      </div>
+      <footer class="sheet-foot"><button class="btn primary" id="submitForm" type="button">Submit request</button></footer>
+    </section>
+  </section>
+</div>
 
+
+
+
+
+</div>
 </div>
 <script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
 const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
@@ -674,6 +742,454 @@ if (shellRoot.dataset.skandiFamily === 'public') {
   })();
 }
 </script>
+<script data-skandi-part="support-chat">(function(){
+const __root=window.document.getElementById("skandi-support-chat-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+(() => {
+  "use strict";
+  const SOURCE = "SKANDI_SUPPORT_CHAT", PARENT = "SKANDI_WIX_PARENT";
+  const ALEX_TOPIC = "lk.chat", HUMAN_TOPIC = "skandi.support.chat";
+  const $ = id => document.getElementById(id);
+  const clean = (value, length = 30000) => String(value ?? "").trim().slice(0, length);
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+  const instance = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const host = $("launcher").parentElement;
+  let boot = {}, avatar = {}, mode = "ALEXANDRA", caseId = "", pagePath = "/about/support";
+  let transcript = [], room = null, roomSession = null, roomEpoch = 0, connecting = false;
+  let active = false, configured = false, loggedIn = false, humanPending = false, sending = false, lastSend = "", open = false;
+  let connectionRequested = false, panelFocusTimer;
+
+  function post(type, payload = {}) {
+    window.parent.postMessage({ source: SOURCE, type, requestId: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, payload: { ...payload, instance } }, "*");
+  }
+  function snapshot() {
+    if (active) post("SUPPORT_CHAT_SNAPSHOT", { messages: transcript.slice(-18), draft: $("input").value });
+  }
+  function setViewport() {
+    const height = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+    host.style.setProperty("--vvh", `${Math.round(height)}px`);
+  }
+  setViewport();
+  window.addEventListener("resize", setViewport);
+  window.visualViewport?.addEventListener("resize", setViewport);
+  window.visualViewport?.addEventListener("scroll", setViewport);
+  window.addEventListener("pagehide", snapshot);
+
+  function setPanel(show, focus = false) {
+    open = show;
+    $("panel").classList.toggle("open", show);
+    $("launcher").classList.toggle("hidden", show);
+    $("launcher").setAttribute("aria-expanded", String(show));
+    clearTimeout(panelFocusTimer);
+    if (show) {
+      setViewport();
+      if (focus) panelFocusTimer = setTimeout(() => $("input").focus(), 80);
+    } else $("input").blur();
+  }
+  function clearAudio() {
+    host.querySelectorAll("audio[data-support-track]").forEach(element => element.remove());
+  }
+  function disconnect() {
+    roomEpoch++;
+    const previous = room;
+    room = null;
+    roomSession = null;
+    connecting = false;
+    sending = false;
+    clearAudio();
+    try { Promise.resolve(previous?.disconnect()).catch(() => {}); } catch (_) {}
+  }
+  function commandState() {
+    const disabled = humanPending || mode === "QUEUED" || mode === "CLOSED";
+    $("input").disabled = disabled;
+    $("sendBtn").disabled = disabled || sending || connecting || connectionRequested;
+  }
+  function presence(value) { $("presenceText").textContent = value; }
+  function setMode(value) {
+    mode = value;
+    const human = value !== "ALEXANDRA";
+    $("agentName").textContent = human ? "SKANDI Customer Service" : "Alexandra";
+    $("agentRole").textContent = human ? "Human SKANDI Customer Service Agent" : "Digital Customer Service Agent";
+    $("avatarFallback").textContent = human ? "S" : "A";
+    $("humanBtn").classList.toggle("hidden", human);
+    if (human) {
+      $("avatarVideo").pause?.();
+      $("avatarVideo").style.display = "none";
+      $("avatarFallback").style.display = "inline";
+    } else setupAvatar(avatar);
+    presence(humanPending ? "Connecting…" : value === "QUEUED" ? "In queue" : value === "CLOSED" ? "Ended" : room?.state === "connected" ? "Online" : "Ready");
+    commandState();
+  }
+  function render(kind, content, name = "") {
+    const element = document.createElement("div");
+    element.className = `msg ${kind}`;
+    element.innerHTML = (name ? `<strong>${esc(name)}</strong>` : "") + esc(content);
+    $("messages").appendChild(element);
+    requestAnimationFrame(() => { $("messages").scrollTop = $("messages").scrollHeight; });
+  }
+  function system(text) { if (text) render("system", text); }
+  function renderMessage(item) {
+    render(item.role === "user" ? "mine" : "remote", item.content, { user: "You", assistant: "Alexandra", agent: "SKANDI Customer Service" }[item.role]);
+  }
+  function message(role, content) {
+    const text = clean(content);
+    if (!text) return;
+    const item = { role, content: text };
+    transcript.push(item);
+    if (transcript.length > 60) transcript.shift();
+    renderMessage(item);
+    snapshot();
+  }
+
+  function setupAvatar(config) {
+    const video = $("avatarVideo");
+    const url = clean(config.avatarVideoUrl, 2000);
+    if (!url) {
+      video.removeAttribute("src");
+      video.style.display = "none";
+      $("avatarFallback").style.display = "inline";
+      return;
+    }
+    const apply = () => {
+      if (mode !== "ALEXANDRA") return;
+      video.playbackRate = 0.75;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.style.display = "block";
+      $("avatarFallback").style.display = "none";
+      video.play().catch(() => {});
+    };
+    video.onloadedmetadata = apply;
+    video.oncanplay = apply;
+    if (video.getAttribute("src") !== url) video.src = url;
+    else if (video.readyState > 0) apply();
+  }
+  function applyBoot(payload) {
+    boot = payload;
+    avatar = payload.alexandra || {};
+    loggedIn = Boolean(payload.loggedIn || payload.profile?.memberId);
+    if (mode === "ALEXANDRA") setupAvatar(avatar);
+    $("humanBtn").title = loggedIn ? "Human Customer Service" : "Sign in for human chat";
+    const profile = payload.profile || {};
+    if (!$("contactName").value) $("contactName").value = clean(profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(" "), 200);
+    if (!$("contactEmail").value) $("contactEmail").value = clean(profile.email, 254);
+    const category = $("category").value, topic = $("topic").value;
+    $("category").innerHTML = (payload.workflows || []).map(workflow => `<option value="${esc(workflow.key)}">${esc(workflow.title || workflow.key)}</option>`).join("") || '<option value="general">General Support</option>';
+    if ([...$("category").options].some(option => option.value === category)) $("category").value = category;
+    updateTopics();
+    if ([...$("topic").options].some(option => option.value === topic)) $("topic").value = topic;
+  }
+  function workflow() { return (boot.workflows || []).find(item => item.key === $("category").value); }
+  function updateTopics() {
+    $("topic").innerHTML = (workflow()?.topics || [{ key: "general-question", title: "General Question" }])
+      .map(item => `<option value="${esc(item.key)}">${esc(item.title || item.key)}</option>`).join("");
+    $("baggageFields").classList.toggle("hidden", $("category").value !== "baggage");
+    updatePir();
+  }
+  function updatePir() {
+    const no = $("support-chat-hasPir").value === "no";
+    $("pirWrap").classList.toggle("hidden", $("support-chat-hasPir").value !== "yes");
+    $("formNotice").textContent = no ? workflow()?.guidance?.noPir || "A SKANDI support case does not replace the formal baggage report/PIR required by the operating airline or airport baggage service." : "";
+    $("formNotice").classList.toggle("hidden", !no);
+  }
+  function openForm(prefill = {}) {
+    $("formSheet").classList.add("open");
+    if (prefill.category) { $("category").value = prefill.category; updateTopics(); }
+    if (prefill.subject) $("subject").value = prefill.subject;
+    if (prefill.message) $("description").value = prefill.message;
+  }
+
+  async function connectRoom(session, nextMode) {
+    const person = nextMode === "HUMAN" ? "Customer Service" : "Alexandra";
+    connectionRequested = false;
+    if (roomSession?.roomName && roomSession.roomName === session?.roomName && (connecting || room?.state === "connected" || room?.state === "reconnecting")) {
+      commandState();
+      return;
+    }
+    if (!session?.url || !session?.token || !window.LivekitClient) {
+      presence("Connection unavailable");
+      system(`${person} could not connect. Please try again.`);
+      commandState();
+      return;
+    }
+    disconnect();
+    const epoch = roomEpoch;
+    const { Room, RoomEvent } = window.LivekitClient;
+    const nextRoom = new Room({ adaptiveStream: true, dynacast: true, disconnectOnPageLeave: false });
+    room = nextRoom;
+    roomSession = session;
+    connecting = true;
+    setMode(nextMode);
+    presence("Connecting…");
+    const isCurrent = () => epoch === roomEpoch && room === nextRoom;
+    const topic = nextMode === "ALEXANDRA" ? session.transcriptionTopic || "lk.transcription" : session.textTopic || HUMAN_TOPIC;
+    nextRoom.registerTextStreamHandler(topic, async (reader, participant) => {
+      if (participant?.identity === nextRoom.localParticipant?.identity) return;
+      try {
+        const text = await reader.readAll();
+        if (isCurrent() && active) message(nextMode === "ALEXANDRA" ? "assistant" : "agent", text);
+      } catch (_) {}
+    });
+    nextRoom.on(RoomEvent.TrackSubscribed, track => {
+      if (!isCurrent() || !active || track.kind !== "audio") return;
+      const audio = track.attach();
+      audio.dataset.supportTrack = "";
+      audio.autoplay = true;
+      host.appendChild(audio);
+    });
+    nextRoom.on(RoomEvent.TrackUnsubscribed, track => track.detach?.().forEach(element => element.remove()));
+    nextRoom.on(RoomEvent.Reconnecting, () => { if (isCurrent()) presence("Reconnecting…"); });
+    nextRoom.on(RoomEvent.Reconnected, () => { if (isCurrent()) presence("Online"); });
+    nextRoom.on(RoomEvent.Disconnected, () => {
+      if (!isCurrent()) return;
+      clearAudio();
+      presence("Disconnected");
+      if (active && open) system(`${person} disconnected. Your messages are still here.`);
+    });
+    if (nextMode === "ALEXANDRA") {
+      nextRoom.registerRpcMethod("open_support_form", async data => {
+        if (isCurrent() && active) openForm(rpcPayload(data));
+        return JSON.stringify({ ok: isCurrent() && active });
+      });
+      nextRoom.registerRpcMethod("start_human_chat", async data => {
+        if (isCurrent() && active) startHuman(rpcPayload(data));
+        return JSON.stringify({ ok: isCurrent() && active });
+      });
+    }
+    try {
+      await nextRoom.connect(session.url, session.token);
+      if (isCurrent()) presence("Online");
+      else await nextRoom.disconnect();
+    } catch (_) {
+      if (isCurrent()) {
+        presence("Connection unavailable");
+        system(`${person} could not connect. Please try again.`);
+      }
+    } finally {
+      if (isCurrent()) { connecting = false; commandState(); }
+    }
+  }
+  function rpcPayload(data) {
+    try { return JSON.parse(data?.payload || "{}"); }
+    catch (_) { return {}; }
+  }
+  function requestConnection() {
+    if (connectionRequested || connecting || room?.state === "reconnecting") return;
+    connectionRequested = true;
+    presence("Connecting…");
+    commandState();
+    post("SUPPORT_CHAT_START_ALEXANDRA", { reconnect: Boolean(roomSession) });
+  }
+  function startHuman(details = {}) {
+    if (humanPending || mode !== "ALEXANDRA") return;
+    if (details.caseId && (details.livekitSession || details.status === "queued")) {
+      void applyHandoff({ ...details, status: details.livekitSession ? "live" : "queued" });
+      return;
+    }
+    if (!loggedIn) {
+      system("Sign in to your SKANDI account to contact a live agent. You can still submit a support request here.");
+      return;
+    }
+    humanPending = true;
+    setMode("HANDOFF_PENDING");
+    system("Connecting you with SKANDI Customer Service. Your messages will be passed along.");
+    post("SUPPORT_CHAT_START_HUMAN", { caseId, reason: details.reason, summary: details.summary, transcript: transcript.slice(-60).map(item => ({ role: { user: "customer", assistant: "alexandra", agent: "human-agent" }[item.role], text: item.content })) });
+  }
+  async function applyHandoff(payload) {
+    caseId = clean(payload.caseId, 160) || caseId;
+    humanPending = false;
+    if (payload.status === "live" && payload.livekitSession) {
+      if (!payload.resume) system(payload.message || "A SKANDI Customer Service agent can now join this conversation.");
+      await connectRoom(payload.livekitSession, "HUMAN");
+      return;
+    }
+    disconnect();
+    setMode(payload.status === "closed" ? "CLOSED" : "QUEUED");
+    system(payload.message || "Your request is in the Customer Service queue.");
+  }
+
+  async function send() {
+    const input = $("input"), text = clean(input.value);
+    if (!active || !text || sending || humanPending || mode === "QUEUED" || mode === "CLOSED") return;
+    if (mode === "HUMAN" && caseId) {
+      sending = true;
+      lastSend = text;
+      commandState();
+      post("SUPPORT_CHAT_HUMAN_MESSAGE", { caseId, content: text });
+      return;
+    }
+    if (mode !== "ALEXANDRA") return;
+    if (room?.state !== "connected") {
+      snapshot();
+      requestConnection();
+      return;
+    }
+    sending = true;
+    commandState();
+    const epoch = roomEpoch;
+    try {
+      await room.localParticipant.sendText(text, { topic: roomSession?.textTopic || ALEX_TOPIC });
+      if (epoch !== roomEpoch) return;
+      if (clean(input.value) === text) input.value = "";
+      message("user", text);
+    } catch (_) {
+      if (epoch === roomEpoch) system("The message could not be sent. It is still in the text box.");
+    } finally {
+      if (epoch === roomEpoch) { sending = false; commandState(); }
+    }
+  }
+  async function humanMessageSaved(payload) {
+    sending = false;
+    const text = clean(payload.sentMessage?.content || payload.sentMessage?.body || lastSend);
+    if (text && clean($("input").value) === lastSend) $("input").value = "";
+    lastSend = "";
+    message("user", text);
+    const session = payload.livekitSession || roomSession;
+    if (session && room?.state !== "connected") await connectRoom(session, "HUMAN");
+    if (text && room?.state === "connected") {
+      try {
+        await room.localParticipant.sendText(text, { topic: session?.textTopic || HUMAN_TOPIC, attributes: { caseId, messageId: String(payload.sentMessage?.messageId || payload.sentMessage?.id || ""), senderType: "customer" } });
+      } catch (_) { system("Your message was saved to the support case."); }
+    }
+    commandState();
+  }
+  function formPayload() {
+    const fullName = clean($("contactName").value, 200), names = fullName.split(/\s+/);
+    const bookingRef = clean($("bookingRef").value, 80);
+    return {
+      firstName: names[0] || "", lastName: names.slice(1).join(" "), fullName, email: clean($("contactEmail").value, 254),
+      category: $("category").value, subCategory: $("topic").value, bookingRef, pnr: bookingRef,
+      subject: clean($("subject").value, 240), message: clean($("description").value, 12000),
+      hasPir: $("support-chat-hasPir").value, pirNumber: clean($("support-chat-pirNumber").value, 80), bagTag: clean($("support-chat-bagTag").value, 80),
+      bagType: clean($("support-chat-bagType").value, 120), bagColor: clean($("support-chat-bagColor").value, 120), bagBrand: clean($("support-chat-bagBrand").value, 300),
+      source: "support-chat-form", sourcePage: pagePath
+    };
+  }
+
+  function applyHost(payload) {
+    configured = true;
+    active = payload.active === true;
+    pagePath = payload.pagePath || pagePath;
+    host.classList.toggle("sitewide", payload.global === true);
+    host.hidden = !active;
+    for (const audio of host.querySelectorAll("audio[data-support-track]")) audio.muted = !active;
+    if (typeof payload.open === "boolean") setPanel(active && payload.open);
+  }
+  function restore(payload) {
+    applyHost(payload);
+    if (!active) return;
+    transcript = Array.isArray(payload.messages) ? payload.messages.slice(-18) : [];
+    $("messages").replaceChildren();
+    transcript.forEach(renderMessage);
+    $("input").value = payload.draft || "";
+    caseId = clean(payload.caseId, 160);
+    if (payload.human && payload.human.status !== "live") void applyHandoff({ ...payload.human, caseId });
+    else if (payload.human?.status === "live" && !room) setMode("HUMAN");
+    if (payload.expired) system("The live session ended. Your messages are here. Try sending again to start a new connection.");
+  }
+  function forceClose() {
+    active = false;
+    connectionRequested = false;
+    sending = false;
+    humanPending = false;
+    lastSend = "";
+    disconnect();
+    caseId = "";
+    transcript = [];
+    loggedIn = false;
+    boot = {};
+    avatar = {};
+    $("messages").replaceChildren();
+    for (const input of host.querySelectorAll(".composer textarea, .sheet input, .sheet textarea, .sheet select")) input.value = "";
+    $("formSheet").classList.remove("open");
+    $("humanBtn").title = "Sign in for human chat";
+    setMode("ALEXANDRA");
+    setPanel(false);
+    host.hidden = true;
+  }
+
+  $("launcher").onclick = () => {
+    if (!active) return;
+    setPanel(true, true);
+    post("SUPPORT_CHAT_PANEL_OPEN");
+    if ((mode === "ALEXANDRA" || mode === "HUMAN") && (!room || room.state === "disconnected")) requestConnection();
+  };
+  $("support-chat-closeBtn").onclick = () => {
+    snapshot();
+    setPanel(false);
+    post("SUPPORT_CHAT_PANEL_CLOSE");
+    $("launcher").focus();
+  };
+  $("humanBtn").onclick = () => startHuman();
+  $("sendBtn").onclick = () => { void send(); };
+  $("input").onkeydown = event => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void send(); } };
+  $("input").oninput = event => {
+    event.target.style.height = "42px";
+    event.target.style.height = Math.min(event.target.scrollHeight, 112) + "px";
+    snapshot();
+  };
+  $("formBtn").onclick = () => openForm();
+  $("formClose").onclick = () => $("formSheet").classList.remove("open");
+  $("category").onchange = updateTopics;
+  $("support-chat-hasPir").onchange = updatePir;
+  $("submitForm").onclick = () => {
+    const input = formPayload();
+    if (!input.fullName || !input.email || !input.subject || !input.message) {
+      $("formNotice").textContent = !input.fullName || !input.email ? "Enter your name and email so Customer Service can reply." : "Subject and description are required.";
+      $("formNotice").classList.remove("hidden");
+      return;
+    }
+    post("SUPPORT_CHAT_SUBMIT_FORM", { input });
+  };
+
+  const ready = () => post("SUPPORT_CHAT_READY", { integrated: true });
+  window.addEventListener("message", event => {
+    const msg = event.data || {}, payload = msg.payload || {};
+    if (event.source !== window.parent || msg.source !== PARENT || (payload.instance && payload.instance !== instance)) return;
+    switch (msg.type) {
+      case "SUPPORT_CHAT_PING": ready(); break;
+      case "SUPPORT_CHAT_HOST_STATE": applyHost(payload); break;
+      case "SUPPORT_CHAT_RESTORE": restore(payload); break;
+      case "SUPPORT_CHAT_FORCE_CLOSE": forceClose(); break;
+      case "SUPPORT_CHAT_BOOTSTRAP":
+        // The published Help Center may still be on its prior Wix controller during rollout.
+        if (!configured && !payload.instance) applyHost({ active: true });
+        if (active) applyBoot(payload);
+        break;
+      case "SUPPORT_CHAT_OPEN":
+        if (!active) return;
+        if (payload.open !== false) setPanel(true);
+        if (payload.mode === "FORM") openForm(payload.formPrefill);
+        else if (payload.mode === "HANDOFF_PENDING") { humanPending = true; setMode("HANDOFF_PENDING"); }
+        else if (payload.alexandraSession) void connectRoom(payload.alexandraSession, "ALEXANDRA");
+        break;
+      case "SUPPORT_CHAT_HUMAN_HANDOFF": if (active) void applyHandoff(payload); break;
+      case "SUPPORT_CHAT_HUMAN_MESSAGE_SAVED": if (active) void humanMessageSaved(payload); break;
+      case "SUPPORT_CHAT_CASE_CREATED":
+        if (!active) return;
+        caseId = clean(payload.caseId, 160) || caseId;
+        $("formSheet").classList.remove("open");
+        system(payload.caseRef ? `Support request ${payload.caseRef} was created.` : "Your support request was created.");
+        break;
+      case "SUPPORT_CHAT_ERROR":
+        if (!active) return;
+        connectionRequested = false;
+        sending = false;
+        lastSend = "";
+        if (humanPending) { humanPending = false; setMode("ALEXANDRA"); }
+        if (payload.action === "connect") presence("Connection unavailable");
+        commandState();
+        system(payload.message || "Support action failed.");
+        break;
+    }
+  });
+  ready();
+  for (const delay of [900, 2600]) setTimeout(() => { if (!configured) ready(); }, delay);
+})();
+
+
+})();</script>
 <script data-skandi-part="store-checkout">(function(){
 const __root=window.document.getElementById("skandi-app-root");
 const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
