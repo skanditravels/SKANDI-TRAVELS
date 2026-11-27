@@ -3361,3 +3361,101 @@ body{background:#fff;color:var(--hybrid-text)}
   :root .ti-search-shell, :root .ti-sheet { max-width: 100%; }
   :root .ti-alexandra-launcher { display: none !important; }
 }
+
+/* Airline passenger guide */
+.ti-airline-guide{display:grid;gap:16px;max-width:1180px;margin:auto;color:var(--ti-navy)}
+.ti-airline-header{display:flex;align-items:center;gap:20px;padding:24px 28px;border:1px solid #dfe7eb;border-radius:18px;background:#fff}
+.ti-airline-logo{width:96px;height:64px;object-fit:contain;flex:none}
+.ti-airline-header h1{margin:0;font-size:clamp(26px,4vw,42px);font-weight:650;letter-spacing:-.04em;line-height:1.05}
+.ti-airline-code{display:block;margin-top:6px;color:#5b6e81;font-size:13px;letter-spacing:.07em}
+.ti-airline-links{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px 18px;margin-inline-start:auto}
+.ti-airline-links a{display:inline-flex;align-items:center;gap:6px;min-height:36px;text-decoration:none;color:#0a4678;font-size:13px;font-weight:650}
+.ti-airline-links a:hover{text-decoration:underline}
+.ti-airline-links svg{width:14px;height:14px}
+.ti-airline-guide .ti-section-nav-wrap{margin:0;border-radius:12px}
+.ti-airline-guide .ti-section-nav[data-mode="airline-tabs"]{display:flex;gap:4px;padding:5px 0}
+.ti-airline-guide .ti-section-nav[data-mode="airline-tabs"] .ti-section-link{font-size:13px;min-height:44px;padding:8px 15px;letter-spacing:0;text-transform:none;white-space:nowrap;border-radius:8px}
+.ti-airline-panel{display:grid;gap:12px;min-width:0}
+.ti-airline-panel[hidden],.ti-airline-guide [data-airline-fare][hidden]{display:none}
+.ti-airline-before{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr));gap:12px;align-items:start}
+.ti-airline-card,.ti-airline-disclosure{min-width:0;background:#fff;border:1px solid #dfe7eb;border-radius:14px;padding:20px 24px}
+.ti-airline-card h2{font-size:22px;font-weight:660;margin:0 0 14px;line-height:1.2;letter-spacing:-.025em}
+.ti-airline-card p,.ti-airline-disclosure p{white-space:pre-line;margin:10px 0 0;color:#344b61;font-size:14px;line-height:1.55}
+.ti-airline-card p.ti-airline-muted{font-size:13px;color:#526877}
+.ti-airline-fare-label{font-weight:650;font-size:13px;display:block;margin-bottom:5px}
+.ti-airline-card select,.ti-walkaround-bar select{width:100%;min-height:42px;min-width:0;padding:7px 30px 7px 10px;color:inherit;background-color:#fff;border:1px solid #cbd7df;border-radius:8px;font-family:inherit;font-size:14px}
+.ti-airline-bags,.ti-airline-deadlines{margin:0;padding:0;list-style:none}
+.ti-airline-bags>div,.ti-airline-deadlines li{display:grid;gap:5px;padding:11px 0;border-bottom:1px solid #e5ecf0;line-height:1.42}
+.ti-airline-bags dt,.ti-airline-deadlines strong{font-weight:690;font-size:14px}
+.ti-airline-bags dd,.ti-airline-deadlines span{margin:0;color:#344b61;font-size:14px;overflow-wrap:anywhere}
+.ti-airline-bags>div:last-child,.ti-airline-deadlines li:last-child{border-bottom:0}
+.ti-airline-disclosure{padding-block:0}
+.ti-airline-disclosure summary{cursor:pointer;padding:14px 0;font-size:15px;font-weight:680}
+.ti-airline-disclosure[open]{padding-bottom:14px}
+.ti-airline-disclosure>div+div{border-top:1px solid #e5ecf0;margin-top:12px;padding-top:12px}
+.ti-airline-disclosure h3{margin:4px 0;font-size:14px}
+.ti-airline-disclosure small{display:block;color:#526877;font-size:13px}
+.ti-airline-cabins{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:8px 20px}
+.ti-airline-cabins li{padding:7px 0;font-size:14px;border-bottom:1px solid #e5ecf0}
+
+.ti-airline-aircraft{min-width:0}
+.ti-walkaround{color:#0c2a47;border:1px solid #d5e1ea;border-radius:16px;overflow:hidden;background:white}
+.ti-walkaround-bar{display:grid;grid-template-columns:1fr minmax(180px,.86fr) minmax(180px,1fr);align-items:end;gap:12px;padding:16px 20px;background:#f4f8fb}
+.ti-walkaround-bar h2{margin:0;align-self:center;font-size:clamp(22px,3vw,28px);font-weight:660;letter-spacing:-.025em}
+.ti-walkaround-bar label{display:grid;gap:4px;min-width:0;font-size:13px;font-weight:650}
+.ti-walkaround-location{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 20px;min-height:54px}
+.ti-walkaround-location h3{margin:0;font-size:17px;line-height:1.25;font-weight:660}
+.ti-walkaround-location button,.ti-walkaround-moves button,.ti-walkaround-point-list button{min-height:42px;padding:5px 10px;border:0;border-radius:6px;color:#0b5081;background:transparent;font:inherit;font-size:14px;font-weight:650}
+.ti-walkaround-location button:hover,.ti-walkaround-point-list button:hover{background:#edf5fa}
+.ti-walkaround-frame{position:relative;overflow:hidden;isolation:isolate;height:clamp(298px,51vw,620px);background:#081728;touch-action:pan-y;outline-offset:-4px}
+.ti-walkaround-frame[data-draggable="true"]{cursor:grab;touch-action:none}
+.ti-walkaround-frame[data-draggable="true"]:active{cursor:grabbing}
+.ti-walkaround-photo,.ti-walkaround-panorama{position:absolute;display:block;max-width:none;max-height:none;user-select:none;pointer-events:none}
+.ti-walkaround-panorama{inset:0;width:100%;height:100%}
+.ti-walkaround-photo{animation:ti-walkaround-reveal .22s ease-out}
+@keyframes ti-walkaround-reveal{from{opacity:0}to{opacity:1}}
+.ti-walkaround-message{position:absolute;inset:0;display:grid;place-content:center;margin:0;color:#e9f3fb;font-size:14px}
+.ti-walkaround-pin,.ti-walkaround-tools button,.ti-walkaround-detail button{display:grid;place-items:center;border:1px solid #d6e7ed;min-width:44px;min-height:44px;padding:0;font:inherit;font-size:20px;font-weight:720;cursor:pointer}
+.ti-walkaround-pin{position:absolute;z-index:1;transform:translate(-50%,-50%);border-radius:50%;color:#102b43;background:#f8fcff;box-shadow:0 0 0 4px #071c3b57,0 4px 12px #08274688}
+.ti-walkaround-pin[data-kind="move"]{color:white;background:#0a416e}
+.ti-walkaround-pin[data-kind="inspect"]{color:#123a43;background:#c6eeee}
+.ti-walkaround-pin:hover{outline:2px solid #82deec}
+.ti-walkaround-tools{display:flex;gap:4px;position:absolute;bottom:10px;right:10px;z-index:2;pointer-events:none}
+.ti-walkaround-tools button{border-radius:8px;background:#101f2ddc;color:#fff;pointer-events:auto}
+.ti-walkaround-tools button:disabled{opacity:.5;cursor:default}
+.ti-walkaround-camera :focus-visible,.ti-airline-guide select:focus-visible{outline:3px solid #1a82aa;outline-offset:2px}
+.ti-walkaround-frame:focus-visible{outline-offset:-4px}
+.ti-walkaround-detail{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 20px;background:#f0f8fb;border-bottom:1px solid #d9e8ef;overflow-wrap:anywhere}
+.ti-walkaround-detail h3{margin:3px 0;font-size:17px}
+.ti-walkaround-detail p{font-size:14px;line-height:1.5;margin:7px 0;white-space:pre-line}
+.ti-walkaround-detail img{display:block;max-width:min(100%,200px);max-height:144px;object-fit:contain}
+.ti-walkaround-detail button{align-self:start;border-radius:8px;color:#0c2a47;background:#fff}
+.ti-walkaround-moves{display:flex;flex-wrap:wrap;gap:6px;margin:9px 20px}
+.ti-walkaround-moves button{border:1px solid #d6e3eb;background:#f4f8fb;padding:6px 13px;text-align:left}
+.ti-walkaround-moves button:hover{background:#dfeffa}
+.ti-walkaround-point-list,.ti-walkaround-cabins{margin:0 20px;padding:10px 0;border-bottom:1px solid #e5ecf0}
+.ti-walkaround-point-list summary,.ti-walkaround-cabins summary{cursor:pointer;font-size:14px;font-weight:650}
+.ti-walkaround-point-list ul{display:flex;flex-wrap:wrap;list-style:none;gap:4px 8px;padding:0;margin:8px 0 0}
+.ti-walkaround-cabins dl{display:grid;gap:8px;margin:10px 0 0}
+.ti-walkaround-cabins dl div{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.ti-walkaround-cabins dt{font-weight:650;font-size:14px}
+.ti-walkaround-cabins dd{margin:0;color:#526877;font-size:13px;text-align:right}
+.ti-walkaround-credit{color:#526877;margin:11px 20px;font-size:13px;line-height:1.55}
+.ti-walkaround-empty{border:1px solid #e5ecf0;border-radius:12px;margin:0;padding:20px;background:#fff;color:#40586a;font-size:14px}
+.ti-walkaround .ti-walkaround-empty{border:0;border-radius:0}
+@media(max-width:640px){
+  .ti-airline-guide{gap:12px}
+  .ti-airline-header{gap:12px;flex-wrap:wrap;padding:14px}
+  .ti-airline-logo{width:69px;height:45px}
+  .ti-airline-links{flex:0 0 100%;justify-content:flex-start;margin:0}
+  .ti-airline-guide .ti-section-nav[data-mode="airline-tabs"] .ti-section-link{padding-inline:9px}
+  .ti-airline-card,.ti-airline-disclosure{padding-inline:14px}
+  .ti-walkaround-bar{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;padding:13px}
+  .ti-walkaround-bar h2{grid-column:1/-1}
+  .ti-walkaround-location{padding-inline:13px}
+  .ti-walkaround-frame{height:clamp(230px,67vw,420px)}
+  .ti-walkaround-location button{flex-shrink:0}
+  .ti-walkaround-moves,.ti-walkaround-credit,.ti-walkaround-point-list,.ti-walkaround-cabins{margin-inline:13px}
+}
+@media(prefers-reduced-motion:reduce){.ti-walkaround-photo{animation:none}}
+.ti-walkaround-frame .ti-walkaround-detail{position:absolute;z-index:3;left:12px;right:12px;bottom:62px;max-width:390px;max-height:55%;overflow:auto;overscroll-behavior:contain;border-radius:10px;box-shadow:0 8px 28px #091b3a66;cursor:default;touch-action:pan-y}

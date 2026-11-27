@@ -8,7 +8,7 @@ function extract(name){const start=source.indexOf(`async function ${name}(`);ass
 function links(records){
  const calls=[];const clean=v=>String(v??'').trim(),upper=v=>clean(v).toUpperCase();
  const select=async(table,query)=>{calls.push({table,query});return (records[table]||[]).filter(row=>Object.entries(query).every(([k,v])=>k==='select'||k==='limit'||String(row[k])===v.slice(3)))};
- const context=vm.createContext({clean,upper,select,qeq:v=>'eq.'+v});vm.runInContext(extract('validateAircraftChildLinks')+'\nthis.validate=validateAircraftChildLinks',context);return {validate:context.validate,calls};
+ const context=vm.createContext({clean,upper,select,isUuid:v=>/^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(v),qeq:v=>'eq.'+v});vm.runInContext(extract('validateAircraftChildLinks')+'\nthis.validate=validateAircraftChildLinks',context);return {validate:context.validate,calls};
 }
 test('cabin images cannot point to another aircraft and blank cabin is allowed',async()=>{
  const {validate}=links({travel_info_aircraft:[{id:'a'}],travel_info_aircraft_cabins:[{id:'own',aircraft_id:'a'},{id:'other',aircraft_id:'b'}]});
@@ -29,7 +29,27 @@ test('walkthrough links stay within the aircraft and cannot target the same scen
  await assert.rejects(()=>validate('scene',{aircraft_id:'a',scene_code:'FIRST',forward_scene_code:'FIRST'}),/itself/);
 });
 test('aircraft form provides linked selections and a creation path',()=>{
- assert.match(ui,/\+ Add Aircraft/);assert.match(ui,/Operating airline/);assert.match(ui,/cabin_ref:cabins\.map/);assert.match(ui,/scene_ref:scenes\.filter/);assert.match(ui,/onCommit=.*INVENTORY_V9_SAVE_AIRCRAFT_CHILD/);
+ assert.match(ui,/\+ Add Aircraft/);assert.match(ui,/Operating airline/);assert.match(ui,/cabin_ref:cabins\.map/);assert.match(ui,/scene_ref:scenes\.filter/);assert.match(ui,/request\("INVENTORY_V9_SAVE_AIRCRAFT_CHILD",\{kind,item\}\)/);
+});
+test('movement points target active images on the same aircraft',async()=>{
+ const from='00000000-0000-4000-8000-000000000001';
+ const view='00000000-0000-4000-8000-000000000002';
+ const other='00000000-0000-4000-8000-000000000003';
+ const inactive='00000000-0000-4000-8000-000000000004';
+ const {validate}=links({
+  travel_info_aircraft_walk_scenes:[{id:from,aircraft_id:'a',active:true,image_url:'https://media.example/scene.jpg'}],
+  travel_info_aircraft_views:[
+   {id:view,aircraft_id:'a',active:true,image_url:'https://media.example/cabin.jpg'},
+   {id:other,aircraft_id:'b',active:true,image_url:'https://media.example/other.jpg'},
+   {id:inactive,aircraft_id:'a',active:false,image_url:'https://media.example/archived.jpg'}
+  ]
+ });
+ await assert.doesNotReject(()=>validate('sceneHotspot',{scene_id:from,action:'MOVE:VIEW:'+view}));
+ await assert.rejects(()=>validate('sceneHotspot',{scene_id:from,action:'MOVE:SCENE:'+from}),/own scene/);
+ await assert.rejects(()=>validate('sceneHotspot',{scene_id:from,action:'MOVE:VIEW:'+other}),/this aircraft/);
+ await assert.rejects(()=>validate('sceneHotspot',{scene_id:from,action:'MOVE:VIEW:'+inactive}),/active destination/);
+ await assert.rejects(()=>validate('sceneHotspot',{scene_id:from,action:'MOVE:'}),/destination scene/);
+ await assert.doesNotReject(()=>validate('sceneHotspot',{scene_id:from,action:'MOVE:VIEW:'+inactive,active:false}));
 });
 test('generated child codes do not collide with existing or inactive items',()=>{
  const start=ui.indexOf('function nextAircraftChildCode('),end=ui.indexOf('\nfunction AircraftStudio(',start);assert.ok(start>=0&&end>start);

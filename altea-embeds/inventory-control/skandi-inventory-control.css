@@ -577,3 +577,37 @@ h1 { margin: 4px 0 0; font-size: 20px; font-weight: normal; color: var(--navy); 
 @media (prefers-reduced-motion: reduce) {
   .sidebar { transition: none; }
 }
+
+/* Aircraft walkaround authoring */
+.ic-walkaround-editor{margin-top:16px;min-width:0}
+.ic-walkaround-settings,.ic-walkaround-workspace,.ic-walkaround-point-form{display:grid;gap:14px;align-items:start}
+.ic-walkaround-settings{grid-template-columns:repeat(2,minmax(0,1fr));margin-block:12px}
+.ic-walkaround-workspace{grid-template-columns:minmax(0,1.7fr) minmax(235px,1fr)}
+.ic-walkaround-point-form{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+.ic-walkaround-position>p{margin:1px 0 10px}
+.ic-walkaround-position output{display:block;margin:9px 0;font-variant-numeric:tabular-nums;color:var(--muted)}
+.ic-walkaround-settings .field>span,.ic-walkaround-point-form .field>span{font-weight:700}
+.ic-walkaround-scene-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;margin-bottom:7px}
+.ic-walkaround-scene-head h3{margin:0;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.ic-walkaround-image{position:relative;width:fit-content;max-width:100%;min-width:0;background:#10233a;line-height:0}
+.ic-walkaround-image img{display:block;max-width:100%;max-height:55svh;object-fit:contain;width:auto;height:auto}
+.ic-walkaround-image.is-positioning{cursor:crosshair}
+.ic-walkaround-image.is-positioning img{user-select:none;pointer-events:none}
+.ic-walkaround-mark{position:absolute;display:grid;place-items:center;left:50%;top:50%;width:34px;height:34px;border-radius:50%;border:2px solid white;transform:translate(-50%,-50%);background:#073964;color:white;font-size:16px;font-weight:700;line-height:1;box-shadow:0 2px 8px #10233a88}
+.ic-walkaround-image.is-positioning .ic-walkaround-mark{pointer-events:none}
+.ic-walkaround-points{min-width:0}
+.ic-walkaround-point-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:10px 8px;border:0;border-bottom:1px solid #e2e9ed;background:white;color:inherit;font:inherit}
+.ic-walkaround-point-row:hover{background:#edf7fb}
+.ic-walkaround-point-row span{color:#4b667c;text-align:right}
+@media(max-width:790px){
+  .ic-walkaround-workspace,.ic-walkaround-point-form{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .ic-walkaround-settings{grid-template-columns:1fr}
+}
+.ic-walkaround-disclosure{margin:0 0 12px;padding:8px 10px;border:1px solid #dce7ed;background:#f6fafc}
+.ic-walkaround-disclosure summary{cursor:pointer;font-weight:650}
+.ic-walkaround-disclosure[open] .field{margin-top:8px}
+.ic-walkaround-fleet{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-block:8px}
+.ic-walkaround-fleet-link{border:0;background:transparent;color:var(--navy);padding:6px 0;text-align:left;font:inherit;font-weight:700;cursor:pointer}
+.ic-walkaround-fleet-link:hover{text-decoration:underline}
