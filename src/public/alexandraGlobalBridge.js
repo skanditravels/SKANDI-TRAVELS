@@ -363,7 +363,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
       }
       return;
     }
-    if (host !== currentHost || host.element !== element || host.instance !== instance) return;
+    if (!host || host !== currentHost || host.element !== element || host.instance !== instance) return;
     const requestId = clean(payload.requestId || message.requestId, 120);
     switch (message.type) {
       case 'SUPPORT_CHAT_START_ALEXANDRA':
