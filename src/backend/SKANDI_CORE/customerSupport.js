@@ -449,6 +449,7 @@ function normalizeMessage(row = {}) {
   const senderName = clean(row.sender_name || p.senderName || (senderTypeRaw === "alexandra" ? "Alexandra" : agentLike ? "SKANDI Customer Service" : "Traveler"), 200);
   const id = clean(row.message_id || row.id, 160);
   const text = clean(row.message || p.message, 30000);
+  const deliveryStatus = lower(row.channel, 40) === "whatsapp" && senderTypeRaw === "agent" ? clean(p.twilioStatus || p.metaStatus, 30) : "";
   return {
     id,
     messageId: id,
@@ -462,15 +463,17 @@ function normalizeMessage(row = {}) {
     private: privateNote,
     kind: privateNote ? "internal" : "public",
     channel: clean(row.channel || p.channel || (privateNote ? "internal" : "chat"), 80),
+    ...(deliveryStatus ? { deliveryStatus, deliveryErrorCode: clean(p.twilioErrorCode || p.metaFailureCode, 30) } : {}),
     message_type: agentLike ? "outgoing" : "incoming"
   };
 }
 
-async function messagesByCaseId(caseId) {
+async function messagesByCaseId(caseId, { latest = false } = {}) {
   const id = clean(caseId, 160);
   if (!id) return [];
-  const rows = await sbRows(DB.messages, { select: "*", case_id: `eq.${id}`, order: "created_at.asc", limit: 1000 });
-  return rows.map(normalizeMessage);
+  const order = latest ? "created_at.desc.nullslast,id.desc" : "created_at.asc";
+  const rows = await sbRows(DB.messages, { select: "*", case_id: `eq.${id}`, order, limit: 1000 });
+  return (latest ? rows.reverse() : rows).map(normalizeMessage);
 }
 
 async function insertSupportMessage(caseRow, { content, senderType = "customer", senderName = "Traveler", memberId = "", wixMemberId = "", channel = "chat", privateNote = false, source = "support", payload = {} } = {}) {
@@ -830,10 +833,11 @@ export async function getAgentSupportCaseCore({ caseId, includeLiveKit = true, s
   const row = await findCaseRecord(id);
   if (!row) throw new Error("SUPPORT_CASE_NOT_FOUND");
   const supportCase = normalizeCase(row);
-  const history = await messagesByCaseId(supportCase.caseId);
+  const isWhatsApp = supportCase.source === "whatsapp";
+  const history = await messagesByCaseId(supportCase.caseId, { latest: isWhatsApp });
   supportCase.history = history;
   supportCase.conversationHistory = history;
-  const livekitSession = includeLiveKit === false
+  const livekitSession = includeLiveKit === false || isWhatsApp
     ? null
     : await issueSupportLiveKitSessionCore({ caseId: supportCase.caseId, role: "agent", subjectId: agent.skId || agent.id || agent.email, participantName: agent.name }).catch(() => null);
   if (silentSync !== true) await audit("AGENT_CASE_OPENED", { caseId: supportCase.caseId, provider: "LiveKit", includeLiveKit: includeLiveKit !== false }, agent);
@@ -844,6 +848,7 @@ export async function replyAgentSupportCaseCore({ caseId, content, privateNote =
   const agent = await requireSupportAgentCore();
   const row = await findCaseRecord(clean(caseId, 160));
   if (!row) throw new Error("SUPPORT_CASE_NOT_FOUND");
+  if (!privateNote && row.source === "whatsapp") throw new Error("Use the WhatsApp reply action for this case.");
   const sentMessage = await insertSupportMessage(row, { content, senderType: "agent", senderName: agent.name, memberId: agent.memberId || agent.id, wixMemberId: agent.memberId, channel: privateNote ? "internal" : "livekit", privateNote: Boolean(privateNote), source: privateNote ? "agent-internal-note" : "agent-reply", payload: { agentSkId: agent.skId } });
   await updateCaseRecord(row, { assigned_agent_id: clean(agent.id || agent.skId || agent.email, 200) || null, assigned_agent_name: agent.name, status: "open" }, { liveHandoff: privateNote ? casePayload(row).liveHandoff : true });
   const livekitSession = privateNote ? null : await issueSupportLiveKitSessionCore({ caseId: caseIdOf(row), role: "agent", subjectId: agent.skId || agent.id || agent.email, participantName: agent.name }).catch(() => null);

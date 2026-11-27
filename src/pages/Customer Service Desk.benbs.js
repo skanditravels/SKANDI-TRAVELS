@@ -101,7 +101,12 @@ function updateFilters(payload) {
   currentFilters = { ...currentFilters, ...next };
   return currentFilters;
 }
-function errorText(error) { return String(error?.publicMessage || error?.message || "Customer service action failed.").slice(0, 300); }
+function errorText(error) {
+  const message = String(error?.publicMessage || error?.message || "Customer service action failed.");
+  if (message.includes("TWILIO_WHATSAPP_NOT_CONFIGURED")) return "The Twilio WhatsApp sender has not been configured in Wix.";
+  if (message.includes("WHATSAPP_24_HOUR_WINDOW_CLOSED")) return "The WhatsApp reply window has closed. An approved template is required to contact this traveler.";
+  return message.slice(0, 300);
+}
 
 async function automationSnapshot() {
   try {
@@ -241,23 +246,33 @@ $w.onReady(function () {
         case "AGENT_REPLY": {
           const caseId = caseIdOf(payload);
           activeCaseId = caseId;
-          // Public replies to WhatsApp-origin cases must travel through Meta, not LiveKit.
-          // Check the canonical case source; never trust the channel claimed by HTML.
+          // Route by the stored case source rather than the channel supplied by the embed.
           const current = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
           const isWhatsApp = String(current?.case?.source || "").toLowerCase() === "whatsapp" ||
             String(current?.case?.sourceChannel || "").toUpperCase() === "WHATSAPP";
           const privateNote = payload.privateNote === true || payload.mode === "internal";
           const result = isWhatsApp && !privateNote
-            ? await replyAgentWhatsApp({ caseId, content: replyOf(payload) })
+            ? await replyAgentWhatsApp({ caseId, content: replyOf(payload), replyId: payload.replyId })
             : await replyAgentSupportCase({ caseId, content: replyOf(payload), privateNote });
+          if (result.ok === false) {
+            post(html, "AGENT_ERROR", { action: message.type, message: result.message, retryWithNewId: result.retryWithNewId === true }, requestId);
+            return;
+          }
           const updates = updatesOf(payload);
-          if (Object.keys(updates).length) await updateAgentSupportCase({ caseId, updates });
-          const detail = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
-          post(html, "AGENT_REPLY_SENT", { ...objectOf(detail), sentMessage: result.sentMessage,
+          let detail;
+          try {
+            if (Object.keys(updates).length) await updateAgentSupportCase({ caseId, updates });
+            detail = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
+          } catch (error) {
+            if (!result.providerAccepted) throw error;
+            console.warn("[Customer Service Center] WhatsApp reply accepted. Case refresh is pending.");
+          }
+          post(html, "AGENT_REPLY_SENT", { ...objectOf(detail), caseId, sentMessage: result.sentMessage,
             privateNote: privateNote, livekitSession: isWhatsApp ? null : result.livekitSession,
             providerAccepted: result.providerAccepted === true,
             deliveryConfirmed: result.deliveryConfirmed === true }, requestId);
-          await refreshListAfterMutation(html, requestId);
+          if (result.providerAccepted) await refreshAgentState(html);
+          else await refreshListAfterMutation(html, requestId);
           return;
         }
 

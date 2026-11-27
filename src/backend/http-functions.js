@@ -13,6 +13,7 @@ import {
 } from "backend/SKANDI_CORE/customerSupport";
 import { verifyAndRecordDuffelAssistantWebhookCore } from "backend/SKANDI_CORE/duffelAssistant";
 import { verifyWhatsAppWebhookChallengeCore, receiveWhatsAppWebhookCore } from "backend/SKANDI_CORE/whatsAppCustomerCare";
+import { receiveTwilioWhatsAppCore, receiveTwilioWhatsAppStatusCore } from "backend/SKANDI_CORE/twilioWhatsApp";
 import { getPublicTravelInfoPayloadCore } from "backend/SKANDI_CORE/publicContent";
 import { applyInventoryAuthorityToTravelInfoCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
 import { getStoreEmailRecommendationsCore } from "backend/SKANDI_CORE/storefront";
@@ -272,6 +273,33 @@ export async function post_skandiWhatsAppWebhook(request) {
     // A transient failure must not be falsely acknowledged; Meta may retry.
     return serverError(responseBody({ ok: false, error: "WHATSAPP_WEBHOOK_RETRY_REQUIRED" }));
   }
+}
+
+async function twilioWhatsAppWebhook(request, receive) {
+  try {
+    const url = String(request.url || "");
+    const queryStart = url.indexOf("?");
+    await receive({
+      raw: await request.body.text(),
+      signature: header(request, "X-Twilio-Signature"),
+      contentType: header(request, "Content-Type"),
+      query: queryStart === -1 ? "" : url.slice(queryStart)
+    });
+    return ok({ headers: { "Content-Type": "text/xml; charset=utf-8", "Cache-Control": "no-store" }, body: "<Response/>" });
+  } catch (error) {
+    if (error?.code === "TWILIO_WHATSAPP_UNAUTHORIZED") return forbidden(responseBody({ ok: false, error: "UNAUTHORIZED" }));
+    if (error?.code === "TWILIO_WHATSAPP_BAD_REQUEST") return badRequest(responseBody({ ok: false, error: "INVALID_REQUEST" }));
+    console.error("[Twilio WhatsApp] Webhook processing failed.", { code: error?.code || "TWILIO_WHATSAPP_WEBHOOK_FAILED" });
+    return serverError(responseBody({ ok: false, error: "TWILIO_WHATSAPP_WEBHOOK_FAILED" }));
+  }
+}
+
+export function post_skandiTwilioWhatsAppInbound(request) {
+  return twilioWhatsAppWebhook(request, receiveTwilioWhatsAppCore);
+}
+
+export function post_skandiTwilioWhatsAppStatus(request) {
+  return twilioWhatsAppWebhook(request, receiveTwilioWhatsAppStatusCore);
 }
 
 // Read-only public product suggestions for Wix's Send HTTP request automation action.
