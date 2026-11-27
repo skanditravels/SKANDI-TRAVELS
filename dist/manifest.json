@@ -859,8 +859,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "6f86accd1f4e03b163e9c2d0d714161d6e8f4f87794270373494b6674cf1f607",
-      "bytes": 505269
+      "sha256": "352b88ef105a61d61c36e1289cc649d45868618145acd76d918c7cdfe74697a6",
+      "bytes": 480924
     },
     {
       "key": "transfers",
@@ -2610,8 +2610,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "c4f66f5d483ac3db07cd1c4ec0cd324b8345f3f35de053a4e9685dd6f9888805",
-      "bytes": 381702
+      "sha256": "4f5c9f7c223c746d9286633f0cbe2ee39e8f8446475f950e06c7faee82f63087",
+      "bytes": 387906
     },
     {
       "key": "uniformCenter",

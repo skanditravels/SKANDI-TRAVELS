@@ -1115,6 +1115,40 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 @media (prefers-reduced-motion: reduce) {
   #skandi-app-root .sidebar { transition: none; }
 }
+
+/* Aircraft walkaround authoring */
+#skandi-app-root .ic-walkaround-editor{margin-top:16px;min-width:0}
+#skandi-app-root .ic-walkaround-settings,#skandi-app-root .ic-walkaround-workspace,#skandi-app-root .ic-walkaround-point-form{display:grid;gap:14px;align-items:start}
+#skandi-app-root .ic-walkaround-settings{grid-template-columns:repeat(2,minmax(0,1fr));margin-block:12px}
+#skandi-app-root .ic-walkaround-workspace{grid-template-columns:minmax(0,1.7fr) minmax(235px,1fr)}
+#skandi-app-root .ic-walkaround-point-form{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+#skandi-app-root .ic-walkaround-position>p{margin:1px 0 10px}
+#skandi-app-root .ic-walkaround-position output{display:block;margin:9px 0;font-variant-numeric:tabular-nums;color:var(--muted)}
+#skandi-app-root .ic-walkaround-settings .field>span,#skandi-app-root .ic-walkaround-point-form .field>span{font-weight:700}
+#skandi-app-root .ic-walkaround-scene-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;margin-bottom:7px}
+#skandi-app-root .ic-walkaround-scene-head h3{margin:0;min-width:0;overflow-wrap:anywhere;font-size:15px}
+#skandi-app-root .ic-walkaround-image{position:relative;width:fit-content;max-width:100%;min-width:0;background:#10233a;line-height:0}
+#skandi-app-root .ic-walkaround-image img{display:block;max-width:100%;max-height:55svh;object-fit:contain;width:auto;height:auto}
+#skandi-app-root .ic-walkaround-image.is-positioning{cursor:crosshair}
+#skandi-app-root .ic-walkaround-image.is-positioning img{user-select:none;pointer-events:none}
+#skandi-app-root .ic-walkaround-mark{position:absolute;display:grid;place-items:center;left:50%;top:50%;width:34px;height:34px;border-radius:50%;border:2px solid white;transform:translate(-50%,-50%);background:#073964;color:white;font-size:16px;font-weight:700;line-height:1;box-shadow:0 2px 8px #10233a88}
+#skandi-app-root .ic-walkaround-image.is-positioning .ic-walkaround-mark{pointer-events:none}
+#skandi-app-root .ic-walkaround-points{min-width:0}
+#skandi-app-root .ic-walkaround-point-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:10px 8px;border:0;border-bottom:1px solid #e2e9ed;background:white;color:inherit;font:inherit}
+#skandi-app-root .ic-walkaround-point-row:hover{background:#edf7fb}
+#skandi-app-root .ic-walkaround-point-row span{color:#4b667c;text-align:right}
+@media(max-width:790px){
+  #skandi-app-root .ic-walkaround-workspace,#skandi-app-root .ic-walkaround-point-form{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  #skandi-app-root .ic-walkaround-settings{grid-template-columns:1fr}
+}
+#skandi-app-root .ic-walkaround-disclosure{margin:0 0 12px;padding:8px 10px;border:1px solid #dce7ed;background:#f6fafc}
+#skandi-app-root .ic-walkaround-disclosure summary{cursor:pointer;font-weight:650}
+#skandi-app-root .ic-walkaround-disclosure[open] .field{margin-top:8px}
+#skandi-app-root .ic-walkaround-fleet{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-block:8px}
+#skandi-app-root .ic-walkaround-fleet-link{border:0;background:transparent;color:var(--navy);padding:6px 0;text-align:left;font:inherit;font-weight:700;cursor:pointer}
+#skandi-app-root .ic-walkaround-fleet-link:hover{text-decoration:underline}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -2594,10 +2628,10 @@ function RepeatSchemaEditor({field,record,update,records}){
 }
 const AIRLINE_LEGACY_FIELDS={"details.checkIn":"checkInDeadline","details.boarding":"boarding","details.lounges":"lounges","details.loyaltyProgram":"loyaltyProgram","details.loyaltyProgramUrl":"loyaltyProgramUrl","details.contactUrl":"contactUrl","details.baggageAllowance":"baggageAllowence","details.foodDrinksJson":"foodDrinksJson","details.wifiOnboardJson":"wifiOnboardJson","details.ticketTypesJson":"ticketTypesJson","details.childrenInfantsJson":"childrenInfantsJson","details.delaysCancellationsJson":"delayCancellationJson","details.damagedBaggageJson":"damagedBaggageJson","details.lostFoundJson":"lostFoundJson","details.quickFactsJson":"quickFactsJson","details.cabinsJson":"cabinsJson","details.hubsJson":"hubsJson","details.fleetSummaryJson":"fleetSummaryJson","details.sourceUrlsJson":"sourceUrlsJson"};
 const AIRLINE_GROUPS=[
-  {id:"profile",label:"Airline profile",paths:["icaoCode","shortName","alliance","brandGroup","country","city","website","contactUrl","summary","loyaltyProgram","loyaltyProgramUrl","quickFactsJson"]},
-  {id:"airport",label:"At the airport",paths:["hubsJson","checkIn","boarding","lounges"]},
-  {id:"onboard",label:"Cabins & onboard",paths:["cabinsJson","foodDrinksJson","wifiOnboardJson","fleetSummaryJson"]},
-  {id:"fares",label:"Fares & baggage",paths:["ticketTypesJson","baggageAllowance","childrenInfantsJson"]},
+  {id:"before",label:"Baggage & check-in",paths:["baggageAllowance","checkIn","boarding","lounges","childrenInfantsJson"]},
+  {id:"onboard",label:"On board",paths:["cabinsJson","foodDrinksJson","wifiOnboardJson","ticketTypesJson"]},
+  {id:"fleet",label:"Fleet & walkaround",paths:["fleetSummaryJson"]},
+  {id:"profile",label:"Airline profile",paths:["icaoCode","shortName","alliance","brandGroup","country","city","website","contactUrl","summary","loyaltyProgram","loyaltyProgramUrl","quickFactsJson","hubsJson"]},
   {id:"support",label:"Disruptions & sources",paths:["delaysCancellationsJson","damagedBaggageJson","lostFoundJson","sourceUrlsJson"]}
 ];
 function airlineFieldValue(record,field){
@@ -2637,12 +2671,14 @@ function AirlineQuickFactsEditor({value,record,onChange}){
   const extras=rows.map((item,index)=>({item,index})).filter(x=>!isDerived(x.item));
   return html`<div className="smartgroup full"><div className="paneltitle"><span>Additional airline facts</span><button type="button" className="btn small" onClick=${()=>onChange([...rows,{label:"",value:""}])}>+ Add fact</button></div><div className="sub">IATA, ICAO and alliance come from the airline profile and do not need to be entered again.</div>${extras.map(({item,index})=>html`<div className="smartobject"><div className="formgrid"><${Field} label="Fact" value=${item.label||""} onChange=${v=>onChange(rows.map((x,i)=>i===index?{...x,label:v}:x))}/><${Field} label="Value" value=${item.value||""} onChange=${v=>onChange(rows.map((x,i)=>i===index?{...x,value:v}:x))}/></div><button type="button" className="btn small danger" onClick=${()=>onChange(rows.filter((_,i)=>i!==index))}>Remove fact</button></div>`)}</div>`;
 }
-function AirlineDetailsEditor({record,update,records,relations=[]}){
-  const [group,setGroup]=useState("profile");
+function AirlineDetailsEditor({record,update,records,relations=[],openAircraft}){
+  const [group,setGroup]=useState("before");
   const selected=AIRLINE_GROUPS.find(x=>x.id===group)||AIRLINE_GROUPS[0];
   const fields=schemaFields("AIRLINE","details").filter(f=>selected.paths.includes(f.path.split(".").pop()));
-  return html`<div><div className="notice">Maintain the airline profile by topic. Link its country, supplier and primary hub under Related inventory. Check fare and baggage information against the operating airline.</div>
+  return html`<div><div className="notice">Edit the passenger guide here. Use Related inventory to link the airline’s country, supplier and primary hub.</div>
     <div className="tabs">${AIRLINE_GROUPS.map(g=>html`<button type="button" className=${`tab ${group===g.id?"active":""}`} onClick=${()=>setGroup(g.id)}>${g.label}</button>`)}</div>
+    ${group==="fleet"?html`<div className="ic-walkaround-fleet notice"><span>Use this list for fleet names. Manage aircraft scenes, movement and seat-row points in Aircraft & Cabin Studio.</span>
+      ${record.id&&openAircraft?html`<button type="button" className="btn small primary" onClick=${()=>openAircraft(record.id)}>Open Aircraft & Cabin Studio</button>`:null}</div>`:null}
     <div className="formgrid three">${group==="profile"?html`<${Field} label="IATA code" value=${record.code||""} onChange=${v=>update("code",v.toUpperCase())}/>`:null}${fields.map(field=>{const value=airlineFieldValue(record,field);const withValue={...record,details:{...(record.details||{}),[field.path.split(".").pop()]:value}};return field.path==="details.boarding"?html`<${AirlineBoardingEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.quickFactsJson"?html`<${AirlineQuickFactsEditor} value=${value} record=${record} onChange=${v=>update(field.path,v)}/>`:field.path==="details.baggageAllowance"?html`<${AirlineBaggageEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.country"&&relations.some(r=>r.relationType==="COUNTRY"&&r.active!==false&&r.targetEntityId)?html`<${Field} label="Country (linked)" value=${value||""} disabled=${true} help="Change the country in Related inventory."/>`:field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${withValue} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} value=${value} onChange=${v=>update(field.path,v)} records=${records}/>`})}</div>
   </div>`;
 }
@@ -2949,13 +2985,14 @@ function MarketSelector({value,onChange}){
   const toggle=(code,checked)=>{if(code==="ALL"){onChange(checked?["ALL"]:[]);return}const next=selected.filter(x=>x!=="ALL"&&x!==code);onChange(checked?[...next,code]:next)};
   return html`<div className="field full"><label>Markets</label><small>Choose where this inventory may be offered. All markets overrides individual choices.</small><div className="toolbar" style=${{flexWrap:"wrap",gap:"12px"}}>${[{code:"ALL",label:"All markets"},...INVENTORY_MARKETS,...extra.map(code=>({code,label:`${code} (existing)`}))].map(m=>html`<label><input type="checkbox" checked=${selected.includes(m.code)} onChange=${e=>toggle(m.code,e.target.checked)}/> ${m.label}</label>`)}</div></div>`;
 }
-function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast}){
+function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast,openAircraft}){
   const [draft,setDraft]=useState(()=>hydrateHierarchy(bundle,records));
   const [tab,setTab]=useState("identity");
   const [lang,setLang]=useState(languages?.[0]||"EN");
   const [assetPicker,setAssetPicker]=useState(null);
   const [translationBusy,setTranslationBusy]=useState(false);
   const [translationReview,setTranslationReview]=useState({});
+  const initialDraft=useRef(draft);
   const rec=draft.record;
   const refs=records||[];
   const update=(path,value)=>setDraft(d=>{const n=clone(d);setPath(n.record,path,value);return n});
@@ -3038,7 +3075,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/>
     </div>`:null}
     ${tab==="details"?html`<div>
-      <div style=${{marginTop:"12px"}}>${rec.entityType==="AIRLINE"?html`<${AirlineDetailsEditor} record=${rec} update=${update} records=${refs} relations=${relations}/>`:html`<${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/>`}</div>
+      <div style=${{marginTop:"12px"}}>${rec.entityType==="AIRLINE"?html`<${AirlineDetailsEditor} record=${rec} update=${update} records=${refs} relations=${relations} openAircraft=${openAircraft?id=>{if(draft===initialDraft.current||confirm("Discard unsaved airline edits and open Aircraft & Cabin Studio?"))openAircraft(id)}:null}/>`:html`<${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/>`}</div>
       <div className="hr"></div><div className="sectiontitle">Additional Stored Fields</div>
       <${SmartObjectEditor} value=${rec.details||{}} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
     </div>`:null}
@@ -3159,7 +3196,7 @@ function updateSavedRecord(setBoot,result){
     return {...previous,records:replace(previous.records),...(record.entityType==="AIRLINE"?{airlines:replace(previous.airlines)}:{})};
   });
 }
-function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView}){
+function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView,openAircraft}){
   const [mode,setMode]=useState("collection");
   const [resourceType,setResourceType]=useState("HOTEL");
   const [query,setQuery]=useState("");
@@ -3289,7 +3326,7 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView})
     ${detail?html`<${Modal} title=${`Supplier Details · ${detailItem?.name||detailResource?.name||resourceType}`} onClose=${()=>setDetail(null)} actions=${html`<button className="btn" onClick=${()=>setDetail(null)}>Close</button>`}><div className="notice">Review the supplier details before adding or linking the record.</div><div className="hr"></div><${ProviderDetailGrid} resource=${detailResource||detailItem?.preview||{}} type=${detail?.entityType||resourceType}/>${detailResource?.description?html`<div><div className="hr"></div><div className="sectiontitle">Supplier description</div><div className="notice">${detailResource.description}</div></div>`:null}</${Modal}>`:null}
 
 
-    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} openAircraft=${openAircraft} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
 
 
     ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"The rate access code cannot be changed after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
@@ -3300,7 +3337,7 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView})
 }
 
 
-function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilter,setView}){
+function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilter,setView,openAircraft}){
   const type=masterFilter;
   const setType=next=>{setMasterFilter(next);if(next==="HOTEL")setView("property")};
   useEffect(()=>{if(type==="HOTEL")setView("property")},[type,setView]);
@@ -3360,7 +3397,7 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
     ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
       <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.filter(t=>t!=="HOTEL").map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
     <//>`:null}
-    ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor?html`<${RecordEditor} openAircraft=${openAircraft} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
 
@@ -3490,40 +3527,128 @@ function AirInventory({boot,setBusy,setToast}){
 }
 
 
-function DraggableHotspot({item,index,onMove,onCommit,onSelect}){
-  const [drag,setDrag]=useState(false);
-  const initial=useRef(null),latest=useRef(null),moved=useRef(false);
-  function move(e){
-    if(!initial.current)return;
-    const rect=e.currentTarget.parentElement.getBoundingClientRect();
-    const x=Math.max(0,Math.min(100,((e.clientX-rect.left)/rect.width)*100));
-    const y=Math.max(0,Math.min(100,((e.clientY-rect.top)/rect.height)*100));
-    if(Math.hypot(x-initial.current.x,y-initial.current.y)>0.5)moved.current=true;
-    if(moved.current){latest.current={x,y};onMove(x,y)}
+function aircraftStop(record,kind,points){
+  const type=kind==="scene"?"SCENE":"VIEW";
+  return {kind,record,points,ref:`${type}:${text(record.id).toUpperCase()}`,title:record.short_title||record.title||record.label||record.scene_code||record.view_code||"Scene"};
+}
+function walkaroundPointType(item){
+  const action=text(item.action).toUpperCase();
+  if(action.startsWith("MOVE:"))return "move";
+  if(["SEAT_ROW","ZOOM","FOCUS"].includes(action)||item.hotspot_type==="SEAT_ROW")return "seat";
+  return "note";
+}
+const WALKAROUND_POINT_TYPES=[{value:"move",label:"Move to another scene"},{value:"note",label:"Show a note"},{value:"seat",label:"Inspect a seat row"}];
+
+function WalkaroundPointEditor({item,stop,stops,cabins,update}){
+  const type=walkaroundPointType(item);
+  const destination=type==="move"?text(item.action).slice(5).toUpperCase():"";
+  const candidates=stops.filter(s=>s.ref!==stop.ref&&s.record.active!==false&&(s.record.image_url||s.record.mobile_image_url));
+  const caption=type==="seat"?"Point label or row number":"Point label";
+  const image=stop.record.image_url||stop.record.mobile_image_url;
+  const x=item.x??50,y=item.y??50;
+  function place(event){
+    const rect=event.currentTarget.getBoundingClientRect();
+    update({
+      x:Math.max(0,Math.min(100,Math.round((event.clientX-rect.left)*1000/rect.width)/10)),
+      y:Math.max(0,Math.min(100,Math.round((event.clientY-rect.top)*1000/rect.height)/10))
+    });
   }
-  function finish(){if(initial.current&&moved.current&&latest.current)onCommit(latest.current,initial.current);initial.current=null;setDrag(false)}
-  return html`<div className=${`hotspot ${drag?"dragging":""}`} style=${{left:`${item.x??50}%`,top:`${item.y??50}%`}} onPointerDown=${e=>{e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);initial.current={x:Number(item.x??50),y:Number(item.y??50)};latest.current=null;moved.current=false;setDrag(true)}} onPointerMove=${move} onPointerUp=${finish} onPointerCancel=${finish} onClick=${e=>{e.stopPropagation();if(!moved.current)onSelect?.()}}>${index+1}<div className="hotlabel">${item.label||item.title||`Hotspot ${index+1}`}</div></div>`
+  function moveKey(event){
+    const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+    if(!moves[event.key])return;
+    event.preventDefault();
+    const [dx,dy]=moves[event.key],step=event.shiftKey?5:1;
+    update({x:Math.max(0,Math.min(100,Number(x)+dx*step)),y:Math.max(0,Math.min(100,Number(y)+dy*step))});
+  }
+  function changeType(value){
+    update({action:{move:"MOVE:",note:"DETAIL",seat:"SEAT_ROW"}[value],target_cabin_code:null,
+      ...(stop.kind==="scene"?{hotspot_type:value==="seat"?"SEAT_ROW":"FEATURE"}:{focus_x:null,focus_y:null,focus_zoom:null})});
+  }
+  return html`<div className="ic-walkaround-point-form">
+    <div className="formgrid">
+      <label className="field"><span>Point action</span><select className="select" value=${type} onChange=${event=>changeType(event.target.value)}>
+        ${WALKAROUND_POINT_TYPES.map(option=>html`<option key=${option.value} value=${option.value}>${option.label}</option>`)}
+      </select></label>
+      ${type==="move"?html`<label className="field"><span>Destination scene</span><select className="select" value=${destination} onChange=${event=>update({action:`MOVE:${event.target.value}`})}>
+        <option value="">Choose a scene</option>${candidates.map(s=>html`<option key=${s.ref} value=${s.ref}>${s.title}</option>`)}
+      </select>${!candidates.length?html`<small>Add another active scene before creating a move point.</small>`:null}</label>`:null}
+      <label className="field full"><span>${caption}</span><input className="input" value=${item.label??""} onInput=${event=>update({label:event.target.value,title:event.target.value})}/></label>
+      ${type!=="move"?html`<label className="field full"><span>${type==="seat"?"Seat-row notes":"Passenger note"}</span><textarea className="textarea" value=${item.description??""} onInput=${event=>update({description:event.target.value})}/></label>`:null}
+      ${type==="seat"?html`<${Field} label="Cabin (optional)" type="select" value=${item.target_cabin_code||""} options=${[{value:"",label:"No cabin selected"},...cabins.map(c=>({value:c.cabinCode,label:c.cabinName}))]} onChange=${v=>update({target_cabin_code:v})}/>`:null}
+      <${Toggle} label="Active" value=${item.active!==false} onChange=${v=>update({active:v})}/>
+    </div>
+    <div className="ic-walkaround-position">
+      <p>Click the image or use the arrow keys to place the point.</p>
+      ${image?html`<div className="ic-walkaround-image is-positioning" tabIndex="0" role="group" aria-label="Point position on the scene image" onClick=${place} onKeyDown=${moveKey}>
+        <img src=${image} alt=${stop.title} draggable="false"/>
+        <span className="ic-walkaround-mark" style=${{left:`${x}%`,top:`${y}%`}} aria-hidden="true">+</span>
+      </div>`:html`<p className="notice warn">Add an image to this scene first.</p>`}
+      <output aria-live="polite">${Number(x).toFixed(1)}% across · ${Number(y).toFixed(1)}% down</output>
+    </div>
+  </div>`;
+}
+
+function AircraftWalkaroundEditor({aircraft,stops,activeStop,setActiveStop,addScene,editScene,addPoint,editPoint,setStart,setAccuracy}){
+  const selected=stops.find(s=>s.ref===activeStop)||stops[0];
+  const scenes=stops.filter(s=>s.kind==="scene");
+  const activeScenes=scenes.filter(s=>s.record.active!==false&&(s.record.image_url||s.record.mobile_image_url));
+  const image=selected?.record.image_url||selected?.record.mobile_image_url;
+  const brokenLinks=selected?.kind==="scene"?[selected.record.forward_scene_code,selected.record.back_scene_code]
+    .filter(code=>code&&!activeScenes.some(scene=>scene.record.scene_code===code)):[];
+  return html`<section className="ic-walkaround-editor">
+    <div className="paneltitle"><span>Walkaround</span><button type="button" className="btn small primary" onClick=${addScene}>+ Add scene</button></div>
+    <div className="ic-walkaround-settings">
+      <label className="field"><span>Starting scene</span><select className="select" value=${aircraft.walkthroughStartSceneCode||""} onChange=${event=>setStart(event.target.value)}>
+        <option value="">Automatic</option>${activeScenes.map(s=>html`<option key=${s.ref} value=${s.record.scene_code}>${s.title}</option>`)}
+      </select><small>Save Aircraft to apply the starting scene.</small></label>
+      <label className="field"><span>Scene to edit</span><select className="select" value=${selected?.ref||""} onChange=${event=>setActiveStop(event.target.value)}>
+        ${stops.length?stops.map(s=>html`<option key=${s.ref} value=${s.ref}>${s.title}${s.record.active===false?" (inactive)":""}</option>`):html`<option value="">No scenes yet</option>`}
+      </select></label>
+    </div>
+    <details className="ic-walkaround-disclosure"><summary>Image accuracy note</summary><${Field} label="Note shown to passengers" value=${aircraft.walkthroughAccuracyLabel||""} onChange=${setAccuracy} help="Use Save Aircraft to apply." /></details>
+    ${!selected?html`<p className="empty">Add a scene with an image, then place points for movement, notes or a closer look at a seat row.</p>`:html`
+      <div className="ic-walkaround-workspace">
+        <div>
+          <div className="ic-walkaround-scene-head"><h3>${selected.title}</h3><button className="btn small" type="button" onClick=${()=>editScene(selected)}>Edit scene</button></div>
+          ${image?html`<div className="ic-walkaround-image"><img src=${image} alt=${selected.title}/>
+            ${selected.points.filter(point=>point.active!==false).map(point=>html`<button key=${point.id} type="button" className="ic-walkaround-mark" style=${{left:`${point.x??50}%`,top:`${point.y??50}%`}} aria-label=${`Edit ${point.label||point.title||"point"}`}
+              onClick=${()=>editPoint(selected,point)}>${{move:"→",note:"i",seat:"+"}[walkaroundPointType(point)]}</button>`)}
+          </div>`:html`<p className="empty">This scene needs an image.</p>`}
+          ${brokenLinks.length?html`<p className="notice warn">A saved movement link points to an unavailable scene. Update it in Edit scene.</p>`:null}
+        </div>
+        <div className="ic-walkaround-points">
+          <div className="ic-walkaround-scene-head"><h3>Interactive points</h3><button className="btn small" type="button" disabled=${!image} onClick=${()=>addPoint(selected)}>+ Add point</button></div>
+          ${selected.points.length?selected.points.map(point=>{
+            const type=walkaroundPointType(point),target=type==="move"?stops.find(s=>s.ref===text(point.action).slice(5).toUpperCase()):null;
+            return html`<button type="button" key=${point.id} className="ic-walkaround-point-row" onClick=${()=>editPoint(selected,point)}>
+              <strong>${point.label||point.title||"Untitled point"}</strong>
+              <span>${point.active===false?"Inactive · ":""}${type==="move"?(target?`To ${target.title}`:"Choose destination"):WALKAROUND_POINT_TYPES.find(x=>x.value===type)?.label}</span>
+            </button>`;
+          }):html`<p className="sub">No points on this scene.</p>`}
+        </div>
+      </div>`}
+  </section>`;
 }
 
 function nextAircraftChildCode(prefix,items,key){
   const used=new Set((items||[]).map(x=>text(x[key]).toUpperCase()));let n=1;while(used.has(`${prefix}_${n}`))n++;return `${prefix}_${n}`;
 }
-function AircraftStudio({boot,setBoot,setBusy,setToast}){
+function AircraftStudio({boot,setBoot,setBusy,setToast,initialAirline=""}){
   const [filter,setFilter]=useState("");
   const [selected,setSelected]=useState(null);
   const [bundle,setBundle]=useState(null);
   const [savedAircraft,setSavedAircraft]=useState("");
   const [mode,setMode]=useState("aircraft");
   const [aircraftSection,setAircraftSection]=useState("identity");
-  const [airlineFilter,setAirlineFilter]=useState("");
+  const [airlineFilter,setAirlineFilter]=useState(initialAirline);
   const [childEdit,setChildEdit]=useState(null);
-  const [activeView,setActiveView]=useState(null);
-  const [placeHotspot,setPlaceHotspot]=useState(false);
+  const [activeStop,setActiveStop]=useState("");
+  const childSaving=useRef(false);
   const list=(boot.aircraft||[]).filter(a=>(!airlineFilter||a.airlineId===airlineFilter)&&(!filter||[a.airlineCode,a.aircraftCode,a.aircraftName,a.manufacturer,a.family,a.variant].join(" ").toLowerCase().includes(filter.toLowerCase())));
   async function open(a){
-    try{setBusy("Opening aircraft digital twin…");const x=await request("INVENTORY_V9_GET_AIRCRAFT",{aircraftId:a.id});setSelected(a.id);setBundle(x);setSavedAircraft(JSON.stringify(x.aircraft));setMode("aircraft");setAircraftSection("identity");setActiveView(x.views?.[0]||null)}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy("Opening aircraft…");const x=await request("INVENTORY_V9_GET_AIRCRAFT",{aircraftId:a.id});setSelected(a.id);setBundle(x);setSavedAircraft(JSON.stringify(x.aircraft));setMode("aircraft");setAircraftSection("identity");setActiveStop("")}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
-  function newAircraft(){setSelected(null);setSavedAircraft("");setBundle({aircraft:{id:"",airlineId:"",airlineCode:"",aircraftCode:"",aircraftName:"",totalSeats:null,configuration:{},status:"DRAFT",customerVisible:false,staffVisible:true,active:true,defaultViewType:"CABIN"},cabins:[],views:[],hotspots:[],scenes:[]});setMode("aircraft");setAircraftSection("identity");setActiveView(null)}
+  function newAircraft(){setSelected(null);setSavedAircraft("");setBundle({aircraft:{id:"",airlineId:"",airlineCode:"",aircraftCode:"",aircraftName:"",totalSeats:null,configuration:{},status:"DRAFT",customerVisible:false,staffVisible:true,active:true,defaultViewType:"CABIN"},cabins:[],views:[],hotspots:[],scenes:[]});setMode("aircraft");setAircraftSection("identity");setActiveStop("")}
   async function sync(){
     if(!confirm("Reconcile airline fleet templates with Aircraft & Cabin Studio? Existing curated imagery and content will be preserved."))return;
     try{setBusy("Reconciling aircraft and cabins…");const r=await request("INVENTORY_V9_SMART_SYNC_AIRCRAFT",{buildMissingCabins:true});const latest=await request("INVENTORY_V9_REFRESH",{});setBoot(latest);setToast(r.message||"Fleet synchronization complete.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
@@ -3534,57 +3659,73 @@ function AircraftStudio({boot,setBoot,setBusy,setToast}){
     if(bundle.aircraft.totalSeats!=null&&(!Number.isInteger(bundle.aircraft.totalSeats)||bundle.aircraft.totalSeats<0)){setToast("Total seats must be a non-negative whole number.",true);return}
     try{setBusy("Saving aircraft…");const refs=bundle.aircraft?._assetRefs||{};const r=await request("INVENTORY_V9_SAVE_AIRCRAFT",{aircraft:bundle.aircraft});
       for(const [field,asset] of Object.entries(refs))if(asset?.id&&r.aircraft?.id)try{await request("INVENTORY_ASSET_REGISTER_USAGE",{assetId:asset.id,system:"Inventory Control",recordType:"AIRCRAFT",recordId:r.aircraft.id,usageRole:field,fieldName:field})}catch(_){}
-      setBundle(b=>({...b,aircraft:{...r.aircraft,_assetRefs:refs}}));setSelected(r.aircraft.id);setSavedAircraft(JSON.stringify({...r.aircraft,_assetRefs:refs}));setBoot(b=>({...b,aircraft:[...(b.aircraft||[]).filter(x=>x.id!==r.aircraft.id),r.aircraft]}));setToast("Aircraft saved. You can now add cabins and views.")}
+      setBundle(b=>({...b,aircraft:{...r.aircraft,_assetRefs:refs}}));setSelected(r.aircraft.id);setSavedAircraft(JSON.stringify({...r.aircraft,_assetRefs:refs}));setBoot(b=>({...b,aircraft:[...(b.aircraft||[]).filter(x=>x.id!==r.aircraft.id),r.aircraft]}));setToast("Aircraft saved.")}
     catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function saveChild(){
-    if(childEdit?.kind==="cabin"&&allCabins.some(c=>c.id!==childEdit.item.id&&text(c.cabinCode).toUpperCase()===text(childEdit.item.cabin_code).toUpperCase())){setToast("This aircraft already has a cabin with that code. Edit the existing cabin instead.",true);return}
-    const count=childEdit?.item?.seat_count;if(childEdit?.kind==="cabin"&&count!=null&&(!Number.isInteger(count)||count<0)){setToast("Cabin seats must be a non-negative whole number.",true);return}
-    try{setBusy("Saving cabin experience…");const refs=childEdit.item?._assetRefs||{};const saved=await request("INVENTORY_V9_SAVE_AIRCRAFT_CHILD",{kind:childEdit.kind,item:childEdit.item});
-      for(const [field,asset] of Object.entries(refs))if(asset?.id&&saved.item?.id)try{await request("INVENTORY_ASSET_REGISTER_USAGE",{assetId:asset.id,system:"Inventory Control",recordType:`AIRCRAFT_${childEdit.kind.toUpperCase()}`,recordId:saved.item.id,usageRole:field,fieldName:field})}catch(_){}
-      setChildEdit(null);const r=await request("INVENTORY_V9_GET_AIRCRAFT",{aircraftId:selected});setBundle(previous=>({...r,aircraft:previous.aircraft}));setActiveView(v=>r.views?.find(x=>x.id===v?.id)||r.views?.[0]||null);setToast("Cabin experience and Asset Library links saved.")}
-    catch(e){setToast(e.message,true)}finally{setBusy("")}
+    if(!childEdit||childSaving.current)return;
+    const {kind,item,stop}=childEdit;
+    if(kind==="cabin"&&allCabins.some(c=>c.id!==item.id&&text(c.cabinCode).toUpperCase()===text(item.cabin_code).toUpperCase())){setToast("This aircraft already has that cabin code.",true);return}
+    if(kind==="cabin"&&item.seat_count!=null&&(!Number.isInteger(item.seat_count)||item.seat_count<0)){setToast("Enter a non-negative whole number of seats.",true);return}
+    if((kind==="scene"||kind==="view")&&!text(item.title||item.label).trim()){setToast("Enter a title for this scene.",true);return}
+    if(stop){
+      const type=walkaroundPointType(item);
+      if(item.active!==false&&type==="move"&&!stops.some(s=>s.ref!==stop.ref&&s.record.active!==false&&(s.record.image_url||s.record.mobile_image_url)&&s.ref===text(item.action).slice(5).toUpperCase())){setToast("Choose another active scene with an image.",true);return}
+      if(type!=="move"&&!text(item.label||item.title).trim()){setToast("Enter a point label.",true);return}
+      if(type==="note"&&!text(item.description).trim()&&!item.thumbnail_url&&!item.target_cabin_code){setToast("Enter the note passengers should see.",true);return}
+    }
+    childSaving.current=true;
+    try{
+      setBusy("Saving aircraft detail…");
+      const saved=await request("INVENTORY_V9_SAVE_AIRCRAFT_CHILD",{kind,item});
+      let assetsLinked=true;
+      for(const [field,asset] of Object.entries(item._assetRefs||{})){
+        if(asset?.id&&saved.item?.id){
+          try{await request("INVENTORY_ASSET_REGISTER_USAGE",{assetId:asset.id,system:"Inventory Control",recordType:`AIRCRAFT_${kind.toUpperCase()}`,recordId:saved.item.id,usageRole:field,fieldName:field})}
+          catch(_){assetsLinked=false}
+        }
+      }
+      setChildEdit(null);
+      if((kind==="scene"||kind==="view")&&saved.item?.id)setActiveStop(aircraftStop(saved.item,kind,[]).ref);
+      // Keep the saved record visible even if refreshing the workspace fails.
+      const collection={cabin:"cabins",view:"views",scene:"scenes",hotspot:"hotspots",sceneHotspot:"sceneHotspots"}[kind];
+      if(saved.item?.id)setBundle(previous=>({...previous,[collection]:[...(previous[collection]||[]).filter(record=>record.id!==saved.item.id),saved.item]}));
+      try{
+        const refreshed=await request("INVENTORY_V9_GET_AIRCRAFT",{aircraftId:selected});
+        setBundle(previous=>({...refreshed,aircraft:previous.aircraft}));
+        setToast(assetsLinked?"Saved.":"Saved. Asset Library usage could not be refreshed.",!assetsLinked);
+      }catch(_){setToast("Saved. The workspace could not refresh.",true)}
+    }catch(e){setToast(e.message,true)}
+    finally{childSaving.current=false;setBusy("")}
   }
   if(!bundle){
     return html`<div className="card panel"><div className="paneltitle"><span>Aircraft & Cabin Studio</span><div className="toolbar"><button className="btn" onClick=${sync}>Sync Airline Fleet</button><button className="btn primary" onClick=${newAircraft}>+ Add Aircraft</button></div></div>
-      <div className="notice">Manage each airline’s aircraft configuration, cabins, images and walkthrough. Select an existing aircraft or add a new one.</div>
+      <div className="notice">Open an aircraft to edit its cabin configuration and customer walkaround.</div>
       <div className="filters" style=${{marginTop:"12px"}}><${Field} label="Airline" type="select" value=${airlineFilter} options=${[{value:"",label:"All airlines"},...(boot.airlines||[]).map(x=>({value:x.id,label:`${x.code} · ${x.name}`}))]} onChange=${setAirlineFilter}/><div className="field grow"><label>Find Aircraft</label><input className="input" value=${filter} onInput=${e=>setFilter(e.target.value)} placeholder="Airline, code, family or aircraft"/></div></div>
-      <div className="tablewrap"><table className="table"><thead><tr><th>Airline</th><th>Aircraft</th><th>Name</th><th>Seats</th><th>Status</th><th>Images</th></tr></thead><tbody>${list.map(a=>html`<tr className="clickrow" onClick=${()=>open(a)}><td><b>${a.airlineCode}</b></td><td>${a.aircraftCode}</td><td>${a.aircraftName}</td><td>${a.totalSeats??"—"}</td><td>${statusPill(a.status)}</td><td>${a.heroImageUrl||a.seatmapImageUrl?"Media linked":"Needs media"}</td></tr>`)}</tbody></table></div>
+      <div className="tablewrap"><table className="table"><thead><tr><th>Airline</th><th>Aircraft</th><th>Name</th><th>Seats</th><th>Status</th><th>Images</th></tr></thead><tbody>${list.map(a=>html`<tr className="clickrow" onClick=${()=>open(a)}><td><b>${a.airlineCode}</b></td><td>${a.aircraftCode}</td><td><button type="button" className="ic-walkaround-fleet-link" onClick=${event=>{event.stopPropagation();open(a)}}>${a.aircraftName}</button></td><td>${a.totalSeats??"—"}</td><td>${statusPill(a.status)}</td><td>${a.heroImageUrl||a.seatmapImageUrl?"Media linked":"Needs media"}</td></tr>`)}</tbody></table></div>
     </div>`
   }
-  const a=bundle.aircraft,allCabins=bundle.cabins||[],views=bundle.views||[],hotspots=bundle.hotspots||[],scenes=bundle.scenes||[];
+  const a=bundle.aircraft,allCabins=bundle.cabins||[],views=bundle.views||[],scenes=bundle.scenes||[];
+  const stops=[
+    ...scenes.map(scene=>aircraftStop(scene,"scene",(bundle.sceneHotspots||[]).filter(p=>p.scene_id===scene.id))),
+    ...views.map(view=>aircraftStop(view,"view",(bundle.hotspots||[]).filter(p=>p.view_id===view.id)))
+  ];
   // Show every active cabin rather than silently hiding records that look alike.
   const cabins=allCabins.filter(c=>c.active!==false);
   const seatTotal=cabins.reduce((s,c)=>s+(Number(c.seatCount??c.seat_count)||0),0);
-  const currentHotspots=activeView?hotspots.filter(h=>h.view_id===activeView.id):[];
   const setA=(k,v)=>setBundle(b=>({...b,aircraft:{...b.aircraft,[k]:v}}));
   const mapTotal=Math.max(1,seatTotal);
   const childFields={
-    cabin:[["Cabin type","cabin_code","cabin_type"],["Cabin Name","cabin_name"],["Seat Count","seat_count","number"],["Rank","rank","number"],["Summary","summary","textarea"],["Description","description","textarea"],["Meal Title","meal_title"],["Meal Description","meal_description","textarea"],["Sort Order","sort_order","number"]],
-    view:[["Cabin","cabin_id","cabin_ref"],["View Code","view_code"],["Label","label"],["View Type","view_type","view_type"],["Alt Text","alt_text"],["Caption","caption","textarea"],["Credit","credit"],["Sort Order","sort_order","number"]],
-    hotspot:[["Hotspot Code","hotspot_code"],["Label","label"],["Title","title"],["Description","description","textarea"],["Action","action","action_type"],["Focus X %","focus_x","number"],["Focus Y %","focus_y","number"],["Focus Zoom","focus_zoom","number"],["Target cabin","target_cabin_code","cabin_code_ref"],["Sort Order","sort_order","number"]],
-    scene:[["Scene Code","scene_code"],["Title","title"],["Short Title","short_title"],["Summary","summary","textarea"],["Next scene","forward_scene_code","scene_ref"],["Previous scene","back_scene_code","scene_ref"],["Forward Label","forward_label"],["Back Label","back_label"],["Sort Order","sort_order","number"]]
+    cabin:[["Cabin type","cabin_code","cabin_type"],["Cabin name","cabin_name"],["Seat count","seat_count","number"],["Rank","rank","number"],["Summary","summary","textarea"],["Description","description","textarea"],["Meal title","meal_title"],["Meal description","meal_description","textarea"],["Sort order","sort_order","number"]],
+    view:[["Scene title","label"],["Cabin","cabin_id","cabin_ref"],["Image description","alt_text"],["Caption","caption","textarea"],["Credit","credit"],["Sort order","sort_order","number"]],
+    scene:[["Scene title","title"],["Short title","short_title"],["Caption","summary","textarea"],["Forward scene","forward_scene_code","scene_ref"],["Back scene","back_scene_code","scene_ref"],["Forward button label","forward_label"],["Back button label","back_label"],["Sort order","sort_order","number"]]
   };
   function setAircraftAsset(field,asset){setBundle(b=>({...b,aircraft:{...b.aircraft,[field]:asset.publicUrl||asset.previewUrl||"",_assetRefs:{...(b.aircraft?._assetRefs||{}),[field]:asset}}}))}
-  function setChildAsset(field,asset){setChildEdit(d=>({...d,item:{...d.item,[field]:asset.publicUrl||asset.previewUrl||"",_assetRefs:{...(d.item?._assetRefs||{}),[field]:asset}}}))}
-  function pointFromEvent(e){
-    const rect=e.currentTarget.getBoundingClientRect();
-    return{
-      x:Math.max(0,Math.min(100,Math.round((((e.clientX-rect.left)/rect.width)*100)*10)/10)),
-      y:Math.max(0,Math.min(100,Math.round((((e.clientY-rect.top)/rect.height)*100)*10)/10))
-    };
-  }
-  function clickPlaceHotspot(e){
-    if(!placeHotspot||!activeView)return;
-    if(e.target.closest?.(".hotspot"))return;
-    const point=pointFromEvent(e);
-    setPlaceHotspot(false);
-    startChild("hotspot",{view_id:activeView.id,hotspot_code:nextAircraftChildCode("HOT",currentHotspots,"hotspot_code"),label:"New hotspot",title:"",description:"",x:point.x,y:point.y,action:"DETAIL",active:true,sort_order:(currentHotspots.length+1)*10});
-  }
-  function startChild(kind,item={}){
+  function updateChild(patch){setChildEdit(d=>({...d,item:{...d.item,...patch}}))}
+  function setChildAsset(field,asset){setChildEdit(d=>({...d,item:{...d.item,[field]:asset.publicUrl||asset.previewUrl||"",_assetRefs:{...(d.item._assetRefs||{}),[field]:asset}}}))}
+  function startChild(kind,item={},stop=null){
     const base={...item,active:item.active!==false,sort_order:item.sort_order??item.sortOrder??100};
     if(kind==="cabin"){
-      // Cabin reads are camelCase; the editor and write contract use snake_case.
       base.aircraft_id=item.aircraft_id??item.aircraftId??a.id;
       base.cabin_code=item.cabin_code??item.cabinCode??"";
       base.cabin_name=item.cabin_name??item.cabinName??"";
@@ -3594,26 +3735,29 @@ function AircraftStudio({boot,setBoot,setBusy,setToast}){
       base.display_settings=item.display_settings??item.displaySettings??{};
       base.rank=item.rank??100;
     }
-    if(kind==="cabin"&&!base.aircraft_id)base.aircraft_id=a.id;
-    if(kind==="view"&&!base.aircraft_id)base.aircraft_id=a.id;
     if(kind==="scene"&&!base.aircraft_id)base.aircraft_id=a.id;
-    if(kind==="hotspot"&&!base.view_id)base.view_id=activeView?.id||"";
-    setChildEdit({kind,item:base});
+    setChildEdit({kind,item:base,stop});
+  }
+  function editPoint(stop,item={}){
+    const scene=stop.kind==="scene";
+    const kind=scene?"sceneHotspot":"hotspot";
+    const parent=scene?"scene_id":"view_id";
+    startChild(kind,{[parent]:stop.record.id,hotspot_code:nextAircraftChildCode("POINT",stop.points,"hotspot_code"),x:50,y:50,action:"DETAIL",...item,label:item.label||item.title||""},stop);
   }
   return html`<div className="card panel"><div className="paneltitle"><span>${a.aircraftName?`${a.airlineCode||"Airline"} · ${a.aircraftName}`:"New aircraft"}</span><div className="toolbar"><button className="btn small" onClick=${()=>{if(savedAircraft?JSON.stringify(a)!==savedAircraft:Boolean(a.airlineId||a.aircraftCode||a.aircraftName))if(!confirm("Discard unsaved aircraft details and return to the fleet?"))return;setBundle(null);setSelected(null);setSavedAircraft("")}}>Back to Fleet</button><button className="btn small primary" onClick=${saveAircraft}>Save Aircraft</button></div></div>
-    ${!a.id?html`<div className="notice">Choose an airline, enter an aircraft code and name, then save to add cabins, images and walkthroughs.</div>`:html`<div className="notice">Aircraft details are saved with Save Aircraft. Cabins, views and scenes are saved in their own editors.</div>`}
-    <div className="kpirow"><div className="kpi"><b>${a.totalSeats??"—"}</b> aircraft seats</div><div className="kpi"><b>${seatTotal}</b> cabin seats</div><div className="kpi"><b>${cabins.length}</b> cabins</div><div className="kpi"><b>${views.length}</b> views</div><div className="kpi"><b>${hotspots.length}</b> hotspots</div><div className="kpi"><b>${scenes.length}</b> walkthrough scenes</div></div>
+    ${!a.id?html`<div className="notice">Choose the airline, enter the aircraft code and name, then save to add cabins and scenes.</div>`:html`<div className="notice">Use Save Aircraft for aircraft details and the starting scene. Cabin, scene and point edits are saved individually.</div>`}
+    <div className="kpirow"><div className="kpi"><b>${a.totalSeats??"—"}</b> aircraft seats</div><div className="kpi"><b>${seatTotal}</b> cabin seats</div><div className="kpi"><b>${cabins.length}</b> cabins</div><div className="kpi"><b>${stops.length}</b> scenes</div></div>
     <div className="cabinmap" style=${{margin:"13px 0"}}>${cabins.length?cabins.map(c=>html`<div className="cabinzone" style=${{flex:`${Math.max(1,(Number(c.seatCount)||1)/mapTotal)}`}}><div><b>${c.cabinCode} · ${c.cabinName}</b><small>${c.seatCount??0} seats</small></div></div>`):html`<div className="empty">No cabin records.</div>`}</div>
     ${a.totalSeats!=null&&cabins.length&&a.totalSeats!==seatTotal?html`<div className="notice warn">Seat reconciliation needs review: aircraft total is ${a.totalSeats}, while active cabins total ${seatTotal}.</div>`:null}
-    <div className="tabs" style=${{marginTop:"12px"}}>${[["aircraft","Aircraft details"],["cabins","Cabins & seats"],["views","Cabin images"],["hotspots","Interactive features"],["walkthrough","Walkthrough"]].map(([k,label])=>html`<button className=${`tab ${mode===k?"active":""}`} disabled=${!a.id&&k!=="aircraft"} onClick=${()=>setMode(k)}>${label}</button>`)}</div>
-    ${mode==="aircraft"?html`<div><div className="tabs">${[["identity","Identity & seats"],["display","Display & walkthrough"],["media","Images"],["review","Review & visibility"]].map(([key,label])=>html`<button type="button" className=${`tab ${aircraftSection===key?"active":""}`} onClick=${()=>setAircraftSection(key)}>${label}</button>`)}</div>
+    <div className="tabs" style=${{marginTop:"12px"}}>${[["aircraft","Aircraft details"],["cabins","Cabins & seats"],["walkaround","Walkaround"]].map(([k,label])=>html`<button className=${`tab ${mode===k?"active":""}`} disabled=${!a.id&&k!=="aircraft"} onClick=${()=>setMode(k)}>${label}</button>`)}</div>
+    ${mode==="aircraft"?html`<div><div className="tabs">${[["identity","Identity & seats"],["display","Public display"],["media","Images"],["review","Review & visibility"]].map(([key,label])=>html`<button type="button" className=${`tab ${aircraftSection===key?"active":""}`} onClick=${()=>setAircraftSection(key)}>${label}</button>`)}</div>
       ${aircraftSection==="identity"?html`<div className="formgrid three">
       <${Field} label="Operating airline" type="select" value=${a.airlineId||""} options=${referenceList(boot.airlines||[],["AIRLINE"],a.airlineId)} disabled=${Boolean(a.id)} onChange=${id=>{const airline=(boot.airlines||[]).find(x=>x.id===id);setBundle(b=>({...b,aircraft:{...b.aircraft,airlineId:id,airlineCode:airline?.code||""}}))}} help="Select the airline that operates this configuration."/>
       <${Field} label="Aircraft / equipment code" value=${a.aircraftCode||""} disabled=${Boolean(a.id)} onChange=${v=>setA("aircraftCode",v.toUpperCase())} help="Use the airline or supplier equipment code. Airline and equipment code are fixed after creation to protect linked records."/>
       <${Field} label="Aircraft name" value=${a.aircraftName||""} onChange=${v=>setA("aircraftName",v)} placeholder="e.g. Airbus A350-900"/>
       <${Field} label="Manufacturer" value=${a.manufacturer||""} onChange=${v=>setA("manufacturer",v)}/><${Field} label="Aircraft family" value=${a.family||""} onChange=${v=>setA("family",v)}/><${Field} label="Variant / configuration" value=${a.variant||""} onChange=${v=>setA("variant",v)}/><${Field} label="Total seats" type="number" value=${a.totalSeats??""} onChange=${v=>setA("totalSeats",v)} help="Total for this specific configuration."/>
       </div><div className="hr"></div><div className="sectiontitle">Seat configuration summary</div><div className="notice">Cabin records and this summary are stored separately. Use the cabin records to update the summary, then save the aircraft.</div><button className="btn small" disabled=${!cabins.length} onClick=${()=>{const summary={};for(const c of cabins)summary[c.cabinName]=(summary[c.cabinName]||0)+(Number(c.seatCount)||0);setA("configuration",summary)}}>Use active cabin records</button><div className="smartgroup">${Object.entries(a.configuration||{}).length?Object.entries(a.configuration||{}).map(([name,seats])=>html`<div className="smartrow"><span>${name}</span><b>${seats} seats</b></div>`):html`<div className="smartempty">No summary saved yet.</div>`}</div>`:null}
-      ${aircraftSection==="display"?html`<div className="formgrid three"><${Field} label="Display title" value=${a.displayTitle||""} onChange=${v=>setA("displayTitle",v)}/><${Field} label="Display summary" type="textarea" value=${a.displaySummary||""} onChange=${v=>setA("displaySummary",v)}/><${Field} label="Default cabin" type="select" options=${optionList(cabins.map(c=>({value:c.cabinCode,label:`${c.cabinCode} · ${c.cabinName}`})),a.defaultCabinCode)} value=${a.defaultCabinCode||""} onChange=${v=>setA("defaultCabinCode",v)}/><${Field} label="Default view" type="select" options=${optionList([...new Set(views.map(v=>v.view_type).filter(Boolean))],a.defaultViewType)} value=${a.defaultViewType||""} onChange=${v=>setA("defaultViewType",v)}/><${Field} label="Walkthrough title" value=${a.walkthroughTitle||""} onChange=${v=>setA("walkthroughTitle",v)}/><${Field} label="Walkthrough subtitle" value=${a.walkthroughSubtitle||""} onChange=${v=>setA("walkthroughSubtitle",v)}/><${Field} label="Starting scene" type="select" options=${optionList(scenes.map(x=>({value:x.scene_code,label:x.title||x.scene_code})),a.walkthroughStartSceneCode)} value=${a.walkthroughStartSceneCode||""} onChange=${v=>setA("walkthroughStartSceneCode",v)}/><${Field} label="Accuracy label" value=${a.walkthroughAccuracyLabel||""} onChange=${v=>setA("walkthroughAccuracyLabel",v)} help="Describe how closely the images match this configuration."/></div>`:null}
+      ${aircraftSection==="display"?html`<div className="formgrid three"><${Field} label="Display title" value=${a.displayTitle||""} onChange=${v=>setA("displayTitle",v)}/><${Field} label="Display summary" type="textarea" value=${a.displaySummary||""} onChange=${v=>setA("displaySummary",v)}/><${Field} label="Default cabin" type="select" options=${optionList(cabins.map(c=>({value:c.cabinCode,label:`${c.cabinCode} · ${c.cabinName}`})),a.defaultCabinCode)} value=${a.defaultCabinCode||""} onChange=${v=>setA("defaultCabinCode",v)}/></div>`:null}
       ${aircraftSection==="review"?html`<div className="formgrid three"><${Field} label="Source website" type="url" value=${a.sourceUrl||""} onChange=${v=>setA("sourceUrl",v)}/><${Field} label="Last reviewed" type="date" value=${a.lastReviewed||""} onChange=${v=>setA("lastReviewed",v)}/><${Field} label="Review notes" type="textarea" value=${a.reviewNotes||""} onChange=${v=>setA("reviewNotes",v)}/><${Field} label="Status" type="select" options=${STATUS} value=${a.status||"DRAFT"} onChange=${v=>setA("status",v)}/><${Toggle} label="Customer visible" value=${a.customerVisible===true} onChange=${v=>setA("customerVisible",v)}/><${Toggle} label="Staff visible" value=${a.staffVisible!==false} onChange=${v=>setA("staffVisible",v)}/><${Toggle} label="Active" value=${a.active!==false} onChange=${v=>setA("active",v)}/></div>`:null}
       ${aircraftSection==="media"?html`<div className="formgrid">
       <div className="full"><div className="sectiontitle">Aircraft Assets</div></div>
@@ -3623,17 +3767,33 @@ function AircraftStudio({boot,setBoot,setBusy,setToast}){
       <${AssetField} label="Thumbnail Image" value=${a.thumbnailImageUrl} assetId=${a._assetRefs?.thumbnailImageUrl?.id} context=${assetContextForAircraft(boot,a,"Thumbnail","thumbnail_image_url")} onSelect=${asset=>setAircraftAsset("thumbnailImageUrl",asset)} setBusy=${setBusy} setToast=${setToast}/>
     </div>`:null}</div>`:null}
     ${mode==="cabins"?html`<div><div className="paneltitle"><span>Cabin Configuration</span><button className="btn small" onClick=${()=>startChild("cabin",{cabin_code:"",cabin_name:"",seat_count:null})}>+ Cabin</button></div>${allCabins.map(c=>html`<div className="childitem" onClick=${()=>startChild("cabin",c)}><b>${c.cabinCode} · ${c.cabinName}</b> · ${c.seatCount??0} seats ${c.active===false?html`<span className="pill">Inactive</span>`:null} <span className="sub">${c.summary||""}</span></div>`)}</div>`:null}
-    ${mode==="views"?html`<div><div className="paneltitle"><span>Cabin Views & Images</span><button className="btn small" onClick=${()=>startChild("view",{view_code:nextAircraftChildCode("VIEW",views,"view_code"),label:"Cabin view",view_type:"CABIN",image_url:""})}>+ View</button></div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))"}}>${views.map(v=>html`<div className="childitem"><div className="preview" onClick=${()=>{setActiveView(v);setMode("hotspots")}}>${v.image_url?html`<img src=${v.image_url} alt=${v.alt_text||""}/>`:"No image"}</div><div style=${{marginTop:"8px"}}><b>${v.label}</b> · ${v.view_type}</div><button className="btn small" onClick=${()=>startChild("view",v)}>Edit</button></div>`)}</div></div>`:null}
-    ${mode==="hotspots"?html`<div><div className="paneltitle"><span>Interactive Hotspot Canvas</span><div className="toolbar"><select className="select w240" value=${activeView?.id||""} onChange=${e=>{setActiveView(views.find(v=>v.id===e.target.value)||null);setPlaceHotspot(false)}}>${views.map(v=>html`<option value=${v.id}>${v.label}</option>`)}</select><button className=${`btn small ${placeHotspot?"cyan":""}`} disabled=${!activeView} onClick=${()=>setPlaceHotspot(v=>!v)}>${placeHotspot?"Cancel Placement":"Click Image to Place Hotspot"}</button></div></div>
-      ${activeView?html`<div className=${`studioimg ${placeHotspot?"place":""}`} onClick=${clickPlaceHotspot}>${activeView.image_url?html`<img src=${activeView.image_url}/>`:null}${currentHotspots.map((h,i)=>html`<${DraggableHotspot} item=${h} index=${i} onSelect=${()=>startChild("hotspot",h)} onMove=${(x,y)=>setBundle(b=>({...b,hotspots:b.hotspots.map(k=>k.id===h.id?{...k,x,y}:k)}))} onCommit=${async(point,original)=>{try{await request("INVENTORY_V9_SAVE_AIRCRAFT_CHILD",{kind:"hotspot",item:{...h,...point}});setToast("Hotspot position saved.")}catch(e){setBundle(b=>({...b,hotspots:b.hotspots.map(k=>k.id===h.id?{...k,...original}:k)}));setToast(e.message,true)}}}/>`)} </div>
-      <div className="positionbar"><span className=${`positionreadout ${placeHotspot?"placementon":""}`}>${placeHotspot?"Placement tool active — click the exact feature on the image":"Create: click “Click Image to Place Hotspot”. Reposition: drag an existing marker."}</span><span className="sub">Coordinates are calculated automatically and stored by the system.</span></div>`:html`<div className="empty">Create or select a cabin view first.</div>`}
-    </div>`:null}
-    ${mode==="walkthrough"?html`<div><div className="paneltitle"><span>Walkthrough Scenes</span><button className="btn small" onClick=${()=>startChild("scene",{scene_code:nextAircraftChildCode("SCENE",scenes,"scene_code"),title:"Cabin scene",image_url:""})}>+ Scene</button></div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))"}}>${scenes.map(s=>html`<div className="childitem"><div className="preview">${s.image_url?html`<img src=${s.image_url}/>`:"No image"}</div><div style=${{marginTop:"8px"}}><b>${s.title}</b><div className="sub">${s.summary||""}</div></div><button className="btn small" onClick=${()=>startChild("scene",s)}>Edit</button></div>`)}</div><div className="notice" style=${{marginTop:"12px"}}>Scene-to-scene navigation is stored on each walkthrough scene. Scene hotspots remain normalized child records and are preserved by Inventory Control even when you edit the scene itself.</div></div>`:null}
-    ${childEdit?html`<${Modal} title=${`Aircraft Studio · ${childEdit.kind}`} onClose=${()=>setChildEdit(null)} actions=${html`<button className="btn small cyan" onClick=${saveChild}>Save</button>`}><div className="formgrid three">${childFields[childEdit.kind].map(([l,k,t="text"])=>{const val=childEdit.item[k]??"";const lists={cabin_type:[{value:"F",label:"First (F)"},{value:"J",label:"Business (J)"},{value:"W",label:"Premium economy (W)"},{value:"Y",label:"Economy (Y)"}],cabin_ref:cabins.map(c=>({value:c.id,label:`${c.cabinCode} · ${c.cabinName}`})),cabin_code_ref:cabins.map(c=>({value:c.cabinCode,label:`${c.cabinCode} · ${c.cabinName}`})),scene_ref:scenes.filter(x=>x.id!==childEdit.item.id).map(x=>({value:x.scene_code,label:x.title||x.scene_code})),view_type:["CABIN","SEATBACK","ROWS","FRONT","REAR","MEAL","SEATMAP","EXTERIOR","OTHER"],action_type:["DETAIL"]};return html`<${Field} label=${l} type=${lists[t]?"select":t} options=${lists[t]?optionList(lists[t],val):[]} value=${val} disabled=${Boolean(childEdit.item.id)&&["cabin_code","view_code","hotspot_code","scene_code"].includes(k)} help=${Boolean(childEdit.item.id)&&["cabin_code","view_code","hotspot_code","scene_code"].includes(k)?"The code is fixed after creation to protect related records.":""} onChange=${v=>setChildEdit(d=>({...d,item:{...d.item,[k]:v}}))}/>`})}
-      ${childEdit.kind==="view"?html`<div className="full"><div className="sectiontitle">View Assets</div><${AssetField} label="Main Cabin View" value=${childEdit.item.image_url} assetId=${childEdit.item._assetRefs?.image_url?.id} context=${assetContextForAircraft(boot,a,"Cabin View","image_url",`Views / ${childEdit.item.label||childEdit.item.view_code||"Cabin"}`)} onSelect=${asset=>setChildAsset("image_url",asset)} setBusy=${setBusy} setToast=${setToast}/><${AssetField} label="Mobile Cabin View" value=${childEdit.item.mobile_image_url} assetId=${childEdit.item._assetRefs?.mobile_image_url?.id} context=${assetContextForAircraft(boot,a,"Cabin View Mobile","mobile_image_url",`Views / ${childEdit.item.label||childEdit.item.view_code||"Cabin"} / Mobile`)} onSelect=${asset=>setChildAsset("mobile_image_url",asset)} setBusy=${setBusy} setToast=${setToast}/><${AssetField} label="View Thumbnail" value=${childEdit.item.thumbnail_url} assetId=${childEdit.item._assetRefs?.thumbnail_url?.id} context=${assetContextForAircraft(boot,a,"Thumbnail","thumbnail_url",`Views / ${childEdit.item.label||childEdit.item.view_code||"Cabin"}`)} onSelect=${asset=>setChildAsset("thumbnail_url",asset)} setBusy=${setBusy} setToast=${setToast}/></div>`:null}
-      ${childEdit.kind==="hotspot"?html`<div className="full"><div className="sectiontitle">Hotspot Asset</div><${AssetField} label="Hotspot Thumbnail" value=${childEdit.item.thumbnail_url} assetId=${childEdit.item._assetRefs?.thumbnail_url?.id} context=${assetContextForAircraft(boot,a,"Hotspot Thumbnail","thumbnail_url",`Hotspots / ${childEdit.item.label||childEdit.item.hotspot_code||"Feature"}`)} onSelect=${asset=>setChildAsset("thumbnail_url",asset)} setBusy=${setBusy} setToast=${setToast}/></div>`:null}
-      ${childEdit.kind==="scene"?html`<div className="full"><div className="sectiontitle">Walkthrough Assets</div><${AssetField} label="Walkthrough Scene Image" value=${childEdit.item.image_url} assetId=${childEdit.item._assetRefs?.image_url?.id} context=${assetContextForAircraft(boot,a,"Walkthrough","image_url",`Walkthrough / ${childEdit.item.title||childEdit.item.scene_code||"Scene"}`)} onSelect=${asset=>setChildAsset("image_url",asset)} setBusy=${setBusy} setToast=${setToast}/><${AssetField} label="Mobile Walkthrough Image" value=${childEdit.item.mobile_image_url} assetId=${childEdit.item._assetRefs?.mobile_image_url?.id} context=${assetContextForAircraft(boot,a,"Walkthrough Mobile","mobile_image_url",`Walkthrough / ${childEdit.item.title||childEdit.item.scene_code||"Scene"} / Mobile`)} onSelect=${asset=>setChildAsset("mobile_image_url",asset)} setBusy=${setBusy} setToast=${setToast}/></div>`:null}
-      ${childEdit.kind==="view"?html`<${Toggle} label="Default view" value=${childEdit.item.is_default===true} onChange=${v=>setChildEdit(d=>({...d,item:{...d.item,is_default:v}}))}/>`:null}<${Toggle} label="Active" value=${childEdit.item.active!==false} onChange=${v=>setChildEdit(d=>({...d,item:{...d.item,active:v}}))}/>${childEdit.kind==="hotspot"?html`<div className="full"><div className="positionbar"><span className="positionreadout">Image position: ${Number(childEdit.item.x??50).toFixed(1)}% × ${Number(childEdit.item.y??50).toFixed(1)}%</span><span className="sub">Position is set by clicking or dragging on the cabin image, not by manually entering X/Y.</span></div></div>`:null}${childEdit.kind==="cabin"?html`<div className="full"><${AmenitiesEditor} value=${childEdit.item.amenities||[]} onChange=${v=>setChildEdit(d=>({...d,item:{...d.item,amenities:v}}))}/></div>`:null}</div></${Modal}>`:null}
+    ${mode==="walkaround"?html`<${AircraftWalkaroundEditor} aircraft=${a} stops=${stops} activeStop=${activeStop} setActiveStop=${setActiveStop}
+      setStart=${value=>setA("walkthroughStartSceneCode",value)} setAccuracy=${value=>setA("walkthroughAccuracyLabel",value)} addScene=${()=>startChild("scene",{scene_code:nextAircraftChildCode("SCENE",scenes,"scene_code"),title:"",image_url:""})}
+      editScene=${stop=>startChild(stop.kind,stop.record)} addPoint=${stop=>editPoint(stop)} editPoint=${editPoint}/>`:null}
+    ${childEdit?html`<${Modal} title=${childEdit.stop?(childEdit.item.id?"Edit point":"Add point"):childEdit.kind==="cabin"?"Edit cabin":childEdit.item.id?"Edit scene":"Add scene"}
+      onClose=${()=>setChildEdit(null)} actions=${html`<button className="btn small primary" type="button" onClick=${saveChild}>Save</button>`}>
+      ${childEdit.stop?html`<${WalkaroundPointEditor} item=${childEdit.item} stop=${childEdit.stop} stops=${stops} cabins=${cabins} update=${updateChild}/>${childEdit.kind==="hotspot"&&walkaroundPointType(childEdit.item)!=="move"?html`<${AssetField} label="Point image (optional)" value=${childEdit.item.thumbnail_url} assetId=${childEdit.item._assetRefs?.thumbnail_url?.id} context=${assetContextForAircraft(boot,a,"Hotspot Thumbnail","thumbnail_url",`Walkaround / ${childEdit.stop.title}`)} onSelect=${asset=>setChildAsset("thumbnail_url",asset)} setBusy=${setBusy} setToast=${setToast}/>`:null}`:html`
+        <div className="formgrid three">${childFields[childEdit.kind].map(([label,field,type="text"])=>{
+          const value=childEdit.item[field]??"";
+          const lists={
+            cabin_type:[{value:"F",label:"First (F)"},{value:"J",label:"Business (J)"},{value:"W",label:"Premium economy (W)"},{value:"Y",label:"Economy (Y)"}],
+            cabin_ref:cabins.map(c=>({value:c.id,label:`${c.cabinCode} · ${c.cabinName}`})),
+            scene_ref:scenes.filter(s=>s.id!==childEdit.item.id&&s.active!==false&&s.image_url).map(s=>({value:s.scene_code,label:s.short_title||s.title||s.scene_code}))
+          };
+          return html`<${Field} key=${field} label=${label} type=${lists[type]?"select":type} options=${lists[type]?optionList(lists[type],value):[]} value=${value} onChange=${v=>updateChild({[field]:v})}/>`;
+        })}
+        ${childEdit.kind==="cabin"?html`<div className="full"><${AmenitiesEditor} value=${childEdit.item.amenities||[]} onChange=${v=>updateChild({amenities:v})}/></div>`:html`
+          <div className="full"><div className="sectiontitle">Scene images</div>
+            ${[["Scene image","image_url",childEdit.kind==="view"?"Cabin View":"Walkthrough"],["Mobile image (optional)","mobile_image_url",childEdit.kind==="view"?"Cabin View Mobile":"Walkthrough Mobile"],
+              ...(childEdit.kind==="view"?[["Scene thumbnail","thumbnail_url","Thumbnail"]]:[])].map(([label,field,role])=>html`
+              <${AssetField} key=${field} label=${label} value=${childEdit.item[field]} assetId=${childEdit.item._assetRefs?.[field]?.id} context=${assetContextForAircraft(boot,a,role,field,`Walkaround / ${childEdit.item.title||childEdit.item.label||childEdit.item.scene_code||"Scene"}`)}
+                onSelect=${asset=>setChildAsset(field,asset)} setBusy=${setBusy} setToast=${setToast}/>`)}
+          </div>
+          ${childEdit.kind==="view"?html`<${Toggle} label="Use as opening image when no scene is configured" value=${childEdit.item.is_default===true} onChange=${v=>updateChild({is_default:v})}/>`:null}
+        `}
+        <${Toggle} label="Active" value=${childEdit.item.active!==false} onChange=${v=>updateChild({active:v})}/>
+        </div>`}
+    </${Modal}>`:null}
   </div>`
 }
 
@@ -4095,13 +4255,19 @@ function App(){
   const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   const mainScrollRef=useRef(null);
   const [masterFilter,setMasterFilter]=useState("");
+  const [aircraftAirline,setAircraftAirline]=useState("");
   const [busy,setBusy]=useState("Connecting Inventory Control…");
   const [toast,setToastState]=useState(null);
   const [masterConfig,setMasterConfig]=useState(null);
   const [connectionError,setConnectionError]=useState("");
   function switchInventoryView(next){
+    if(next==="aircraft")setAircraftAirline("");
     setView(next);
     setMobileMenuOpen(false);
+  }
+  function openAircraft(airlineId){
+    setAircraftAirline(airlineId);
+    setView("aircraft");
   }
   useEffect(()=>{
     if(mainScrollRef.current)mainScrollRef.current.scrollTop=0;
@@ -4183,13 +4349,13 @@ function App(){
       ${masterFilter&&!["overview","master","property","provider"].includes(view)?html`<div className="scope-label">Showing ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}.</div>`:null}
       ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory Control is unavailable":"Connecting to Inventory Control…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
         view==="overview"?html`<${Overview} boot=${boot} setView=${setView} masterFilter=${masterFilter}/>`:
-        view==="provider"?html`<${ProviderWorkspace} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setView=${setView}/>`:
-        view==="master"?html`<${MasterRecords} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setMasterFilter=${setMasterFilter} setView=${setView}/>`:
+        view==="provider"?html`<${ProviderWorkspace} openAircraft=${openAircraft} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setView=${setView}/>`:
+        view==="master"?html`<${MasterRecords} openAircraft=${openAircraft} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setMasterFilter=${setMasterFilter} setView=${setView}/>`:
         view==="property"?html`<${PropertyDirector} boot=${boot} masterFilter=${masterFilter} setBusy=${setBusy} setToast=${setToast} onSaved=${refresh}/>`:
         view==="assets"?html`<${AssetLibraryPanel} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="dated"?html`<${DatedInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="air"?html`<${AirInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
-        view==="aircraft"?html`<${AircraftStudio} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast}/>`:
+        view==="aircraft"?html`<${AircraftStudio} initialAirline=${aircraftAirline} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="quality"?html`<${Quality} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         html`<${Audit} setBusy=${setBusy} setToast=${setToast}/>`}
     </main></div>
