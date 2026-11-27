@@ -1338,7 +1338,7 @@ function WalkaroundPointEditor({item,stop,stops,cabins,update}){
   const type=walkaroundPointType(item);
   const destination=type==="move"?text(item.action).slice(5).toUpperCase():"";
   const candidates=stops.filter(s=>s.ref!==stop.ref&&s.record.active!==false&&(s.record.image_url||s.record.mobile_image_url));
-  const caption=type==="seat"?"Point label or row number":"Point label";
+  const caption=type==="seat"?"Point label or row number":type==="move"?"Editor label (optional)":"Point label";
   const image=stop.record.image_url||stop.record.mobile_image_url;
   const x=item.x??50,y=item.y??50;
   function place(event){
@@ -1505,6 +1505,17 @@ function AircraftStudio({boot,setBoot,setBusy,setToast,initialAirline=""}){
     ...scenes.map(scene=>aircraftStop(scene,"scene",(bundle.sceneHotspots||[]).filter(p=>p.scene_id===scene.id))),
     ...views.map(view=>aircraftStop(view,"view",(bundle.hotspots||[]).filter(p=>p.view_id===view.id)))
   ];
+  const titles=new Map();
+  for(const stop of stops){
+    const title=text(stop.title).trim().toUpperCase();
+    titles.set(title,(titles.get(title)||0)+1);
+  }
+  for(const stop of stops){
+    if(titles.get(text(stop.title).trim().toUpperCase())>1){
+      const recordCode=stop.record.scene_code||stop.record.view_code;
+      stop.title=`${stop.title} · ${stop.kind==="view"?"Photo":"Scene"} ${recordCode}`;
+    }
+  }
   // Show every active cabin rather than silently hiding records that look alike.
   const cabins=allCabins.filter(c=>c.active!==false);
   const seatTotal=cabins.reduce((s,c)=>s+(Number(c.seatCount??c.seat_count)||0),0);
@@ -1513,7 +1524,7 @@ function AircraftStudio({boot,setBoot,setBusy,setToast,initialAirline=""}){
   const childFields={
     cabin:[["Cabin type","cabin_code","cabin_type"],["Cabin name","cabin_name"],["Seat count","seat_count","number"],["Rank","rank","number"],["Summary","summary","textarea"],["Description","description","textarea"],["Meal title","meal_title"],["Meal description","meal_description","textarea"],["Sort order","sort_order","number"]],
     view:[["Scene title","label"],["Cabin","cabin_id","cabin_ref"],["Image description","alt_text"],["Caption","caption","textarea"],["Credit","credit"],["Sort order","sort_order","number"]],
-    scene:[["Scene title","title"],["Short title","short_title"],["Caption","summary","textarea"],["Forward scene","forward_scene_code","scene_ref"],["Back scene","back_scene_code","scene_ref"],["Forward button label","forward_label"],["Back button label","back_label"],["Sort order","sort_order","number"]]
+    scene:[["Scene title","title"],["Short title","short_title"],["Caption","summary","textarea"],["Forward scene","forward_scene_code","scene_ref"],["Back scene","back_scene_code","scene_ref"],["Sort order","sort_order","number"]]
   };
   function setAircraftAsset(field,asset){setBundle(b=>({...b,aircraft:{...b.aircraft,[field]:asset.publicUrl||asset.previewUrl||"",_assetRefs:{...(b.aircraft?._assetRefs||{}),[field]:asset}}}))}
   function updateChild(patch){setChildEdit(d=>({...d,item:{...d.item,...patch}}))}
@@ -1573,7 +1584,7 @@ function AircraftStudio({boot,setBoot,setBusy,setToast,initialAirline=""}){
           const lists={
             cabin_type:[{value:"F",label:"First (F)"},{value:"J",label:"Business (J)"},{value:"W",label:"Premium economy (W)"},{value:"Y",label:"Economy (Y)"}],
             cabin_ref:cabins.map(c=>({value:c.id,label:`${c.cabinCode} · ${c.cabinName}`})),
-            scene_ref:scenes.filter(s=>s.id!==childEdit.item.id&&s.active!==false&&s.image_url).map(s=>({value:s.scene_code,label:s.short_title||s.title||s.scene_code}))
+            scene_ref:stops.filter(s=>s.kind==="scene"&&s.record.id!==childEdit.item.id&&s.record.active!==false&&s.record.image_url).map(s=>({value:s.record.scene_code,label:s.title}))
           };
           return html`<${Field} key=${field} label=${label} type=${lists[type]?"select":type} options=${lists[type]?optionList(lists[type],value):[]} value=${value} onChange=${v=>updateChild({[field]:v})}/>`;
         })}

@@ -29,7 +29,7 @@ test('walkthrough links stay within the aircraft and cannot target the same scen
  await assert.rejects(()=>validate('scene',{aircraft_id:'a',scene_code:'FIRST',forward_scene_code:'FIRST'}),/itself/);
 });
 test('aircraft form provides linked selections and a creation path',()=>{
- assert.match(ui,/\+ Add Aircraft/);assert.match(ui,/Operating airline/);assert.match(ui,/cabin_ref:cabins\.map/);assert.match(ui,/scene_ref:scenes\.filter/);assert.match(ui,/request\("INVENTORY_V9_SAVE_AIRCRAFT_CHILD",\{kind,item\}\)/);
+ assert.match(ui,/\+ Add Aircraft/);assert.match(ui,/Operating airline/);assert.match(ui,/cabin_ref:cabins\.map/);assert.match(ui,/scene_ref:stops\.filter/);assert.match(ui,/request\("INVENTORY_V9_SAVE_AIRCRAFT_CHILD",\{kind,item\}\)/);
 });
 test('movement points target active images on the same aircraft',async()=>{
  const from='00000000-0000-4000-8000-000000000001';
