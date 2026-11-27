@@ -739,6 +739,7 @@
       ],
       "components": [],
       "binding": "explicit",
+      "layout": "viewport",
       "requiresStaff": false,
       "status": "BUILT",
       "files": [
@@ -768,8 +769,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "c81749e69df54c3b5c50764e9c1b98d30ce108a103b15a35a9c9957a3ae3c175",
-      "bytes": 330493
+      "sha256": "4cb374d249fe4e6c19a62564f3a05cf6fb0b77ef97c2f496bc9085942b2cd181",
+      "bytes": 308725
     },
     {
       "key": "travelInfo",
@@ -3722,6 +3723,7 @@
         "src/backend/SKANDI_CORE/customerBooking.web.js"
       ],
       "messages": [
+        "AIRPORT",
         "BOOKING_CART_AUTH",
         "COUNTRY",
         "COUNTRY_ARRIVAL_REQUIRED",
@@ -3764,8 +3766,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/country/skandi-country.receiver.html",
       "receiverFile": "skandi-embeds/country/skandi-country.receiver.html",
-      "sha256": "fad62f430b56d979f4003988846f411052621f46d9b0c7ae81c2cb53e4219884",
-      "bytes": 401525
+      "sha256": "a50fd2fdcb1e07a2c34756e7828f0032e01782ed35e714eda7082a886ca7df5a",
+      "bytes": 360580
     },
     {
       "key": "hotelList",
@@ -3807,8 +3809,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
       "receiverFile": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
-      "sha256": "af80ce4c012172712c4d66e7153d2e14f3dee5163e9a2dc3b2014af68c81c41d",
-      "bytes": 182791
+      "sha256": "a876438c15710ecad3637c668981eb01b4df8e3ce1827e511659d3c04a7ca0c0",
+      "bytes": 191152
     },
     {
       "key": "bookingFlow",

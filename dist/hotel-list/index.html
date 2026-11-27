@@ -13,7 +13,10 @@
   
   
   
+  
+  
 
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;display=swap">
 <style data-skandi-part="header">#skandi-global-header-root{
   --sk-navy:#022e64;
   --sk-blue:#0b3a7a;
@@ -1142,55 +1145,129 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   body.store-keyboard-open:has(#pageHost) #skandi-mobile-nav-container{display:none!important}
 }
 </style>
-<style data-skandi-part="hotel-list">#skandi-app-root{--hs-navy:#022e64;--hs-deep:#011c3e;--hs-line:#dce6ef;--hs-ink:#18273a;--hs-muted:#52657b;--hs-paper:#f5f8fc}
-#skandi-app-root .hs-page{background:var(--hs-paper);color:var(--hs-ink);font-family:Montserrat,system-ui,sans-serif;padding-bottom:64px}
-#skandi-app-root .hs-page [hidden]{display:none!important}
-#skandi-app-root .hs-shell{width:min(1160px,calc(100% - 44px));margin-inline:auto}
-#skandi-app-root .hs-hero{position:relative;isolation:isolate;background:var(--hs-deep);color:#fff;padding:34px 0 54px}
-#skandi-app-root .hs-hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.38;z-index:-1}
-#skandi-app-root .hs-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#011c3edb,#011c3e25);z-index:-1}
-#skandi-app-root .hs-hero nav{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:34px;font-size:max(13px, .83rem)}
-#skandi-app-root .hs-hero nav a{color:#fff;text-underline-offset:4px}
-#skandi-app-root .hs-eyebrow{color:#a9e5ea;text-transform:uppercase;letter-spacing:.17em;font-size:max(13px, .73rem);font-weight:750;margin:0 0 10px}
-#skandi-app-root .hs-hero h1{font:700 clamp(2.5rem,6vw,4.8rem)/1.03 Georgia,serif;margin:0}
-#skandi-app-root .hs-hero p:last-child{max-width:60ch;line-height:1.7;margin-bottom:0}
-#skandi-app-root .hs-state,#skandi-app-root .hs-unavailable{margin:18px 0;color:var(--hs-navy);font-weight:650}
-#skandi-app-root .hs-state:empty,#skandi-app-root .hs-fields:empty{display:none}
-#skandi-app-root .hs-booking{position:sticky;top:var(--skandi-header-height,0px);z-index:3;margin:20px 0;background:#fff;border:1px solid var(--hs-line);border-radius:16px;box-shadow:0 8px 32px #022e6415}
-#skandi-app-root .hs-booking summary{cursor:pointer;padding:14px 18px;color:var(--hs-navy);font-weight:750}
-#skandi-app-root .hs-booking form{padding:0 18px 16px}
-#skandi-app-root .hs-fields,#skandi-app-root .hs-filters{display:flex;flex-wrap:wrap;gap:10px 14px;margin:0 0 12px}
-#skandi-app-root .hs-page label{display:grid;gap:4px;font-size:max(13px, .78rem);font-weight:680}
-#skandi-app-root .hs-page input,#skandi-app-root .hs-page select{padding:9px 10px;border:1px solid #b8c9dc;border-radius:8px;min-height:42px;color:var(--hs-ink);font:inherit;background:#fff;max-width:100%}
-#skandi-app-root .hs-page input[type=number]{width:110px}
-#skandi-app-root .hs-page .hs-check{display:flex;align-items:center;margin:6px 0}
-#skandi-app-root .hs-page input[type=checkbox]{min-height:auto;margin:0 8px 0 0}
-#skandi-app-root .hs-button{display:inline-flex;align-items:center;min-height:42px;padding:8px 15px;border:0;border-radius:8px;background:var(--hs-navy);color:#fff;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
-#skandi-app-root .hs-button:disabled{background:#dce5ee;color:#3a4f66;cursor:default}
-#skandi-app-root .hs-booking .hs-button{margin-top:10px}
-#skandi-app-root .hs-filters{margin-top:24px;justify-content:space-between}
-#skandi-app-root .hs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-#skandi-app-root .hs-card,#skandi-app-root .hs-detail>section{background:#fff;border:1px solid var(--hs-line);border-radius:16px;overflow:hidden}
-#skandi-app-root .hs-card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover}
-#skandi-app-root .hs-card>div,#skandi-app-root .hs-detail>section{padding:20px}
-#skandi-app-root .hs-card h2,#skandi-app-root .hs-detail h2{margin:0 0 10px;color:var(--hs-navy);font:700 1.5rem/1.15 Georgia,serif}
-#skandi-app-root .hs-card p,#skandi-app-root .hs-detail p,#skandi-app-root .hs-detail li{line-height:1.62;color:var(--hs-muted)}
-#skandi-app-root .hs-card p:first-child{font-size:max(13px, .83rem);margin:0 0 6px}
-#skandi-app-root .hs-card .hs-button{margin-top:6px}
-#skandi-app-root .hs-detail{display:grid;gap:16px;margin-top:20px}
-#skandi-app-root .hs-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-#skandi-app-root .hs-gallery img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:8px}
-#skandi-app-root .hs-gallery figure{margin:0;min-width:0}#skandi-app-root .hs-gallery figcaption{margin-top:6px;color:var(--hs-muted);font-size:max(13px, .85rem)}
-#skandi-app-root .hs-room{margin-top:10px;border:1px solid var(--hs-line);border-radius:12px;background:#f9fbfe;overflow:hidden}
-#skandi-app-root .hs-room summary{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 18px;padding:16px;cursor:pointer;color:var(--hs-navy);font-weight:700}
-#skandi-app-root .hs-room summary small{color:var(--hs-muted);font-weight:500;font-size:max(13px, .9rem)}#skandi-app-root .hs-room>div{padding:0 16px 16px}
-#skandi-app-root .hs-detail ul{padding-left:1.3rem}#skandi-app-root .hs-detail li+li{margin-top:6px}
-#skandi-app-root .hs-detail dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px}
-#skandi-app-root .hs-detail dt{font-weight:750}
-#skandi-app-root .hs-detail dd{margin:4px 0 0;color:var(--hs-muted)}
-#skandi-app-root .hs-page :focus-visible{outline:3px solid #317a9c;outline-offset:2px}
-@media(max-width:850px){#skandi-app-root .hs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:560px){#skandi-app-root .hs-grid{grid-template-columns:1fr}#skandi-app-root .hs-shell{width:calc(100% - 28px)}#skandi-app-root .hs-hero{padding-bottom:30px}#skandi-app-root .hs-booking[open]{position:relative;top:auto}#skandi-app-root .hs-filters>*{width:100%}}
+<style data-skandi-part="hotel-list">#skandi-app-root .sj-page {
+  --sj-navy: #082e57;
+  --sj-ink: #1b344d;
+  --sj-muted: #4e6277;
+  --sj-line: #dce6ee;
+  --sj-paper: #f5f8fb;
+  --sj-accent: #0c7175;
+  background: var(--sj-paper);
+  color: var(--sj-ink);
+  font: 500 15px/1.6 Montserrat, system-ui, sans-serif;
+  min-height: 55vh;
+}
+#skandi-app-root .sj-page [hidden] { display: none !important; }
+#skandi-app-root .sj-page button, #skandi-app-root .sj-page select, #skandi-app-root .sj-page input { font: inherit; }
+#skandi-app-root .sj-page button, #skandi-app-root .sj-page select, #skandi-app-root .sj-page summary { cursor: pointer; }
+#skandi-app-root .sj-page :focus-visible { outline: 3px solid #20858a; outline-offset: 3px; }
+#skandi-app-root .sj-shell { width: min(1180px, calc(100% - clamp(24px, 6vw, 88px))); margin-inline: auto; }
+#skandi-app-root .sj-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 20px; padding-block: 10px; }
+#skandi-app-root .sj-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 0 9px; min-width: 0; color: var(--sj-muted); }
+#skandi-app-root .sj-breadcrumb a {
+  display: inline-flex; align-items: center; min-height: 36px;
+  color: var(--sj-navy); font-size: 13px; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+#skandi-app-root .sj-breadcrumb [aria-current="page"] { overflow-wrap: anywhere; font-size: 13px; }
+#skandi-app-root .sj-hero {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  border: 1px solid var(--sj-line); border-radius: 16px; background: #fff; overflow: hidden;
+}
+#skandi-app-root .sj-hero:has(.sj-visual:not([hidden])) { grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); }
+#skandi-app-root .sj-hero-copy { min-width: 0; padding: clamp(22px, 4vw, 48px); align-self: center; }
+#skandi-app-root .sj-hero-copy h1 {
+  margin: 0 0 10px; color: var(--sj-navy);
+  font: 700 clamp(34px, 5vw, 60px)/1.08 "Playfair Display", Georgia, serif; overflow-wrap: anywhere;
+}
+#skandi-app-root .sj-hero-copy p { max-width: 60ch; margin: 8px 0 0; }
+#skandi-app-root .sj-hero-copy .sj-context { color: var(--sj-accent); font-weight: 700; margin: 0 0 7px; }
+#skandi-app-root .sj-visual { position: relative; min-height: clamp(220px, 25vw, 330px); background: var(--sj-paper); }
+#skandi-app-root .sj-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#skandi-app-root .sj-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+#skandi-app-root .sj-button {
+  display: inline-flex; place-content: center; align-items: center;
+  min-height: 44px; padding: 7px 13px; border: 1px solid var(--sj-line); border-radius: 8px;
+  background: #fff; color: var(--sj-navy); font-weight: 700 !important; line-height: 1.25;
+  text-decoration: none; text-align: center;
+}
+#skandi-app-root .sj-button:hover { background: #ecf4f9; }
+#skandi-app-root .sj-button.primary { background: var(--sj-navy); border-color: var(--sj-navy); color: #fff; }
+#skandi-app-root .sj-button.primary:hover { background: #154a76; }
+#skandi-app-root .sj-button:disabled { cursor: default; opacity: .6; }
+#skandi-app-root .sj-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-block: 20px 14px; }
+#skandi-app-root .sj-controls button {
+  min-height: 44px; padding: 5px 13px; border: 1px solid var(--sj-line); border-radius: 8px;
+  color: var(--sj-navy); background: #fff; font-weight: 700;
+}
+#skandi-app-root .sj-controls button[aria-pressed="true"] { background: var(--sj-navy); border-color: var(--sj-navy); color: #fff; }
+#skandi-app-root .sj-card, #skandi-app-root .sj-section { background: #fff; border: 1px solid var(--sj-line); border-radius: 13px; min-width: 0; }
+#skandi-app-root .sj-section { padding: clamp(16px, 2.5vw, 28px); }
+#skandi-app-root .sj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 13px; }
+#skandi-app-root .sj-heading { color: var(--sj-navy); margin: 0 0 10px; font-size: max(13px, clamp(21px, 3vw, 27px)); line-height: 1.22; overflow-wrap: anywhere; }
+#skandi-app-root .sj-card-img { display: block; width: 100%; height: 156px; object-fit: cover; border-radius: 12px 12px 0 0; }
+#skandi-app-root .sj-status { margin-block: 10px; color: var(--sj-muted); }
+#skandi-app-root .sj-status.error { color: #8c2e26; }
+@media (max-width: 660px) {
+  #skandi-app-root .sj-hero:has(.sj-visual:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
+  #skandi-app-root .sj-visual { min-height: clamp(140px, 43vw, 236px); }
+  #skandi-app-root .sj-hero-copy { padding: 17px; }
+  #skandi-app-root .sj-actions { margin-top: 12px; }
+  #skandi-app-root .sj-breadcrumb { gap: 0 6px; }
+  #skandi-app-root .sj-controls { margin-top: 12px; }
+}
+
+#skandi-app-root .hs-page { padding-bottom: clamp(24px, 5vw, 64px); }
+#skandi-app-root .hs-page img { max-width: 100%; }
+#skandi-app-root .hs-page .hs-unavailable { margin: 0; color: var(--sj-muted); }
+#skandi-app-root .hs-page :is(#hotelDirectory, .hs-detail) { margin-top: 14px; }
+#skandi-app-root .hs-filters { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(150px, 220px); gap: 10px; align-items: end; }
+#skandi-app-root .hs-page label { display: grid; gap: 4px; min-width: 0; font-size: 13px; font-weight: 700; }
+#skandi-app-root .hs-page label :is(input:not([type="checkbox"]), select) {
+  min-width: 0; width: 100%; min-height: 44px; padding: 7px 9px;
+  border: 1px solid var(--sj-line); border-radius: 8px; background: #fff; color: var(--sj-ink);
+}
+#skandi-app-root #hotelCount { margin: 12px 0 8px; color: var(--sj-muted); }
+#skandi-app-root #hotelStatus:empty { display: none; }
+#skandi-app-root .hs-card { display: flex; flex-direction: column; }
+#skandi-app-root .hs-card .hs-card-copy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 15px; }
+#skandi-app-root .hs-card h2 { margin: 0 0 7px; font-size: 20px; line-height: 1.24; color: var(--sj-navy); overflow-wrap: anywhere; }
+#skandi-app-root .hs-card p { margin: 0 0 8px; }
+#skandi-app-root .hs-card p.hs-location { margin-bottom: 4px; color: var(--sj-muted); font-size: 13px; }
+#skandi-app-root .hs-card .sj-button { margin-top: auto; }
+#skandi-app-root .hs-card .hs-summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+#skandi-app-root .hs-grid-meta { font-size: 13px; font-weight: 700; color: var(--sj-muted); }
+#skandi-app-root .hs-panel { display: grid; gap: 12px; }
+#skandi-app-root .hs-detail section > h3, #skandi-app-root .hs-room h3 { margin: 12px 0 6px; color: var(--sj-navy); font-size: 16px; }
+#skandi-app-root .hs-detail p { max-width: 75ch; margin: 8px 0; }
+#skandi-app-root .hs-detail ul { margin-block: 8px; padding-inline-start: 22px; }
+#skandi-app-root .hs-detail dl {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+  gap: 8px; margin-block: 12px 0;
+}
+#skandi-app-root .hs-detail dl div { min-width: 0; padding: 8px 11px; border-radius: 7px; background: #edf4f8; overflow-wrap: anywhere; }
+#skandi-app-root .hs-detail dt { font-size: 13px; color: var(--sj-muted); }
+#skandi-app-root .hs-detail dd { margin: 2px 0 0; font-weight: 700; }
+#skandi-app-root .hs-room { border-top: 1px solid var(--sj-line); padding: 5px 0; }
+#skandi-app-root .hs-room summary { min-height: 44px; padding: 8px 3px; color: var(--sj-navy); font-weight: 700; }
+#skandi-app-root .hs-room summary small { display: inline-block; margin-inline-start: 6px; color: var(--sj-muted); font-weight: 500; }
+#skandi-app-root .hs-room img { display: block; width: min(430px, 100%); border-radius: 8px; object-fit: cover; }
+#skandi-app-root .hs-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); gap: 9px; }
+#skandi-app-root .hs-gallery figure { margin: 0; }
+#skandi-app-root .hs-gallery img { display: block; width: 100%; height: 145px; object-fit: cover; border-radius: 8px; }
+#skandi-app-root .hs-gallery figcaption { margin-top: 6px; color: var(--sj-muted); font-size: 13px; }
+#skandi-app-root .hs-booking { margin-top: 14px; padding: 10px 14px; border: 1px solid var(--sj-line); border-radius: 12px; background: #fff; }
+#skandi-app-root .hs-booking summary { min-height: 44px; padding-block: 8px; font-weight: 700; color: var(--sj-navy); }
+#skandi-app-root .hs-booking form { display: grid; align-items: start; gap: 12px; padding-bottom: 8px; }
+#skandi-app-root .hs-fields { display: grid; gap: 9px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr)); }
+#skandi-app-root .hs-fields:empty { display: none; }
+#skandi-app-root .hs-page .hs-check { display: flex; align-items: center; min-height: 44px; gap: 7px; }
+#skandi-app-root #hotelBook { justify-self: start; }
+#skandi-app-root #hotelOriginField { width: min(380px, 100%); }
+@media (max-width: 520px) {
+  #skandi-app-root .hs-filters { grid-template-columns: minmax(0, 1fr); }
+  #skandi-app-root .hs-detail .sj-controls button { flex: 1 1 auto; }
+  #skandi-app-root .hs-room summary small { display: block; margin-inline-start: 0; }
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -1477,22 +1554,30 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 </div>
 </div>
 <div id="skandi-app-root">
-  <main class="hs-page" id="hotelListApp">
-    <header class="hs-hero">
-      <img id="hotelHeroImage" alt="" hidden="">
-      <div class="hs-shell">
-        <nav id="hotelBreadcrumb" aria-label="Breadcrumb"></nav>
-        <p class="hs-eyebrow">SKANDI Travels</p>
-        <h1 id="hotelTitle">Hotels</h1>
-        <p id="hotelIntro"></p>
+  <main class="sj-page hs-page" id="hotelListApp" aria-busy="true">
+    <div class="sj-shell">
+      <div class="sj-top">
+        <nav class="sj-breadcrumb" id="hotelBreadcrumb" aria-label="Breadcrumb">
+          <a href="https://www.skanditravels.com/destinations" target="_top" data-path="/destinations">Destinations</a>
+        </nav>
       </div>
-    </header>
-    <div class="hs-shell">
-      <div class="hs-state" role="status" id="hotelStatus">Loading hotels…</div>
-      <button class="hs-button" id="hotelRetry" type="button" hidden="">Try again</button>
+      <header class="sj-hero" aria-labelledby="hotelTitle">
+        <div class="sj-hero-copy">
+          <p class="sj-context" id="hotelLocation" hidden=""></p>
+          <h1 id="hotelTitle">Hotels</h1>
+          <p id="hotelIntro" hidden=""></p>
+          <div class="sj-actions" id="hotelHeroActions" hidden="">
+            <button class="sj-button primary" id="hotelAvailabilityLink" type="button" hidden="">Check availability</button>
+            <p id="hotelUnavailable" class="hs-unavailable" hidden="">Online booking is unavailable for this hotel.</p>
+          </div>
+        </div>
+        <div class="sj-visual" id="hotelVisual" hidden=""><img id="hotelHeroImage" alt=""></div>
+      </header>
+      <div class="sj-status" role="status" id="hotelStatus">Loading hotels…</div>
+      <button class="sj-button" id="hotelRetry" type="button" hidden="">Try again</button>
       <section id="hotelContent" hidden="">
         <details class="hs-booking" id="hotelBooking">
-          <summary>Find your stay</summary>
+          <summary>Check dates and availability</summary>
           <form id="hotelBookingForm">
             <div class="hs-fields">
               <label id="hotelPropertyField">Hotel<select id="hotelProperty"></select></label>
@@ -1505,19 +1590,21 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
             <div class="hs-fields" id="hotelChildAges"></div>
             <label class="hs-check" id="hotelFlightsField"><input type="checkbox" name="addFlights"> Add flights</label>
             <label id="hotelOriginField" hidden="">Flying from<select name="originIata"></select></label>
-            <button class="hs-button" id="hotelBook" type="submit">Check availability</button>
+            <button class="sj-button primary" id="hotelBook" type="submit">Check availability</button>
           </form>
         </details>
-        <button class="hs-button hs-unavailable" id="hotelUnavailable" type="button" disabled="" hidden="">Booking not available</button>
         <div id="hotelDirectory">
           <div class="hs-filters">
             <label>Find a hotel<input id="hotelFilter" type="search" placeholder="Hotel or location"></label>
             <label>Sort by<select id="hotelSort"><option value="recommended">Recommended</option><option value="name">Hotel name</option><option value="rating">Guest rating</option></select></label>
           </div>
           <p id="hotelCount" role="status"></p>
-          <div class="hs-grid" id="hotelCards"></div>
+          <div class="sj-grid" id="hotelCards"></div>
         </div>
-        <article id="hotelDetail" class="hs-detail" hidden=""></article>
+        <article id="hotelDetail" class="hs-detail" hidden="">
+          <nav id="hotelSections" class="sj-controls" aria-label="Hotel information"></nav>
+          <div id="hotelPanels"></div>
+        </article>
       </section>
     </div>
   </main>
@@ -3208,7 +3295,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     clearTimeout(timer);
     pending=Date.now().toString(36)+Math.random().toString(36).slice(2,9);
     status.textContent=message;
-    status.scrollIntoView?.({block:"nearest"});
+    if(type==="HOTEL_SEARCH_RUN")status.scrollIntoView?.({block:"nearest"});
     retry.hidden=true;
     find("hotelBook").disabled=true;
     post(type,payload,pending);
@@ -3216,8 +3303,13 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
   }
   function load(force=false){request("HOTEL_SEARCH_READY",{settings,force});}
   function nav(path){post("HOTEL_SEARCH_NAVIGATE",{path});}
-  function anchor(path,label,className=""){
-    return `<a class="${className}" target="_top" href="${escape(link(path))}" data-path="${escape(path)}">${escape(label)}</a>`;
+  function anchor(path,label,className="",description=""){
+    if(typeof path!=="string"||!path.startsWith("/")||path.startsWith("//"))return "";
+    return `<a class="${className}" target="_top" href="${escape(link(path))}" data-path="${escape(path)}"${description?` aria-label="${escape(description)}"`:""}>${escape(label)}</a>`;
+  }
+  function shortCopy(value,limit=300){
+    const text=String(value||"").trim().split(/\n/)[0];
+    return text.length>limit?text.slice(0,limit).replace(/\s+\S*$/,"")+"…":text;
   }
   function filterHotels(){
     const term=find("hotelFilter").value.trim().toLowerCase();
@@ -3225,13 +3317,19 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     const sort=find("hotelSort").value;
     if(sort==="name")visible.sort((a,b)=>a.name.localeCompare(b.name));
     if(sort==="rating")visible.sort((a,b)=>(b.guestRating||0)-(a.guestRating||0)||a.name.localeCompare(b.name));
-    find("hotelCount").textContent=visible.length?`${visible.length} ${visible.length===1?"hotel":"hotels"}`:"No hotels match this selection.";
+    find("hotelCount").textContent=visible.length?`${visible.length} ${visible.length===1?"hotel":"hotels"}`:
+      hotels.length?"No hotels match your search.":"No hotels are listed for this place yet.";
     find("hotelCards").innerHTML=visible.map(h=>{
-      const image=safeImage(h.image);
-      return `<article class="hs-card">${image?`<img src="${image}" alt="" loading="lazy">`:""}<div><p>${escape(h.location)}</p><h2>${escape(h.name)}</h2>${h.guestRating?`<p>Guest rating ${escape(h.guestRating)}</p>`:""}<p>${escape(h.summary)}</p>${anchor(h.path,"View hotel","hs-button")}${h.bookable?"":'<p>Booking not available</p>'}</div></article>`;
+      const image=safeImage(h.image),summary=shortCopy(h.summary,170);
+      const ratings=[h.classification?`${h.classification}-star hotel`:"",h.guestRating?`Guest rating ${h.guestRating}`:""].filter(Boolean).join(" · ");
+      return `<article class="sj-card hs-card">${image?`<img class="sj-card-img" src="${image}" alt="" loading="lazy">`:""}
+        <div class="hs-card-copy">${h.location?`<p class="hs-location">${escape(h.location)}</p>`:""}<h2>${escape(h.name)}</h2>
+        ${ratings?`<p class="hs-grid-meta">${escape(ratings)}</p>`:""}${summary?`<p class="hs-summary">${escape(summary)}</p>`:""}
+        ${anchor(h.path,"View hotel","sj-button primary","View "+h.name)}</div></article>`;
     }).join("");
   }
-  function section(title,body){return body?`<section><h2>${escape(title)}</h2>${body}</section>`:"";}
+  function section(title,body){return body?`<section class="sj-section"><h2 class="sj-heading">${escape(title)}</h2>${body}</section>`:"";}
+  function subSection(title,body){return body?`<div><h3>${escape(title)}</h3>${body}</div>`:"";}
   function display(value,depth=0){
     if(depth>6||value===null||value===undefined||value==="")return "";
     if(typeof value==="string"){
@@ -3258,30 +3356,69 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     const items=entries.map(([label,value])=>[display(label),display(value)]).filter(([label,value])=>label&&value);
     return items.length?`<dl>${items.map(([label,value])=>`<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>`:"";
   }
+  function selectHotelSection(key){
+    find("hotelSections").querySelectorAll("button").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.section===key)));
+    find("hotelPanels").querySelectorAll("[data-panel]").forEach(panel=>{panel.hidden=panel.dataset.panel!==key});
+  }
   function renderDetail(page){
+    const current=find("hotelSections").querySelector('[aria-pressed="true"]')?.dataset.section;
+    const place=page.locationTransfer||{},policies=page.policies||{};
     const metadata=rows(page.galleryMedia);
     const gallery=rows(page.gallery).map(url=>({url:safeImage(url),meta:metadata.find(item=>item.url===url)||{}})).filter(item=>item.url);
-    const roomInfo=rows(page.rooms).map(room=>`<details class="hs-room"><summary><span>${escape(display(room.name)||"Room")}</span><small>${escape([display(room.roomType),display(room.bedType),display(room.size),room.capacity?`Sleeps ${room.capacity}`:""].filter(Boolean).join(" · "))}</small></summary><div>${paragraph(room.description)}${bullets(room.features)}</div></details>`).join("");
-    const place=page.locationTransfer||{};
-    const policies=page.policies||{};
-    find("hotelDetail").innerHTML=[
-      section("About the hotel",paragraph(page.about)+paragraph(page.important)+facts(rows(page.facts).map(f=>[f.label,f.value]))),
-      section("Photos",gallery.length?`<div class="hs-gallery">${gallery.map(image=>`<figure><img src="${image.url}" alt="${escape(display(image.meta.alt)||page.name)}" loading="lazy">${image.meta.caption?`<figcaption>${escape(display(image.meta.caption))}</figcaption>`:""}</figure>`).join("")}</div>`:""),
-      section("Highlights",bullets(page.highlights)),
-      section("Facilities",bullets(rows(page.facilities).map(value=>typeof value==="string"?value.replace(/_/g," "):value))),
-      section("Rooms",paragraph(page.roomsIntro)+roomInfo),
-      ...[["Food and drink",page.food],["Pool and beach",page.poolBeach],["Activities",page.activities],["Accessibility",page.accessibility]].map(([title,value])=>
-        section(title,contentFacts(value))),
-      section("Board options",bullets(page.boardOptions)),
-      section("Good to know",facts([["Check-in",policies.checkIn],["Check-out",policies.checkOut],["Minimum check-in age",policies.minimumAge],["Pets allowed",policies.petsAllowed],["Smoking",policies.smoking]])+(rows(page.included).length?`<h3>Included</h3>${bullets(page.included)}`:"")+(rows(page.notIncluded).length?`<h3>Not included</h3>${bullets(page.notIncluded)}`:"")),
-      section("Location",paragraph(place.text)+facts([["Address",place.address],["Airport",place.airportDistance],["Transfer",place.transferTime],["City centre",place.centerDistance],["Beach",place.beachDistance],["Phone",place.phone],["Email",place.email]]))
-    ].join("");
+    const roomInfo=rows(page.rooms).map(room=>{
+      const image=safeImage(room.image);
+      const name=display(room.name)||"Room";
+      const labels=[display(room.roomType),display(room.bedType),display(room.size),room.capacity?`Sleeps ${room.capacity}`:""].filter(Boolean);
+      return `<details class="hs-room"><summary><span>${escape(name)}</span>${labels.length?`<small>${escape(labels.join(" · "))}</small>`:""}</summary>
+        <div>${image?`<img src="${image}" alt="${escape(name)}" loading="lazy">`:""}${paragraph(room.description)}${bullets(room.features)}</div></details>`;
+    }).join("");
+    const moreFacts=facts(rows(page.facts).map(fact=>[fact.label,fact.value]));
+    const about=display(page.about);
+    const facilities=bullets(rows(page.facilities).map(value=>typeof value==="string"?value.replace(/_/g," "):value));
+    const amenityDetails=[
+      ["Food and drink",page.food],["Pool and beach",page.poolBeach],["Activities",page.activities],["Accessibility",page.accessibility]
+    ].map(([title,value])=>section(title,contentFacts(value))).join("");
+    const locationFacts=facts([["Address",place.address],["Distance to airport",place.airportDistance],["Transfer time",place.transferTime],
+      ["Distance to city centre",place.centerDistance],["Distance to beach",place.beachDistance],["Phone",place.phone],["Email",place.email]]);
+    const stayPolicies=facts([["Minimum check-in age",policies.minimumAge],["Pets allowed",policies.petsAllowed],["Smoking",policies.smoking]]);
+    const panels=[
+      ["overview","Overview",section("About the hotel",
+        facts([["Official rating",page.classification?`${page.classification} stars`:""],["Guest rating",page.guestRating],
+          ["Check-in",policies.checkIn],["Check-out",policies.checkOut]])+
+        (about&&about!==display(page.summary)?paragraph(about):"")+subSection("Highlights",bullets(page.highlights)))+
+        section("Property details",moreFacts?`<details><summary>See more about the property</summary>${moreFacts}</details>`:"")],
+      ["rooms","Rooms",section("Rooms",paragraph(page.roomsIntro)+roomInfo)],
+      ["facilities","Facilities",section("Facilities",facilities)+amenityDetails+section("Meal plans",bullets(page.boardOptions))],
+      ["location","Location & policies",section("Location",paragraph(place.text)+locationFacts)+
+        section("Policies and useful information",paragraph(page.important)+stayPolicies+subSection("Included",bullets(page.included))+subSection("Not included",bullets(page.notIncluded)))],
+      ["photos","Photos",section("Photos",gallery.length?`<div class="hs-gallery">${gallery.map(image=>`<figure><img src="${image.url}" alt="${escape(display(image.meta.alt)||page.name)}" loading="lazy">${image.meta.caption?`<figcaption>${escape(display(image.meta.caption))}</figcaption>`:""}</figure>`).join("")}</div>`:"")]
+    ].filter(([, ,body])=>body);
+    find("hotelSections").hidden=panels.length<2;
+    find("hotelSections").innerHTML=panels.map(([key,title])=>
+      `<button type="button" data-section="${key}" aria-controls="hotel-section-${key}" aria-pressed="false">${escape(title)}</button>`
+    ).join("");
+    find("hotelPanels").innerHTML=panels.map(([key,,body])=>`<div class="hs-panel" id="hotel-section-${key}" data-panel="${key}" hidden>${body}</div>`).join("");
+    selectHotelSection(panels.some(([key])=>key===current)?current:panels[0]?.[0]);
+  }
+  function renderBreadcrumb(page,detail){
+    const parts=[anchor(routes.destinations||"/destinations","Destinations")];
+    rows(page.breadcrumbs).forEach(place=>parts.push(anchor(place.path,place.name)));
+    if(detail){
+      const query=new URLSearchParams();
+      ["country","region","destination","area"].forEach(level=>{if(page[level+"Slug"])query.set(level,page[level+"Slug"])});
+      const directory=(routes.hotelList||"/destinations/explore/hotel-list")+(query.size?"?"+query:"");
+      parts.push(anchor(page.hotelsPath||directory,"Hotels"));
+    }
+    parts.push(`<span aria-current="page">${escape(detail?page.name:"Hotels")}</span>`);
+    find("hotelBreadcrumb").innerHTML=parts.filter(Boolean).join('<span aria-hidden="true">›</span>');
   }
   function updateBooking(){
     const hotel=selected||hotels.find(h=>h.id===find("hotelProperty").value);
     const bookable=hotel?.bookable===true;
     find("hotelBooking").hidden=!bookable;
-    find("hotelUnavailable").hidden=bookable||(!selected&&!hotels.length);
+    find("hotelHeroActions").hidden=!selected;
+    find("hotelAvailabilityLink").hidden=!selected||!bookable;
+    find("hotelUnavailable").hidden=!selected||bookable;
     find("hotelBook").disabled=!bookable||Boolean(pending);
     find("hotelFlightsField").hidden=!hotel?.flightsAvailable;
     if(!hotel?.flightsAvailable)field("addFlights").checked=false;
@@ -3291,19 +3428,22 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
   function render(page,detail){
     selected=detail?page:null;
     hotels=detail?[]:rows(page.previewHotels);
-    const scope=page.areaName||page.destinationName||page.countryName||"";
-    find("hotelTitle").textContent=detail?page.name:scope?`Hotels in ${scope}`:"Explore hotels";
-    find("hotelIntro").textContent=detail?page.summary||scope:page.intro||"Find a stay in a SKANDI destination.";
-    const image=find("hotelHeroImage"), url=safeImage(page.heroImage);
-    image.hidden=!url;
+    const scope=page.areaName||page.destinationName||page.regionName||page.countryName||"";
+    const title=detail?page.name:scope?`Hotels in ${scope}`:"Explore hotels";
+    const location=detail?[page.destinationName||page.areaName||page.regionName,page.countryName].filter(Boolean).join(" · "):"";
+    const intro=detail?shortCopy(page.summary):"";
+    find("hotelTitle").textContent=title;
+    document.title=`${title} · SKANDI Travels`;
+    find("hotelIntro").textContent=intro;
+    find("hotelIntro").hidden=!intro;
+    find("hotelLocation").textContent=location;
+    find("hotelLocation").hidden=!location;
+    const image=find("hotelHeroImage"),url=safeImage(page.heroImage);
+    find("hotelVisual").hidden=!url;
     if(url)image.src=page.heroImage;
     else image.removeAttribute("src");
-    const query=new URLSearchParams();
-    if(page.countrySlug)query.set("country",page.countrySlug);
-    if(page.destinationSlug)query.set("destination",page.destinationSlug);
-    if(page.areaSlug)query.set("area",page.areaSlug);
-    const directory=routes.hotelList+(query.size?"?"+query.toString():"");
-    find("hotelBreadcrumb").innerHTML=anchor(routes.destinations,"Destinations")+(detail?" › "+anchor(directory,"Hotels"):"");
+    renderBreadcrumb(page,detail);
+    root.setAttribute("aria-busy","false");
     find("hotelDirectory").hidden=detail;
     find("hotelDetail").hidden=!detail;
     find("hotelPropertyField").hidden=detail;
@@ -3313,6 +3453,16 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     if(detail)renderDetail(page);else filterHotels();
     updateBooking();
   }
+  find("hotelSections").addEventListener("click",event=>{
+    const button=event.target.closest("[data-section]");
+    if(button)selectHotelSection(button.dataset.section);
+  });
+  find("hotelAvailabilityLink").addEventListener("click",()=>{
+    const booking=find("hotelBooking");
+    booking.open=true;
+    booking.scrollIntoView({block:"nearest"});
+    field("checkInDate").focus({preventScroll:true});
+  });
   find("hotelFilter").addEventListener("input",filterHotels);
   find("hotelSort").addEventListener("change",filterHotels);
   find("hotelProperty").addEventListener("change",updateBooking);
