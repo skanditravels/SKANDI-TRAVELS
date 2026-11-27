@@ -18,7 +18,7 @@ let html = null, catalog = [], catalogJob = null, catalogLoadedAt = 0;
 let pageJob = null, searchJob = null, selectionJob = null;
 let settings = { language:"EN", currency:"USD" };
 let currentCountry = null, currentPlace = null, discoveryTimer = null, discoveryCount = 0;
-let exploreRouteQuery;
+let exploreRouteQuery,exploreRouteKey;
 const bound = new Set();
 const content = createDestinationContent(() => catalog, () => ({}), LANGUAGES);
 
@@ -51,6 +51,9 @@ function navigate(raw) {
       /(^|\/)\.\.?($|\/)/.test(decodeURIComponent(path.split(/[?#]/)[0])) ||
       /^\/_(?:functions|api)(?:\/|$)/i.test(path)) throw fail("COUNTRY_INVALID_ROUTE","This link is unavailable.");
   wixLocationFrontend.to(path);
+  if(normalizeSitePath(path)===APP_ROUTES.country) {
+    refreshExploreRoute(Object.fromEntries(new URL(path,"https://www.skanditravels.com").searchParams));
+  }
 }
 async function ensureCatalog(force = false) {
   if (!force && catalogLoadedAt && Date.now()-catalogLoadedAt < 60000) return;
@@ -74,6 +77,12 @@ function requestedPlace(query = {}) {
     destinationSlug:slug(query.destination),
     areaSlug:slug(query.area)
   };
+}
+function refreshExploreRoute(query) {
+  const key=JSON.stringify(requestedPlace(query));
+  if(key===exploreRouteKey)return;
+  exploreRouteKey=key;exploreRouteQuery=query;
+  post("DESTINATION_ROUTE_CHANGED");
 }
 function arrivals(record) {
   if (!record) return [];
@@ -273,14 +282,10 @@ function discover() {
   else console.error("[Explore] No page response from #exploreEmbed.");
 }
 $w.onReady(() => {
-  let currentKey=JSON.stringify(requestedPlace(wixLocationFrontend.query));
+  exploreRouteKey=JSON.stringify(requestedPlace(wixLocationFrontend.query));
   wixLocationFrontend.onChange?.(location=>{
     if(Array.isArray(location?.path)&&normalizeSitePath("/"+location.path.join("/"))!==APP_ROUTES.country)return;
-    const query=location?.query??wixLocationFrontend.query;
-    const key=JSON.stringify(requestedPlace(query));
-    if(key===currentKey)return;
-    currentKey=key;exploreRouteQuery=query;
-    post("DESTINATION_ROUTE_CHANGED");
+    refreshExploreRoute(location?.query??wixLocationFrontend.query);
   });
   discover();
 });

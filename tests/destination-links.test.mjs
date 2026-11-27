@@ -82,7 +82,7 @@ test('Hotel List links directly to an unlinked property and its detail blocks bo
   assert.equal(w.document.getElementById('hotelUnavailable').hidden,false);
 });
 
-test('a retained Wix hotel embed opens the selected property and restores its scoped list on back', async t => {
+test('a retained Wix hotel embed opens a property even when the link emits no location event', async t => {
   const base='skandi-embeds/hotel-list/skandi-hotel-list';
   const dom=new JSDOM(await source(base+'.html'),{runScripts:'outside-only',url:'https://example.test'});
   t.after(()=>dom.window.close());
@@ -94,15 +94,12 @@ test('a retained Wix hotel embed opens the selected property and restores its sc
     {id:'se',name:'Sweden',entityType:'COUNTRY'},place,
     {id:'scc',name:'Scandic Continental',entityType:'HOTEL',parentEntityId:place.id,details:{summary:'Beside Stockholm Central Station.'}}
   ];
-  let receive,change;
+  let receive,change,navigated;
   const messages=[], requests=[];
   const wixLocation={
     query:listQuery,
     onChange:fn=>{change=fn;},
-    to:path=>{
-      const target=new URL(path,'https://example.test');
-      change({path:target.pathname.slice(1).split('/'),query:Object.fromEntries(target.searchParams)});
-    }
+    to:path=>{navigated=new URL(path,'https://example.test');}
   };
   const embed={
     id:'hotelsEmbed',onMessage:fn=>{receive=fn;},
@@ -125,6 +122,10 @@ test('a retained Wix hotel embed opens the selected property and restores its sc
   assert.equal(title.textContent,'Scandic Continental');
   assert.equal(w.document.getElementById('hotelDirectory').hidden,true);
   assert.equal(messages.at(-1).type,'HOTEL_DETAIL_DATA');
+  assert.equal(navigated.searchParams.get('hotelId'),'scc');
+  const openedMessages=messages.length;
+  change({path:listPath.slice(1).split('/'),query:Object.fromEntries(navigated.searchParams)});
+  assert.equal(messages.length,openedMessages);
   change({path:listPath.slice(1).split('/'),query:listQuery});
   await Promise.all(requests.splice(0));
   assert.equal(title.textContent,'Hotels in Stockholm');

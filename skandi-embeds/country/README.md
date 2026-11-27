@@ -3,7 +3,7 @@
 ## 2026-11-27 — Explore by geographic scope
 
 - The existing `/destinations/explore` page and `#exploreEmbed` render the published place selected by `country`, `region`, `destination` and `area`. The path skips levels without a published relationship. The breadcrumbs and hotel links retain the verified scope.
-- The controller refreshes the selected place on Wix location changes when navigation keeps the same embed mounted.
+- Links within Explore refresh the selected place immediately. The controller also follows Wix location events when browser navigation retains the existing embed.
 - Overview shows the next places to explore and the location guide. Trips & prices uses the existing package search and booking handoff. Weather, practical information, airlines and FAQs remain available when published. The destinations map is the geographic entry point.
 - Source remains the split HTML, CSS and JavaScript; the shared discovery stylesheet also serves Hotel List. The `COUNTRY_*` message contracts and published Inventory source are retained. The older inline-map and route notes below are historical.
 

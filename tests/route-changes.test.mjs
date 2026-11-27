@@ -57,7 +57,7 @@ test('Explore renders the selected country even when Wix keeps the current page 
   const $w=()=>embed;
   $w.onReady=fn=>{ready=fn;};
   const context={
-    ...routes,console,setTimeout,clearTimeout,$w,
+    ...routes,console,setTimeout,clearTimeout,URL,URLSearchParams,$w,
     wixLocationFrontend:{query:{country:'greece'},to:path=>navigated.push(path),onChange:fn=>{change=fn;}},
     getDestinationFlowCatalog:async()=>({ok:true,records}),
     createDestinationContent:()=>({
@@ -70,10 +70,13 @@ test('Explore renders the selected country even when Wix keeps the current page 
   ready();
   await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_READY',requestId:'ready'}},embed);
   await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_SELECT_COUNTRY',requestId:'select',payload:{slug:'sweden'}}},embed);
-  assert.equal(posted.at(-1).requestId,'select');
-  assert.equal(posted.at(-1).payload.page.name,'Sweden');
+  const selected=posted.findLast(message=>message.type==='COUNTRY_PAGE_RESULT');
+  assert.equal(selected.requestId,'select');
+  assert.equal(selected.payload.page.name,'Sweden');
   assert.deepEqual(navigated,['/destinations/explore?country=sweden']);
-  change({path:['destinations','explore'],query:{country:'sweden',destination:'stockholm'}});
+  const detail='/destinations/explore?country=sweden&destination=stockholm';
+  await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_NAVIGATE',requestId:'link',payload:{path:detail}}},embed);
+  assert.equal(navigated.at(-1),detail);
   assert.equal(posted.at(-1).type,'DESTINATION_ROUTE_CHANGED');
   await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_READY',requestId:'retained',payload:{slug:'greece'}}},embed);
   assert.equal(posted.at(-1).payload.page.name,'Stockholm');
