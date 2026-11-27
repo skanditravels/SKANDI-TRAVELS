@@ -135,6 +135,8 @@ test('the checkout, order confirmation and profile receivers restore the same ch
     const candidate = { ...fakeEmbed(), id:PAGE_BUILD_INTEGRATIONS[key].embedIds[0].slice(1) };
     const message = { source:'SKANDI_SUPPORT_CHAT', type:'SUPPORT_CHAT_READY', payload:{ instance:key } };
     assert.equal(await next.bridge.handlePageChatMessage({ ...candidate, id:'someOtherEmbed' }, message), false);
+    assert.equal(await next.bridge.handlePageChatMessage(candidate, { ...message, type:'SUPPORT_CHAT_SNAPSHOT' }), true);
+    assert.equal(next.requests.length, 0);
     assert.equal(await next.bridge.handlePageChatMessage(candidate, message), true);
     const restored = candidate.sent.find(m => m.type === 'SUPPORT_CHAT_RESTORE');
     assert.equal(restored.payload.draft, 'Checkout support question');
