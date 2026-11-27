@@ -26,7 +26,7 @@ async function fixture(t, extra={}) {
   await write(root,'skandi-embeds/receiver/skandi-wix-universal-receiver.html',await fs.readFile(path.join(ROOT,'skandi-embeds/receiver/skandi-wix-universal-receiver.html'),'utf8'));
   for(const [key,m] of Object.entries(metadata))await write(root,m.controller,`// ${m.embedIds[0]} ${m.sources[0]}\nexport const bridge=true;`);
   for(const file of ['skandi-shell.css','skandi-shell.js','skandi-website-design.js'])await write(root,'skandi-embeds/global/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global',file),'utf8'));
-  for(const file of ['skandi-alexandra-chat.html','skandi-alexandra-chat.css','skandi-alexandra-chat.js'])await write(root,'skandi-embeds/global/alexandra/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global/alexandra',file),'utf8'));
+  for(const file of ['skandi-alexandra-chat.html','skandi-alexandra-chat.css','skandi-alexandra-chat.js','assets/alexandra-portrait.webp','assets/alexandra-portrait-still.webp'])await write(root,'skandi-embeds/global/alexandra/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global/alexandra',file)));
   for(const family of ['public','riaintra','altea'])for(const role of family==='public'?['header','footer','mobile-nav']:['header','footer']) {
     const directory=family==='public'?'skandi-embeds/global':family+'-embeds/global',stem=(family==='public'?'skandi':family)+'-'+role;
     await write(root,`${directory}/${stem}.html`,`<div id="${family}-${role}">${family} ${role}</div>`);

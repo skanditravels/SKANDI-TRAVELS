@@ -48,8 +48,8 @@ div:has(> .skandi-alexandra-host) {
   position: fixed !important;
   inset: auto 0 0 auto !important;
   margin: 0 !important;
-  width: 94px !important;
-  height: 94px !important;
+  width: 106px !important;
+  height: 104px !important;
   min-width: 0 !important;
   min-height: 0 !important;
   max-width: none !important;
@@ -79,6 +79,9 @@ div:has(> .skandi-alexandra-host) {
 .skandi-alexandra-host-open {
   width: min(456px, 100%) !important;
   height: min(736px, 100dvh) !important;
+}
+.skandi-alexandra-host-greeting {
+  width: min(306px, 100%) !important;
 }
 @media (max-width: 1020px) {
   .skandi-alexandra-host { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
