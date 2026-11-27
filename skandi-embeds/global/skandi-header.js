@@ -68,11 +68,23 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     loggedIn:false,
     displayName:"",
     email:"",
-    points:0,
+    points:null,
     tierName:"",
     menu:[]
   };
   let userSettings = { language:"EN", currency:"USD" };
+
+  function updateCustomerSession(payload = {}) {
+    session = {
+      loggedIn:Boolean(payload.loggedIn),
+      displayName:payload.displayName || "",
+      email:payload.email || "",
+      points:payload.loyaltyAvailable && Number.isFinite(payload.points) ? payload.points : null,
+      pointsName:payload.pointsName || "Points",
+      tierName:payload.tierName || "",
+      menu:Array.isArray(payload.menu) ? payload.menu : []
+    };
+  }
   let mobileMenuOpen = false;
 
   const $ = id => document.getElementById(id);
@@ -394,9 +406,6 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     const email =
       String(session.email || "").trim();
 
-    const points =
-      Number(session.points || 0);
-
     const tier = String(session.tierName || "").trim();
 
     target.innerHTML = `
@@ -410,8 +419,10 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
           <span class="account-mini-separator">·</span>
           <span class="account-mini-email">${esc(email)}</span>
         ` : ""}
-        <span class="account-mini-separator">·</span>
-        <span class="account-mini-points">${points.toLocaleString()} pts</span>
+        ${Number.isFinite(session.points) ? `
+          <span class="account-mini-separator">·</span>
+          <span class="account-mini-points">${session.points.toLocaleString()} ${esc(session.pointsName)}</span>
+        ` : ""}
       </div>
     `;
   }
@@ -829,6 +840,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 
     if (msg.type === "SKANDI_MASTER_CONFIG") {
       master = msg.payload || {};
+      if (master.customerSession) updateCustomerSession(master.customerSession);
 
       if (master?.settings) {
         applyParentSettings(
@@ -864,16 +876,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     }
 
     if (msg.type === "CUSTOMER_HEADER_STATE") {
-      session = {
-        loggedIn:Boolean(msg.payload?.loggedIn),
-        displayName:msg.payload?.displayName || "",
-        email:msg.payload?.email || "",
-        points:Number(msg.payload?.points || 0),
-        tierName:msg.payload?.tierName || "",
-        menu:Array.isArray(msg.payload?.menu)
-          ? msg.payload.menu
-          : []
-      };
+      updateCustomerSession(msg.payload);
 
       if (session.loggedIn) {
         setClubBusy(false);

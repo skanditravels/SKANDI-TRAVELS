@@ -3,7 +3,7 @@
 // V12 transport repair: every frontend-callable export is declared directly with webMethod so Wix can generate stable proxies.
 
 import { Permissions, webMethod } from "@wix/web-methods";
-import { currentMember } from "wix-members-backend";
+import { getCurrentCustomerMemberCore, getCustomerMemberFieldsCore } from "backend/SKANDI_CORE/customerSession";
 import {
   getCustomerProfileBootstrapCore,
   updateCustomerProfileCore,
@@ -29,22 +29,17 @@ import {
   getCustomerDocumentCore
 } from "backend/SKANDI_CORE/customerProfile";
 
-async function memberContext() {
-  const member = await currentMember.getMember();
-  if (!member?._id) {
-    const error = new Error("Sign in to manage your SKANDI profile.");
-    error.code = "LOGIN_REQUIRED";
-    error.publicMessage = error.message;
-    throw error;
-  }
-  const firstName = String(member.contactDetails?.firstName || member.profile?.nickname || "").trim();
-  const lastName = String(member.contactDetails?.lastName || "").trim();
+async function memberContext(account) {
+  const member = await getCurrentCustomerMemberCore({ account });
+  const fields = getCustomerMemberFieldsCore(member);
   return {
-    memberId: member._id,
-    email: String(member.loginEmail || member.contactDetails?.emails?.[0] || "").trim().toLowerCase(),
-    firstName,
-    lastName,
-    displayName: String(member.profile?.nickname || [firstName, lastName].filter(Boolean).join(" ") || "").trim()
+    memberId: member._id || member.id,
+    email: fields.loginEmail,
+    emailVerified: member.loginEmailVerified === true,
+    firstName: fields.firstName || "",
+    lastName: fields.lastName || "",
+    displayName: fields.displayName || member.profile?.nickname || "",
+    member: account ? member : null
   };
 }
 
@@ -58,16 +53,16 @@ function publicError(error) {
   return out;
 }
 
-async function memberCall(handler, input = {}) {
+async function memberCall(handler, input = {}, account = false) {
   try {
-    return await handler(await memberContext(), input || {});
+    return await handler(await memberContext(account), input || {});
   } catch (error) {
     throw publicError(error);
   }
 }
 
-export const getCustomerProfileBootstrap = webMethod(Permissions.SiteMember, input => memberCall(getCustomerProfileBootstrapCore, input));
-export const updateCustomerProfile = webMethod(Permissions.SiteMember, input => memberCall(updateCustomerProfileCore, input));
+export const getCustomerProfileBootstrap = webMethod(Permissions.SiteMember, input => memberCall(getCustomerProfileBootstrapCore, input, true));
+export const updateCustomerProfile = webMethod(Permissions.SiteMember, input => memberCall(updateCustomerProfileCore, input, true));
 export const saveCustomerTraveler = webMethod(Permissions.SiteMember, input => memberCall(saveCustomerTravelerCore, input));
 export const removeCustomerTraveler = webMethod(Permissions.SiteMember, input => memberCall(removeCustomerTravelerCore, input));
 export const markCustomerNotificationRead = webMethod(Permissions.SiteMember, input => memberCall(markCustomerNotificationReadCore, input));
