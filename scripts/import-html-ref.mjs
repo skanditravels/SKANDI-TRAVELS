@@ -24,7 +24,7 @@ for(const m of mappings) {
     } catch(e) {diagnostics.push(`${r.name}: original source syntax: ${e.message}`);}
   }
   const outputs=[];
-  for(const [name,content] of Object.entries(split.files)) {
+  for(const [name,content] of Object.entries(m.referenceOnly ? {} : split.files)) {
     const target=m.directory+'/'+name;
     if(planned.has(target)&&planned.get(target)!==content)throw new Error('Conflicting source target: '+target);
     planned.set(target,content);outputs.push({path:target,sha256:digest(content),bytes:Buffer.byteLength(content)});

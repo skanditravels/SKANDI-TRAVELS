@@ -10,7 +10,7 @@ import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { createHash, randomUUID } from "crypto";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
-import { issueSupportLiveKitSessionCore, issueAlexandraLiveKitSessionCore } from "backend/SKANDI_CORE/livekitServer";
+import { issueSupportLiveKitSessionCore, issueAlexandraLiveKitSessionCore, resumeAlexandraLiveKitSessionCore } from "backend/SKANDI_CORE/livekitServer";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
@@ -706,11 +706,15 @@ export async function listCustomerSupportCasesCore() {
   return { cases: rows.map(row => { const item = normalizeCase(row); return { caseId: item.caseId, caseRef: item.caseRef, subject: item.subject, category: item.category, bookingRef: item.bookingRef, pnr: item.pnr, priority: item.priority, status: item.status, updatedAt: item.updatedAt }; }) };
 }
 
-export async function getCustomerSupportCaseCore({ caseId } = {}) {
+export async function getCustomerSupportCaseCore({ caseId, resumeLiveChat = false } = {}) {
   const id = clean(caseId, 160);
-  const { row } = await customerCase(id, { adopt: true });
+  const { row, profile } = await customerCase(id, { adopt: true });
   const item = normalizeCase(row);
-  return { case: { caseId: item.caseId, caseRef: item.caseRef, subject: item.subject, category: item.category, bookingRef: item.bookingRef, pnr: item.pnr, status: item.status, priority: item.priority }, messages: await messagesByCaseId(item.caseId) };
+  const result = { case: { caseId: item.caseId, caseRef: item.caseRef, subject: item.subject, category: item.category, bookingRef: item.bookingRef, pnr: item.pnr, status: item.status, priority: item.priority }, messages: await messagesByCaseId(item.caseId) };
+  if (resumeLiveChat === true && casePayload(row).liveHandoff === true && !["closed", "resolved", "cancelled", "canceled"].includes(item.status)) {
+    result.livekitSession = await issueSupportLiveKitSessionCore({ caseId: item.caseId, role: "customer", subjectId: profile.memberId || profile.email, participantName: profile.displayName || "Traveler" });
+  }
+  return result;
 }
 
 export async function addCustomerSupportMessageCore({ caseId, content, source = "customer-portal" } = {}) {
@@ -1077,9 +1081,14 @@ export async function addStaffHelpDeskSupportMessageCore({ caseId, content } = {
   return { ok: true, receiver: "SUPPORT", caseId: caseIdOf(row), sentMessage };
 }
 
-export async function startAlexandraSupportSessionCore({ locale = "en-US", currency = "USD", pagePath = "/about/support" } = {}) {
+export async function startAlexandraSupportSessionCore({ locale = "en-US", currency = "USD", pagePath = "/about/support", resumeTicket } = {}) {
   const profile = memberProfile(await memberSafe());
-  const session = await issueAlexandraLiveKitSessionCore({ locale: clean(locale, 40) || "en-US", currency: upper(currency, 12) || "USD", pagePath: clean(pagePath, 300) || "/about/support", authenticated: profile.loggedIn === true, channel: "web" });
+  const memberId = profile.memberId || "";
+  if (resumeTicket !== undefined) {
+    const session = await resumeAlexandraLiveKitSessionCore({ resumeTicket, memberId });
+    return session ? { ok: true, loggedIn: profile.loggedIn === true, session } : { ok: false, code: "ALEXANDRA_SESSION_ENDED" };
+  }
+  const session = await issueAlexandraLiveKitSessionCore({ locale: clean(locale, 40) || "en-US", currency: upper(currency, 12) || "USD", pagePath: clean(pagePath, 300) || "/about/support", authenticated: profile.loggedIn === true, channel: "web", memberId });
   try {
     await sbInsert(DB.alexandraSessions, { session_id: session.sessionId, member_id: profile.memberId || null, status: "active", payload: { provider: "LiveKit", agentRuntime: "LiveKit Agents", agentName: session.agentName, roomName: session.roomName, contextId: session.contextId, dispatchId: session.dispatchId, pagePath: clean(pagePath, 300) || "/about/support", locale: clean(locale, 40) || "en-US", currency: upper(currency, 12) || "USD", authenticated: profile.loggedIn === true } });
   } catch (_) {}

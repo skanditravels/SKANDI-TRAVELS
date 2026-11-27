@@ -25,25 +25,24 @@ test('compiled Help Center mounts its support chat and emits both bridge ready m
   assert.deepEqual(errors.map(e=>e.message),[]);
 });
 
-test('one Wix component handles Help Center bootstrap and starts the shared LiveKit chat',async()=>{
+test('the Help Center delegates chat actions to the same public Wix host',async()=>{
   let code=await fs.readFile(new URL('../src/pages/Support.k0iqp.js',import.meta.url),'utf8');
   const imports=parse(code,{ecmaVersion:'latest',sourceType:'module'}).body.filter(x=>x.type==='ImportDeclaration');
   for(const n of imports.reverse())code=code.slice(0,n.start)+code.slice(n.end);
-  let receive; const sent=[],calls=[];
+  let receive; const sent=[],calls=[],messages=[];
   const embed={onMessage:fn=>{assert.equal(receive,undefined);receive=fn},postMessage:m=>sent.push(m)};
   const $w=id=>id==='#skandiHelpCenterEmbed'?embed:null;$w.onReady=fn=>fn();
   const noop=async()=>({ok:true});
   const ctx={$w,console,wixLocationFrontend:{query:{}},openCustomerLogin:noop,
     getCustomerSupportBootstrap:async()=>({ok:true,workflows:[]}),createCustomerSupportCase:noop,
-    startAlexandraLiveKitSession:async input=>{calls.push(input);return {ok:true,session:{sessionId:'s',url:'wss://example.test',token:'token'}}},
-    sendAlexandraAiMessage:noop,requestCustomerHumanHandoff:noop,addCustomerLiveSupportMessage:noop};
+    getAlexandraGlobal:()=>({open:async input=>{calls.push(input);return true;},handleSupportMessage:(target,message)=>{assert.equal(target,embed);messages.push(message);}})};
   vm.createContext(ctx);vm.runInContext(code,ctx);
   await receive({data:{source:'SKANDI_SUPPORT_PUBLIC',type:'PUBLIC_SUPPORT_READY'}});
   assert.ok(sent.some(m=>m.type==='PUBLIC_SUPPORT_BOOTSTRAP'));
   await receive({data:{source:'SKANDI_SUPPORT_CHAT',type:'SUPPORT_CHAT_READY'}});
-  assert.ok(sent.some(m=>m.type==='SUPPORT_CHAT_BOOTSTRAP'));
+  assert.equal(messages[0].type,'SUPPORT_CHAT_READY');
   await receive({data:{source:'SKANDI_SUPPORT_PUBLIC',type:'PUBLIC_SUPPORT_OPEN_ALEXANDRA'}});
-  assert.equal(calls.length,1);assert.ok(sent.some(m=>m.type==='SUPPORT_CHAT_OPEN'&&m.payload.alexandraSession.sessionId==='s'));
+  assert.equal(calls.length,1);assert.equal(calls[0].mode,'ALEXANDRA');
 });
 
 test('service desk stops retrying after a bootstrap error without an error-refresh loop',async t=>{
@@ -72,7 +71,7 @@ test('chat does not claim connection or discard an unsent message when LiveKit i
   const html=await compilePage(root,row),sent=[];
   let parent;const dom=new JSDOM(html,{url:'https://embed.example',runScripts:'dangerously',pretendToBeVisual:true,beforeParse(w){parent={postMessage:m=>sent.push(m)};Object.defineProperty(w,'parent',{value:parent});w.HTMLElement.prototype.scrollIntoView=function(){};}});
   t.after(()=>dom.window.close());const w=dom.window,doc=w.document;
-  assert.equal(doc.querySelector('#fileBrowseBtn').disabled,true);
+  w.dispatchEvent(new w.MessageEvent('message',{source:parent,data:{source:'SKANDI_WIX_PARENT',type:'SUPPORT_CHAT_HOST_STATE',payload:{active:true}}}));
   w.dispatchEvent(new w.MessageEvent('message',{source:parent,data:{source:'SKANDI_WIX_PARENT',type:'SUPPORT_CHAT_OPEN',payload:{mode:'ALEXANDRA',alexandraSession:{url:'wss://example.test',token:'test'}}}}));
   await new Promise(resolve=>setImmediate(resolve));
   assert.match(doc.querySelector('#messages').textContent,/could not connect/i);

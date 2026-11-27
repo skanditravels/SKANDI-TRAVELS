@@ -1,223 +1,445 @@
-// SKANDI V12 — shared sitewide Alexandra LiveKit bridge.
-// One canonical LiveKit Agents provider, session dispatcher and Supabase Support core.
-// Sitewide mobile navigation and the integrated desktop widget share this Wix coordinator.
+// Wix owns the public chat host and the browser-tab conversation.
 import { session } from 'wix-storage-frontend';
 import { currentMember } from 'wix-members-frontend';
 import {
   startAlexandraLiveKitSession,
-  createCustomerSupportCase,
   getCustomerSupportBootstrap,
+  createCustomerSupportCase,
+  getCustomerSupportCase,
   requestCustomerHumanHandoff,
   addCustomerLiveSupportMessage
 } from 'backend/SKANDI_CORE/customerSupport.web';
+import { SITE_MAP, isSafeInternalRoute } from 'public/siteMap';
 
-const LAUNCHER_ID = '#skandiAlexandraLauncherEmbed';
-const PANEL_ID = '#skandiAlexandraGlobalEmbed';
-const MOBILE_NAV_ID = '#skandiMobileAppNavEmbed';
+export const ALEXANDRA_GLOBAL_PANEL_ID = '#skandiAlexandraGlobalEmbed';
+const LEGACY_LAUNCHER_ID = '#skandiAlexandraLauncherEmbed';
 const CHAT_SOURCE = 'SKANDI_SUPPORT_CHAT';
-const LAUNCH_SOURCE = 'SKANDI_ALEXANDRA_LAUNCHER';
-const PARENT_SOURCE = 'SKANDI_WIX_PARENT';
 const STORAGE_KEY = 'skandi_alexandra_livekit_chat_v12';
 const LEGACY_KEY = 'skandi_alexandra_wix_ai_chat_v127';
-const clean = (x, n = 1500) => String(x ?? '').trim().slice(0,n);
-const obj = x => x && typeof x === 'object' && !Array.isArray(x) ? x : {};
-const pathOf = x => { const p=clean(x,400);return p.startsWith('/')&&!p.startsWith('//')&&!/[\\\x00-\x1F]/.test(p)?p:''; };
-const post = (el,type,payload={}) => { try { el?.postMessage({source:PARENT_SOURCE,type,payload}); } catch(_){} };
-function transcript(raw={}) {
-  const data=obj(raw), rawMessages=Array.isArray(data.messages)?data.messages:[];
-  const rawHistory=Array.isArray(data.history)?data.history:[];
+const LOCALES = { EN: 'en-US', SV: 'sv-SE', NO: 'nb-NO', DA: 'da-DK', FI: 'fi-FI' };
+const AVATAR = {
+  avatarAssetKey: 'alexandra-support-avatar',
+  avatarVideoUrl: 'https://video.wixstatic.com/video/394052_b44198f20fc44baa90b3fc03d87602ea/1080p/mp4/file.mp4',
+  playbackRate: 0.75,
+  displayName: 'Alexandra',
+  role: 'SKANDI Digital Customer Service Assistant',
+  provider: 'LiveKit'
+};
+const clean = (value, max) => String(value ?? '').trim().slice(0, max);
+const object = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+let bridge;
+
+function conversation(value = {}) {
+  const messages = Array.isArray(value.messages) ? value.messages : [];
+  const human = object(value.human);
   return {
-    open:data.open===true,
-    messages:rawMessages.slice(-18).filter(m=>['user','assistant'].includes(m?.role)).map(m=>({role:m.role,content:clean(m.content,1900)})),
-    history:rawHistory.slice(-8).filter(m=>['user','assistant'].includes(m?.role)).map(m=>({role:m.role,content:clean(m.content,900)}))
+    open: value.open === true,
+    messages: messages.slice(-18).filter(item => ['user', 'assistant', 'agent'].includes(item?.role))
+      .map(item => ({ role: item.role, content: clean(item.content, 1700) })).filter(item => item.content),
+    draft: String(value.draft ?? '').slice(0, 2000),
+    caseId: clean(value.caseId, 160),
+    resumeTicket: clean(value.resumeTicket, 1550),
+    expired: value.expired === true,
+    human: ['live', 'queued', 'closed'].includes(human.status) ? { status: human.status, message: clean(human.message, 500) } : null
   };
 }
-function storageRead() {
-  try {
-    const current=session.getItem(STORAGE_KEY);
-    if(current)return transcript(JSON.parse(current));
-    const legacy=session.getItem(LEGACY_KEY);
-    return legacy?transcript(JSON.parse(legacy)):transcript();
-  } catch(_) {return transcript();}
-}
-function storageSave(value) {
-  try {
-    // LiveKit room credentials/tokens/dispatches are NEVER persisted to browser storage.
-    session.setItem(STORAGE_KEY,JSON.stringify(transcript(value)));
-    session.removeItem(LEGACY_KEY);
-  } catch(_) {}
-}
-function hide(el) {try{el?.hide();} catch(_) {}}
-function show(el) {try{el?.show();} catch(_) {}}
-async function identity(){try{const m=await currentMember.getMember();return String(m?._id||'guest').slice(0,120);}catch(_){return 'guest';}}
-function safeFailure(error){return clean(error?.publicMessage||error?.message||'Live customer assistance could not connect.',350);}
 
-export function bindAlexandraGlobal({ wixSelector=$w, navigate, enabled=()=>true, mobileEnabled=()=>false, mobileTarget=()=>null }={}) {
-  let launcher,panel,mobileNav;
-  try{launcher=wixSelector(LAUNCHER_ID);}catch(_){}
-  try{panel=wixSelector(PANEL_ID);}catch(_){}
-  try{mobileNav=wixSelector(MOBILE_NAV_ID);}catch(_){}
-  const launcherAvailable=Boolean(launcher&&typeof launcher.onMessage==='function');
-  const desktopAvailable=Boolean(panel&&typeof panel.onMessage==='function');
-  const mobileElement=()=>mobileTarget() || mobileNav;
-  const mobileAvailable=()=>Boolean(mobileElement()&&typeof mobileElement().postMessage==='function');
-  if(!desktopAvailable&&!mobileAvailable()){
-    console.warn('[Alexandra Global] Neither the global widget nor mobile navigation is installed.');
-    return {installed:false};
-  }
-  let memberId='guest',state=storageRead(),openRequested=state.open,currentPath='',busy=false;
-  let activeDesktop=null,activeMobile=null,desktopInitialized=false,integratedWidget=false;
-  let desktopEpoch=0,mobileEpoch=0,bootstrapMember='',bootstrapData=null,bootstrapPromise=null,forceCloseSent=false;
-  const targetEl=target=>target==='mobile'?mobileElement():panel;
-  const allowed=()=>enabled()!==false&&currentPath.startsWith('/')&&!/^\/(?:riaintra|altea|intra|staff|admin)(?:\/|$)/i.test(currentPath);
-  function syncOpen(){
-    if(!allowed()){
-      if(!forceCloseSent){post(panel,'SUPPORT_CHAT_FORCE_CLOSE',{reason:'restricted-route'});forceCloseSent=true;}
-      hide(launcher);hide(panel);return;
+function readSaved() {
+  try {
+    const saved = JSON.parse(session.getItem(STORAGE_KEY) || 'null');
+    if (saved?.memberId) return saved;
+    const legacy = saved || JSON.parse(session.getItem(LEGACY_KEY) || '{}');
+    return { memberId: session.getItem(STORAGE_KEY + '_identity'), ...conversation(legacy), open: false };
+  } catch (_) { return {}; }
+}
+
+function save(memberId, state) {
+  try {
+    // Store only the bounded transcript and the scoped resume ticket in this tab.
+    // LiveKit join JWTs and customer/agent connection credentials stay in memory.
+    const snapshot = { memberId, ...conversation(state) };
+    let json = JSON.stringify(snapshot);
+    // Leave room in Wix's 50 KB session store for the site's other state.
+    while (json.length > 9000 && snapshot.messages.length) {
+      snapshot.messages.shift();
+      json = JSON.stringify(snapshot);
     }
-    forceCloseSent=false;
-    if(mobileAvailable()&&mobileEnabled()===true){hide(launcher);hide(panel);return;}
-    if(integratedWidget){hide(launcher);show(panel);return;}
-    if(launcherAvailable&&desktopAvailable){show(launcher);if(openRequested)show(panel);else hide(panel);post(launcher,'SUPPORT_LAUNCHER_STATE',{open:openRequested});return;}
-    if(desktopAvailable){if(launcherAvailable)hide(panel);else show(panel);}
+    session.setItem(STORAGE_KEY, json);
+    session.removeItem(STORAGE_KEY + '_identity');
+    session.removeItem(LEGACY_KEY);
+  } catch (_) { console.warn('[Alexandra] Browser-tab state could not be saved.'); }
+}
+
+function post(host, type, payload = {}, requestId = '') {
+  try {
+    host?.element.postMessage({ source: 'SKANDI_WIX_PARENT', type, requestId, payload: { ...payload, instance: host.instance, requestId } });
+  } catch (_) { /* Wix may be replacing the component during navigation. */ }
+}
+
+function widgetVisibility(element, visible, expanded = false) {
+  try {
+    if (element.customClassList) {
+      element.customClassList.add('skandi-alexandra-host');
+      if (expanded) element.customClassList.add('skandi-alexandra-host-open');
+      else element.customClassList.remove('skandi-alexandra-host-open');
+    }
+    const update = visible ? element.show() : element.hide();
+    Promise.resolve(update).catch(() => {});
+  } catch (_) {}
+}
+
+export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, initialPath = '' }) {
+  if (bridge) {
+    bridge.onRouteChange(initialPath);
+    return bridge;
   }
-  function save(next){state=transcript({...next,open:openRequested});storageSave(state);}
-  function release(target){if(target==='mobile'){activeMobile=null;++mobileEpoch;}else{activeDesktop=null;++desktopEpoch;}}
-  async function pushBootstrap(force=false){
-    if(!integratedWidget||!allowed()||!panel)return;
-    if(!force&&bootstrapData&&bootstrapMember===memberId){post(panel,'SUPPORT_CHAT_BOOTSTRAP',{...bootstrapData,pagePath:currentPath});return;}
-    if(bootstrapPromise&&bootstrapMember===memberId){await bootstrapPromise;return;}
-    const requestedMember=memberId;
-    bootstrapMember=requestedMember;
-    const pending=(async()=>{
-      const data=obj(await getCustomerSupportBootstrap());
-      if(requestedMember!==memberId||!integratedWidget||!allowed())return;
-      bootstrapData=data;
-      post(panel,'SUPPORT_CHAT_BOOTSTRAP',{...data,pagePath:currentPath});
+
+  const hosts = new Map();
+  const bound = new WeakSet();
+  let path = initialPath, currentHost, panelElement, state = conversation(), memberId, bootstrap, profilePromise;
+  let generation = 0, launch, alexandraRoom, humanRoom, pendingOpen;
+  const allowed = () => enabled() && isSafeInternalRoute(path) && !/^\/(?:riaintra|altea|intra|staff|admin|_functions)(?:\/|$)/i.test(path);
+  const commit = updates => {
+    state = conversation({ ...state, ...updates });
+    if (memberId && allowed()) save(memberId, state);
+  };
+
+  function widgetContext(host, restore = false) {
+    const ui = { active: host === currentHost, global: host.global, pagePath: path };
+    if (restore && ui.active) {
+      const { open, messages, draft, caseId, human, expired } = state;
+      post(host, 'SUPPORT_CHAT_RESTORE', { ...ui, open, messages, draft, caseId, human, expired });
+    } else post(host, 'SUPPORT_CHAT_HOST_STATE', ui);
+  }
+
+  function updateSize() {
+    if (currentHost?.global) widgetVisibility(currentHost.element, allowed(), state.open);
+  }
+
+  function selectHost() {
+    const next = allowed() ? hosts.get('global') || (path === SITE_MAP.support ? hosts.get('help') : null) : null;
+    if (next === currentHost) return false;
+    const previous = currentHost;
+    currentHost = next;
+    if (previous) widgetContext(previous);
+    if (next && memberId) {
+      updateSize();
+      widgetContext(next, true);
+    }
+    return Boolean(next);
+  }
+
+  function clear() {
+    ++generation;
+    launch = null;
+    alexandraRoom = null;
+    humanRoom = null;
+    pendingOpen = null;
+    bootstrap = null;
+    state = conversation();
+    try { session.removeItem(STORAGE_KEY);session.removeItem(LEGACY_KEY);session.removeItem(STORAGE_KEY + '_identity'); } catch (_) {}
+    for (const host of hosts.values()) post(host, 'SUPPORT_CHAT_FORCE_CLOSE');
+    updateSize();
+  }
+
+  async function refreshIdentity() {
+    if (profilePromise) return profilePromise;
+    const pending = (async () => {
+      let id = 'guest';
+      try { id = clean((await currentMember.getMember())?._id, 120) || 'guest'; } catch (_) {}
+      if (memberId === id) return;
+      const previous = memberId;
+      const saved = previous ? {} : readSaved();
+      if (previous || (saved.memberId && saved.memberId !== id)) clear();
+      memberId = id;
+      if (saved.memberId === id) state = conversation(saved);
+      const selected = selectHost();
+      if (currentHost && !selected) {
+        updateSize();
+        widgetContext(currentHost, true);
+      }
     })();
-    bootstrapPromise=pending;
-    try{await pending;}catch(error){if(requestedMember===memberId){bootstrapData=null;bootstrapMember='';post(panel,'SUPPORT_CHAT_ERROR',{message:safeFailure(error)});}}
-    finally{if(bootstrapPromise===pending)bootstrapPromise=null;}
+    profilePromise = pending;
+    try { await pending; } finally { if (profilePromise === pending) profilePromise = null; }
   }
-  async function open(requestId='',target='desktop'){
-    if(!allowed()||busy)return;
-    if(target==='desktop'&&openRequested&&activeDesktop)return;
-    const el=targetEl(target);
-    if(!el)return;
-    busy=true;
-    if(target==='desktop')openRequested=true;
-    const epoch=target==='mobile'?++mobileEpoch:++desktopEpoch;
-    syncOpen();
-    try {
-      // Each room requires a freshly issued 15-minute LiveKit JWT and agent dispatch.
-      // Do not attempt to reuse a prior session ID or a disconnected LiveKit room.
-      const started=await startAlexandraLiveKitSession({pagePath:currentPath||'/about/support'});
-      if(epoch!==(target==='mobile'?mobileEpoch:desktopEpoch)||!allowed())return;
-      const room=obj(started?.session);
-      if(!started?.ok||!room.sessionId||!room.url||!room.token||!room.roomName||!room.dispatchId)throw new Error('LiveKit did not confirm an Alexandra session and agent dispatch.');
-      if(target==='mobile')activeMobile=room.sessionId;else activeDesktop=room.sessionId;
-      save(state);
-      post(el,'SUPPORT_CHAT_OPEN',{mode:'ALEXANDRA_LIVEKIT',alexandraSession:room,messages:state.messages,history:state.history,loggedIn:memberId!=='guest',requestId});
-    }catch(e){
-      release(target);
-      if(target==='desktop'){openRequested=false;syncOpen();}
-      post(el,'SUPPORT_CHAT_ERROR',{message:safeFailure(e),requestId});
-    }finally{busy=false;}
+
+  async function pushBootstrap(host, requestId) {
+    const requestGeneration = generation;
+    const pending = bootstrap ||= Promise.resolve().then(() => getCustomerSupportBootstrap());
+    let data;
+    try { data = await pending; }
+    catch (_) { if (bootstrap === pending) bootstrap = null; data = {}; }
+    if (requestGeneration === generation && host === currentHost && allowed()) {
+      post(host, 'SUPPORT_CHAT_BOOTSTRAP', { ...object(data), loggedIn: memberId !== 'guest', alexandra: { ...AVATAR, ...object(data?.alexandra) }, pagePath: path }, requestId);
+    }
   }
-  async function runCreateCase(msg,target='desktop'){
-    const payload=obj(msg.payload),requestId=clean(payload.requestId||msg.requestId,100);
-    try {
-      const input=obj(payload.input);
-      const result=await createCustomerSupportCase({input:{...input,source:'alexandra-widget',sourceChannel:'ALEXANDRA_LIVEKIT',sourcePage:currentPath||'/about/support'}});
-      post(targetEl(target),'SUPPORT_CHAT_CASE_CREATED',{...obj(result),requestId});
-    }catch(e){post(targetEl(target),'SUPPORT_CHAT_ERROR',{message:safeFailure(e),requestId});}
+
+  function chatError(requestId, message, action = '') {
+    if (allowed()) post(currentHost, 'SUPPORT_CHAT_ERROR', { message, action }, requestId);
   }
-  async function runHumanHandoff(msg,target='desktop'){
-    const payload=obj(msg.payload),requestId=clean(payload.requestId||msg.requestId,100);
-    try {
-      const result=await requestCustomerHumanHandoff({
-        caseId:clean(payload.caseId,160),
-        input:{subject:'Live Customer Service Request',message:'The customer requested a live handoff from Alexandra.',source:'alexandra-live-chat',sourcePage:currentPath||'/about/support'},
-        reason:clean(payload.reason||'Customer requested a human agent.',2000),
-        summary:clean(payload.summary,6000),
-        transcript:Array.isArray(payload.transcript)?payload.transcript.slice(-60):clean(payload.transcript,12000)
-      });
-      post(targetEl(target),'SUPPORT_CHAT_HUMAN_HANDOFF',{...obj(result),requestId});
-    }catch(e){post(targetEl(target),'SUPPORT_CHAT_ERROR',{message:safeFailure(e),requestId});}
+
+  function publishRoom(host, session, type, requestId) {
+    if (host !== currentHost || !allowed()) return;
+    if (type === 'HUMAN') {
+      post(host, 'SUPPORT_CHAT_HUMAN_HANDOFF', { ...state.human, caseId: state.caseId, livekitSession: session, resume: true }, requestId);
+      return;
+    }
+    const { resumeTicket, ...room } = session;
+    post(host, 'SUPPORT_CHAT_OPEN', { mode: 'ALEXANDRA_LIVEKIT', alexandraSession: room, open: state.open, loggedIn: memberId !== 'guest' }, requestId);
   }
-  async function runHumanMessage(msg,target='desktop'){
-    const payload=obj(msg.payload),requestId=clean(payload.requestId||msg.requestId,100);
-    try {
-      const result=await addCustomerLiveSupportMessage({caseId:clean(payload.caseId,160),content:clean(payload.content,12000)});
-      post(targetEl(target),'SUPPORT_CHAT_HUMAN_MESSAGE_SAVED',{...obj(result),requestId});
-    }catch(e){post(targetEl(target),'SUPPORT_CHAT_ERROR',{message:safeFailure(e),requestId});}
-  }
-  async function handleChatMessage(msg,target){
-    const payload=obj(msg.payload);
-    switch(msg.type){
-      case 'SUPPORT_CHAT_READY':
-        if(target==='desktop'&&payload.integrated===true){
-          integratedWidget=true;
-          desktopInitialized=true;
-          openRequested=false;
-          save(state);
-          syncOpen();
-          await pushBootstrap();
+
+  async function connect(host, requestId = '', retry = false) {
+    if (!host || launch || !allowed()) return;
+    if (state.human && state.human.status !== 'live') return;
+    if (state.expired && !retry) return;
+    const selectedGeneration = generation;
+    const pending = (async () => {
+      try {
+        if (state.human?.status === 'live') {
+          const room = humanRoom?.expires > Date.now() && !retry ? humanRoom.session :
+            (await getCustomerSupportCase({ caseId: state.caseId, resumeLiveChat: true }))?.livekitSession;
+          if (selectedGeneration !== generation || !allowed()) return;
+          if (!room) {
+            commit({ human: { status: 'closed', message: 'This live chat has ended. You can follow up in your support case.' } });
+            publishRoom(currentHost, null, 'HUMAN', requestId);
+            return;
+          }
+          humanRoom = { session: room, expires: Date.now() + 14 * 60 * 1000 };
+          publishRoom(currentHost, room, 'HUMAN', requestId);
           return;
         }
-        if(target==='desktop'&&!desktopInitialized){desktopInitialized=true;if(openRequested)await open('','desktop');}
-        return;
-      case 'SUPPORT_CHAT_START_ALEXANDRA':await open(clean(payload.requestId||msg.requestId,100),target);return;
-      case 'SUPPORT_CHAT_SNAPSHOT':save({...state,messages:payload.messages,history:payload.history});return;
-      case 'SUPPORT_CHAT_PANEL_CLOSE':release(target);if(target==='desktop'){openRequested=false;save(state);syncOpen();}return;
-      case 'SUPPORT_CHAT_START_HUMAN':await runHumanHandoff(msg,target);return;
-      case 'SUPPORT_CHAT_HUMAN_MESSAGE':await runHumanMessage(msg,target);return;
-      case 'SUPPORT_CHAT_ALEXANDRA_MESSAGE':
-        // The browser sends on LiveKit lk.chat; do not fake or duplicate Wix AI responses.
-        post(targetEl(target),'SUPPORT_CHAT_ERROR',{message:'Please reconnect Alexandra to LiveKit before sending.'});return;
-      case 'SUPPORT_CHAT_SUBMIT_FORM':await runCreateCase(msg,target);return;
-      case 'SUPPORT_CHAT_NAVIGATE':{const path=pathOf(payload.path);if(path&&typeof navigate==='function')navigate(path);return;}
-      default:return;
+
+        if (alexandraRoom?.expires > Date.now() && alexandraRoom.instance === host.instance && !retry) {
+          publishRoom(currentHost, alexandraRoom.session, 'ALEXANDRA', requestId);
+          return;
+        }
+        const siteSettings = settings();
+        const resumeTicket = state.resumeTicket;
+        const result = await startAlexandraLiveKitSession({
+          locale: siteSettings.locale || LOCALES[siteSettings.language],
+          currency: siteSettings.currency,
+          pagePath: path,
+          ...(resumeTicket ? { resumeTicket } : {})
+        });
+        if (selectedGeneration !== generation || !allowed()) return;
+        if (result?.code === 'ALEXANDRA_SESSION_ENDED') {
+          alexandraRoom = null;
+          commit({ resumeTicket: '', expired: true });
+          chatError(requestId, 'The live session ended. Your messages are here. Try sending again to start a new connection.', 'connect');
+          return;
+        }
+        const room = object(result?.session);
+        if (!result?.ok || !room.sessionId || !room.url || !room.token || !room.roomName) throw new Error('Unconfirmed LiveKit session');
+        alexandraRoom = { session: room, expires: Date.now() + 14 * 60 * 1000, instance: currentHost?.instance };
+        commit({ resumeTicket: room.resumeTicket, expired: false });
+        publishRoom(currentHost, room, 'ALEXANDRA', requestId);
+      } catch (_) {
+        if (selectedGeneration === generation) chatError(requestId, 'Chat could not connect. Your messages are still here. Please try again.', 'connect');
+      }
+    })();
+    launch = pending;
+    try { await pending; } finally { if (launch === pending) launch = null; }
+  }
+
+  async function open({ mode = 'ALEXANDRA', payload = {}, requestId = '', retry = false } = {}) {
+    if (!allowed()) return false;
+    await refreshIdentity();
+    if (!allowed()) return false;
+    if (!currentHost) {
+      if (!panelElement && path !== SITE_MAP.support) return false;
+      pendingOpen = { mode, payload, requestId, retry };
+      return true;
+    }
+    const host = currentHost, openGeneration = generation;
+    commit({ open: true });
+    updateSize();
+    post(host, 'SUPPORT_CHAT_HOST_STATE', { active: true, open: true, global: host.global, pagePath: path }, requestId);
+    if (mode === 'FORM') {
+      await pushBootstrap(host, requestId);
+      if (openGeneration === generation && host === currentHost) post(host, 'SUPPORT_CHAT_OPEN', { mode, formPrefill: payload }, requestId);
+    } else if (mode === 'HUMAN') {
+      await pushBootstrap(host, requestId);
+      if (openGeneration !== generation || host !== currentHost) return true;
+      if (state.human) await connect(host, requestId);
+      else {
+        post(host, 'SUPPORT_CHAT_OPEN', { mode: 'HANDOFF_PENDING' }, requestId);
+        await runAction('SUPPORT_CHAT_START_HUMAN', payload, requestId);
+      }
+    } else {
+      void pushBootstrap(host, requestId);
+      await connect(host, requestId, retry);
+    }
+    return true;
+  }
+
+  function restoreConnection(host) {
+    if (state.open) return open();
+    if (state.resumeTicket || state.human?.status === 'live') return connect(host);
+  }
+
+  async function runAction(type, payload, requestId) {
+    const started = generation;
+    let response, result;
+    try {
+      if (type === 'SUPPORT_CHAT_START_HUMAN') {
+        result = await requestCustomerHumanHandoff({
+          caseId: state.caseId || clean(payload.caseId, 160),
+          input: { ...object(payload.input), source: 'alexandra-live-chat', sourcePage: path },
+          reason: clean(payload.reason || 'Customer requested a human agent.', 2000),
+          summary: clean(payload.summary, 6000),
+          collectedFields: object(payload.collectedFields),
+          transcript: Array.isArray(payload.transcript) ? payload.transcript.slice(-60) : clean(payload.transcript, 12000)
+        });
+        response = 'SUPPORT_CHAT_HUMAN_HANDOFF';
+      } else if (type === 'SUPPORT_CHAT_HUMAN_MESSAGE') {
+        result = await addCustomerLiveSupportMessage({ caseId: state.caseId, content: clean(payload.content, 12000) });
+        response = 'SUPPORT_CHAT_HUMAN_MESSAGE_SAVED';
+      } else {
+        result = await createCustomerSupportCase({ input: { ...object(payload.input), source: 'alexandra-widget', sourceChannel: 'ALEXANDRA_LIVEKIT', sourcePage: path } });
+        response = 'SUPPORT_CHAT_CASE_CREATED';
+      }
+      if (started !== generation || !allowed()) return;
+      if (type === 'SUPPORT_CHAT_START_HUMAN') {
+        if (!result?.caseId || !['live', 'queued'].includes(result.status)) throw new Error('Unconfirmed human handoff');
+        commit({ caseId: result.caseId, human: result, resumeTicket: '' });
+        alexandraRoom = null;
+      } else if (type === 'SUPPORT_CHAT_SUBMIT_FORM' && result?.caseId && !state.human) {
+        commit({ caseId: result.caseId });
+      }
+      if (result?.livekitSession) humanRoom = { session: result.livekitSession, expires: Date.now() + 14 * 60 * 1000 };
+      post(currentHost, response, object(result), requestId);
+      if (response === 'SUPPORT_CHAT_CASE_CREATED' && path === SITE_MAP.support) {
+        post(hosts.get('help'), 'PUBLIC_SUPPORT_CASE_CREATED', object(result), requestId);
+      }
+    } catch (_) {
+      if (started === generation) {
+        const message = type === 'SUPPORT_CHAT_START_HUMAN' && memberId === 'guest'
+          ? 'Sign in to your SKANDI account to contact a live agent.'
+          : 'Customer Service could not complete that action. Please try again.';
+        chatError(requestId, message, type);
+      }
     }
   }
-  if(launcherAvailable){
-    launcher.onMessage(async ev=>{
-      const msg=obj(ev?.data);if(msg.source!==LAUNCH_SOURCE)return;
-      if(msg.type==='SUPPORT_LAUNCHER_READY')syncOpen();
-      if(msg.type==='SUPPORT_LAUNCHER_CLICK')await open(clean(msg.requestId,100),'desktop');
-    });
+
+  async function handle(element, message, global) {
+    if (!allowed() || message.source !== CHAT_SOURCE) return;
+    const payload = object(message.payload);
+    const key = global ? 'global' : 'help';
+    const instance = clean(payload.instance, 90);
+    let host = hosts.get(key);
+    if (message.type === 'SUPPORT_CHAT_READY') {
+      if (!global && path !== SITE_MAP.support) return;
+      let newWidget = false;
+      if (!host || host.instance !== instance || host.element !== element) {
+        host = { element, instance, global };
+        hosts.set(key, host);
+        newWidget = true;
+      }
+      await refreshIdentity();
+      if (!allowed() || hosts.get(key) !== host) return;
+      const changed = selectHost();
+      if (host !== currentHost) {
+        widgetContext(host);
+        return;
+      }
+      if (pendingOpen) {
+        const pending = pendingOpen;
+        pendingOpen = null;
+        await open(pending);
+      } else if (changed || newWidget) {
+        await restoreConnection(host);
+        if (!instance) await pushBootstrap(host, message.requestId);
+      }
+      else {
+        widgetContext(host);
+        if (!instance) await pushBootstrap(host, message.requestId);
+      }
+      return;
+    }
+    if (host !== currentHost || host.element !== element || host.instance !== instance) return;
+    const requestId = clean(payload.requestId || message.requestId, 120);
+    switch (message.type) {
+      case 'SUPPORT_CHAT_START_ALEXANDRA':
+        await open({ requestId, retry: payload.reconnect === true || state.expired });
+        break;
+      case 'SUPPORT_CHAT_SNAPSHOT':
+        commit({ messages: payload.messages, draft: payload.draft });
+        break;
+      case 'SUPPORT_CHAT_PANEL_CLOSE':
+        commit({ open: false });
+        updateSize();
+        break;
+      case 'SUPPORT_CHAT_PANEL_OPEN':
+        commit({ open: true });
+        updateSize();
+        break;
+      case 'SUPPORT_CHAT_START_HUMAN':
+      case 'SUPPORT_CHAT_HUMAN_MESSAGE':
+      case 'SUPPORT_CHAT_SUBMIT_FORM':
+        await runAction(message.type, payload, requestId);
+        break;
+      case 'SUPPORT_CHAT_NAVIGATE':
+        if (isSafeInternalRoute(payload.path)) navigate(payload.path);
+        break;
+    }
   }
-  if(desktopAvailable){
-    panel.onMessage(async ev=>{const msg=obj(ev?.data);if(msg.source!==CHAT_SOURCE)return;await handleChatMessage(msg,'desktop');});
-  }
-  const handleMobileMessage=async msg=>{
-    if(!mobileAvailable()||mobileEnabled()!==true||!allowed())return;
-    const m=obj(msg);if(m.source===CHAT_SOURCE)await handleChatMessage(m,'mobile');
-  };
-  const refreshIdentity=async()=>{
-    const id=await identity();
+
+  function onRouteChange(nextPath) {
+    path = nextPath || '/';
+    let panel;
     try {
-      const previous=session.getItem(STORAGE_KEY+'_identity');
-      if(previous&&previous!==id){state=transcript();openRequested=false;storageSave(state);release('desktop');release('mobile');bootstrapData=null;bootstrapMember='';post(panel,'SUPPORT_CHAT_FORCE_CLOSE',{reason:'member-changed'});}
-      session.setItem(STORAGE_KEY+'_identity',id);
-    }catch(_){}
-    memberId=id;syncOpen();
-    if(integratedWidget&&allowed())await pushBootstrap(true);
-  };
-  refreshIdentity().catch(error=>console.warn('[Alexandra Global] Identity unavailable.',error));
-  syncOpen();
-  return {
-    installed:true,handleMobileMessage,
-    onRouteChange(path=''){
-      currentPath=clean(path,350);
-      if(!allowed()){openRequested=false;release('desktop');release('mobile');save(state);}
-      syncOpen();
-      if(integratedWidget&&allowed())void pushBootstrap();
-      if(desktopInitialized&&!integratedWidget&&openRequested&&!activeDesktop&&allowed())void open('','desktop');
+      const old = wixSelector(LEGACY_LAUNCHER_ID);
+      if (old) Promise.resolve(old.hide()).catch(() => {});
+    } catch (_) {}
+    try { panel = wixSelector(ALEXANDRA_GLOBAL_PANEL_ID); } catch (_) {}
+    panelElement = panel && typeof panel.onMessage === 'function' ? panel : null;
+    if (!panel || typeof panel.onMessage !== 'function') hosts.delete('global');
+    else if (!bound.has(panel)) {
+      bound.add(panel);
+      panel.onMessage(event => handle(panel, object(event?.data), true));
+    }
+    if (!allowed()) {
+      for (const host of hosts.values()) post(host, 'SUPPORT_CHAT_FORCE_CLOSE');
+      hosts.clear();
+      currentHost = null;
+      pendingOpen = null;
+      launch = null;
+      alexandraRoom = null;
+      humanRoom = null;
+      ++generation;
+      if (panel) widgetVisibility(panel, false);
+      return;
+    }
+    if (path !== SITE_MAP.support) hosts.delete('help');
+    const changed = selectHost();
+    if (changed) void restoreConnection(currentHost);
+    else if (currentHost) widgetContext(currentHost);
+    // An existing frame may survive Wix navigation. Request its current instance,
+    // without disconnecting it or triggering a new provider dispatch.
+    if (panel) {
+      widgetVisibility(panel, true, currentHost?.global && state.open);
+      post({ element: panel }, 'SUPPORT_CHAT_PING');
+    }
+  }
+
+  bridge = {
+    onRouteChange, open, clear, refreshIdentity,
+    handleSupportMessage: (embed, message) => handle(embed, message, false),
+    reportSupportCase(result, requestId) {
+      if (!allowed() || path !== SITE_MAP.support || !result?.caseId || state.human) return;
+      commit({ caseId: result.caseId });
+      post(currentHost, 'SUPPORT_CHAT_CASE_CREATED', result, requestId);
     },
-    open:()=>open(),
-    close:()=>{openRequested=false;release('desktop');save(state);syncOpen();},
-    clear:()=>{openRequested=false;activeDesktop=null;activeMobile=null;state=transcript();storageSave(state);syncOpen();},
-    refreshIdentity,isOpen:()=>openRequested
+    async openFromMobile(requestId) {
+      if (!allowed()) return;
+      if (!(await open({ requestId }))) {
+        commit({ open: true });
+        navigate(SITE_MAP.support);
+      }
+    }
   };
+  onRouteChange(initialPath);
+  return bridge;
 }
+
+export function getAlexandraGlobal() { return bridge; }

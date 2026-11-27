@@ -2,6 +2,8 @@
 
 > Current document: `skandi-embeds/global/alexandra/references/riaintra-alexandra-chat-md/README.md`. Original reference: `HTML_REF/riaintra/Alexandra Chat.md`.
 
+> The HTML below records the 2026-10-26 implementation. The production candidate is built from the active [`skandi-alexandra-chat` source files](../..) and uses the [public installation and verification steps](../../README.md).
+
 
 ## INFO / LOG
 - Wix site: SKANDI TRAVELS, Wix Studio.
@@ -21,6 +23,7 @@
 - Active presentation: the current integrated launcher/chat source is the complete site-owner upload from 2026-10-26; older separate chat and launcher sources are retained as historical/legacy references.
 
 ## CHANGE LOG
+- 2026-11-27 — The public master now owns Alexandra on every page where the shared Wix component is installed. The Help Center opens that widget and retains its inline chat as a fallback. The active implementation preserves the room during normal navigation and restores recent messages, the draft and panel position from browser-tab storage when Wix recreates the frame. A signed, expiring resume ticket recovers an active room without a second dispatch. LiveKit join JWTs stay in memory. The widget and transcript are scoped to the current identity and public routes. The 2026-10-26 HTML below remains a historical reference.
 - 2026-10-21 V12.7: new public sitewide global component prepared; dark-navy SKANDI branding, fixed bottom-left pin location by Wix Studio setup, minimization, browser-tab conversation state, canonical Customer Service case creation, WhatsApp +1 711-216-0382 and call +1 951-620-7875. WhatsApp supplied number is an invalid +1 N11 area code; link held pending a valid Meta-registered number.
 - 2026-10-21 V12.7 master-source convergence: compared the complete user-provided 1059-line Wix masterPage.js, installed bridge bootstrapping and live route/identity handling without reverting branded Supabase logos, preserved canonical Customer Service case creation. WhatsApp contact remains disabled until valid Meta Business number; voice phone +1 951-620-7875 retained. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 - 2026-10-22 V12 LiveKit Alexandra restoration: Added a separate frontend-callable LiveKit session method for sitewide Alexandra (retaining the existing Wix AI method for `/about/support`), and changed only desktop/mobile chat transport: Wix AI reply method is no longer called from the sitewide Alexandra bridge; existing `alexandra-prod` LiveKit worker receives `lk.chat`, produces `lk.transcription`; signed tokens are ephemeral, and a new room is dispatched on reopening. Existing case, profile, contact and navigation contracts remain. STATICALLY VERIFIED, REQUIRES LIVE TEST on published Wix and active LiveKit Cloud worker.

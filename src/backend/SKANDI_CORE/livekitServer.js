@@ -4,7 +4,7 @@
 // LiveKit Agents owns Alexandra runtime; Supabase customer_support_* owns durable Support cases/messages.
 // GroupTalk remains a separate operational domain.
 
-import { createHash, createHmac, randomUUID } from "crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "crypto";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 
@@ -13,6 +13,7 @@ const DEFAULT_TTL = "15m";
 const SUPPORT_TEXT_TOPIC = "skandi.support.chat";
 const ALEXANDRA_TEXT_TOPIC = "lk.chat";
 const ALEXANDRA_AGENT_NAME = "alexandra-prod";
+const ALEXANDRA_RESUME_TTL_SECONDS = 60 * 60;
 
 // Wix's package runtime cannot load the SDK's ESM dependency tree. LiveKit
 // documents its JWT grants and Twirp API, so keep the existing service and
@@ -31,15 +32,16 @@ export function signLiveKitAccessTokenCore({ apiKey, apiSecret, identity = "", n
   return `${unsigned}.${createHmac("sha256", apiSecret).update(unsigned, "utf8").digest("base64url")}`;
 }
 
-async function dispatchAlexandra({ apiHost, apiKey, apiSecret, roomName, jobMetadata }) {
+async function alexandraDispatchRequest({ apiHost, apiKey, apiSecret, roomName }, method, payload) {
   if (!/^https:\/\//i.test(apiHost)) throw new Error("LIVEKIT_URL_INVALID");
   const authorization = signLiveKitAccessTokenCore({ apiKey, apiSecret, video: { roomAdmin: true, room: roomName }, ttlSeconds: 60 });
-  const response = await fetch(`${apiHost}/twirp/livekit.AgentDispatchService/CreateDispatch`, {
+  const response = await fetch(`${apiHost}/twirp/livekit.AgentDispatchService/${method}`, {
     method: "POST",
     redirect: "error",
     headers: { Authorization: `Bearer ${authorization}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ agent_name: ALEXANDRA_AGENT_NAME, room: roomName, metadata: JSON.stringify(jobMetadata) })
+    body: JSON.stringify({ room: roomName, ...payload })
   });
+  if (method === "ListDispatch" && response.status === 404) return { agent_dispatches: [] };
   if (!response.ok) throw new Error(`ALEXANDRA_DISPATCH_HTTP_${response.status}`);
   return response.json();
 }
@@ -171,14 +173,59 @@ export async function issueSupportLiveKitSessionCore({
   });
 }
 
+function alexandraResumeSignature(apiSecret, memberId, payload) {
+  return createHmac("sha256", apiSecret).update(JSON.stringify(["skandi-alexandra-v1", memberId, payload]), "utf8").digest();
+}
+
+function makeAlexandraResumeTicket(apiSecret, memberId, session) {
+  const payload = Buffer.from(JSON.stringify({ ...session, exp: Math.floor(Date.now() / 1000) + ALEXANDRA_RESUME_TTL_SECONDS })).toString("base64url");
+  return `${payload}.${alexandraResumeSignature(apiSecret, memberId, payload).toString("base64url")}`;
+}
+
+function readAlexandraResumeTicket(apiSecret, memberId, ticket) {
+  if (typeof ticket !== "string" || !/^[A-Za-z0-9_-]{1,1500}\.[A-Za-z0-9_-]{43}$/.test(ticket)) return null;
+  const [payload, signature] = ticket.split(".");
+  const provided = Buffer.from(signature, "base64url");
+  if (!timingSafeEqual(provided, alexandraResumeSignature(apiSecret, memberId, payload))) return null;
+  const session = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  return session.exp > Math.floor(Date.now() / 1000) ? session : null;
+}
+
+function alexandraParticipantSession({ apiKey, apiSecret, livekitUrl }, details, resumeTicket, metadata) {
+  const { roomName, identity, sessionId, contextId, dispatchId, channel, locale } = details;
+  const token = signLiveKitAccessTokenCore({ apiKey, apiSecret,
+    identity, name: "SKANDI Traveler",
+    metadata: JSON.stringify({ system: "skandi-alexandra", channel, locale, sessionId }),
+    video: { roomJoin: true, room: roomName, canSubscribe: true, canPublish: true, canPublishData: true }
+  });
+  return {
+    url: livekitUrl, token, roomName, identity, sessionId, contextId, dispatchId, resumeTicket,
+    agentName: ALEXANDRA_AGENT_NAME, agentRuntime: "LiveKit Agents", provider: "LiveKit", caseStore: "Supabase",
+    textTopic: ALEXANDRA_TEXT_TOPIC, transcriptionTopic: "lk.transcription", metadata, expiresIn: DEFAULT_TTL
+  };
+}
+
+export async function resumeAlexandraLiveKitSessionCore({ resumeTicket, memberId = "" } = {}) {
+  const credentials = await liveKitCredentials();
+  const details = readAlexandraResumeTicket(credentials.apiSecret, memberId, resumeTicket);
+  if (!details) return null;
+  const result = await alexandraDispatchRequest({ ...credentials, roomName: details.roomName }, "ListDispatch", { dispatch_id: details.dispatchId });
+  const dispatch = result?.agent_dispatches?.find(item => item.id === details.dispatchId && item.agent_name === ALEXANDRA_AGENT_NAME);
+  if (!dispatch || Number(dispatch.state?.deleted_at) > 0) return null;
+  const jobs = dispatch.state?.jobs;
+  if (jobs?.length && jobs.every(job => Number(job.state?.ended_at) > 0 || ["JS_FAILED", "JS_SUCCESS"].includes(job.state?.status))) return null;
+  return alexandraParticipantSession(credentials, details, resumeTicket);
+}
+
 export async function issueAlexandraLiveKitSessionCore({
   locale = "en-US",
   currency = "USD",
   pagePath = "/about/support",
   authenticated = false,
-  channel = "web"
+  channel = "web",
+  memberId = ""
 } = {}) {
-  const { apiKey, apiSecret, livekitUrl, apiHost } = await liveKitCredentials();
+  const credentials = await liveKitCredentials();
   const sessionId = `alexandra_${randomUUID().replaceAll("-", "").slice(0, 20)}`;
   const contextId = `ctx_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
   const roomName = `alexandra-${randomUUID().replaceAll("-", "").slice(0, 24)}`;
@@ -199,46 +246,14 @@ export async function issueAlexandraLiveKitSessionCore({
     support_message_table: "customer_support_messages"
   };
 
-  const dispatch = await dispatchAlexandra({ apiHost, apiKey, apiSecret, roomName, jobMetadata });
+  const dispatch = await alexandraDispatchRequest({ ...credentials, roomName }, "CreateDispatch", { agent_name: ALEXANDRA_AGENT_NAME, metadata: JSON.stringify(jobMetadata) });
   if (!dispatch?.id) {
     const error = new Error("ALEXANDRA_DISPATCH_UNCONFIRMED");
     error.code = "ALEXANDRA_DISPATCH_UNCONFIRMED";
     throw error;
   }
 
-  const token = signLiveKitAccessTokenCore({ apiKey, apiSecret,
-    identity,
-    name: "SKANDI Traveler",
-    metadata: JSON.stringify({
-      system: "skandi-alexandra",
-      channel: jobMetadata.channel,
-      locale: jobMetadata.locale,
-      sessionId
-    }),
-    video: {
-    roomJoin: true,
-    room: roomName,
-    canSubscribe: true,
-    canPublish: true,
-    canPublishData: true
-    }
-  });
-
-  return {
-    url: livekitUrl,
-    token,
-    roomName,
-    identity,
-    sessionId,
-    contextId,
-    agentName: ALEXANDRA_AGENT_NAME,
-    agentRuntime: "LiveKit Agents",
-    provider: "LiveKit",
-    caseStore: "Supabase",
-    dispatchId: clean(dispatch.id, 200),
-    textTopic: ALEXANDRA_TEXT_TOPIC,
-    transcriptionTopic: "lk.transcription",
-    metadata: jobMetadata,
-    expiresIn: DEFAULT_TTL
-  };
+  const details = { roomName, identity, sessionId, contextId, dispatchId: clean(dispatch.id, 200), channel: jobMetadata.channel, locale: jobMetadata.locale };
+  const ticket = makeAlexandraResumeTicket(credentials.apiSecret, memberId, details);
+  return alexandraParticipantSession(credentials, details, ticket, jobMetadata);
 }

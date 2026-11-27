@@ -16,7 +16,7 @@ import { createFlightsPageHost } from "public/flightsPageHost";
 import { getCruisesBootstrap, refreshCruises } from "backend/SKANDI_CORE/cruises.web";
 import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEvent, submitEosOpsAction } from "backend/SKANDI_CORE/eos.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, hasPageMobileNavigation, resolveBuildRoute } from "public/siteMap";
-import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
+import { bindAlexandraGlobal, ALEXANDRA_GLOBAL_PANEL_ID } from "public/alexandraGlobalBridge.js";
 
 const MASTER_VERSION = "BACKEND-BASE-1.0-B011.20-BRANCH-MEDIA-CONTROL";
 const MASTER_ENV = "PRD";
@@ -732,13 +732,13 @@ function wireLocationChangeScroll() {
   try {
     wixLocationFrontend.onChange(async () => {
       const nextPath = currentPathString();
+      alexandraGlobal?.onRouteChange(nextPath);
       if (isRiaintraChildPath(nextPath) && !hasManualRiaintraSession()) {
         observedPath = nextPath;
         await requireManualRiaintraLogin();
         return;
       }
       observedPath = nextPath;
-      alexandraGlobal?.onRouteChange?.(currentPathString());
       await resetGlobalMobileDrawer();
       scheduleScrollViewportToTop("location-change");
       stopMobileFooterGate();
@@ -1057,15 +1057,21 @@ async function handleMasterMessage(embed, message = {}) {
 
   if (embed?.id === GLOBAL_MOBILE_NAV_ID.slice(1) && source === 'SKANDI_SUPPORT_CHAT') {
     if (!isPublicMobileChromePath()) return true;
-    if (typeof alexandraGlobal?.handleMobileMessage === 'function') {
-      await alexandraGlobal.handleMobileMessage(message);
-    } else {
-      postToEmbed(embed, 'SUPPORT_CHAT_ERROR', { message:'Alexandra is not available yet. Please try again.' });
+    if (type === 'SUPPORT_CHAT_START_ALEXANDRA') {
+      await resetGlobalMobileDrawer();
+      await alexandraGlobal?.openFromMobile(String(message.requestId || ''));
     }
     return true;
   }
 
   if (isGlobalMobileNavMessage(embed, message)) {
+    if (type === 'SKANDI_SUPPORT_CHAT' && !isInternalPath()) {
+      if (payload.type === 'SUPPORT_CHAT_START_ALEXANDRA') {
+        await resetGlobalMobileDrawer();
+        await alexandraGlobal?.openFromMobile(String(message.requestId || ''));
+      }
+      return true;
+    }
     if (type === "HOME_APP_READY") {
       pushMasterConfig(embed);
       postGlobalMobileNav("HOME_APP_READY_ACK", { route:currentPathString(), mobile:isPublicMobileChromePath() }, String(message.requestId || ""));
@@ -1123,8 +1129,11 @@ async function handleMasterMessage(embed, message = {}) {
       else navigate(SITE_MAP.home);
       return true;
     }
-    if (type === "SKANDI_SUPPORT_CHAT" && !isInternalPath() && typeof alexandraGlobal?.handleMobileMessage === "function") {
-      await alexandraGlobal.handleMobileMessage({ source:"SKANDI_SUPPORT_CHAT", type:payload.type, payload:payload.payload || {}, requestId:message.requestId });
+    if (type === "SKANDI_SUPPORT_CHAT" && !isInternalPath()) {
+      if (payload.type === 'SUPPORT_CHAT_START_ALEXANDRA') {
+        postToEmbed(embed, 'HOME_APP_DRAWER_FORCE_CLOSE', {});
+        await alexandraGlobal?.openFromMobile(String(message.requestId || ''));
+      }
       return true;
     }
   }
@@ -1379,7 +1388,7 @@ async function handleMasterMessage(embed, message = {}) {
 }
 
 function wireHtmlComponent(embed) {
-  if (!isHtmlEmbed(embed) || wiredEmbeds.has(embed)) return;
+  if (!isHtmlEmbed(embed) || wiredEmbeds.has(embed) || embed.id === ALEXANDRA_GLOBAL_PANEL_ID.slice(1)) return;
   wiredEmbeds.add(embed);
   const key = embed.id || "unknown embed";
   embed.onMessage(async event => {
@@ -1524,6 +1533,15 @@ function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
 $w.onReady(async function () {
+  if (wixWindowFrontend.rendering?.env !== 'backend') {
+    alexandraGlobal = bindAlexandraGlobal({
+      wixSelector: safeEl,
+      navigate,
+      enabled: () => !isInternalPath(currentPathString()),
+      settings: () => customerSettings,
+      initialPath: currentPathString()
+    });
+  }
   // Non-sensitive presentation assets for the Club login lightbox.
   try { session.setItem("SKANDI_CLUB_BRAND", JSON.stringify({ white:MASTER_CONFIG.brand.assets.logos.clubWhite, navy:MASTER_CONFIG.brand.assets.logos.clubNavy, hero:MASTER_CONFIG.brand.assets.images.clubLoginHero })); } catch (_) {}
   let closeLogoutPending = false;
@@ -1556,14 +1574,6 @@ $w.onReady(async function () {
   wireLocationChangeScroll();
   wireAllHtmlComponents();
   await resetGlobalMobileDrawer();
-  alexandraGlobal = bindAlexandraGlobal({
-    wixSelector: $w,
-    navigate,
-    enabled: () => !isInternalPath(currentPathString()),
-    mobileEnabled: () => isPublicMobileChromePath(),
-    mobileTarget: () => allHtmlComponents().find(el => compiledEmbeds.has(el.id) && compiledEmbeds.get(el.id).key === resolveBuildRoute(currentPathString())?.key) || null
-  });
-  alexandraGlobal?.onRouteChange?.(currentPathString());
 
   const path = currentPathString();
   const chromeFree = isChromeFreePath(path);
