@@ -87,6 +87,10 @@ function categoryTitle(id){
   return categories.find(c=>c.categoryId===id)?.title||id||"News";
 }
 
+function postType(item){
+  return item.contentType||categoryTitle(item.categoryId);
+}
+
 function filtered(){
   const query=($("search").value||"").toLowerCase().trim();
   const type=$("typeFilter").value;
@@ -149,14 +153,14 @@ function renderHero(){
 
   selected=item;
   $("hero").innerHTML=`
-    <div class="feature-media" data-media-role="newsroom-featured-media">${mediaMarkup(item,"")}</div>
     <div class="feature-copy">
-      <div class="kicker">${esc(item.kicker||categoryTitle(item.categoryId))}</div>
+      <div class="kicker">${esc(item.kicker||postType(item))}</div>
       <h2>${esc(item.title)}</h2>
       <p>${esc(item.summary||"")}</p>
       <div class="meta" style="margin-bottom:16px">${esc(fmt(item.publishDate))}${item.location?" · "+esc(item.location):""}</div>
       <button class="btn" type="button" data-open="${esc(item.postId)}">Read article</button>
-    </div>`;
+    </div>
+    <div class="feature-media" data-media-role="newsroom-featured-media">${mediaMarkup(item,"")}</div>`;
 }
 
 function renderGrid(){
@@ -170,7 +174,7 @@ function renderGrid(){
           : `<div class="card-placeholder">SKANDI Newsroom</div>`}
       </div>
       <div class="card-body">
-        <div class="kicker">${esc(categoryTitle(item.categoryId))}</div>
+        <div class="kicker">${esc(postType(item))}</div>
         <h3>${esc(item.title)}</h3>
         <p>${esc(item.summary||"")}</p>
         <div class="meta">${esc(fmt(item.publishDate))}${item.location?" · "+esc(item.location):""}</div>
@@ -192,11 +196,18 @@ function renderDetail(item){
 
   $("detail").classList.add("active");
   $("detail").innerHTML=`
-    ${image?`<div class="detail-hero"><img src="${esc(image)}" alt="${esc(item.title)}"></div>`:""}
     <div class="detail-body">
-      <button class="btn secondary" type="button" data-close-detail>← Back to newsroom</button>
-      <h2>${esc(item.title)}</h2>
-      <div class="detail-meta">${esc(categoryTitle(item.categoryId))} · ${esc(fmt(item.publishDate))}${item.location?" · "+esc(item.location):""}</div>
+      <header class="detail-head">
+        <button class="detail-back" type="button" data-close-detail>← Back to newsroom</button>
+        <div class="detail-meta">
+          <span class="detail-type">${esc(postType(item))}</span>
+          ${item.publishDate?`<time datetime="${esc(item.publishDate)}">${esc(fmt(item.publishDate))}</time>`:""}
+          ${item.location?`<span>${esc(item.location)}</span>`:""}
+        </div>
+        <h2>${esc(item.title)}</h2>
+        ${item.summary?`<p class="detail-deck">${esc(item.summary)}</p>`:""}
+      </header>
+      ${image?`<figure class="detail-hero"><img src="${esc(image)}" alt="${esc(item.title)}"></figure>`:""}
       <div class="detail-content">${content}</div>
     </div>`;
 
