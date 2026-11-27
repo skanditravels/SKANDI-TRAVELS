@@ -175,7 +175,7 @@ test("contact and travel forms submit only their fields and refresh once after e
   contact.elements.firstName.value = "Ada-Marie";
   contact.requestSubmit();
   await setImmediate();
-  assert.deepEqual(Object.keys(submitted[0]), ["firstName", "lastName", "email", "phone"]);
+  assert.deepEqual(Object.keys(submitted[0]), ["firstName", "lastName", "displayName", "email", "phone"]);
   assert.match(contact.querySelector(".form-status").textContent, /Contact details saved/);
   assert.equal(site.current(), "profile-details");
   assert.equal(site.bootstraps(), 2);

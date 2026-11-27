@@ -4,6 +4,10 @@
 
 ## 2026-11-27 · Account navigation and profile actions
 
+- Wix Members owns sign-in identity, first and last name, phone and the private Display Name and Email fields. The profile displays the login email from Wix. The travel contact email uses the existing private Email field.
+- The existing private country, language, currency and departure airport fields use country and language codes, currency codes and airport IATA codes. The SKANDI travel profile retains verified reference IDs. Wix account values appear on the next profile load and a profile save mirrors confirmed values into the travel record. Seat, dietary and accessibility preferences stay in the travel record under the same Wix Member ID.
+- Wix Email Subscriptions controls marketing subscription status. Confirmed choices are also written to the existing Wix Marketing Consent field and the SKANDI travel record. Terms and privacy acceptance dates are managed during onboarding.
+- Wix Loyalty supplies enrollment, program settings, the available points balance and configured levels to My Profile and the public header. The SKANDI Club program was confirmed active and its Wix tier setting disabled on November 27. The points activity view displays the travel ledger.
 - The active source is the adjacent HTML, CSS, and JavaScript triplet. Wix continues to load that build in `#htmlMyProfile` on `/my-profile`. The HTML later in this reference records the earlier layout.
 - A single greeting introduces the account. Mobile shows a compact section selector built from the profile navigation, and the current section is reflected in the Wix URL.
 - The host chooses the initial view from the actual Wix query, including `?tab=trips`. A profile refresh keeps the selected view and unsaved form edits. Startup and refresh failures offer recovery on the page.

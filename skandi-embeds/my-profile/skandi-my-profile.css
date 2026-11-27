@@ -473,6 +473,7 @@ textarea.control{min-height:100px;padding:12px;resize:vertical}
 .form-status.bad{color:var(--sk-danger)}
 .profile-form label.field{display:grid;gap:6px;color:var(--sk-navy-deep);font-weight:700}
 .profile-account-actions,#profileSummary{margin-top:20px}
+.wix-tier-table .tier-row{grid-template-columns:minmax(0,1fr) minmax(80px,auto)}
 #bookingDocumentStatus{margin-bottom:14px}
 #bookingDocumentStatus .btn{display:inline-flex;align-items:center;text-decoration:none;margin-top:8px}
 .view{display:none}

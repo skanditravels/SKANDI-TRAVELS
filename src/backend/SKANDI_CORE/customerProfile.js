@@ -19,9 +19,16 @@ import {
 } from "backend/SKANDI_CORE/duffelServicing";
 import { getDuffelStayBookingCore, cancelDuffelStayBookingCore, getDuffelCarBookingCore, cancelDuffelCarBookingCore } from "backend/SKANDI_CORE/duffelGround";
 import { ensureDuffelCustomerUserCore } from "backend/SKANDI_CORE/duffelIdentity";
+import { getCustomerMemberFieldsCore, updateCustomerMemberFieldsCore, getCustomerWixLoyaltyCore } from "backend/SKANDI_CORE/customerSession";
+import { email as validatedEmail } from "backend/SKANDI_CORE/platformValidation";
 
 const VERSION = "B-011.31";
-const ACTIVE_POINT_EXCLUSIONS = new Set(["VOID", "CANCELLED", "REVERSED"]);
+const ACCOUNT_PREFERENCES = [
+  { id: "countryOfResidenceId", wix: "countryOfResidence", list: "countries", code: "code", column: "country_of_residence_id" },
+  { id: "preferredLanguageId", wix: "preferredLanguage", list: "languages", code: "code", column: "preferred_language_id" },
+  { id: "preferredDepartureAirportId", wix: "preferredDepartureAirport", list: "airports", code: "iata", column: "preferred_departure_airport_id" }
+];
+const PREFERRED_CURRENCIES = new Set(["USD", "SEK", "NOK", "DKK", "EUR"]);
 
 function clean(v, max = 500) { return String(v ?? "").trim().slice(0, max); }
 function lower(v, max = 500) { return clean(v, max).toLowerCase(); }
@@ -64,7 +71,13 @@ async function resolveProfile(context, { create = true } = {}) {
   const auth = requireContext(context);
   let row = (await select("customer_profiles", { select: "*", member_id: qeq(auth.memberId), limit: "1" }))[0] || null;
   if (!row) row = (await select("customer_profiles", { select: "*", wix_member_id: qeq(auth.memberId), limit: "1" }))[0] || null;
-  if (!row && auth.email) row = (await select("customer_profiles", { select: "*", auth_email: qeq(auth.email), limit: "1" }))[0] || (await select("customer_profiles", { select: "*", email: qeq(auth.email), limit: "1" }))[0] || null;
+  if (!row && auth.email && context.emailVerified === true) {
+    // A verified sign-in can claim a unique legacy profile with no Wix Member link.
+    const unlinked = { select: "*", wix_member_id: "is.null", limit: "2" };
+    const byAuth = await select("customer_profiles", { ...unlinked, auth_email: qeq(auth.email) });
+    const candidates = byAuth.length ? byAuth : await select("customer_profiles", { ...unlinked, auth_email: "is.null", email: qeq(auth.email) });
+    if (candidates.length === 1) row = candidates[0];
+  }
   if (!row && create) {
     row = await insert("customer_profiles", {
       member_id: auth.memberId,
@@ -81,33 +94,23 @@ async function resolveProfile(context, { create = true } = {}) {
     });
   }
   if (!row) return null;
-  if (row.wix_member_id && row.wix_member_id !== auth.memberId && lower(row.auth_email || row.email) !== auth.email) throw fail("PROFILE_OWNERSHIP_MISMATCH", "This customer profile is linked to a different account.", 403);
+  if (row.wix_member_id && row.wix_member_id !== auth.memberId) throw fail("PROFILE_OWNERSHIP_MISMATCH", "This customer profile is linked to a different account.", 403);
   if (!row.wix_member_id) {
-    const updated = await patch("customer_profiles", { id: qeq(row.id) }, { wix_member_id: auth.memberId, auth_email: row.auth_email || auth.email || null, updated_at: now() });
-    row = updated[0] || { ...row, wix_member_id: auth.memberId };
+    const updated = await patch("customer_profiles", { id: qeq(row.id), wix_member_id: "is.null" }, {
+      wix_member_id: auth.memberId, auth_email: auth.email || row.auth_email || null, updated_at: now()
+    });
+    if (updated[0]?.wix_member_id !== auth.memberId) throw fail("PROFILE_LINK_NOT_CONFIRMED", "The account link could not be verified. Please try again.", 409);
+    row = updated[0];
   }
   return row;
 }
 
 async function clubData(profile) {
-  if (!profile) return { clubProfile: null, tiers: [], tier: null, nextTier: null, pointsBalance: 0, points: [], progress: null };
-  const [clubRows, tiers, points] = await Promise.all([
+  const [clubRows, points] = await Promise.all([
     select("club_profiles", { select: "*", member_id: qeq(profile.member_id), limit: "1" }),
-    select("club_tiers", { select: "*", active: "eq.true", order: "sort_order.asc", limit: "100" }),
-    select("skandi_points_ledger", { select: "id,transaction_id,member_id,booking_id,booking_reference,transaction_date,type,amount,description,status,is_manual_adjustment,created_at", member_id: qeq(profile.member_id), order: "transaction_date.desc", limit: "5000" })
+    select("skandi_points_ledger", { select: "id,transaction_id,member_id,booking_id,booking_reference,transaction_date,type,amount,description,status,is_manual_adjustment,created_at", member_id: qeq(profile.member_id), order: "transaction_date.desc", limit: "250" })
   ]);
-  const valid = points.filter(row => !ACTIVE_POINT_EXCLUSIONS.has(upper(row.status, 40)));
-  const balance = valid.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
-  const tier = tiers.find(row => row.id === profile.club_tier_id) || tiers.find(row => lower(row.tier_key) === "member") || tiers[0] || null;
-  const nextTier = tier ? tiers.find(row => Number(row.sort_order) > Number(tier.sort_order)) || null : null;
-  const progress = tier ? {
-    currentMin: Number(tier.min_points || 0),
-    currentMax: tier.max_points === null ? null : Number(tier.max_points),
-    nextMin: nextTier ? Number(nextTier.min_points || 0) : null,
-    pointsToNext: nextTier ? Math.max(0, Number(nextTier.min_points || 0) - balance) : 0,
-    percent: nextTier ? Math.max(0, Math.min(100, ((balance - Number(tier.min_points || 0)) / Math.max(1, Number(nextTier.min_points || 0) - Number(tier.min_points || 0))) * 100)) : 100
-  } : null;
-  return { clubProfile: clubRows[0] || null, tiers, tier, nextTier, pointsBalance: balance, points: points.slice(0, 250), progress };
+  return { clubProfile: clubRows[0] || null, points };
 }
 
 function publicProfile(profile, club) {
@@ -153,8 +156,55 @@ function publicProfile(profile, club) {
     }
   };
 }
-function publicTier(row) { return row ? { id: row.id, key: row.tier_key, name: row.tier_name, minPoints: Number(row.min_points || 0), maxPoints: row.max_points === null ? null : Number(row.max_points), multiplier: Number(row.multiplier || 1), sortOrder: Number(row.sort_order || 999), benefits: arr(obj(row.payload).benefits) } : null; }
 function publicPoint(row) { return { id: row.id, transactionId: row.transaction_id, bookingId: row.booking_id || null, bookingReference: row.booking_reference || "", date: row.transaction_date || row.created_at || null, type: row.type || "", amount: Number(row.amount || 0), description: row.description || "", status: row.status || "" }; }
+
+function memberProfileRow(profile, member, refs) {
+  if (!member) return profile;
+  const native = getCustomerMemberFieldsCore(member);
+  const row = { ...profile };
+  for (const [field, column] of [
+    ["firstName", "first_name"], ["lastName", "last_name"], ["displayName", "display_name"],
+    ["email", "email"], ["phone", "phone"], ["preferredCurrency", "preferred_currency"]
+  ]) {
+    if (Object.hasOwn(native, field)) row[column] = native[field];
+  }
+  for (const preference of ACCOUNT_PREFERENCES) {
+    const value = native[preference.wix];
+    if (value === "") row[preference.column] = null;
+    if (!value) continue;
+    const key = lower(value, 180);
+    const match = arr(refs[preference.list]).find(item =>
+      [item.id, item[preference.code], item.name].some(candidate => lower(candidate, 180) === key)
+    );
+    if (match) row[preference.column] = match.id;
+  }
+  return row;
+}
+
+function wixMemberChanges(changes, refs) {
+  const native = {};
+  for (const [key, max] of [["firstName", 160], ["lastName", 160], ["displayName", 300], ["phone", 40]]) {
+    if (Object.hasOwn(changes, key)) native[key] = clean(changes[key], max);
+  }
+  if (Object.hasOwn(changes, "email")) {
+    const value = clean(changes.email, 254);
+    native.email = validatedEmail(value);
+    if (value && !native.email) throw fail("CONTACT_EMAIL_INVALID", "Enter a valid contact email.");
+  }
+  if (Object.hasOwn(changes, "preferredCurrency")) {
+    const currency = upper(changes.preferredCurrency, 16);
+    if (currency && !PREFERRED_CURRENCIES.has(currency)) throw fail("PREFERRED_CURRENCY_INVALID", "Choose an available currency.");
+    native.preferredCurrency = currency;
+  }
+  for (const preference of ACCOUNT_PREFERENCES) {
+    if (!Object.hasOwn(changes, preference.id)) continue;
+    const value = clean(changes[preference.id], 80);
+    const match = arr(refs[preference.list]).find(item => item.id === value);
+    if (value && !match?.[preference.code]) throw fail("ACCOUNT_REFERENCE_INVALID", "Choose an available option or leave the current value.");
+    native[preference.wix] = match?.[preference.code] || "";
+  }
+  return native;
+}
 
 async function references() {
   const [countries, languages, airports] = await Promise.all([
@@ -245,14 +295,20 @@ async function bookingDocuments(bookings, profileDocs) {
 
 export async function getCustomerClubSummaryCore(context) {
   const profile = await resolveProfile(context, { create: false });
-  if (!profile) return { enrolled: false, points: 0, tier: "", clubNumber: "" };
-  const club = await clubData(profile);
-  return { enrolled: profile.is_loyalty_member === true, points: club.pointsBalance, tier: publicTier(club.tier)?.name || "", clubNumber: profile.club_number ? String(profile.club_number) : "", memberSince: club.clubProfile?.enrolled_at || (profile.is_loyalty_member === true ? profile.created_at || null : null) };
+  const club = await getCustomerWixLoyaltyCore();
+  return { enrolled: club.enrolled, points: club.pointsBalance, tier: club.tier?.name || "", clubNumber: profile?.club_number ? String(profile.club_number) : "", memberSince: club.memberSince };
 }
 
 export async function getCustomerProfileBootstrapCore(context, input = {}) {
   const profile = await resolveProfile(context, { create: true });
-  const [club, rows, refs, carts] = await Promise.all([clubData(profile), customerRows(profile), references(), listCustomerBookingCartsCore(requireContext(context), { limit: 100 }).catch(() => ({ carts: [] }))]);
+  if (!profile?.id) throw fail("PROFILE_NOT_AVAILABLE", "Your travel profile could not be loaded.");
+  const [travelClub, club, rows, refs, carts] = await Promise.all([
+    clubData(profile),
+    getCustomerWixLoyaltyCore(),
+    customerRows(profile),
+    references(),
+    listCustomerBookingCartsCore(requireContext(context), { limit: 100 }).catch(() => ({ carts: [] }))
+  ]);
   const bookings = await bookingsFor(profile, rows);
   const documents = await bookingDocuments(bookings, rows.profileDocs);
   const upcoming = bookings.filter(b => b.departureDate && b.departureDate >= new Date().toISOString().slice(0,10) && upper(b.status) !== "CANCELLED").sort((a,b)=>String(a.departureDate).localeCompare(String(b.departureDate)));
@@ -260,8 +316,11 @@ export async function getCustomerProfileBootstrapCore(context, input = {}) {
   return {
     ok: true,
     version: VERSION,
-    profile: publicProfile(profile, club),
-    club: { enrolled: profile.is_loyalty_member === true, memberSince: club.clubProfile?.enrolled_at || (profile.is_loyalty_member === true ? profile.created_at || null : null), pointsBalance: club.pointsBalance, tier: publicTier(club.tier), nextTier: publicTier(club.nextTier), tiers: club.tiers.map(publicTier), progress: club.progress, ledger: club.points.map(publicPoint) },
+    profile: {
+      ...publicProfile(memberProfileRow(profile, context.member, refs), travelClub),
+      loginEmail: requireContext(context).email
+    },
+    club: { ...club, ledger: travelClub.points.map(publicPoint) },
     trips: { upcoming, history, carts: arr(carts.carts) },
     travelers: rows.travelers.map(travelerView),
     documents,
@@ -278,6 +337,7 @@ export async function getCustomerProfileBootstrapCore(context, input = {}) {
 
 export async function updateCustomerProfileCore(context, input = {}) {
   const profile = await resolveProfile(context, { create: true });
+  if (!profile?.id) throw fail("PROFILE_NOT_AVAILABLE", "Your travel profile could not be loaded.");
   const changes = obj(input.profile || input);
   const body = { updated_at: now() };
   for (const [key, column, max] of [["firstName","first_name",160],["lastName","last_name",160],["displayName","display_name",300],["email","email",254],["phone","phone",40],["preferredCurrency","preferred_currency",3],["accessibilityNeeds","accessibility_needs_general",2000]]) if (Object.prototype.hasOwnProperty.call(changes,key)) body[column] = clean(changes[key],max) || null;
@@ -286,12 +346,37 @@ export async function updateCustomerProfileCore(context, input = {}) {
   for (const [key,max] of [["seatPreference",100],["dietaryPrefs",1000]]) if (Object.prototype.hasOwnProperty.call(changes,key)) preferencePayload[key] = clean(changes[key],max);
   for (const key of ["mealPreferences","frequentFlyerPrograms","hotelLoyaltyPrograms","carRentalLoyaltyPrograms","emergencyContacts"]) if (Object.prototype.hasOwnProperty.call(changes,key)) preferencePayload[key] = arr(changes[key]).slice(0,20);
   if (Object.keys(preferencePayload).length) body.payload = { ...obj(profile.payload), ...preferencePayload };
-  let updated = (await patch("customer_profiles", { id: qeq(profile.id) }, body))[0];
-  if (!updated?.id) throw fail("PROFILE_SAVE_NOT_CONFIRMED", "The profile update could not be confirmed. Refresh before trying again.", 409);
+
+  let member = context.member;
+  let refs;
+  if (member) {
+    refs = await references();
+    member = await updateCustomerMemberFieldsCore(member, wixMemberChanges(changes, refs));
+    const confirmed = memberProfileRow({ ...profile, ...body }, member, refs);
+    for (const column of [
+      "first_name", "last_name", "display_name", "email", "phone", "preferred_currency",
+      ...ACCOUNT_PREFERENCES.map(preference => preference.column)
+    ]) {
+      if (Object.hasOwn(body, column) || confirmed[column] !== profile[column]) body[column] = confirmed[column] || null;
+    }
+    const loginEmail = getCustomerMemberFieldsCore(member).loginEmail;
+    if (loginEmail && loginEmail !== profile.auth_email) body.auth_email = loginEmail;
+  }
+
+  let updated;
+  try {
+    updated = (await patch("customer_profiles", { id: qeq(profile.id), wix_member_id: qeq(context.memberId) }, body))[0];
+    if (!updated?.id) throw new Error("The profile write returned no record.");
+  } catch (_) {
+    const message = member && member !== context.member
+      ? "Your Wix account was updated. The SKANDI travel profile could not be confirmed. Refresh before trying again."
+      : "The profile update could not be confirmed. Refresh before trying again.";
+    throw fail("PROFILE_SAVE_NOT_CONFIRMED", message, 409);
+  }
   let providerSync = { ok: false, skipped: true, reason: "Profile needs first name, last name and email before supplier identity can be synchronized." };
   if (updated.first_name && updated.last_name && updated.email) {
     try {
-      const refs = await references();
+      refs ||= await references();
       const language = refs.languages.find(x => x.id === updated.preferred_language_id)?.code || "";
       const synced = await ensureDuffelCustomerUserCore({ customerUserId: clean(obj(updated.payload).duffelCustomerUserId,220), email: updated.email, givenName: updated.first_name, familyName: updated.last_name, phoneNumber: updated.phone || "", preferredLanguage: language ? lower(language,2) : "" });
       const nextPayload = { ...obj(updated.payload), duffelCustomerUserId: synced.user.id, duffelCustomerUserSyncedAt: now() };
@@ -301,8 +386,12 @@ export async function updateCustomerProfileCore(context, input = {}) {
       providerSync = { ok: true, customerUserId: synced.user.id, provider: "Duffel" };
     } catch (error) { providerSync = { ok: false, skipped: false, error: safeError(error) }; }
   }
-  const club = await clubData(updated);
-  return { ok: true, profile: publicProfile(updated, club), providerSync };
+  const clubProfile = (await select("club_profiles", { select: "*", member_id: qeq(updated.member_id), limit: "1" }))[0] || null;
+  return {
+    ok: true,
+    profile: { ...publicProfile(updated, { clubProfile }), loginEmail: requireContext(context).email },
+    providerSync
+  };
 }
 
 export async function saveCustomerTravelerCore(context, input = {}) {

@@ -816,19 +816,21 @@ function navigate(path) {
 async function getCustomerState() {
   try {
     const member = await currentMember.getMember();
-    if (!member) return { loggedIn:false, displayName:"", points:0, tierName:"", menu:[] };
+    if (!member) return { loggedIn:false, displayName:"", points:null, tierName:"", menu:[] };
     const session = await getCustomerHeaderSession();
     return {
       loggedIn:true,
       displayName:session?.displayName || member?.profile?.nickname || member?.loginEmail || "",
       email:session?.email || member?.loginEmail || "",
-      points:Number(session?.points || session?.clubPoints || 0),
+      points:Number.isFinite(session?.points) ? session.points : null,
+      pointsName:session?.pointsName || "Points",
+      loyaltyAvailable:session?.loyaltyAvailable === true,
       tierName:session?.tierName || session?.tier || "",
       menu:Array.isArray(session?.menu) ? session.menu : []
     };
   } catch (error) {
     console.warn("[MasterPage] Customer session unavailable.", error);
-    return { loggedIn:false, displayName:"", points:0, tierName:"", menu:[] };
+    return { loggedIn:false, displayName:"", points:null, tierName:"", menu:[] };
   }
 }
 async function pushCustomerHeaderState(embed = customerHeaderEl()) {

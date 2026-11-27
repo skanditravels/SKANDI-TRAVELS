@@ -95,10 +95,11 @@ function renderHero(){
   const d=state.data;if(!d)return;const p=d.profile||{},c=d.club||{},first=(p.firstName||p.displayName||"Member").split(" ")[0];
   $("heroName").textContent=first;
   $("greetingLine").firstChild.nodeValue=`${greetingForNow()}, `;
-  $("heroTier").textContent=c.enrolled?(c.tier?.name||"Member"):"Not enrolled";
+  $("heroTier").textContent=c.status==="UNAVAILABLE"?"Unavailable":c.enrolled?(c.tier?.name||"Member"):"Not enrolled";
   $("heroMembership").hidden=!(c.enrolled&&p.clubNumber);
   $("heroNumber").textContent=p.clubNumber||"";
-  $("heroPoints").textContent=c.enrolled?num(c.pointsBalance):"—";
+  $("heroPointsLabel").textContent=c.pointsName||"Points";
+  $("heroPoints").textContent=c.enrolled&&Number.isFinite(c.pointsBalance)?num(c.pointsBalance):"—";
   $("heroTrips").textContent=num(arr(d.trips?.upcoming).length);
   $("heroMemberSince").textContent=c.enrolled?monthYear(c.memberSince||p.accountCreatedAt):"—";
   const progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0)));document.documentElement.style.setProperty("--club-progress",`${progress}%`);
@@ -107,6 +108,15 @@ function renderOverview(){
   const {profile:p={},club:c={}}=state.data;
   const overview=$("clubView");
   const title='<div class="page-intro"><h2>Club Overview</h2></div>';
+  if(c.status==="UNAVAILABLE"){
+    overview.innerHTML=title+`
+      <div class="club-status-panel">
+        <h3>Club information is temporarily unavailable</h3>
+        <p>Refresh to check your current membership and balance.</p>
+        <button class="btn cyan" type="button" data-refresh-profile>Refresh account</button>
+      </div>`;
+    return;
+  }
   if(!c.enrolled){
     overview.innerHTML=title+`
       <div class="club-status-panel">
@@ -123,6 +133,7 @@ function renderOverview(){
   const progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0)));
   const currentTier=c.tier?.name||"Member";
   const nextTier=c.nextTier?.name;
+  const showTier=c.tiersEnabled??(Boolean(nextTier)||arr(c.tiers).length>0);
   const recent=arr(c.ledger).slice(0,5);
   const recentRows=recent.map(entry=>`
     <div class="club-activity-mini">
@@ -137,20 +148,10 @@ function renderOverview(){
         <div><div class="club-status-name">${esc(currentTier)}</div><div class="club-status-caption">Current Club status</div></div>
         ${p.clubNumber?`<span class="club-number-badge">Club ${esc(p.clubNumber)}</span>`:""}
       </div>
-      <div class="club-status-body">
-        <div class="status-ring" style="--p:${progress}">
-          <div class="status-ring-content"><strong>${progress.toFixed(0)}%</strong><span>${nextTier?`to ${esc(nextTier)}`:"top level"}</span></div>
-        </div>
-        <div class="status-copy">
-          <h3>${nextTier?`Next level: ${esc(nextTier)}`:`${esc(currentTier)} status`}</h3>
-          <p>${nextTier?`${num(c.progress?.pointsToNext)} more points to reach ${esc(nextTier)}.`:"You have reached the highest Club level."}</p>
-          <div class="status-facts">
-            <div class="status-fact"><strong>${Number(c.tier?.multiplier||1).toFixed(2).replace(/\.00$/,"")}×</strong><span>Earning multiplier</span></div>
-            <div class="status-fact"><strong>${num(c.tier?.minPoints||0)}</strong><span>Level threshold</span></div>
-            ${nextTier?`<div class="status-fact"><strong>${num(c.nextTier.minPoints)}</strong><span>Next threshold</span></div>`:""}
-          </div>
-        </div>
-      </div>
+      ${showTier&&nextTier?`<div class="club-status-body">
+        <div class="status-ring" style="--p:${progress}"><div class="status-ring-content"><strong>${progress.toFixed(0)}%</strong><span>to ${esc(nextTier)}</span></div></div>
+        <div class="status-copy"><h3>Next level: ${esc(nextTier)}</h3><p>${num(c.progress?.pointsToNext)} more points to reach ${esc(nextTier)}.</p></div>
+      </div>`:`<div class="status-copy"><h3>${esc(c.programName||"SKANDI Club")}</h3><p>${showTier?"Your current level is shown above.":"Your available points appear in the account summary."}</p></div>`}
     </section>
     <h3 class="quick-links-title">Manage your account</h3>
     <div class="quick-links">${pageLink("club","activity","Points Activity","wallet")}${pageLink("trips","upcoming","My Upcoming Trips","calendar")}${pageLink("profile","details","Personal Information","user")}</div>
@@ -173,8 +174,23 @@ function renderTrips(){
 function renderClub(){
   const d=state.data,c=d?.club||{},tiers=arr(c.tiers),ledger=arr(c.ledger);
   const activityRoot=$("clubActivityView"),programRoot=$("clubProgramView");
-  if(activityRoot){let rows=ledger;if(state.ledgerFilter==="earned")rows=rows.filter(x=>Number(x.amount)>0);else if(state.ledgerFilter==="used")rows=rows.filter(x=>Number(x.amount)<0);else if(state.ledgerFilter==="pending")rows=rows.filter(x=>String(x.status||"").toUpperCase()==="PENDING");activityRoot.innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Account Activity</div><h2>Points Activity</h2></div><p>Posted and pending entries from your canonical SKANDI Points ledger.</p></div><div class="activity-toolbar"><div class="activity-filters">${[["all","All"],["earned","Earned"],["used","Used"],["pending","Pending"]].map(([v,l])=>`<button class="activity-filter ${state.ledgerFilter===v?"active":""}" data-ledger-filter="${v}">${l}</button>`).join("")}</div><div style="color:rgba(255,255,255,.42);font-size:10px">${num(rows.length)} entries</div></div><div class="activity-list">${rows.length?rows.map(x=>`<div class="activity-row"><div class="date">${esc(date(x.date))}</div><div><strong>${esc(x.description||friendly(x.type)||"SKANDI Club activity")}</strong><small>${esc(x.bookingReference||friendly(x.status||"Posted"))}</small></div><div class="amount ${Number(x.amount)<0?"neg":""}">${Number(x.amount)>0?"+":""}${num(x.amount)} pts</div></div>`).join(""):empty("No matching activity","There are no Club ledger entries in this filter.","wallet")}</div>`}
-  if(programRoot){programRoot.innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Program Information</div><h2>Club Levels</h2></div><p>The level names, point thresholds and earning multipliers below come directly from the active SKANDI Club configuration. Benefits are not invented here when they have not been configured.</p></div><div class="tier-table"><div class="tier-row header"><span>Club level</span><span>From</span><span>Through</span><span>Multiplier</span></div>${tiers.map(t=>`<div class="tier-row ${t.id===c.tier?.id?"current":""}"><strong>${esc(t.name)}</strong><span>${num(t.minPoints)} pts</span><span>${t.maxPoints===null||t.maxPoints===undefined?"No upper limit":`${num(t.maxPoints)} pts`}</span><span>${Number(t.multiplier||1).toFixed(2).replace(/\.00$/,'')}×</span></div>`).join("")}</div><div class="provider-note" style="margin-top:18px">SKANDI Club status is determined by the active Club configuration and your posted SKANDI Points balance. Program-specific benefits should only appear here once they are defined in the Club configuration.</div>`}
+  if(activityRoot){let rows=ledger;if(state.ledgerFilter==="earned")rows=rows.filter(x=>Number(x.amount)>0);else if(state.ledgerFilter==="used")rows=rows.filter(x=>Number(x.amount)<0);else if(state.ledgerFilter==="pending")rows=rows.filter(x=>String(x.status||"").toUpperCase()==="PENDING");activityRoot.innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Account Activity</div><h2>Points Activity</h2></div><p>Points activity recorded for your SKANDI trips.</p></div><div class="activity-toolbar"><div class="activity-filters">${[["all","All"],["earned","Earned"],["used","Used"],["pending","Pending"]].map(([v,l])=>`<button class="activity-filter ${state.ledgerFilter===v?"active":""}" data-ledger-filter="${v}">${l}</button>`).join("")}</div><div style="color:rgba(255,255,255,.42);font-size:10px">${num(rows.length)} entries</div></div><div class="activity-list">${rows.length?rows.map(x=>`<div class="activity-row"><div class="date">${esc(date(x.date))}</div><div><strong>${esc(x.description||friendly(x.type)||"SKANDI Club activity")}</strong><small>${esc(x.bookingReference||friendly(x.status||"Posted"))}</small></div><div class="amount ${Number(x.amount)<0?"neg":""}">${Number(x.amount)>0?"+":""}${num(x.amount)} pts</div></div>`).join(""):empty("No matching activity","There are no Club ledger entries in this filter.","wallet")}</div>`}
+  if(programRoot){
+    const programName=esc(c.programName||"SKANDI Club");
+    const title=`<div class="page-intro"><h2>${programName}</h2></div>`;
+    const tierRows=tiers.map(t=>`<div class="tier-row ${t.id&&t.id===c.tier?.id?"current":""}"><strong>${esc(t.name)}</strong><span>${num(t.minPoints)}</span></div>`).join("");
+    const summary=c.programStatus==="UNAVAILABLE"
+      ? "Club program information is temporarily unavailable."
+      : c.programStatus==="PAUSED"
+        ? "The Club program is currently paused."
+        : "See how to earn and use your Club points.";
+    programRoot.innerHTML=title+`<div class="club-status-panel">
+      <h3>Program information</h3><p>${summary}</p>
+      <button class="btn cyan" type="button" data-route="/skandi-club">Explore SKANDI Club</button>
+    </div>`+(tiers.length?`<div class="tier-table wix-tier-table">
+      <div class="tier-row header"><span>Club level</span><span>Points required</span></div>${tierRows}
+    </div>`:"");
+  }
 }
 function initials(t){return [t.firstName,t.lastName].filter(Boolean).map(x=>x[0]).join("").slice(0,2).toUpperCase()||"TR"}
 function renderTravelers(){const list=arr(state.data?.travelers);$("travelerGrid").innerHTML=list.length?list.map(t=>`<article class="card traveler-card"><div class="traveler-head"><div class="avatar">${esc(initials(t))}</div><div><div class="traveler-name">${esc(t.displayName||[t.firstName,t.lastName].join(" "))}</div><div class="traveler-meta">${t.isPrimary?"Primary traveler":esc(t.travelerType||"Companion")}</div></div></div><div class="traveler-info"><div class="info-pair"><span>Date of birth</span><strong>${esc(t.dateOfBirth?date(t.dateOfBirth):"Not saved")}</strong></div><div class="info-pair"><span>Passport</span><strong>${esc(t.passportLast4?`•••• ${t.passportLast4}`:"Not saved")}</strong></div><div class="info-pair"><span>Email</span><strong>${esc(t.email||"—")}</strong></div><div class="info-pair"><span>Accessibility</span><strong>${esc(t.accessibilityNeeds||"None saved")}</strong></div></div><div class="traveler-actions"><button class="btn small" data-edit-traveler="${esc(t.id)}">Edit</button>${!t.isPrimary?`<button class="btn small danger" data-remove-traveler="${esc(t.id)}">Remove</button>`:""}</div></article>`).join(""):empty("No saved travelers","Add frequent travel companions so their details are ready for future bookings.","user")}
@@ -202,13 +218,13 @@ function renderContact(){
   const profile=state.data.profile;
   const form=$("contactForm");
   if(!form.dataset.editVersion){
-    for(const name of ["firstName","lastName","email","phone"]){
+    for(const name of ["firstName","lastName","displayName","email","phone"]){
       form.elements.namedItem(name).value=profile[name]||"";
     }
   }
-  $("profileSummary").innerHTML=profile.passportLast4
-    ? `<div class="info-pair"><span>Passport on file</span><strong>•••• ${esc(profile.passportLast4)}</strong></div>`
-    : "";
+  $("profileSummary").innerHTML=`
+    ${profile.loginEmail?`<div class="info-pair"><span>Wix sign-in email</span><strong>${esc(profile.loginEmail)}</strong></div>`:""}
+    ${profile.passportLast4?`<div class="info-pair"><span>Passport on file</span><strong>•••• ${esc(profile.passportLast4)}</strong></div>`:""}`;
 }
 
 function renderSettings(){
@@ -251,6 +267,7 @@ async function saveAccountForm(event){
     renderHero();
     renderContact();
     renderSettings();
+    post("SKANDI_MASTER_CONFIG_REQUEST");
     const success=form.id==="contactForm"?"Contact details saved.":"Travel preferences saved.";
     const supplierFailed=result.providerSync?.ok===false&&!result.providerSync.skipped;
     setFormStatus(form,supplierFailed?success+" Your travel supplier could not receive the update.":success);
@@ -311,7 +328,9 @@ async function saveEmailPreferences(event){
   try{
     const {result}=await request("MY_PROFILE_EMAIL_PREFERENCES_SAVE",{subscribed,consentConfirmed:subscribed});
     renderEmailPreferences(result);
-    status.textContent="Email choice saved. "+status.textContent;
+    status.textContent=result.accountSynced===false
+      ? "Email choice saved. The account copy could not be updated."
+      : "Email choice saved. "+status.textContent;
   }catch(error){
     status.textContent=error.message;
   }finally{
@@ -678,7 +697,7 @@ document.addEventListener("click",async e=>{
   }
   if(e.target.id==="linkBookingBtn"){linkBookingModal();return}
 
-  if(e.target.id==="refreshBtn"||e.target.id==="profileRefreshRetry"){refresh();return}
+  if(e.target.id==="refreshBtn"||e.target.id==="profileRefreshRetry"||e.target.closest("[data-refresh-profile]")){refresh();return}
   if(e.target.id==="closeBtn"){post("CUSTOMER_DOCUMENT_CLOSE",{},DOC_SOURCE);setPage("trips","upcoming",true);return}
   const legacy=e.target.closest("[data-tab]");if(legacy){setTab(legacy.dataset.tab,true);return}
   const route=e.target.closest("[data-route]");if(route){post("MY_PROFILE_NAVIGATE",{path:route.dataset.route});return}

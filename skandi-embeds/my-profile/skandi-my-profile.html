@@ -29,7 +29,7 @@
         <h1 id="greetingLine">Welcome, <span id="heroName">Member</span></h1>
       </div>
       <div class="account-summary-grid" aria-label="Club account summary">
-        <div class="account-summary-item"><span class="account-summary-label">Points</span><strong class="account-summary-value" id="heroPoints">0</strong></div>
+        <div class="account-summary-item"><span class="account-summary-label" id="heroPointsLabel">Points</span><strong class="account-summary-value" id="heroPoints">—</strong></div>
         <div class="account-summary-item"><span class="account-summary-label">Club status</span><strong class="account-summary-value" id="heroTier">Member</strong></div>
         <div class="account-summary-item"><span class="account-summary-label">Member since</span><strong class="account-summary-value" id="heroMemberSince">—</strong></div>
       </div>
@@ -98,12 +98,13 @@
       <section class="view" data-page="trips-drafts"><div class="page-intro"><div><div class="kicker">Continue booking</div><h2>Booking Drafts</h2></div><p>Booking carts that have not yet been completed.</p></div><div id="tripDraftList" class="trip-list"></div></section>
 
       <section class="view" data-page="profile-details">
-        <div class="page-intro"><h2>Personal Information</h2><p>These details are used for travel and service. Your sign-in email is managed through your SKANDI Club login.</p></div>
+        <div class="page-intro"><h2>Personal Information</h2><p>Manage the contact details linked to your Wix member account.</p></div>
         <div class="card pad">
           <form id="contactForm" class="profile-form">
             <label class="field">First name<input class="control" name="firstName" autocomplete="given-name"></label>
             <label class="field">Last name<input class="control" name="lastName" autocomplete="family-name"></label>
-            <label class="field">Contact email<input class="control" name="email" type="email" autocomplete="email"></label>
+            <label class="field">Display name<input class="control" name="displayName" autocomplete="nickname"></label>
+            <label class="field">Travel contact email<input class="control" name="email" type="email" autocomplete="email"></label>
             <label class="field">Phone<input class="control" name="phone" type="tel" autocomplete="tel"></label>
             <div class="field full">
               <div class="button-row"><button class="btn primary" type="submit">Save contact details</button></div>
