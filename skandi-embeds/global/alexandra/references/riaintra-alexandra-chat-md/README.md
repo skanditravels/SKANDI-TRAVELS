@@ -7,6 +7,7 @@
 
 ## INFO / LOG
 - 2026-11-27 — The active [public chat source](../../README.md) uses LiveKit text without media subscription, a transparent portrait from the approved clip, and a greeting claimed once per browsing tab. The historical HTML below records the previous interface.
+- 2026-11-27 — The active launcher places Alexandra’s head in front of the rounded upper edge and her shoulders behind its navy name band. The open chat continues to use the larger portrait.
 - Wix site: SKANDI TRAVELS, Wix Studio.
 - System: customer-facing SKANDI only. Exclude staff/ALTEA/RIA INTRA pages.
 - Wix site-master HTML Component: `#skandiAlexandraGlobalEmbed` (integrated launcher and chat panel; keep on customer SKANDI pages and exclude `/riaintra`/internal routes).

@@ -20,6 +20,50 @@
   border: 0;
   background: transparent;
   pointer-events: auto;
+  isolation: isolate;
+}
+
+.launcher::before {
+  content: "";
+  position: absolute;
+  inset: 25px 4px 0;
+  z-index: 0;
+  border: 1px solid #cad9eb;
+  border-radius: 17px;
+  background: linear-gradient(#f4f8fd, #e5eef8);
+  box-shadow: 0 3px 8px #022e6429;
+}
+
+.launcher .avatar-portrait {
+  position: absolute;
+  inset: 0 6px 18px;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  overflow: hidden;
+}
+
+.launcher .avatar-portrait img {
+  width: 100%;
+  height: auto;
+}
+
+.launcher-name {
+  position: absolute;
+  inset: auto 4px 0;
+  z-index: 2;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border-radius: 0 0 17px 17px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.launcher:hover .launcher-name {
+  background: #124477;
 }
 
 .avatar-wrap {
@@ -49,8 +93,8 @@
 }
 
 .launcher-fallback {
+  z-index: 1;
   color: var(--navy);
-  text-shadow: 0 0 6px #fff, 0 0 10px #fff;
 }
 
 .greeting {
