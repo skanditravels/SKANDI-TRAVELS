@@ -611,3 +611,22 @@ h1 { margin: 4px 0 0; font-size: 20px; font-weight: normal; color: var(--navy); 
 .ic-walkaround-fleet{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-block:8px}
 .ic-walkaround-fleet-link{border:0;background:transparent;color:var(--navy);padding:6px 0;text-align:left;font:inherit;font-weight:700;cursor:pointer}
 .ic-walkaround-fleet-link:hover{text-decoration:underline}
+
+/* Travel records and field groups */
+.ic-navigation-group{margin:0 0 12px}
+.ic-navigation-group .group{font-size:.78rem;margin:0;padding-block:9px}
+.ic-navigation-group .navbtn{width:100%}
+.ic-editor-tabs,.ic-topic-tabs{gap:6px}
+.ic-editor-tabs .tab,.ic-topic-tabs .tab{min-height:42px}
+.ic-topic-tabs{margin-bottom:11px}
+.ic-editor-fieldset{margin:6px 0 0;padding:10px 14px 14px;min-width:0;border:1px solid #dbe5ee;border-radius:7px;background:#fff}
+.ic-editor-fieldset legend{font-size:.9rem;font-weight:700;padding:0 6px;color:#264663}
+.ic-editor-fieldset .formgrid{align-items:start}
+.ic-stored-fields{margin-top:13px;padding:9px 12px;border:1px solid #dbe5ee;border-radius:7px;background:#fff}
+.ic-stored-fields summary{font-weight:670;cursor:pointer;padding-block:3px}
+.ic-stored-fields[open] summary{margin-bottom:9px}
+@media(max-width:650px){
+  .ic-editor-fieldset{padding:8px 10px 10px}
+  .ic-editor-tabs,.ic-topic-tabs{padding-bottom:3px}
+  .ic-editor-tabs .tab,.ic-topic-tabs .tab{flex-shrink:0}
+}

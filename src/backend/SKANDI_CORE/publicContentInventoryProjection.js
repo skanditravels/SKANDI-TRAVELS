@@ -334,6 +334,17 @@ function masterMediaUrl(row = {}) {
   return clean(first(preferred.publicUrl, preferred.public_url, preferred.url, preferred.imageUrl, preferred.image_url), 3000);
 }
 
+function hotelAddress(details) {
+  const address=structured(details.address, "");
+  if(typeof address==="string")return clean(address,500);
+  const fields=obj(address);
+  return clean([
+    first(fields.line1,fields.addressLine1,fields.streetAddress,fields.street),
+    first(fields.line2,fields.addressLine2),
+    first(fields.postalCode,fields.zip,details.postalCode)
+  ].map(part=>publicText(part,250)).filter(Boolean).join(", "),500);
+}
+
 function masterPublicSections(type, details, localized) {
   const raw=structured(first(details.sections, details.sectionsJson), {});
   const sections=raw&&typeof raw==="object"&&!Array.isArray(raw)?{...raw}:{};
@@ -353,11 +364,11 @@ function masterPublicSections(type, details, localized) {
     add("notIncluded","Not included",first(localized.notIncluded,localized.not_included));
   }else if(type==="TRANSFER"){
     const meeting={};
-    for(const [name,value] of [["Meeting point",details.meetingPoint],["Meeting instructions",details.meetingPointDescription],["Terminal",details.terminal],["Arrival hall",details.arrivalHall],["Waiting area",details.waitingArea],["Transfer type",details.transferType],["Vehicle",details.vehicleType],["Published minimum minutes",details.publishedTimeMin],["Published maximum minutes",details.publishedTimeMax],["Accessibility",details.accessibilityNotes]])if(present(value))meeting[name]=value;
+    for(const [name,value] of [["Meeting point",details.meetingPoint],["Meeting instructions",details.meetingPointDescription],["Terminal",details.terminal],["Arrival hall",details.arrivalHall],["Airport exit",details.airportExitNumber],["Waiting area",details.waitingArea],["Transfer type",details.transferType],["Vehicle",details.vehicleType],["Luggage capacity",details.luggageCapacity],["Minimum journey time (minutes)",details.publishedTimeMin],["Maximum journey time (minutes)",details.publishedTimeMax],["Accessibility",details.accessibilityNotes]])if(present(value))meeting[name]=value;
     add("transferDetails","Transfer details",meeting);
   }else if(["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET"].includes(type)){
     const practical={};
-    for(const [name,value] of [["Duration",details.duration],["Duration minutes",details.durationMinutes],["Meeting point",first(details.meetingPoint,details.meetingLocation)],["Languages",details.languages],["Minimum age",details.minimumAge],["Accessibility",details.accessibility],["Restrictions",details.restrictions]])if(present(value))practical[name]=value;
+    for(const [name,value] of [["Duration",details.duration],["Duration minutes",details.durationMinutes],["Meeting point",first(details.meetingPoint,details.meetingLocation)],["Start location",details.startLocation],["Languages",details.languages],["Minimum age",details.minimumAge],["Maximum age",details.maximumAge],["Child policy",details.childPolicy],["Accessibility",details.accessibility],["Restrictions",details.restrictions]])if(present(value))practical[name]=value;
     add("practical","Practical information",practical);
     add("included","Included",localized.included);
     add("notIncluded","Not included",first(localized.notIncluded,localized.not_included));
@@ -402,6 +413,7 @@ function projectMaster(row = {}, language = "EN") {
     fromLocation:publicText(first(d.fromLocation,d.origin),500),
     toLocation:publicText(first(d.toLocation,d.destination),500),
     starRating:finite(d.officialStarRating,null),
+    ...(type==="HOTEL"?{address:hotelAddress(d)}:{}),
     website:clean(d.website,2000),
     contactUrl:clean(d.contactUrl,2000),
     image,
