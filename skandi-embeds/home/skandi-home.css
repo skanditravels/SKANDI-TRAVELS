@@ -1204,10 +1204,13 @@ img,video,svg{max-width:100%}
   }
   :root .swap-btn:active { transform: translateY(-50%) scale(.97); }
   :root .airport-suggestions {
+    position: static;
+    margin-top: 6px;
     max-height: min(45vh, 270px); border-radius: 13px;
     box-shadow: 0 12px 32px rgba(2,46,100,.17);
     overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   }
+  :root .field-row:has(.airport-suggestions.active) > .swap-btn { visibility: hidden; }
   :root .airport-option { min-height: 48px; padding: 11px 12px; }
   :root .search-submit {
     min-height: 54px; margin-top: 7px; border-radius: 13px;
