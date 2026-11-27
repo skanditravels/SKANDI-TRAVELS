@@ -3026,7 +3026,9 @@
         "SKANDI_SUPPORT_AGENT",
         "SKANDI_WIX_PARENT",
         "TALK_CALL",
-        "WHATSAPP"
+        "TWILIO_WHATSAPP_NOT_CONFIGURED",
+        "WHATSAPP",
+        "WHATSAPP_24_HOUR_WINDOW_CLOSED"
       ],
       "output": "dist/service-desk/index.html",
       "dynamic": false,
@@ -3034,8 +3036,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/service-desk/skandi-service-desk.receiver.html",
       "receiverFile": "riaintra-embeds/service-desk/skandi-service-desk.receiver.html",
-      "sha256": "e7a55aad7211eab8895990e56e33ccecd12250d40fcacc2a89df66470885e260",
-      "bytes": 199044
+      "sha256": "2cf6b71fad72bc09644dda952dd02d9230fe5e04a34d0530d470eb7381d4873a",
+      "bytes": 200897
     },
     {
       "key": "policyControl",
