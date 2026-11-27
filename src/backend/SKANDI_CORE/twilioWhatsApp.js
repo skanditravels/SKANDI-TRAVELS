@@ -1,6 +1,5 @@
-import { createHash } from "crypto";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { Buffer } from "buffer";
-import twilio from "twilio";
 import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
@@ -12,7 +11,8 @@ const ACCOUNT_SID = /^AC[0-9a-f]{32}$/i;
 const MESSAGE_SID = /^(?:SM|MM)[0-9a-f]{32}$/i;
 const REPLY_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const ADDRESS = /^whatsapp:\+[1-9]\d{1,14}$/;
-const WEBHOOK_BASE = "https://www.skanditravels.com/_functions/";
+const WEBHOOK_ORIGIN = "https://www.skanditravels.com";
+const WEBHOOK_BASE = `${WEBHOOK_ORIGIN}/_functions/`;
 const INBOUND_URL = `${WEBHOOK_BASE}skandiTwilioWhatsAppInbound`;
 const STATUS_URL = `${WEBHOOK_BASE}skandiTwilioWhatsAppStatus`;
 const WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -44,6 +44,21 @@ async function settings() {
   };
 }
 
+function matchesFormSignature(authToken, signature, url, fields) {
+  const formData = Object.keys(fields).sort().map(name => {
+    const value = fields[name];
+    const values = Array.isArray(value) ? [...new Set(value)].sort() : [value];
+    return values.map(item => name + item).join("");
+  }).join("");
+  const provided = Buffer.from(signature, "ascii");
+  // Twilio can sign the canonical HTTPS URL with or without its default port.
+  const urlWithPort = `${WEBHOOK_ORIGIN}:443${url.slice(WEBHOOK_ORIGIN.length)}`;
+  return [url, urlWithPort].some(signedUrl => {
+    const expected = createHmac("sha1", authToken).update(signedUrl + formData, "utf8").digest("base64");
+    return timingSafeEqual(provided, Buffer.from(expected, "ascii"));
+  });
+}
+
 async function signedForm({ raw, signature, contentType, url }) {
   if (!/^application\/x-www-form-urlencoded(?:\s*;|$)/i.test(contentType || "") || typeof raw !== "string" || !raw || raw.length > 65536) {
     throw failure("TWILIO_WHATSAPP_BAD_REQUEST");
@@ -55,7 +70,7 @@ async function signedForm({ raw, signature, contentType, url }) {
     if (fields[key] === undefined) fields[key] = value;
     else fields[key] = [].concat(fields[key], value);
   }
-  if (!twilio.validateRequest(config.authToken, signature, url, fields) || field(fields, "AccountSid") !== config.account) {
+  if (!matchesFormSignature(config.authToken, signature, url, fields) || field(fields, "AccountSid") !== config.account) {
     throw failure("TWILIO_WHATSAPP_UNAUTHORIZED");
   }
   return { config, fields };
