@@ -1,5 +1,12 @@
 # INFO / LOG — Inventory Control
 
+### Travel Info authoring and inventory workspace — 2026-11-27
+
+- Use **Travel Inventory** to choose a record type. **Record & access** holds identity, status and visibility. **Page content**, **Media**, **Related inventory**, **Pricing**, **Operations**, **Catalog placement** and **Review & SEO** hold their respective fields.
+- **Airport guide** uses **Terminals & check-in**, **Getting there** and **Airport services**, matching Travel Info. **Location & contacts** and **Reference data** hold airport identity and source information. The flight board uses the existing provider response.
+- Use **Property Director → Stay & location** for hotel stay times and address. Use **Product details → Pickup & drop-off** for transfers, **When & where** for tours and activities, and **Venue & entry** for tickets. Use **Additional saved fields** to review older record fields outside the standard form. Optional yes/no fields offer a **Not set** choice.
+- Edits use the existing authenticated record bundle. Travel Info reads published customer-visible records through `publicContentInventoryProjection.js`. Verify an airport edit and a product edit in authenticated Wix Preview.
+
 2026-11-13 — The active source adds sequential bulk file and directory uploads, preserving relative folder paths in Asset Library metadata and reporting each success, duplicate, review and failure. Empty folders cannot be selected by browser directory uploads; existing hash deduplication and file limits still apply. Rename/move edits library metadata only and retains physical object paths and existing URLs; writes require the existing Asset Library authorization and a matching update timestamp. The legacy full HTML further below is historical and superseded by the active triplet. Asset list pagination now loads beyond the first 1,000 entries. Source and automated verification only; authenticated upload and edits require live verification.
 
 2026-11-12 — Hierarchy work: added Region/State and Area labels, typed related-record dropdowns and inbound references, with separate chain and booking-supplier slots. Existing mismatched relationships are retained for review. Collection levels are Select, Signature and Excelsior; Partner is limited to suppliers and airlines. Backend and published embed must be deployed together; live Wix verification is required.

@@ -9,8 +9,8 @@
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: V12 SMART CABIN EXPLORER + PUBLISHED AIRCRAFT WALKTHROUGH — STATICALLY VERIFIED, REQUIRES LIVE TEST
-- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
+- CURRENT STATUS: Directory and passenger guide update in the active Travel Info source. Wix publication and live verification follow release.
+- ACTIVE EMBED SOURCE: `skandi-embeds/travel-info/` triplet and script companions. The HTML snapshot below is historical.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js` + `/src/backend/SKANDI_CORE/flightStatus.web.js` for airport context/FIDS only
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js` + `/src/backend/SKANDI_CORE/flightStatus.js` for AirLabs airport-board data and airport context projection
 - CANONICAL INVENTORY PROJECTION: `/src/backend/SKANDI_CORE/publicContentInventoryProjection.js` — overlays public airline/airport output from canonical `inventory_details` / `media_assets`; no second content store.
@@ -27,6 +27,7 @@
 
 ## CHANGE LOG
 
+- 2026-11-27 — The active embed consolidates the Travel Info directory and fixes detail rendering for help articles and published product records. Airport tabs group terminal guidance, transport and airport services alongside the existing flight board. See [the active page notes](../../README.md) for data ownership and release details.
 - 2026-11-27 — The active Travel Info source now provides a compact airline passenger guide and one Walkaround camera. The embedded snapshot below describes the earlier separate aircraft modes and is retained as historical reference. See [the active page notes](../../README.md) for the current workflow and data contract.
 - 2026-10-19 — Smart cabin walk-through upgrade: built a photo-first, keyboard/pointer/touch-operable cabin camera over the existing React 19 V12 airline explorer; real 2:1 equirectangular photography can be rendered with native WebGL as an opt-in 360° mode, with ordinary published cabin images retaining non-spherical pan/zoom and visible honest fallbacks. The walk-through now follows published `travel_info_aircraft_walk_scenes` ordering and `forward_scene_code`/`back_scene_code` links with image preloading, smoother scene transitions, interactive forward-path marker, route stop list, optional timed automatic tour, auto-pause on manual interactions, fullscreen where the hosting Wix iframe allows, zoom/reset and informational hotspots. The page and provider message contracts, airport FIDS, baggage/special-assistance routes, carrier references, booking data, Supabase ownership, and Wix controller remain unchanged. The direct uploaded HTML was byte-identical to the current GitHub `main` HTML_REF intended HTML before this scoped change. STATICALLY VERIFIED (JS syntax, new CSS parse, fixed source contracts); REQUIRES LIVE TEST with published scenes and panorama photos after Wix embed replacement/publication.
 - 2026-10-11 — Special Assistance separation: removed Special Assistance/accessibility guidance from Travel Info airline/airport detail rendering and excludes assistance-specific help topics/articles from the main Travel Info featured/search/directory surfaces. Travel Info now exposes a dedicated Special Assistance quick action/search utility and detail action; each redirects to `/travel-info/special-assistance` through the existing safe `TRAVEL_INFO_NAVIGATE` contract. No airline, airport, FIDS, baggage, authorization or data-authority contract changed. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the Travel Info embed and publishing Wix.

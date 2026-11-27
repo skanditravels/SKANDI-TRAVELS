@@ -25,7 +25,7 @@ function fixture(t,airlines){
   const receive=(type,payload)=>window.dispatchEvent(new window.MessageEvent('message',{source:window,data:{source:'SKANDI_WIX_PARENT',type,payload}}));
   receive('TRAVEL_INFO_DATA',{airlines});
   const get=selector=>window.document.querySelector(selector);
-  get('[data-library="airlines"],[data-action="airlines"]')?.click();
+  get('[data-filter="airlines"]')?.click();
   const open=name=>{
     const label='Open '+name;
     [...window.document.querySelectorAll('button[aria-label]')].find(button=>button.getAttribute('aria-label')===label).click();

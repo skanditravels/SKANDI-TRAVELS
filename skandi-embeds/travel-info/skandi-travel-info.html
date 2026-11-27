@@ -16,99 +16,45 @@
 <div id="tiLive" class="ti-visually-hidden" aria-live="polite"></div>
 
 <section id="tiHome" class="ti-home" aria-label="SKANDI Travel Info">
-  <header class="ti-atlas">
-    <div class="ti-orbit ti-orbit-a"></div>
-    <div class="ti-orbit ti-orbit-b"></div>
-    <svg class="ti-route-art" viewBox="0 0 1440 760" preserveAspectRatio="none" aria-hidden="true">
-      <defs><linearGradient id="tiRouteGradient" x1="0" x2="1"><stop offset="0" stop-color="#5fc7cf" stop-opacity=".05"/><stop offset=".5" stop-color="#9de0e5" stop-opacity=".8"/><stop offset="1" stop-color="#d1bc98" stop-opacity=".18"/></linearGradient></defs>
-      <path d="M-80,620 C270,300 525,285 810,430 C1060,558 1250,420 1510,140"/>
-      <path d="M50,180 C350,360 650,125 940,250 C1180,352 1280,310 1470,215"/>
-      <circle cx="810" cy="430" r="3"/><circle cx="940" cy="250" r="3"/><circle cx="1260" cy="410" r="2.5"/>
-    </svg>
-    <div class="ti-wrap ti-atlas-inner">
-      <div class="ti-atlas-copy">
-        <div class="ti-kicker">SKANDI Travel Companion</div>
-        <h1>Travel info,<br>made effortless.</h1>
-        <p class="ti-atlas-lede">Airline and airport guidance, baggage, accessibility, travel requirements and destination support, brought together for every stage of your journey.</p>
-        <div id="tiNetworkMeta" class="ti-network-meta" aria-label="Published Travel Info summary"></div>
-        <form id="tiHeroSearchForm" class="ti-command" role="search" autocomplete="off">
-          <span id="tiHeroSearchIcon" aria-hidden="true"></span>
-          <label class="ti-visually-hidden" for="tiHeroSearch">Search Travel Info</label>
-          <input id="tiHeroSearch" type="search" placeholder="What do you need to know?" enterkeyhint="search" autocomplete="off">
-          <button class="ti-btn ti-btn-aqua" type="submit" aria-label="Search Travel Info"><span>Search</span><span id="tiSearchArrow" aria-hidden="true"></span></button>
-        </form>
-        <div class="ti-action-rail" aria-label="Travel Info quick actions">
-          <button class="ti-action-chip" type="button" data-action="baggage"><span data-icon="bag"></span>Baggage</button>
-          <button class="ti-action-chip" type="button" data-action="assistance"><span data-icon="help"></span>Special assistance</button>
-          <button class="ti-action-chip" type="button" data-action="requirements"><span data-icon="passport"></span>Travel requirements</button>
-          <button class="ti-action-chip" type="button" data-action="airports"><span data-icon="pin"></span>Airports</button>
-          <button class="ti-action-chip" type="button" data-action="airlines"><span data-icon="aircraft"></span>Airlines</button>
-          <button class="ti-action-chip" type="button" data-action="support"><span data-icon="help"></span>Support</button>
-        </div>
-        <div id="tiStatus" class="ti-atlas-status" hidden></div>
+  <header class="ti-find">
+    <div class="ti-wrap ti-find-inner">
+      <h1>Travel Info</h1>
+      <p>Find answers about your airline, airport, hotel and every stage of your trip.</p>
+      <form id="tiHeroSearchForm" class="ti-find-search" role="search" autocomplete="off">
+        <span id="tiHeroSearchIcon" aria-hidden="true"></span>
+        <label class="ti-visually-hidden" for="tiHeroSearch">Search Travel Info</label>
+        <input id="tiHeroSearch" type="search" placeholder="Search JFK, baggage or check-in" enterkeyhint="search" autocomplete="off">
+        <button class="ti-btn ti-btn-aqua" type="submit" aria-label="Search Travel Info"><span>Search</span><span id="tiSearchArrow" aria-hidden="true"></span></button>
+      </form>
+      <div class="ti-find-tools" aria-label="Travel tools">
+        <button type="button" data-action="baggage"><span data-icon="bag"></span>Baggage allowance</button>
+        <button type="button" data-action="requirements"><span data-icon="passport"></span>Passport &amp; entry requirements</button>
+        <button type="button" data-action="assistance"><span data-icon="help"></span>Special assistance</button>
+        <button type="button" data-action="insurance"><span data-icon="ticket"></span>Travel insurance</button>
       </div>
+      <div id="tiStatus" class="ti-atlas-status" role="status" hidden></div>
     </div>
-    <div id="tiAtlasCodes" class="ti-atlas-codes" aria-hidden="true"></div>
   </header>
 
   <main>
-    <section class="ti-section ti-section-tight" aria-labelledby="tiJourneyHeading">
-      <div class="ti-wrap">
-        <div class="ti-heading-row">
-          <div><div class="ti-kicker ti-kicker-dark">Your journey</div><h2 id="tiJourneyHeading">Know what matters, when it matters.</h2></div>
-          <p>Move through your trip from planning to return. Each stage opens the guidance currently published for that part of the journey.</p>
-        </div>
-        <div class="ti-journey-shell"><div id="tiJourneyTrack" class="ti-journey-track"></div></div>
-      </div>
-    </section>
-
-    <section class="ti-section ti-section-tint" aria-labelledby="tiPopularHeading">
-      <div class="ti-wrap">
-        <div class="ti-heading-row">
-          <div><div class="ti-kicker ti-kicker-dark">Popular help</div><h2 id="tiPopularHeading">Answers travelers open first.</h2></div>
-        </div>
-        <div id="tiFeaturedHelp" class="ti-featured-layout"></div>
-      </div>
-    </section>
-
-    <section class="ti-section" aria-labelledby="tiLibrariesHeading">
-      <div class="ti-wrap">
-        <div class="ti-heading-row">
-          <div><div class="ti-kicker ti-kicker-dark">Explore Travel Info</div><h2 id="tiLibrariesHeading">A guide for every part of the trip.</h2></div>
-          <p>Browse the live SKANDI information library. New published airlines, airports and travel products appear here automatically.</p>
-        </div>
-        <div id="tiGatewayGrid" class="ti-gateway-grid"></div>
-      </div>
-    </section>
-
-    <section id="tiDirectory" class="ti-section ti-section-tint" aria-labelledby="tiDirectoryHeading">
-      <div class="ti-wrap">
-        <div class="ti-heading-row">
-          <div><div class="ti-kicker ti-kicker-dark">Travel library</div><h2 id="tiDirectoryHeading">Browse Travel Info.</h2></div>
-          <p id="tiDirectoryLead">Airlines, airports, stays, transfers and experiences, plus help articles for the questions that come up along the way.</p>
-        </div>
-        <div class="ti-directory-shell">
-          <div class="ti-filter-row">
-            <div id="tiFilterTabs" class="ti-filter-tabs" role="toolbar" aria-label="Travel Info filters"></div>
-            <div id="tiResultCount" class="ti-result-count"></div>
-          </div>
-          <div id="tiDirectoryList" class="ti-directory-list"></div>
-          <div id="tiLoadMoreWrap" class="ti-load-more" hidden><button id="tiLoadMore" class="ti-btn ti-btn-light" type="button">Show more</button></div>
+    <section id="tiDirectory" class="ti-guide-directory ti-wrap" aria-labelledby="tiDirectoryHeading">
+      <div id="tiFilterTabs" class="ti-guide-filter" role="group" aria-label="Information categories"></div>
+      <div class="ti-guide-directory-head">
+        <h2 id="tiDirectoryHeading" tabindex="-1">Travel help</h2>
+        <div class="ti-guide-directory-options">
+          <label id="tiJourneyFilterWrap">Trip stage <select id="tiJourneyFilter"></select></label>
+          <span id="tiResultCount" aria-live="polite"></span>
         </div>
       </div>
+      <div id="tiDirectoryList" class="ti-guide-results"></div>
+      <div id="tiLoadMoreWrap" class="ti-load-more" hidden><button id="tiLoadMore" class="ti-btn ti-btn-light" type="button">Show more</button></div>
     </section>
 
-    <section class="ti-support-chapter" aria-labelledby="tiSupportHeading">
-      <div class="ti-wrap ti-support-grid">
-        <div>
-          <div class="ti-kicker">SKANDI Support</div>
-          <h2 id="tiSupportHeading">Need something more specific?</h2>
-          <p>Alexandra can take you into the shared SKANDI support experience, or you can send a travel-information request directly to our support team.</p>
-        </div>
-        <div class="ti-support-actions">
-          <button class="ti-btn ti-btn-ghost" type="button" data-action="alexandra"><span data-icon="spark"></span>Ask Alexandra</button>
-          <button class="ti-btn ti-btn-aqua" type="button" data-action="support"><span data-icon="message"></span>Contact support</button>
-        </div>
+    <section class="ti-wrap ti-guide-help" aria-labelledby="tiSupportHeading">
+      <h2 id="tiSupportHeading">Need help with your trip?</h2>
+      <div>
+        <button class="ti-btn ti-btn-light" type="button" data-action="alexandra"><span data-icon="spark"></span>Ask Alexandra</button>
+        <button class="ti-btn ti-btn-primary" type="button" data-action="support"><span data-icon="message"></span>Contact support</button>
       </div>
     </section>
   </main>
@@ -129,7 +75,7 @@
       <span id="tiSearchDialogIcon" aria-hidden="true"></span>
       <label class="ti-visually-hidden" for="tiSearchInput">Search the SKANDI Travel Info library</label>
       <input id="tiSearchInput" type="search" placeholder="Search airline, airport, baggage, accessibility, passport..." autocomplete="off">
-      <button class="ti-search-esc" type="button" data-close-search>Esc</button>
+      <button class="ti-search-esc" type="button" data-close-search aria-label="Close search">Close</button>
     </div>
     <div id="tiSearchResults" class="ti-search-results"></div>
   </section>

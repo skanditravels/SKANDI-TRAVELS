@@ -3459,3 +3459,107 @@ body{background:#fff;color:var(--hybrid-text)}
 }
 @media(prefers-reduced-motion:reduce){.ti-walkaround-photo{animation:none}}
 .ti-walkaround-frame .ti-walkaround-detail{position:absolute;z-index:3;left:12px;right:12px;bottom:62px;max-width:390px;max-height:55%;overflow:auto;overscroll-behavior:contain;border-radius:10px;box-shadow:0 8px 28px #091b3a66;cursor:default;touch-action:pan-y}
+
+/* Travel Info discovery and passenger guides */
+.ti-find{background:#082644;color:#fff}
+.ti-find-inner{padding:32px 0 28px}
+.ti-find h1{margin:0;font-size:clamp(2rem,4vw,3.1rem);line-height:1.08;font-weight:700;letter-spacing:-.04em}
+.ti-find p{margin:8px 0 20px;max-width:48rem;color:#d8e5f0;font-size:1rem;line-height:1.55}
+.ti-find-search{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;max-width:44rem;padding:5px 6px 5px 15px;border-radius:10px;background:#fff;color:#10304f}
+.ti-find-search input{min-width:0;padding:10px 0;width:100%;border:0;background:transparent;color:#102842;font:inherit;font-size:1rem}
+.ti-find-search input::placeholder{color:#586d82}
+.ti-find-search .ti-btn{min-height:44px;border-radius:8px;box-shadow:none;padding:9px 16px}
+.ti-find-search .ti-icon{width:20px;height:20px}
+.ti-find-tools{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:14px}
+.ti-find-tools button,.ti-guide-links button,.ti-guide-detail-help button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:6px 10px;border:1px solid #ffffff40;border-radius:7px;background:transparent;color:inherit;font:inherit;font-size:.88rem;font-weight:630;line-height:1.25;cursor:pointer}
+.ti-find-tools button:hover{background:#ffffff15}
+.ti-find-tools svg,.ti-guide-help svg,.ti-guide-links svg,.ti-guide-fold svg,.ti-guide-entry svg{width:16px;height:16px;flex:none}
+.ti-find [hidden],.ti-guide-directory [hidden],.ti-guide-stack[hidden]{display:none!important}
+.ti-guide-directory{padding:22px 0 24px;scroll-margin-top:18px}
+.ti-guide-filter{display:flex;flex-wrap:wrap;gap:5px;padding:5px;border:1px solid #d9e3ea;border-radius:11px;background:#f7f9fb}
+.ti-guide-filter button{min-height:44px;padding:8px 13px;border:0;border-radius:7px;background:transparent;color:#294661;font:inherit;font-size:.91rem;font-weight:670;cursor:pointer;white-space:nowrap}
+.ti-guide-filter button:hover{background:#e8eff5}
+.ti-guide-filter button[aria-pressed="true"],.ti-guide-filter button[aria-selected="true"]{background:#022e64;color:#fff}
+.ti-guide-directory-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px 18px;margin:21px 0 13px}
+.ti-guide-directory-head h2{margin:0;color:#102c4e;font-size:clamp(1.24rem,2.8vw,1.62rem);letter-spacing:-.02em}
+.ti-guide-directory-options{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#40576e;font-size:.875rem}
+.ti-guide-directory-options label{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:650}
+.ti-guide-directory-options select{min-height:40px;max-width:100%;background:#fff;color:#102f4d;border:1px solid #c8d6e0;border-radius:7px;padding:5px 9px;font:inherit;font-size:.9rem}
+.ti-guide-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ti-guide-result{width:100%;min-width:0;min-height:66px;display:grid;grid-template-columns:42px minmax(0,1fr) 18px;align-items:center;gap:11px;padding:9px 11px;text-align:left;border:1px solid #dde6ed;border-radius:9px;background:#fff;color:#112f4c;font:inherit;cursor:pointer}
+.ti-guide-result:hover{border-color:#86abbf;background:#f6fafc}
+.ti-guide-result-media{display:grid;place-items:center;width:42px;height:42px;border-radius:6px;background:#edf4f8;color:#195377;overflow:hidden}
+.ti-guide-result-media img{display:block;width:100%;height:100%;object-fit:cover}
+.ti-guide-result-media.is-logo{background:#fff;border:1px solid #e0e9ee}
+.ti-guide-result-media.is-logo img{object-fit:contain;padding:4px}
+.ti-guide-result[data-directory-index] .ti-guide-result-media svg{width:20px;height:20px}
+.ti-guide-result-title{min-width:0;overflow-wrap:anywhere}
+.ti-guide-result-title strong{display:block;font-size:.94rem;font-weight:680;line-height:1.32}
+.ti-guide-result-title small{display:block;margin-top:4px;color:#425c75;font-size:.83rem;line-height:1.33}
+.ti-guide-result>span:last-child svg{width:15px;height:15px}
+.ti-guide-empty{grid-column:1/-1;margin:0;padding:18px;border:1px solid #dce7ef;border-radius:9px;background:#f7fafc;color:#324f69;font-size:.95rem;line-height:1.55}
+.ti-guide-help{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:34px;padding:16px;border-top:1px solid #dce6ee;color:#123350}
+.ti-guide-help h2{margin:0;font-size:1.14rem;letter-spacing:-.015em}
+.ti-guide-help>div{display:flex;gap:8px;flex-wrap:wrap}
+.ti-guide-help .ti-btn{gap:6px;min-height:43px;border-radius:7px;box-shadow:none}
+
+.ti-guide{color:#102b48;max-width:1180px;margin:0 auto 36px}
+.ti-guide-header{display:grid;gap:0;overflow:hidden;border:1px solid #dce6ec;border-radius:13px;background:#fff;margin-bottom:14px}
+.ti-guide-header.has-image{grid-template-columns:minmax(0,1fr) minmax(0,290px)}
+.ti-guide-header-copy{min-width:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:18px}
+.ti-guide-header h1{margin:0;line-height:1.12;font-size:clamp(1.55rem,3.8vw,2.25rem);font-weight:700;letter-spacing:-.03em;overflow-wrap:anywhere}
+.ti-guide-header p{margin:6px 0 0;font-size:.93rem;color:#496178;line-height:1.4}
+.ti-guide-logo{display:block;width:64px;height:48px;object-fit:contain;flex:none}
+.ti-guide-header-image{width:100%;height:100%;min-height:126px;max-height:205px;object-fit:cover}
+.ti-guide-links{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 10px}
+.ti-guide-links a,.ti-guide-links button,.ti-guide-related button,.ti-guide-entry a,.ti-guide-detail-help button{display:inline-flex;align-items:center;gap:6px;color:#0c527c;font:inherit;font-size:.89rem;font-weight:650;text-align:left;min-height:40px;padding:5px 8px;border:1px solid #d4e2eb;border-radius:6px;background:#f8fbfd;text-decoration:none;cursor:pointer}
+.ti-guide-links a:hover,.ti-guide-links button:hover,.ti-guide-related button:hover,.ti-guide-entry a:hover,.ti-guide-detail-help button:hover{background:#eaf4fa}
+.ti-guide-tabs{margin-bottom:12px;scroll-margin-top:10px}
+.ti-guide-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;min-width:0}
+.ti-guide-card,.ti-guide-fold{min-width:0;padding:16px 18px;border:1px solid #dbe6ed;border-radius:10px;background:#fff}
+.ti-guide-card h2{margin:0 0 8px;font-size:1.14rem;letter-spacing:-.02em}
+.ti-guide-copy,.ti-guide-list{margin:0;color:#334e66;font-size:.94rem;line-height:1.56;white-space:pre-line;overflow-wrap:anywhere}
+.ti-guide-list{padding-left:20px}
+.ti-guide-list li+li{margin-top:5px}
+.ti-guide-copy+.ti-guide-list{margin-top:9px}
+.ti-guide-fold{padding:0}
+.ti-guide-fold summary{cursor:pointer;font-size:.98rem;font-weight:680;padding:13px 18px;line-height:1.4}
+.ti-guide-fold-body{padding:0 18px 14px}
+.ti-guide-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(185px,100%),1fr));gap:11px 17px;margin:0}
+.ti-guide-facts>div{min-width:0;padding:6px 0}
+.ti-guide-facts dt{font-size:.84rem;font-weight:690;margin-bottom:4px}
+.ti-guide-facts dd{margin:0;font-size:.92rem;color:#39546c;white-space:pre-line;overflow-wrap:anywhere}
+.ti-guide-entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(215px,100%),1fr));gap:8px}
+.ti-guide-entry{min-width:0;color:#123550;overflow-wrap:anywhere}
+.ti-guide-entries .ti-guide-entry{padding:12px;border-radius:8px;background:#f5f8fb}
+.ti-guide-entry>strong{display:block;margin-bottom:5px;font-size:.92rem}
+.ti-guide-entry .ti-guide-copy{font-size:.87rem}
+.ti-guide-entry a{margin-top:7px}
+.ti-guide-related{display:flex;gap:7px;flex-wrap:wrap;list-style:none;padding:0;margin:0}
+.ti-guide-detail-help{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 0}
+.ti-guide :focus-visible,.ti-find :focus-visible,.ti-guide-directory :focus-visible{outline:3px solid #1480a2;outline-offset:2px}
+.ti-airport-guide{padding-bottom:0}
+.ti-airport-guide .ti-airport-flight-panel{min-width:0;grid-template-columns:minmax(0,1fr)}
+@media(max-width:650px){
+  .ti-find-inner{padding:22px 0 20px}
+  .ti-find p{margin-bottom:13px}
+  .ti-find-search{gap:7px;padding-left:8px}
+  .ti-find-search .ti-btn{padding:8px 10px}
+  .ti-find-search .ti-btn svg{display:none}
+  .ti-find-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .ti-find-tools button{justify-content:flex-start;text-align:left;padding:7px;min-height:44px}
+  .ti-guide-directory{padding-top:13px}
+  .ti-guide-filter button{flex-grow:1;padding-inline:8px}
+  .ti-guide-results{grid-template-columns:1fr}
+  .ti-guide-header.has-image{grid-template-columns:1fr}
+  .ti-guide-header-copy{padding:12px}
+  .ti-guide-header-image{height:118px;min-height:0}
+  .ti-guide-card{padding:13px 12px}
+  .ti-guide-fold summary{padding:12px}
+  .ti-guide-fold-body{padding:0 12px 12px}
+}
+@media(max-width:620px){
+  .ti-airport-guide .board-airport-bar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ti-airport-guide .board-airport-bar>div{padding-inline:10px}
+  .ti-airport-guide .board-airport-bar strong{font-size:1.1rem;overflow-wrap:anywhere}
+}
