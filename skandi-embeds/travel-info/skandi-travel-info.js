@@ -852,8 +852,41 @@ function tiRenderAirportFlights(){
   }
 }
 function tiAirportFlightPanelHtml(x){
-  const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",arrivals=type==="arrivals",clock=tiAirportLocalClock(x);
-  return `<section class="ti-airport-flight-panel ${arrivals?"is-arrivals":"is-departures"}"><div class="ti-airport-flight-heading"><div><div class="eyebrow">Flight information</div><h2>${esc(iata)} ${arrivals?"arrivals":"departures"}</h2><p>Current and upcoming flights from the airport clock. Completed flights are available under See earlier flights.</p></div><div class="airport-board-toggle" role="group" aria-label="Arrivals or departures"><button type="button" class="airport-toggle ${!arrivals?"active":""}" data-ti-board-type="departures">Departures</button><button type="button" class="airport-toggle ${arrivals?"active":""}" data-ti-board-type="arrivals">Arrivals</button></div></div><div class="terminal-bay"><div class="flight-board-shell"><div class="board-screen" role="table" aria-label="${esc(iata)} passenger flight information display"><div class="board-airport-bar"><div><small>AIRPORT</small><strong id="tiAirportScreenCode">${esc(iata)}</strong></div><div><small>PASSENGER FLIGHT INFORMATION</small><strong>${arrivals?"ARRIVALS":"DEPARTURES"}</strong></div><div class="board-clock"><small id="tiAirportLocalDate">${esc(clock.date)}</small><strong id="tiAirportLocalTime">${esc(clock.time)}</strong></div></div><div class="board-columns fids-layout" role="row"><div role="columnheader">Logo</div><div role="columnheader">Flight No</div><div role="columnheader">Codeshare</div><div role="columnheader">Time</div><div role="columnheader" id="tiAirportPlaceHeader">${arrivals?"From":"To"}</div><div role="columnheader">Terminal</div><div role="columnheader" id="tiAirportFacilityHeader">${arrivals?"Belt":"Gate"}</div><div role="columnheader">Remarks</div></div><div class="board-scroll"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup"><div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Loading ${esc(type)} for ${esc(iata)}.</span></div></div></div></div><div class="board-footer"><span>Passenger flight information</span><button type="button" class="fids-earlier-control" id="tiAirportEarlierFlights" data-ti-earlier-flights hidden>See earlier flights</button><span id="tiAirportBoardMeta">Scheduled times remain fixed; operational times appear in Remarks.</span></div></div></div></section>`
+  const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",arrivals=type==="arrivals";
+  const clock=tiAirportLocalClock(x),direction=arrivals?"Arrivals":"Departures";
+  return `<section class="ti-airport-flight-panel ${arrivals?"is-arrivals":"is-departures"}">
+    <div class="ti-airport-flight-heading">
+      <h2>${esc(iata)} ${direction.toLowerCase()}</h2>
+      <div class="airport-board-toggle" role="group" aria-label="Arrivals or departures">
+        <button type="button" class="airport-toggle" data-ti-board-type="departures">Departures</button>
+        <button type="button" class="airport-toggle" data-ti-board-type="arrivals">Arrivals</button>
+      </div>
+    </div>
+    <div class="terminal-bay"><div class="flight-board-shell">
+      <div class="board-screen" role="table" aria-label="${esc(iata)} ${direction.toLowerCase()}">
+        <div class="board-airport-bar">
+          <div><small>AIRPORT</small><strong id="tiAirportScreenCode">${esc(iata)}</strong></div>
+          <div><small>FLIGHT INFORMATION</small><strong>${direction.toUpperCase()}</strong></div>
+          <div class="board-clock"><small id="tiAirportLocalDate">${esc(clock.date)}</small><strong id="tiAirportLocalTime">${esc(clock.time)}</strong></div>
+        </div>
+        <div class="board-columns fids-layout" role="row">
+          <div role="columnheader">Logo</div><div role="columnheader">Flight No</div>
+          <div role="columnheader">Codeshare</div><div role="columnheader">Time</div>
+          <div role="columnheader" id="tiAirportPlaceHeader">${arrivals?"From":"To"}</div>
+          <div role="columnheader">Terminal</div>
+          <div role="columnheader" id="tiAirportFacilityHeader">${arrivals?"Belt":"Gate"}</div>
+          <div role="columnheader">Remarks</div>
+        </div>
+        <div class="board-scroll"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup">
+          <div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Loading ${esc(type)} for ${esc(iata)}.</span></div>
+        </div></div>
+      </div>
+      <div class="board-footer">
+        <span id="tiAirportBoardMeta">Time shows the schedule. Completion times appear in Remarks.</span>
+        <button type="button" class="fids-earlier-control" id="tiAirportEarlierFlights" data-ti-earlier-flights hidden>See earlier flights</button>
+      </div>
+    </div></div>
+  </section>`;
 }
 function tiActivateAirportTab(id,x,scroll=true){
   const root=$("tiDetailMount"),button=root?.querySelector(`[data-airport-tab="${CSS.escape(id)}"]`);if(!root||!button)return;STATE.activeAirportTab=id;

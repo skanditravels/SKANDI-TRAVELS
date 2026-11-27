@@ -3539,7 +3539,17 @@ body{background:#fff;color:var(--hybrid-text)}
 .ti-guide-detail-help{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 0}
 .ti-guide :focus-visible,.ti-find :focus-visible,.ti-guide-directory :focus-visible{outline:3px solid #1480a2;outline-offset:2px}
 .ti-airport-guide{padding-bottom:0}
-.ti-airport-guide .ti-airport-flight-panel{min-width:0;grid-template-columns:minmax(0,1fr)}
+.ti-airport-guide .ti-airport-flight-panel{min-width:0;grid-template-columns:minmax(0,1fr);gap:12px}
+.ti-airport-guide .ti-airport-flight-heading{align-items:center;gap:8px}
+.ti-airport-guide .airport-board-toggle{display:flex;justify-self:start;gap:4px;padding:4px;border:1px solid #d9e3ea;border-radius:9px;background:#f7f9fb}
+.ti-airport-guide .airport-toggle{flex:1;min-height:42px;padding:6px 10px;border:0;border-radius:6px;background:transparent;color:#294661;font:inherit;font-size:.9rem;font-weight:660;cursor:pointer}
+.ti-airport-guide .airport-toggle:hover{background:#e8eff5}
+.ti-airport-guide .airport-toggle[aria-pressed="true"]{background:#022e64;color:#fff}
+.ti-airport-guide .board-footer{grid-template-columns:minmax(0,1fr) auto}
+.ti-airport-guide #tiAirportBoardMeta{text-align:left}
+@media(max-width:980px){
+  .ti-airport-guide .ti-airport-flight-panel .board-columns{display:none}
+}
 @media(max-width:650px){
   .ti-find-inner{padding:22px 0 20px}
   .ti-find p{margin-bottom:13px}
@@ -3562,4 +3572,5 @@ body{background:#fff;color:var(--hybrid-text)}
   .ti-airport-guide .board-airport-bar{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ti-airport-guide .board-airport-bar>div{padding-inline:10px}
   .ti-airport-guide .board-airport-bar strong{font-size:1.1rem;overflow-wrap:anywhere}
+  .ti-airport-guide .board-footer{grid-template-columns:minmax(0,1fr)}
 }
