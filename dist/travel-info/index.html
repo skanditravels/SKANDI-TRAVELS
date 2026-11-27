@@ -6884,8 +6884,11 @@ function itemLogoUrl(x){return safeExternal(text(x?.logo||x?.logoIcon||x?.logoUr
 function itemHeroUrl(x){return safeExternal(text(x?.heroImage||x?.heroImageUrl||x?.image||x?.image_url||x?.imageUrl||""))}
 function itemImage(x){return itemHeroUrl(x)||itemLogoUrl(x)}
 function itemCode(x){return text(x?.iataCode||x?.iata||x?.code||x?.icaoCode||x?.icao||"")}
-function displayImageUrl(x){return itemImage(x)}
-function isLogoMedia(x,url){const logo=itemLogoUrl(x);return Boolean(url&&logo&&url===logo)}
+function directoryImageUrl(x){
+  return ["airlines","airports"].includes(x._library)?safeExternal(x.logoIcon)||itemLogoUrl(x):safeExternal(x.thumbnail)||safeExternal(x.image)||itemHeroUrl(x);
+}
+function displayImageUrl(x){return directoryImageUrl(x)||itemImage(x)}
+function isLogoMedia(x,url){return Boolean(url&&[itemLogoUrl(x),safeExternal(x.logoIcon)].includes(url))}
 function libraryLabel(key){return key==="faq"||key==="articles"?"Travel Help":libraryDef(key)?.title||"Travel Info"}
 function searchKey(value){
   return text(value).normalize("NFD").replace(/\p{Diacritic}/gu,"").toLowerCase().replace(/[–—_.-]+/g," ").replace(/\s+/g," ").trim();
@@ -6996,7 +6999,7 @@ function renderDirectory(){
   }
   host.innerHTML=visible.map((item,i)=>{
     const isLogo=["airlines","airports"].includes(item._library);
-    const url=isLogo?itemLogoUrl(item):itemHeroUrl(item);
+    const url=directoryImageUrl(item);
     const definition=libraryDef(item._library);
     const meta=directoryMeta(item);
     const subtitle=item._library==="faq"||item._library==="articles"?text(item.subtitle||item.excerpt):"";

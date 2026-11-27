@@ -859,8 +859,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "ead25840e3d04a853df72ba9abc7dcc928a2ad5f178e1d8338bdd05b89ff3914",
-      "bytes": 483095
+      "sha256": "c813607a3fbe3b8e10c7ad68ddb04b852448e8febcd9b9907db3cf29b8fdd521",
+      "bytes": 483305
     },
     {
       "key": "transfers",
@@ -2610,8 +2610,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "f46cb5ee2b195e62e0f939636d97c3dab7ec9e23b245d4eee131c9d4b520a992",
-      "bytes": 394776
+      "sha256": "fd5035e552daadd755175c87d6b81b132a7b5b7d17c6c2fcf477f90160c52d24",
+      "bytes": 400377
     },
     {
       "key": "uniformCenter",
@@ -4685,8 +4685,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flight-status/flight-status.receiver.html",
       "receiverFile": "skandi-embeds/flight-status/flight-status.receiver.html",
-      "sha256": "c8350528737b7f97208a97090b1c3a9c4a74340969780db57149ba2682e49024",
-      "bytes": 341657
+      "sha256": "11518399405bf0e52f5b0660cafc420d642a6c6845dabaaa66be5f812c451a4d",
+      "bytes": 341800
     }
   ],
   "globalComponents": {

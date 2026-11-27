@@ -1163,6 +1163,16 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .ic-stored-fields{margin-top:13px;padding:9px 12px;border:1px solid #dbe5ee;border-radius:7px;background:#fff}
 #skandi-app-root .ic-stored-fields summary{font-weight:670;cursor:pointer;padding-block:3px}
 #skandi-app-root .ic-stored-fields[open] summary{margin-bottom:9px}
+#skandi-app-root .ic-display-media{margin:0 0 16px}
+#skandi-app-root .ic-display-media h3,#skandi-app-root .ic-display-media h4{margin:0 0 6px;color:var(--navy)}
+#skandi-app-root .ic-display-media p{margin:5px 0 9px}
+#skandi-app-root .ic-display-media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+#skandi-app-root .ic-display-media-slot{min-width:0;border:1px solid var(--line);border-radius:7px;padding:11px;background:#fff}
+#skandi-app-root .ic-display-media-preview{display:grid;place-items:center;min-height:82px;border:1px solid var(--line2);border-radius:5px;background:#f5f8fb;color:#40566a}
+#skandi-app-root .ic-display-media-preview img{display:block;width:100%;height:82px;object-fit:cover}
+#skandi-app-root .ic-display-media-preview.is-brand img{box-sizing:border-box;object-fit:contain;padding:8px}
+#skandi-app-root .ic-supplier-media{display:flex;align-items:center;gap:10px}
+#skandi-app-root .ic-supplier-media img{width:68px;height:42px;object-fit:contain;background:#fff}
 @media(max-width:650px){
   #skandi-app-root .ic-editor-fieldset{padding:8px 10px 10px}
   #skandi-app-root .ic-editor-tabs,#skandi-app-root .ic-topic-tabs{padding-bottom:3px}
@@ -2311,6 +2321,58 @@ function normalizeMedia(row={}){
   const payload=row.payload&&typeof row.payload==="object"&&!Array.isArray(row.payload)?row.payload:{};
   return{...row,id:row.id||"",mediaType:row.mediaType??row.media_type??"IMAGE",role:row.role||"GALLERY",url:row.url||"",altText:row.altText??row.alt_text??"",caption:row.caption||"",credit:row.credit||"",language:row.language||"",sortOrder:row.sortOrder??row.sort_order??100,active:row.active!==false,focalX:row.focalX??row.focal_x??null,focalY:row.focalY??row.focal_y??null,sourceKind:row.sourceKind??row.source_kind??"URL",storageBucket:row.storageBucket??row.storage_bucket??"",storagePath:row.storagePath??row.storage_path??"",payload,assetId:payload.assetId||row.assetId||""}
 }
+function isSupplierMedia(row){
+  return [row?.payload?.provider,row?.provider,row?.source,row?.sourceKind,row?.source_kind]
+    .some(value=>["DUFFEL","SUPPLIER","PROVIDER"].includes(text(value).trim().toUpperCase()));
+}
+function isReferenceMediaDefault(row){
+  return isSupplierMedia(row)||row.sourceKind==="LEGACY_PROJECTION_BACKFILL";
+}
+function isManualMedia(row){
+  return !isReferenceMediaDefault(row)&&(Boolean(row.assetId)||["UPLOAD","ASSET_LIBRARY"].includes(text(row.sourceKind).toUpperCase()));
+}
+function mediaInSlot(media,roles){
+  const rank=item=>isManualMedia(item)?0:isSupplierMedia(item)?1:2;
+  return media.filter(item=>item.active!==false&&item.mediaType==="IMAGE"&&item.url&&roles.includes(item.role))
+    .sort((a,b)=>rank(a)-rank(b)||roles.indexOf(a.role)-roles.indexOf(b.role)||a.sortOrder-b.sortOrder)[0];
+}
+function mediaWithLibraryAsset(row,role,asset){
+  return normalizeMedia({...row,role,active:true,url:asset.publicUrl,assetId:asset.id,sourceKind:"ASSET_LIBRARY",
+    storageBucket:asset.bucket,storagePath:asset.storagePath,altText:row.altText||asset.altText||asset.displayName||"",
+    payload:{...row.payload,...(row.payload?.role?{role}:{}),assetId:asset.id,assetCode:asset.assetCode}});
+}
+function replaceDisplayMedia(rows,role,asset){
+  const manual=mediaInSlot(rows.filter(row=>isManualSlotMedia(row,role)),[role,"ICON"]);
+  if(manual)return rows.map(row=>row===manual?mediaWithLibraryAsset(row,role,asset):row);
+  return [...rows,mediaWithLibraryAsset({},role,asset)];
+}
+function isManualSlotMedia(row,role){
+  return isManualMedia(row)&&(row.role===role||(role==="THUMBNAIL"&&row.role==="ICON"));
+}
+function DisplayMediaSlots({media,branding,onChoose,onReset}){
+  const slots=branding
+    ? [["Logo","LOGO",["LOGO"]],["Thumbnail","THUMBNAIL",["THUMBNAIL","ICON","LOGO"]]]
+    : [["Card thumbnail","THUMBNAIL",["THUMBNAIL","CARD"]]];
+  return html`<section className="ic-display-media">
+    <h3>Website images</h3>
+    <p className="sub">Choose or upload an image for a specific placement. Save the record to apply it.</p>
+    <div className="ic-display-media-grid">${slots.map(([label,role,roles])=>{
+      const visible=mediaInSlot(media,roles);
+      const custom=media.some(item=>item.active!==false&&isManualSlotMedia(item,role));
+      const fallback=mediaInSlot(media.filter(item=>!isManualMedia(item)),roles);
+      const source=visible?(isManualMedia(visible)?"Custom image":isSupplierMedia(visible)?"Supplier image":"Existing image"):"No image assigned";
+      return html`<div key=${role} className="ic-display-media-slot">
+        <h4>${label}</h4>
+        <div className=${`ic-display-media-preview ${branding?"is-brand":""}`}>${visible?html`<img src=${visible.url} alt=${visible.altText||label}/>`:html`<span>No image</span>`}</div>
+        <p className="sub">${source}${custom&&fallback?" · Default available":""}</p>
+        <div className="toolbar">
+          <button type="button" className="btn small primary" onClick=${()=>onChoose(role)}>${custom?"Change":"Choose or upload"} ${label.toLowerCase()}</button>
+          ${custom?html`<button type="button" className="btn small" onClick=${()=>onReset(role)}>${fallback?"Use default":"Clear custom"} ${label.toLowerCase()}</button>`:null}
+        </div>
+      </div>`;
+    })}</div>
+  </section>`;
+}
 function normalizeRelation(row={}){
   return{...row,id:row.id||"",relationType:row.relationType??row.relation_type??"RELATED",targetEntityId:row.targetEntityId??row.target_entity_id??"",targetRecordType:row.targetRecordType??row.target_record_type??"",targetRecordId:row.targetRecordId??row.target_record_id??"",sequenceNo:row.sequenceNo??row.sequence_no??100,active:row.active!==false}
 }
@@ -3144,12 +3206,14 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const commercialKnown=knownSectionKeys(rec.entityType,"commercial");
   const operationsKnown=knownSectionKeys(rec.entityType,"operations");
   const setSection=(key,next)=>setDraft(d=>({...d,record:{...d.record,[key]:next}}));
-  function useRecordAsset(index,asset,isNew=false){
+  const referenceBranding=["AIRLINE","AIRPORT"].includes(rec.entityType);
+  function useRecordAsset(index,asset,isNew=false,role=""){
     if(asset.visibility!=="PUBLIC"||asset.assetType!=="IMAGE"||!asset.publicUrl){setToast("Choose a public image from the Asset Library.",true);return}
     setDraft(d=>{
       const rows=(d.media||[]).map(normalizeMedia);
+      if(role)return {...d,media:replaceDisplayMedia(rows,role,asset)};
       const prior=isNew?normalizeMedia({role:"GALLERY",sortOrder:(rows.length+1)*10}):rows[index];
-      const next={...prior,url:asset.publicUrl||asset.previewUrl||"",storageBucket:asset.bucket,storagePath:asset.storagePath,sourceKind:"ASSET_LIBRARY",altText:prior.altText||asset.altText||asset.displayName||"",payload:{...(prior.payload||{}),assetId:asset.id,assetCode:asset.assetCode}};
+      const next=mediaWithLibraryAsset(prior,prior.role,asset);
       if(isNew)rows.push(next);else rows[index]=next;
       return{...d,media:rows};
     });
@@ -3164,7 +3228,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       payload.record.details={...(payload.record.details||{})};
       for(const key of ["logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets"])delete payload.record.details[key];
       payload.localizedContent=localized;
-      payload.media=media;
+      if(!rec.id||JSON.stringify(draft.media)!==JSON.stringify(initialDraft.current.media))payload.media=media;
+      else delete payload.media;
       payload.relations=relations;
       payload.catalog=catalog.catalogType==="NONE"?{...catalog,catalogType:"NONE"}:catalog;
       const result=await request("INVENTORY_V9_SAVE_BUNDLE",{bundle:payload});
@@ -3223,9 +3288,17 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       </div>
     </div>`:null}
     ${tab==="media"?html`<div>
+      <${DisplayMediaSlots} media=${media} branding=${referenceBranding}
+        onChoose=${role=>setAssetPicker({role,context:assetContextForRecord(rec,role)})}
+        onReset=${role=>setDraft(d=>({...d,media:(d.media||[]).map(normalizeMedia).filter(row=>!isManualSlotMedia(row,role))}))}/>
       <div className="paneltitle"><span>Assets</span><button className="btn small" onClick=${()=>setAssetPicker({index:-1,isNew:true,context:assetContextForRecord(rec,"GALLERY")})}>+ Browse / Upload Asset</button></div>
-      <div className="notice">Choose a public image from Asset Library. Existing linked images remain available; supplier-managed images are updated during refresh.</div>
-      ${media.length?media.map((m,i)=>{const providerOwned=(m.payload?.provider||m.source)==="DUFFEL";return html`<div className=${`mediaitem ${providerOwned?"providerowned":""}`}><div className="formgrid three">
+      ${media.length?media.map((m,i)=>{
+        const providerOwned=referenceBranding?isReferenceMediaDefault(m):isSupplierMedia(m);
+        if(providerOwned)return html`<div key=${m.id||m.role+"-"+m.url} className="mediaitem providerowned ic-supplier-media">
+          ${m.url?html`<img src=${m.url} alt=${m.altText||m.role}/>`:null}
+          <div><strong>${m.role==="THUMBNAIL"||m.role==="ICON"?"Thumbnail":m.role==="LOGO"?"Logo":prettyKey(m.role)}</strong><div className="sub">${isSupplierMedia(m)?"Supplier image":"Existing default"}</div></div>
+        </div>`;
+        return html`<div className="mediaitem"><div className="formgrid three">
         <${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${m.role} disabled=${providerOwned} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],role:v};return{...d,media:x}})}/>
         <${Field} label="Alt Text" value=${m.altText} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],altText:v};return{...d,media:x}})}/>
         <${Field} label="Caption" value=${m.caption||""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],caption:v};return{...d,media:x}})}/>
@@ -3233,7 +3306,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Focal X %" type="number" value=${m.focalX??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalX:v};return{...d,media:x}})}/>
         <${Field} label="Focal Y %" type="number" value=${m.focalY??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalY:v};return{...d,media:x}})}/>
       </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed image":"Supplier-managed image"}</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Browse the Asset Library to add one.</div>`}
-      ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker.context} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
+      ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker.context} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew,assetPicker.role)} setBusy=${setBusy} setToast=${setToast}/>`:null}
     </div>`:null}
     ${tab==="relations"?html`<${RelationPanel} draft=${draft} setDraft=${setDraft} records=${refs}/>`:null}
     ${tab==="catalog"?html`<div className="formgrid three">
@@ -4066,6 +4139,7 @@ function PDPropertyMap({latitude,longitude,onCoordinates}){
 }
 function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const [draft,setDraft]=useState(()=>hydrateHierarchy(bundle,boot.records));
+  const savedMedia=useRef(JSON.stringify(draft.media));
   const [tab,setTab]=useState("MASTER");
   const [lang,setLang]=useState("SV");
   const [translationBusy,setTranslationBusy]=useState(false);
@@ -4156,7 +4230,18 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   function dropDetailRow(key,index){setDetails(key,(Array.isArray(d[key])?d[key]:[]).filter((_,i)=>i!==index))}
   function newId(){return (typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`PD-${Date.now()}-${Math.random().toString(36).slice(2,12)}`}
   function updateMap(roomId,channelId,key,value){const i=mappings.findIndex(x=>x.roomId===roomId&&x.channelId===channelId);const newMap=i<0?{roomId,channelId,roomCode:"",rateCode:"",[key]:value}:{...mappings[i],[key]:value};setDetails("mappings",i<0?[...mappings,newMap]:mappings.map((x,j)=>i===j?newMap:x))}
-  function addMediaAsset(asset){if(asset.visibility!=="PUBLIC"||!(asset.publicUrl||asset.previewUrl))return setToast("Select a public image with a usable URL from Asset Library.",true);const existing=media.find(m=>m.payload?.assetId===asset.id);if(existing)return setToast("This Asset Library image is already linked to the property.");const added=normalizeMedia({role:"GALLERY",url:asset.publicUrl||asset.previewUrl,sourceKind:"ASSET_LIBRARY",storageBucket:asset.bucket||"",storagePath:asset.storagePath||"",altText:asset.altText||asset.displayName||"",active:true,sortOrder:(media.length+1)*10,payload:{assetId:asset.id,assetCode:asset.assetCode||"",tag:"General",roomLink:""}});setDraft(old=>({...old,media:[...(old.media||[]),added]}));setAssetPicker(null)}
+  function addMediaAsset(asset){
+    if(asset.visibility!=="PUBLIC"||asset.assetType!=="IMAGE"||!asset.publicUrl)return setToast("Choose a public image from Asset Library.",true);
+    const role=assetPicker?.role||"GALLERY";
+    if(role==="GALLERY"&&media.some(m=>m.role===role&&m.assetId===asset.id))return setToast("This asset is already linked to the gallery.");
+    setDraft(old=>{
+      const rows=(old.media||[]).map(normalizeMedia);
+      const next=role==="THUMBNAIL"?replaceDisplayMedia(rows,role,asset):
+        [...rows,mediaWithLibraryAsset({sortOrder:(rows.length+1)*10,payload:{tag:"General",roomLink:""}},role,asset)];
+      return {...old,media:next};
+    });
+    setAssetPicker(null);
+  }
   function updateMedia(i,key,value){setDraft(old=>{const next=clone(old);if(key.startsWith("payload.")){const k=key.split(".")[1];next.media[i].payload={...(next.media[i].payload||{}),[k]:value};}else next.media[i][key]=value;return next})}
   async function archiveProperty(){
     if(!rec.id||rec.status==="ARCHIVED")return;
@@ -4176,6 +4261,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     try{
       setBusy("Saving property…");
       const payload=clone(draft);
+      if(rec.id&&JSON.stringify(draft.media)===savedMedia.current)delete payload.media;
       const english=(payload.localizedContent||[]).map(normalizeLocalized).find(row=>row.language==="EN");
       if(english){payload.record.seo={...(payload.record.seo||{}),...(english.seoTitle?{title:english.seoTitle}:{}),...(english.seoDescription?{description:english.seoDescription}:{})};}
       payload.record.details={...(payload.record.details||{})};
@@ -4184,6 +4270,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
       const response=await request("INVENTORY_V9_SAVE_BUNDLE",{bundle:payload});
       if(response?.ok!==true||!response?.bundle?.record?.id)throw new Error("The property could not be saved.");
       const saved=response.bundle;
+      savedMedia.current=JSON.stringify(saved.media);
       for(const m of saved.media||[]){const id=m?.payload?.assetId||m?.assetId;if(id)try{await request("INVENTORY_ASSET_REGISTER_USAGE",{assetId:id,system:"Inventory Control",recordType:"HOTEL",recordId:saved.record.id,usageRole:m.role||"MEDIA",fieldName:"inventory_media_assets"})}catch(err){setToast(`Property saved; asset usage registration failed: ${err.message}`,true)}}
       setDraft(clone(saved));
       setToast("Property saved.");
@@ -4305,8 +4392,11 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
         <div className="seo-preview" style=${{marginTop:"12px"}}><div className="seo-url">skanditravels.com &gt; hotels &gt; ${rec.slug||"hotel"}</div><div className="seo-title">${current.seoTitle||"Page Title"}</div><div className="seo-desc">${current.seoDescription||"Page description will appear here in search results."}</div></div>
       </div>
     </div>
+    <${DisplayMediaSlots} media=${media} branding=${false}
+      onChoose=${role=>setAssetPicker(assetContextForRecord(rec,role))}
+      onReset=${role=>setDraft(old=>({...old,media:(old.media||[]).map(normalizeMedia).filter(row=>!isManualSlotMedia(row,role))}))}/>
     <div className="paneltitle pd-module-title"><span>Media Repository</span><button className="btn primary small" onClick=${()=>setAssetPicker(assetContextForRecord(rec,"GALLERY"))}>+ ADD ASSET</button></div>
-    <div className="media-grid">${media.length?media.map((m,i)=>html`<div className="media-card"><div className="assetthumb" style=${{height:"120px"}}>${m.url?html`<img className="media-img" alt=${m.altText||"Property image"} src=${m.url}/>`:html`<span>Image unavailable</span>`}</div><${PDField} label="Asset name / Alt" value=${m.altText||""} onChange=${v=>updateMedia(i,"altText",v)}/><${PDField} label="Media Role" type="select" options=${["HERO","GALLERY","ROOM","CARD","MOBILE","THUMBNAIL","LOGO"]} value=${m.role||"GALLERY"} onChange=${v=>updateMedia(i,"role",v)} disabled=${(m.payload?.provider||m.source)==="DUFFEL"}/><${PDField} label="Photo Tag" type="select" options=${["Exterior","Lobby","Room","Bathroom","General"]} value=${m.payload?.tag||"General"} onChange=${v=>updateMedia(i,"payload.tag",v)}/>${m.role==="ROOM"?html`<${PDField} label="Room Package" type="select" options=${[{value:"",label:"Select package"},...sells.map(s=>({value:s.id,label:s.name||s.id}))]} value=${m.payload?.roomLink||""} onChange=${v=>updateMedia(i,"payload.roomLink",v)}/>`:null}<button className="btn small danger" disabled=${(m.payload?.provider||m.source)==="DUFFEL"} onClick=${()=>setDraft(old=>({...old,media:old.media.filter((_,j)=>j!==i)}))}>DROP ASSET</button>${(m.payload?.provider||m.source)==="DUFFEL"?html`<div className="pd-muted">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed":"Supplier-managed"}</div>`:null}</div>`):html`<div className="empty" style=${{gridColumn:"1/-1"}}>No media assigned.</div>`}</div>
+    <div className="media-grid">${media.length?media.map((m,i)=>isSupplierMedia(m)?html`<div className="media-card"><div className="assetthumb">${m.url?html`<img src=${m.url} alt=${m.altText||"Supplier image"}/>`:null}</div><p className="sub">Supplier image · ${prettyKey(m.role)}</p></div>`:html`<div className="media-card"><div className="assetthumb" style=${{height:"120px"}}>${m.url?html`<img className="media-img" alt=${m.altText||"Property image"} src=${m.url}/>`:html`<span>Image unavailable</span>`}</div><${PDField} label="Asset name / Alt" value=${m.altText||""} onChange=${v=>updateMedia(i,"altText",v)}/><${PDField} label="Media Role" type="select" options=${["HERO","GALLERY","ROOM","CARD","MOBILE","THUMBNAIL","LOGO"]} value=${m.role||"GALLERY"} onChange=${v=>updateMedia(i,"role",v)} disabled=${(m.payload?.provider||m.source)==="DUFFEL"}/><${PDField} label="Photo Tag" type="select" options=${["Exterior","Lobby","Room","Bathroom","General"]} value=${m.payload?.tag||"General"} onChange=${v=>updateMedia(i,"payload.tag",v)}/>${m.role==="ROOM"?html`<${PDField} label="Room Package" type="select" options=${[{value:"",label:"Select package"},...sells.map(s=>({value:s.id,label:s.name||s.id}))]} value=${m.payload?.roomLink||""} onChange=${v=>updateMedia(i,"payload.roomLink",v)}/>`:null}<button className="btn small danger" disabled=${(m.payload?.provider||m.source)==="DUFFEL"} onClick=${()=>setDraft(old=>({...old,media:old.media.filter((_,j)=>j!==i)}))}>DROP ASSET</button>${(m.payload?.provider||m.source)==="DUFFEL"?html`<div className="pd-muted">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed":"Supplier-managed"}</div>`:null}</div>`):html`<div className="empty" style=${{gridColumn:"1/-1"}}>No media assigned.</div>`}</div>
     ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker} onClose=${()=>setAssetPicker(null)} onSelect=${addMediaAsset} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`;
   const renderAudit=()=>html`<div className="card panel">
