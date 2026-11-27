@@ -39,6 +39,7 @@ import {
 } from "backend/SKANDI_CORE/stripeClient";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getPublicAirlineRecommendationTiersCore } from "backend/SKANDI_CORE/publicContent";
+import { getPublishedAirlineBrandsCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
 import {
   createOwnedCart,
   getOwnedCart,
@@ -289,12 +290,15 @@ function resumeStepForStatus(status) {
 
 export async function searchLiveFlightOffersCore(input = {}) {
   const normalized = toDuffelOfferSearch(input.search || input);
-  const result = await searchDuffelOffersCore(normalized.coreRequest);
+  const [result, brands] = await Promise.all([
+    searchDuffelOffersCore(normalized.coreRequest),
+    getPublishedAirlineBrandsCore()
+  ]);
   const items = arr(result.offers)
     .filter(offer => !offer.isExpired && hasValidFlightPrice(offer))
     .sort((a, b) => Number(a.totalAmount || 0) - Number(b.totalAmount || 0))
     .slice(0, 50)
-    .map(offer => mapOfferForHome(offer, normalized.searchContext));
+    .map(offer => mapOfferForHome(offer, normalized.searchContext, brands));
   return {
     provider: "Duffel",
     offerRequestId: result.offerRequestId,
@@ -325,7 +329,8 @@ export async function getFlightUpsellsCore(input = {}) {
   }
   const matches = arr(result.offers).filter(offer => !offer.isExpired && hasValidFlightPrice(offer) && flightJourneyKey(offer) === key);
   for (const offer of matches) assertOfferMatchesSearch(offer, normalized.searchContext);
-  return {items:publicFlightItems({items:matches.map(offer => mapOfferForHome(offer, normalized.searchContext))}, input.search),available:true};
+  const brands = matches.length ? await getPublishedAirlineBrandsCore() : undefined;
+  return {items:publicFlightItems({items:matches.map(offer => mapOfferForHome(offer, normalized.searchContext, brands))}, input.search),available:true};
 }
 
 

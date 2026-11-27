@@ -29,3 +29,8 @@
 - Airports group published information under Terminals & check-in, Getting there, Airport services and Flight Info. The Flight Info tab still requests departures and arrivals through the existing Wix controller. Stay times and address, transfer pickup and timing, experience meeting points and ticket entry rules appear at the top of their respective guides when published.
 - Hotels, transfers, tours, activities and tickets come from the published Inventory Control projection. Help content comes from the existing Travel Help topics and articles. Staff set airport guide details in Airport guide, hotels in Property Director, and transfer and experience details in Product details.
 - Release through the existing Travel Info and Inventory Control receivers. Publish `src/backend/SKANDI_CORE/publicContentInventoryProjection.js` from the linked Wix code branch for additional details already stored in inventory, including hotel addresses and tour meeting points. Verify an airport departure and arrival, a hotel, a transfer and a help article in Wix after publication.
+
+### Inventory branding
+
+- The carrier or airport guide displays the selected Logo. The directory and search use the selected Thumbnail. A custom logo also works as a compact mark when there is no custom thumbnail. Logo and thumbnail assets are kept out of the guide's hero image selection.
+- The Flight Info board uses the same published carrier branding as Flight Status. Hotel and other product directory cards use the assigned thumbnail from Inventory Control. Existing receivers serve the compiled pages.

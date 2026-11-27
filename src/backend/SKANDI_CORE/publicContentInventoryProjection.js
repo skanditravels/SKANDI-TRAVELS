@@ -10,6 +10,7 @@
 // compatibility projections maintained by the accompanying database migration.
 
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { inventoryCardImage, inventoryMediaUrl, referenceInventoryBrand } from "public/inventoryMedia";
 
 const ACTIVE = "eq.true";
 const PUBLISHED = "eq.PUBLISHED";
@@ -108,7 +109,8 @@ function canonicalSections(details = {}) {
 }
 
 function mediaUrl(row = {}, preferredRoles = []) {
-  const media = arr(structured(row.media_assets, [])).filter(item => item && item.active !== false && clean(item.url, 3000));
+  const media = arr(structured(row.media_assets, [])).filter(item => item && item.active !== false &&
+    !["LOGO", "THUMBNAIL", "ICON"].includes(upper(item.role, 40)) && inventoryMediaUrl(item));
   for (const role of preferredRoles) {
     const wanted = upper(role, 40);
     const hit = media.find(item => upper(item.role, 40) === wanted);
@@ -147,7 +149,7 @@ async function referenceRows() {
       table: "travel_info_airlines",
       method: "GET",
       query: {
-        select: "ID,Title,shortName,iataCode,icaoCode,source,source_reference,inventory_details,media_assets,sort_order",
+        select: "ID,Title,shortName,iataCode,icaoCode,logoFile,logoIcon,inventory_details,media_assets,sort_order",
         active: ACTIVE,
         customer_visible: ACTIVE,
         status: PUBLISHED,
@@ -160,7 +162,7 @@ async function referenceRows() {
       table: "travel_info_airports",
       method: "GET",
       query: {
-        select: "ID,title,iata,icao,source,source_reference,inventory_details,media_assets,sort_order",
+        select: "ID,title,iata,icao,logoUrl,logoIconUrl,inventory_details,media_assets,sort_order",
         active: ACTIVE,
         customer_visible: ACTIVE,
         status: PUBLISHED,
@@ -218,8 +220,7 @@ function projectAirline(item = {}, row = {}) {
   const d = obj(structured(row.inventory_details, {}));
   const baggage = publicBaggage(canonical(d, "baggageAllowance", item.baggageAllowance));
   const hero = mediaUrl(row, ["HERO", "PRIMARY", "CARD"]);
-  const logo = mediaUrl(row, ["LOGO"]);
-  const icon = mediaUrl(row, ["THUMBNAIL", "ICON", "LOGO"]);
+  const brand = referenceInventoryBrand(row);
   const sections = structured(canonical(d, "sectionsJson", item.sections), {});
   return {
     ...item,
@@ -236,8 +237,8 @@ function projectAirline(item = {}, row = {}) {
     summary: publicText(canonical(d, "summary", item.summary), 5000),
     primaryColor: clean(canonical(d, "primaryColor", item.primaryColor), 40),
     accentColor: clean(canonical(d, "accentColor", item.accentColor), 40),
-    logo: clean(first(logo, item.logo), 3000),
-    logoIcon: clean(first(icon, item.logoIcon, logo), 3000),
+    logo: brand.logoUrl || item.logo,
+    logoIcon: brand.thumbnailUrl || item.logoIcon,
     heroImage: clean(first(hero, item.heroImage), 3000),
     checkInDeadline: structured(canonical(d, "checkIn", d.checkInDeadline, item.checkInDeadline), ""),
     boarding: structured(canonical(d, "boarding", item.boarding), ""),
@@ -264,7 +265,7 @@ function projectAirport(item = {}, row = {}) {
   const d = obj(structured(row.inventory_details, {}));
   const sections = canonicalSections(d);
   const hero = mediaUrl(row, ["HERO", "PRIMARY", "CARD"]);
-  const logo = mediaUrl(row, ["LOGO"]);
+  const brand = referenceInventoryBrand(row);
   const overview = canonical(d, "information", d.summary, item.body, item.summary);
   return {
     ...item,
@@ -290,7 +291,8 @@ function projectAirport(item = {}, row = {}) {
     accentColor: clean(canonical(d, "accentColor", item.accentColor), 40),
     heroImage: clean(first(hero, item.heroImage), 3000),
     image: clean(first(hero, item.image), 3000),
-    logo: clean(first(logo, item.logo), 3000),
+    logo: brand.logoUrl || item.logo,
+    logoIcon: brand.thumbnailUrl || item.logoIcon,
     sections,
     arrival: structured(canonical(d, "arrivalInfo", item.arrival), ""),
     departure: structured(canonical(d, "departureInfo", item.departure), ""),
@@ -326,12 +328,13 @@ function localizedMaster(row = {}, language = "EN") {
 }
 
 function masterMediaUrl(row = {}) {
-  const media = arr(structured(row.media, []));
+  const media = arr(structured(row.media, [])).filter(item=>item?.active!==false && inventoryMediaUrl(item) &&
+    !["LOGO","THUMBNAIL","ICON"].includes(upper(item?.role,40)));
   const preferred = media.find(item => item?.isPrimary === true || item?.is_primary === true || upper(item?.role, 40) === "PRIMARY") ||
     media.find(item => item?.isHero === true || item?.is_hero === true || upper(item?.role, 40) === "HERO") ||
     media.find(item => item?.isCard === true || item?.is_card === true || upper(item?.role, 40) === "CARD") ||
     media[0] || {};
-  return clean(first(preferred.publicUrl, preferred.public_url, preferred.url, preferred.imageUrl, preferred.image_url), 3000);
+  return inventoryMediaUrl(preferred);
 }
 
 function hotelAddress(details) {
@@ -419,6 +422,7 @@ function projectMaster(row = {}, language = "EN") {
     image,
     image_url: image,
     heroImage: image,
+    thumbnail: inventoryCardImage(row.media) || image,
     sections: masterPublicSections(type,d,localized),
     path: type==="HOTEL"?`/destinations/explore/hotel-list?view=hotel&hotelId=${encodeURIComponent(clean(row.id,180))}`:clean(d.path,1000),
     sortOrder: finite(row.sort_priority, 100),
@@ -465,4 +469,37 @@ export async function applyInventoryAuthorityToTravelInfoCore(payload = {}) {
     tickets: masters.tickets,
     dataAuthority: "DUFFEL_TO_INVENTORY_CONTROL_TO_SUPABASE_TO_CONSUMERS"
   };
+}
+
+let publishedAirlineBrands;
+let brandLookup;
+let brandLookupExpires = 0;
+
+export async function getPublishedAirlineBrandsCore() {
+  if (publishedAirlineBrands && Date.now() < brandLookupExpires) return publishedAirlineBrands;
+  if (!brandLookup) {
+    brandLookup = restRequest({
+      table: "travel_info_airlines",
+      query: {
+        select: "iataCode,logoFile,logoIcon,inventory_details,media_assets",
+        active: ACTIVE, customer_visible: ACTIVE, status: PUBLISHED, limit: "500"
+      },
+      prefer: ""
+    }).then(rows => {
+      if (!Array.isArray(rows)) throw new Error("Unexpected airline media response");
+      const brands = new Map();
+      for (const row of rows) {
+        const code = upper(row.iataCode, 4);
+        const brand = referenceInventoryBrand(row);
+        if (code && brand.logoUrl) brands.set(code, brand);
+      }
+      publishedAirlineBrands = brands;
+      brandLookupExpires = Date.now() + 60_000;
+      return brands;
+    }).catch(error => {
+      console.warn("[SKANDI Inventory] Airline branding unavailable", {code: error?.code || "READ_FAILED"});
+      return new Map();
+    }).finally(() => { brandLookup = null; });
+  }
+  return brandLookup;
 }

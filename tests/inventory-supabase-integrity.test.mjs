@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { inventorySearchPriority } from '../src/backend/SKANDI_CORE/inventoryRanking.js';
+import * as inventoryMedia from '../src/public/inventoryMedia.js';
 import { createRequire } from 'node:module';
 const require=createRequire(new URL('../scripts/package.json',import.meta.url));
 const {parse}=require('acorn');
@@ -10,7 +11,7 @@ const code=await fs.readFile(new URL('../src/backend/SKANDI_CORE/inventory.js',i
 const ast=parse(code,{ecmaVersion:'latest',sourceType:'module'});
 function functionCode(name){const n=ast.body.map(x=>x.type==='ExportNamedDeclaration'?x.declaration:x).find(x=>x?.type==='FunctionDeclaration'&&x.id.name===name);assert.ok(n,name);return code.slice(n.start,n.end)}
 const clean=(v,max=5000)=>String(v??'').trim().slice(0,max);
-const base={clean,array:v=>Array.isArray(v)?v:[],upper:(v,max=80)=>clean(v,max).toUpperCase(),object:v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},JSON,Set,Map,console};
+const base={...inventoryMedia,clean,array:v=>Array.isArray(v)?v:[],upper:(v,max=80)=>clean(v,max).toUpperCase(),object:v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},JSON,Set,Map,console};
 
 test('localized JSONB entries remain structured when saved',()=>{
  const ctx=vm.createContext({...base});vm.runInContext([functionCode('localizedList'),functionCode('localizedBody'),'this.make=localizedBody'].join('\n'),ctx);
@@ -25,6 +26,29 @@ test('media cannot be moved from another product or replaced with a raw URL',asy
  await assert.rejects(()=>ctx.sync({}, {id:'product'}, {media:[{id:'other',url:'https://example.test/old.jpg'}]}),/INVENTORY_MEDIA_RECORD_MISMATCH/);
  await assert.rejects(()=>ctx.sync({}, {id:'product'}, {media:[{id:'existing',url:'https://example.test/new.jpg'}]}),/INVENTORY_ASSET_LIBRARY_REQUIRED/);
  assert.equal(writes,0);
+});
+
+test('airline media saves protect supplier rows and only activate approved Asset Library links',async()=>{
+  const supplier={role:'LOGO',url:'https://supplier.example/new.svg',payload:{provider:'DUFFEL'}};
+  const oldFlat='https://legacy.example/sas-thumbnail.svg';
+  const current={media_assets:[supplier],logoIcon:oldFlat};
+  const assetId='11111111-1111-4111-8111-111111111111';
+  const asset={id:assetId,visibility:'PUBLIC',asset_type:'IMAGE',public_url:'https://library.example/sas.svg'};
+  const ctx=vm.createContext({...base,qeq:x=>'eq.'+x,isUuid:x=>x===assetId,select:async()=>[asset],
+    nullableNumber:()=>null,MEDIA_ROLES:new Set(['LOGO','THUMBNAIL'])});
+  vm.runInContext(functionCode('resolveReferenceMediaRows')+'\nthis.resolve=resolveReferenceMediaRows',ctx);
+  const changes=[{...supplier,url:'https://supplier.example/stale.svg'},
+    {role:'LOGO',assetId,url:'https://untrusted.example/wrong.svg'}];
+  const merged=await ctx.resolve(current,changes);
+  assert.equal(merged[0].url,asset.public_url);
+  assert.equal(merged[0].sourceKind,'UPLOAD');
+  assert.ok(merged.includes(supplier));
+  assert.ok(merged.some(row=>row.url===oldFlat&&row.role==='THUMBNAIL'));
+  const reset=await ctx.resolve(current,[]);
+  assert.ok(reset.includes(supplier));
+  await assert.rejects(()=>ctx.resolve(current,[{role:'LOGO',url:'https://untrusted.example/wrong.svg'}]),/INVENTORY_ASSET_LIBRARY_REQUIRED/);
+  asset.visibility='PRIVATE';
+  await assert.rejects(()=>ctx.resolve(current,changes),/INVENTORY_PUBLIC_ASSET_REQUIRED/);
 });
 
 test('save reports an unconfirmed restore instead of claiming rollback succeeded',async()=>{

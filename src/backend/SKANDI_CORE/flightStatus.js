@@ -9,6 +9,8 @@ import { secrets } from "wix-secrets-backend.v2";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import { text, upper, lower, record, safeNumber } from "backend/SKANDI_CORE/platformValidation";
+import { getPublishedAirlineBrandsCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
+import { inventoryCardImage, referenceInventoryBrand } from "public/inventoryMedia";
 
 const FLIGHT_STATUS_CORE_VERSION = "V12-AIRLABS";
 const AIRLABS_BASE = "https://airlabs.co/api/v9";
@@ -16,13 +18,11 @@ const AIRLABS_SECRET_NAMES = Object.freeze(["AIRLABS_API_KEY"]);
 const getSecretValue = elevate(secrets.getSecretValue);
 const PUBLIC_ENTITY_TYPES = new Set(["TRANSFER", "HOTEL", "DESTINATION", "GUIDED_TOUR", "ACTIVITY"]);
 const DIRECTORY_TTL_MS = 5 * 60 * 1000;
-const AIRLINE_BRAND_TTL_MS = 5 * 60 * 1000;
 const CONTEXT_TTL_MS = 2 * 60 * 1000;
 const FLIGHT_TTL_MS = 60 * 1000;
 
 let airlabsKeyPromise = null;
 let directoryCache = null;
-let airlineBrandCache = null;
 const contextCache = new Map();
 const flightCache = new Map();
 const flightRequests = new Map();
@@ -267,54 +267,18 @@ function sameFlight(a, b) {
   const names = [a.flight_iata, a.flight_icao, a.cs_flight_iata].filter(Boolean);
   return [b.flight_iata, b.flight_icao, b.cs_flight_iata].some(x => x && names.includes(x)) && (!a.dep_iata || !b.dep_iata || a.dep_iata === b.dep_iata) && (!a.arr_iata || !b.arr_iata || a.arr_iata === b.arr_iata);
 }
-async function airlineBrandDirectory() {
-  const now = Date.now();
-  if (airlineBrandCache && airlineBrandCache.expiresAt > now) return airlineBrandCache.value;
-
-  try {
-    const rows = arr(await restRequest({
-      table: "travel_info_airlines",
-      query: {
-        select: "iataCode,media_assets",
-        active: "eq.true",
-        customer_visible: "eq.true",
-        status: "eq.PUBLISHED",
-        limit: "500"
-      }
-    }));
-
-    const value = new Map();
-    for (const row of rows) {
-      const iata = cleanCode(row?.iataCode, 4);
-      if (!iata) continue;
-      const media = normalizeLooseList(row?.media_assets);
-      const preferred =
-        media.find(asset => upper(asset?.role, 40) === "LOGO" && asset?.active !== false) ||
-        media.find(asset => upper(asset?.role, 40) === "THUMBNAIL" && asset?.active !== false) ||
-        media.find(asset => asset?.active !== false && text(asset?.url, 3000));
-      const logoUrl = text(preferred?.url, 3000);
-      if (logoUrl) value.set(iata, logoUrl);
-    }
-
-    airlineBrandCache = { expiresAt: now + AIRLINE_BRAND_TTL_MS, value };
-    return value;
-  } catch (error) {
-    console.warn("[SKANDI Flight Status] Airline logo lookup unavailable", error);
-    return new Map();
-  }
-}
 async function applyAirlineBranding(items = []) {
-  const directory = await airlineBrandDirectory();
+  const directory = await getPublishedAirlineBrandsCore();
   if (!directory.size) return items;
 
   return items.map(item => {
     const marketingIata = cleanCode(item?.airlineIata, 4);
     const operatingIata = cleanCode(item?.operatingAirlineIata, 4);
     const airlineLogoUrl =
-      directory.get(marketingIata) ||
+      directory.get(marketingIata)?.logoUrl ||
       text(item?.airlineLogoUrl, 3000);
     const operatingAirlineLogoUrl =
-      directory.get(operatingIata) ||
+      directory.get(operatingIata)?.logoUrl ||
       text(item?.operatingAirlineLogoUrl, 3000);
 
     return {
@@ -410,7 +374,7 @@ function publicAirport(row = {}) {
     city: text(row.locationCity, 180), country: text(row.country, 120), timezone: text(row.timezone, 80) || "UTC",
     summary: text(row.summary || en.shortDescription || row.information || row.body, 3000), information: text(row.information, 5000),
     distanceToCityCenterKm: Number.isFinite(Number(row.distanceToCityCenterKm)) ? Number(row.distanceToCityCenterKm) : null,
-    website: text(row.website, 2000), contactUrl: text(row.contactUrl, 2000), logoUrl: text(row.logoUrl || row.logoIconUrl, 2000),
+    website: text(row.website, 2000), contactUrl: text(row.contactUrl, 2000), logoUrl: referenceInventoryBrand(row).logoUrl,
     heroImageUrl: text(row.heroImageUrl || row.image_url || hero.url, 2000), primaryColor: text(row.primaryColor, 20), accentColor: text(row.accentColor, 20),
     quickFacts, terminals, transport, lounges, foodDrinks, airportHotel, destinationAds, lostFound, lastReviewed: text(row.lastReviewed, 80)
   };
@@ -418,14 +382,14 @@ function publicAirport(row = {}) {
 function publicDirectoryAirport(row = {}) {
   return {
     iata: cleanIata(row.iata), icao: cleanCode(row.icao, 8), title: text(row.title, 240), city: text(row.locationCity, 180),
-    country: text(row.country, 120), timezone: text(row.timezone, 80) || "UTC", logoUrl: text(row.logoIconUrl || row.logoUrl, 2000)
+    country: text(row.country, 120), timezone: text(row.timezone, 80) || "UTC", logoUrl: referenceInventoryBrand(row).thumbnailUrl
   };
 }
 async function readPublishedAirports() {
   return restRequest({
     table: "travel_info_airports",
     query: {
-      select: "title,iata,icao,country,locationCity,timezone,logoUrl,logoIconUrl,sortOrder,active,published,customer_visible,status",
+      select: "title,iata,icao,country,locationCity,timezone,logoUrl,logoIconUrl,media_assets,sortOrder,active,published,customer_visible,status",
       active: "eq.true", published: "eq.true", customer_visible: "eq.true", limit: "500"
     }
   });
@@ -464,6 +428,8 @@ function localizedEnglish(row = {}) {
   return localized.find(item => upper(item?.language, 10) === "EN") || localized[0] || {};
 }
 function mediaUrl(row = {}) {
+  const card = inventoryCardImage(row.media);
+  if (card) return card;
   const media = normalizeLooseList(row.media);
   const chosen = media.find(item => item?.isHero || item?.isPrimary || ["HERO", "PRIMARY", "CARD"].includes(upper(item?.role, 20))) || media[0] || {};
   return text(chosen?.url, 2000);

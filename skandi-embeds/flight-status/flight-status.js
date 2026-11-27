@@ -754,7 +754,8 @@ function render(items, meta) {
     
     const rules = lastFlightMeta.boardingRules || {};
     const carrierName = rules[activeAirline]?.name || item.airlineName || activeAirline;
-    const logoUrl = KNOWN_AIRLINE_LOGOS[activeAirline] || "";
+    const canonicalLogo = safeUrl(displayAsCodeshare ? item.operatingAirlineLogoUrl : item.airlineLogoUrl);
+    const logoUrl = canonicalLogo || KNOWN_AIRLINE_LOGOS[activeAirline] || "";
 
     // Safely fetch city tracking values out of the schema models without duplication loops
     const targetCity = destination?.city || "";
@@ -796,7 +797,7 @@ function render(items, meta) {
       <div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" data-flight-key="${escapeHtml(key)}">
         <div class="fids-cell cell-airline" role="cell">
           <div class="fids-carrier" title="${escapeHtml(carrierName)}">
-            <span class="fids-tail ${logoUrl ? "" : "fallback"} ${logoUrl ? "logo-dark" : ""} is-changing">
+            <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
               <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
               ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
             </span>

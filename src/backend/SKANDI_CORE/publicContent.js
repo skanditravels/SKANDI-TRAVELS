@@ -11,6 +11,7 @@ import { currentMember } from "wix-members-backend";
 import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
+import { inventoryCardImage, referenceInventoryBrand } from "public/inventoryMedia";
 
 export const PUBLIC_CONTENT_VERSION = "SKANDI-PUBLIC-CONTENT-V12";
 
@@ -63,6 +64,9 @@ function localizedRecord(row = {}, language = "EN") {
 function publicImage(row = {}) {
   const details = obj(row.details);
   const media = arr(row.media);
+  const card = ["AIRLINE","AIRPORT"].includes(upper(row.entity_type,80))
+    ? referenceInventoryBrand(row).thumbnailUrl : inventoryCardImage(media);
+  if (card) return card;
   const preferred = media.find(item => item?.isPrimary === true || item?.is_primary === true) || media[0] || {};
   return clean(first(
     preferred.publicUrl,

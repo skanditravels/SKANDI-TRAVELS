@@ -4,6 +4,7 @@
 import { currentMember } from 'wix-members-backend';
 import { restRequest } from 'backend/SKANDI_CORE/supabaseServer';
 import { getCustomerProfileBootstrapCore } from 'backend/SKANDI_CORE/customerProfile';
+import { inventoryCardImage } from 'public/inventoryMedia';
 
 const PUBLIC_VIEW = 'inventory_public_entities_v';
 const DATED_TABLE = 'inventory_dated_inventory';
@@ -34,7 +35,7 @@ function lists(v) {
 function nameOf(record) { return clean(record?.name, 240); }
 function countryName(code, entities) { return nameOf(entities.find(x => x.entity_type === 'COUNTRY' && clean(x.code).toUpperCase() === code)) || code; }
 function mediaOf(entry) {
-  const images = arr(entry.media).filter(x => url(x?.url)).sort((a, b) => {
+  const images = arr(entry.media).filter(x => url(x?.url) && clean(x.role,40).toUpperCase() !== 'THUMBNAIL').sort((a, b) => {
     const rank = x => x?.isCard === true ? 0 : x?.isPrimary === true ? 1 : x?.isHero === true ? 2 : x?.role === 'CARD' ? 3 : 4;
     return rank(a) - rank(b) || Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0);
   });
@@ -86,7 +87,7 @@ function publicExperience(entry, entities, schedule, lang) {
     meetingPoint: clean(details.meetingPoint || details.meetingPointAddress || '', 2000),
     accessibility: clean(details.accessibility || '', 4000), cancellation: clean(details.cancellationPolicy || '', 3000),
     childPolicy: clean(details.childPolicy || '', 2000), minimumAge: Number.isFinite(Number(details.minimumAge)) ? Number(details.minimumAge) : null,
-    image: imageUrls[0] || '', images: imageUrls,
+    image: inventoryCardImage(entry.media) || imageUrls[0] || '', images: imageUrls,
     duration: Number.isFinite(minutes) && minutes > 0 ? `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)} h` : ''}${minutes % 60 ? ` ${minutes % 60} min` : ''}`.trim() : '',
     durationCode: Number.isFinite(minutes) ? minutes <= 180 ? 'short' : minutes <= 300 ? 'half' : minutes <= 720 ? 'full' : 'multi' : '',
     durationMinutes: Number.isFinite(minutes) ? minutes : null,

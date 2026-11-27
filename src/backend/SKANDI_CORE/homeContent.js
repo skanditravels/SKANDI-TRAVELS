@@ -7,6 +7,7 @@ import { restRequest, storageGetPublicUrl } from "backend/SKANDI_CORE/supabaseSe
 import { searchLiveFlightOffersCore, searchLiveStaysCore } from "backend/SKANDI_CORE/customerBooking";
 import { ensureEditorialContext } from "backend/SKANDI_CORE/publicContent";
 import { listAssetsCore, registerAssetUsageCore, deactivateAssetUsageCore } from "backend/SKANDI_CORE/assets";
+import { inventoryCardImage } from "public/inventoryMedia";
 
 const PUBLIC_VIEW = "inventory_public_entities_v";
 const CACHE_TTL_MS = 60_000;
@@ -94,6 +95,8 @@ function localized(record, language = "EN") {
 }
 
 function mediaUrl(record) {
+  const card = inventoryCardImage(record?.media);
+  if (card) return card;
   const rows = arr(record?.media).slice().sort((a, b) => num(a?.sortOrder ?? a?.sort_order) - num(b?.sortOrder ?? b?.sort_order));
   for (const raw of rows) {
     if (typeof raw === "string" && clean(raw, 1800)) return clean(raw, 1800);
