@@ -82,6 +82,59 @@ test('Hotel List links directly to an unlinked property and its detail blocks bo
   assert.equal(w.document.getElementById('hotelUnavailable').hidden,false);
 });
 
+test('a retained Wix hotel embed opens the selected property and restores its scoped list on back', async t => {
+  const base='skandi-embeds/hotel-list/skandi-hotel-list';
+  const dom=new JSDOM(await source(base+'.html'),{runScripts:'outside-only',url:'https://example.test'});
+  t.after(()=>dom.window.close());
+  const w=dom.window;
+  const listQuery={country:'sweden',destination:'stockholm',view:'hotels'};
+  const listPath=routes.APP_ROUTES.hotelList;
+  const place={id:'sto',name:'Stockholm',entityType:'DESTINATION',parentEntityId:'se'};
+  const records=[
+    {id:'se',name:'Sweden',entityType:'COUNTRY'},place,
+    {id:'scc',name:'Scandic Continental',entityType:'HOTEL',parentEntityId:place.id,details:{summary:'Beside Stockholm Central Station.'}}
+  ];
+  let receive,change;
+  const messages=[], requests=[];
+  const wixLocation={
+    query:listQuery,
+    onChange:fn=>{change=fn;},
+    to:path=>{
+      const target=new URL(path,'https://example.test');
+      change({path:target.pathname.slice(1).split('/'),query:Object.fromEntries(target.searchParams)});
+    }
+  };
+  const embed={
+    id:'hotelsEmbed',onMessage:fn=>{receive=fn;},
+    postMessage:data=>{messages.push(data);w.dispatchEvent(new w.MessageEvent('message',{source:w,data}));}
+  };
+  const context=vm.createContext({...routes,wixLocation,URLSearchParams,URL,inventoryCardImage,setTimeout,clearTimeout,
+    getDestinationFlowCatalog:async()=>({ok:true,records})});
+  vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
+  vm.runInContext(withoutImports(await source('src/public/destinationFlowBridge.js')),context);
+  context.bindDestinationFlow(()=>embed,'hotels',{embedId:'#hotelsEmbed',sources:['SKANDI_AREA_HOTEL_SEARCH']});
+  const send=data=>receive({data:{source:'SKANDI_AREA_HOTEL_SEARCH',...data}});
+  w.postMessage=data=>requests.push(send(data));
+  w.eval(await source(base+'.js'));
+  await Promise.all(requests.splice(0));
+  const title=w.document.getElementById('hotelTitle');
+  assert.equal(title.textContent,'Hotels in Stockholm');
+  const link=w.document.querySelector('#hotelCards a').dataset.path;
+  await send({type:'HOTEL_SEARCH_NAVIGATE',payload:{path:link}});
+  await Promise.all(requests.splice(0));
+  assert.equal(title.textContent,'Scandic Continental');
+  assert.equal(w.document.getElementById('hotelDirectory').hidden,true);
+  assert.equal(messages.at(-1).type,'HOTEL_DETAIL_DATA');
+  change({path:listPath.slice(1).split('/'),query:listQuery});
+  await Promise.all(requests.splice(0));
+  assert.equal(title.textContent,'Hotels in Stockholm');
+  assert.equal(w.document.getElementById('hotelDirectory').hidden,false);
+  assert.equal(w.document.querySelector('#hotelCards a').dataset.path,link);
+  const count=messages.length;
+  change({path:listPath.slice(1).split('/'),query:{...listQuery,ref:'campaign'}});
+  assert.equal(messages.length,count);
+});
+
 
 test('geography links narrow descendants through region and area, including existing details',async()=>{
  const records=[{id:'us',entityType:'COUNTRY',name:'United States'}, {id:'fl',entityType:'REGION',name:'Florida',parentEntityId:'us'}, {id:'orl',entityType:'DESTINATION',name:'Orlando',parentEntityId:'fl'}, {id:'disney',entityType:'AREA',name:'Disney Area',parentEntityId:'orl'}, {id:'hotel',entityType:'HOTEL',name:'Hotel',details:{areaId:'disney'}}];

@@ -4,7 +4,7 @@ import wixLocation from "wix-location-frontend";
 import { getDestinationFlowCatalog } from "backend/SKANDI_CORE/destinationFlow.web";
 import { createDestinationContent } from "public/destinationContent";
 import { startBookingSearch } from "public/bookingSearch";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute, normalizeSitePath } from "public/siteMap";
 
 const PARENT = "SKANDI_WIX_PARENT";
 const SOURCES = {flow:"SKANDI_DESTINATION_FLOW",index:"SKANDI_DESTINATIONS_INDEX",country:"SKANDI_DYNAMIC_COUNTRY_PAGE",destination:"SKANDI_DYNAMIC_DESTINATION_PAGE",area:"SKANDI_DYNAMIC_DESTINATION_AREA",hotels:"SKANDI_AREA_HOTEL_SEARCH",hotel:"SKANDI_HOTEL_DETAIL"};
@@ -21,11 +21,12 @@ function bounded(promise) {
 }
 export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]} = {}) {
   let html = null, merged = false, catalog = [], catalogJob = null, loadedAt = 0, discoveryTimer = null;
+  let hotelRouteQuery;
   let flowState = initialState(), settings = {language:"EN",currency:"USD"};
   const bound = new Set(), jobs = new Map();
   const content = createDestinationContent(()=>catalog,()=>flowState,LANGUAGES);
-  function initialState() {
-    const q = obj(wixLocation.query);
+  function initialState(query=hotelRouteQuery??wixLocation.query) {
+    const q = obj(query);
     const state = {countrySlug:slug(q.country),regionSlug:slug(q.region),destinationSlug:slug(q.destination),areaSlug:slug(q.area),hotelSlug:slug(q.hotel),hotelId:clean(q.hotelId,160)};
     const level = q.view === "hotel" || state.hotelSlug || state.hotelId ? "hotel" : q.view === "hotels" ? "hotels" : state.areaSlug ? "area" : state.destinationSlug ? "destination" : state.countrySlug ? "country" : entry;
     return {...state,level};
@@ -230,6 +231,18 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
     for(const embed of found){if(!embed||typeof embed.onMessage!=="function"||typeof embed.postMessage!=="function")continue;const key=embed.id||embed;if(bound.has(key))continue;bound.add(key);embed.onMessage(e=>receive(e,embed));embed.postMessage({source:PARENT,type:"DESTINATION_BRIDGE_READY",payload:{version:"V12"}});embed.postMessage({source:PARENT,type:"COUNTRY_HOST_READY",payload:{version:"V12"}});}
     if(attempts<60)discoveryTimer=setTimeout(discover,500);
     else console.error("[Destinations V12] No destination embed handshake received.");
+  }
+  if(entry==="hotels"&&embedId&&typeof wixLocation.onChange==="function") {
+    let currentKey=JSON.stringify(initialState());
+    wixLocation.onChange(location=>{
+      if(Array.isArray(location?.path)&&normalizeSitePath("/"+location.path.join("/"))!==APP_ROUTES.hotelList)return;
+      const query=location?.query??wixLocation.query;
+      const key=JSON.stringify(initialState(query));
+      if(key===currentKey)return;
+      currentKey=key;hotelRouteQuery=query;
+      jobs.clear();
+      post("DESTINATION_ROUTE_CHANGED");
+    });
   }
   discover();
 }

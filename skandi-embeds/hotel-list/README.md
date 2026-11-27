@@ -3,6 +3,7 @@
 ## 2026-11-27 — Scoped hotel list and property guide
 
 - The list uses the published country, region or state, destination and area. Direct property visits resolve the published Inventory ID. Breadcrumbs link to each published place and back to the scoped hotel list.
+- Wix location changes on this route request a fresh list or property view in the existing embed. This covers card links, breadcrumbs and browser history without requiring a new iframe.
 - A shared Explore and Hotels layout keeps the property name, location and availability at the top. Overview, rooms, facilities, location and policies, and photos appear when the property has that information. The existing Inventory media choices, dates, party fields, optional flights and Duffel booking handoff remain the owners of their respective content and actions.
 - The page continues to use `#hotelsEmbed` and the existing receiver. The notes below record the initial route and property implementation.
 
