@@ -623,8 +623,9 @@
     "source": "skandi-embeds/global/alexandra/references/riaintra-alexandra-chat-md/README.md",
     "directory": "skandi-embeds/global/alexandra",
     "stem": "skandi-alexandra-chat",
-    "disposition": "SEPARATE COMPONENT",
-    "note": "Current integrated sitewide SKANDI widget supplied 2026-10-26; the master bridge closes it on RIAINTRA, ALTEA and other internal routes.",
+    "disposition": "SUPERSEDED REFERENCE",
+    "referenceOnly": true,
+    "note": "Original sitewide widget supplied 2026-10-26. The active split source uses the shared public chat session added 2026-11-27.",
     "originalSource": "HTML_REF/riaintra/Alexandra Chat.md"
   },
   {

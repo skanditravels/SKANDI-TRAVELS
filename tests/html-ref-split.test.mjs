@@ -17,7 +17,8 @@ test('every HTML_REF payload is mapped and reconstructs exactly from its split f
   assert.match(mergedBooking.note,/single \/booking page with #bookingFlowEmbed/);
   const alexandra=map.find(m=>m.originalSource==='HTML_REF/riaintra/Alexandra Chat.md');
   assert.ok(alexandra,'The latest integrated Alexandra source must be mapped.');
-  assert.equal(alexandra.disposition,'SEPARATE COMPONENT');
+  assert.equal(alexandra.disposition,'SUPERSEDED REFERENCE');
+  assert.equal(alexandra.referenceOnly,true);
   assert.equal(alexandra.directory,'skandi-embeds/global/alexandra');
   assert.equal(alexandra.stem,'skandi-alexandra-chat');
   assert.match(alexandra.note,/sitewide/);
@@ -55,14 +56,14 @@ test('all embed roots trigger the source-validation workflow',async()=>{
   for(const section of [push,pull])for(const name of ['skandi-embeds','riaintra-embeds','altea-embeds'])assert.ok(section.includes(name+'/**'));
 });
 
-test('sitewide Alexandra sidecars match their authoritative payloads',async()=>{
+test('the active Alexandra widget is wired through the public master and the old HTML remains a reference',async()=>{
   const map=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sources.json'),'utf8'));
   for(const source of ['HTML_REF/riaintra/Alexandra Chat.md']) {
     const m=map.find(row=>row.originalSource===source),original=extractDocument(await fs.readFile(path.join(root,m.source),'utf8'));
     assert.ok(m,source+' must be mapped');
-    const split=splitDocument(original,m.stem);
-    for(const [name,content] of Object.entries(split.files))
-      assert.equal(await fs.readFile(path.join(root,m.directory,name),'utf8'),content,source+' / '+name);
+    assert.equal(m.referenceOnly,true);
+    assert.match(original,/SUPPORT_CHAT_READY/);
+    assert.match(await fs.readFile(path.join(root,m.directory,m.stem+'.js'),'utf8'),/SUPPORT_CHAT_RESTORE/);
   }
   const master=await fs.readFile(path.join(root,'src/pages/masterPage.js'),'utf8');
   const bridge=await fs.readFile(path.join(root,'src/public/alexandraGlobalBridge.js'),'utf8');

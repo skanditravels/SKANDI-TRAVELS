@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import { createHash, createHmac, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { createRequire } from 'node:module';
 const require = createRequire(new URL('../scripts/package.json', import.meta.url));
 const { parse } = require('acorn');
@@ -19,7 +19,7 @@ async function service(fetch) {
   for (const node of parse(code, { ecmaVersion:'latest', sourceType:'module' }).body.filter(x => x.type === 'ImportDeclaration').reverse()) code = code.slice(0,node.start) + code.slice(node.end);
   code = code.replace(/export (async )?function (\w+)/g, (_, a, n) => `globalThis.${n} = ${a || ''}function ${n}`);
   const values = { LIVEKIT_API_KEY:key, LIVEKIT_API_SECRET:secret, LIVEKIT_URL:'wss://example.livekit.cloud' };
-  const ctx = { Buffer, createHash, createHmac, randomUUID, fetch, secrets:{getSecretValue:async name=>({value:values[name]})}, elevate:fn=>fn };
+  const ctx = { Buffer, createHash, createHmac, randomUUID, timingSafeEqual, fetch, secrets:{getSecretValue:async name=>({value:values[name]})}, elevate:fn=>fn };
   vm.createContext(ctx); vm.runInContext(code,ctx); return ctx;
 }
 test('support room JWT is signed and preserves room-scoped listen-only grants', async()=>{
@@ -47,4 +47,35 @@ test('failed or unconfirmed dispatch cannot produce a successful chat session', 
   await assert.rejects(failing.issueAlexandraLiveKitSessionCore(),/ALEXANDRA_DISPATCH_HTTP_403/);
   const empty = await service(async()=>({ok:true,json:async()=>({})}));
   await assert.rejects(empty.issueAlexandraLiveKitSessionCore(),/ALEXANDRA_DISPATCH_UNCONFIRMED/);
+});
+
+test('Alexandra resumes the same participant and dispatch only for the same Wix identity', async () => {
+  const calls = [];
+  let active = true, ended = false;
+  const api = await service(async (url, options) => {
+    const request = JSON.parse(options.body);
+    calls.push({ url, request, token: claims(options.headers.Authorization.slice(7)) });
+    return { ok: true, json: async () => url.endsWith('/CreateDispatch') ? { id: 'dispatch-123' } : {
+      agent_dispatches: active ? [{ id: 'dispatch-123', agent_name: 'alexandra-prod', state: { jobs: [{ state: { status: ended ? 'JS_SUCCESS' : 'JS_RUNNING' } }] } }] : []
+    } };
+  });
+  const first = await api.issueAlexandraLiveKitSessionCore({ memberId: 'member-one' });
+  assert.ok(first.resumeTicket);
+  assert.equal(await api.resumeAlexandraLiveKitSessionCore({ resumeTicket: first.resumeTicket, memberId: 'member-two' }), null);
+  const tampered = (first.resumeTicket.startsWith('A') ? 'B' : 'A') + first.resumeTicket.slice(1);
+  assert.equal(await api.resumeAlexandraLiveKitSessionCore({ resumeTicket: tampered, memberId: 'member-one' }), null);
+  assert.equal(calls.length, 1);
+  const next = await api.resumeAlexandraLiveKitSessionCore({ resumeTicket: first.resumeTicket, memberId: 'member-one' });
+  assert.equal(next.sessionId, first.sessionId);
+  assert.equal(next.roomName, first.roomName);
+  assert.equal(next.identity, first.identity);
+  assert.equal(claims(next.token).video.roomAdmin, undefined);
+  assert.equal(calls[1].token.video.room, first.roomName);
+  assert.equal(calls[1].request.dispatch_id, first.dispatchId);
+  assert.match(calls[1].url, /ListDispatch$/);
+  ended = true;
+  assert.equal(await api.resumeAlexandraLiveKitSessionCore({ resumeTicket: first.resumeTicket, memberId: 'member-one' }), null);
+  active = false;
+  assert.equal(await api.resumeAlexandraLiveKitSessionCore({ resumeTicket: first.resumeTicket, memberId: 'member-one' }), null);
+  assert.equal(calls.filter(call => call.url.endsWith('/CreateDispatch')).length, 1);
 });

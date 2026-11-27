@@ -1,82 +1,442 @@
-
 (() => {
   "use strict";
-  const SOURCE="SKANDI_SUPPORT_CHAT",PARENT="SKANDI_WIX_PARENT",ALEX_TOPIC="lk.chat",HUMAN_TOPIC="skandi.support.chat";
-  const $=id=>document.getElementById(id);let boot={},mode="ALEXANDRA",caseId="",alexRoom=null,humanRoom=null,alexSession=null,humanSession=null,transcript=[],connected=false,loggedIn=false,avatarCfg={},roomEpoch=0,bootstrapReceived=false,hostBlocked=false;
-  const clean=(v,n=30000)=>String(v??"").trim().slice(0,n);const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,requestId:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,payload},"*")}
-  function setViewport(){const h=window.visualViewport?.height||window.innerHeight||document.documentElement.clientHeight;document.documentElement.style.setProperty("--vvh",`${Math.round(h)}px`)}
-  setViewport();window.addEventListener("resize",setViewport);window.visualViewport?.addEventListener("resize",setViewport);window.visualViewport?.addEventListener("scroll",setViewport);
-  function openPanel(){ $("panel").classList.add("open");$("launcher").classList.add("hidden");setViewport();setTimeout(()=>$("input").focus(),80)}
-  function closePanel(){ $("panel").classList.remove("open");$("launcher").classList.remove("hidden");$("input").blur() }
-  function disconnectRooms(){
+  const SOURCE = "SKANDI_SUPPORT_CHAT", PARENT = "SKANDI_WIX_PARENT";
+  const ALEX_TOPIC = "lk.chat", HUMAN_TOPIC = "skandi.support.chat";
+  const $ = id => document.getElementById(id);
+  const clean = (value, length = 30000) => String(value ?? "").trim().slice(0, length);
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+  const instance = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const host = $("launcher").parentElement;
+  let boot = {}, avatar = {}, mode = "ALEXANDRA", caseId = "", pagePath = "/about/support";
+  let transcript = [], room = null, roomSession = null, roomEpoch = 0, connecting = false;
+  let active = false, configured = false, loggedIn = false, humanPending = false, sending = false, lastSend = "", open = false;
+  let connectionRequested = false, panelFocusTimer;
+
+  function post(type, payload = {}) {
+    window.parent.postMessage({ source: SOURCE, type, requestId: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, payload: { ...payload, instance } }, "*");
+  }
+  function snapshot() {
+    if (active) post("SUPPORT_CHAT_SNAPSHOT", { messages: transcript.slice(-18), draft: $("input").value });
+  }
+  function setViewport() {
+    const height = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+    host.style.setProperty("--vvh", `${Math.round(height)}px`);
+  }
+  setViewport();
+  window.addEventListener("resize", setViewport);
+  window.visualViewport?.addEventListener("resize", setViewport);
+  window.visualViewport?.addEventListener("scroll", setViewport);
+  window.addEventListener("pagehide", snapshot);
+
+  function setPanel(show, focus = false) {
+    open = show;
+    $("panel").classList.toggle("open", show);
+    $("launcher").classList.toggle("hidden", show);
+    $("launcher").setAttribute("aria-expanded", String(show));
+    clearTimeout(panelFocusTimer);
+    if (show) {
+      setViewport();
+      if (focus) panelFocusTimer = setTimeout(() => $("input").focus(), 80);
+    } else $("input").blur();
+  }
+  function clearAudio() {
+    host.querySelectorAll("audio[data-support-track]").forEach(element => element.remove());
+  }
+  function disconnect() {
     roomEpoch++;
-    const rooms=[alexRoom,humanRoom].filter(Boolean);
-    alexRoom=null;humanRoom=null;alexSession=null;humanSession=null;connected=false;
-    for(const room of rooms){try{Promise.resolve(room.disconnect()).catch(()=>{})}catch(_){}}
+    const previous = room;
+    room = null;
+    roomSession = null;
+    connecting = false;
+    sending = false;
+    clearAudio();
+    try { Promise.resolve(previous?.disconnect()).catch(() => {}); } catch (_) {}
   }
-  function forceClose(){
-    hostBlocked=true;disconnectRooms();caseId="";transcript=[];loggedIn=false;boot={};avatarCfg={};
-    $("messages").replaceChildren();$("input").value="";$("input").disabled=false;$("sendBtn").disabled=false;
-    $("formSheet").classList.remove("open");$("subject").value="";$("description").value="";
-    $("contactName").value="";$("contactEmail").value="";$("humanBtn").title="Sign in for human chat";setMode("ALEXANDRA");closePanel();
+  function commandState() {
+    const disabled = humanPending || mode === "QUEUED" || mode === "CLOSED";
+    $("input").disabled = disabled;
+    $("sendBtn").disabled = disabled || sending || connecting || connectionRequested;
   }
-  function scrollBottom(){requestAnimationFrame(()=>{$("messages").scrollTop=$("messages").scrollHeight})}
-  function message(kind,text,name=""){text=clean(text);if(!text)return;const n=document.createElement("div");n.className=`msg ${kind}`;n.innerHTML=(name?`<strong>${esc(name)}</strong>`:"")+esc(text);$("messages").appendChild(n);scrollBottom();if(kind!=="system")transcript.push({role:kind==="mine"?"customer":mode==="ALEXANDRA"?"alexandra":"human-agent",text,at:new Date().toISOString()})}
-  function system(text){message("system",text)}
-  function setMode(next){mode=next;const human=next==="HUMAN";$("agentName").textContent=human?"SKANDI Customer Service":"Alexandra";$("agentRole").textContent=human?"Human SKANDI Customer Service Agent":"Digital Customer Service Agent";$("avatarFallback").textContent=human?"S":"A";if(human){$("avatarVideo").pause?.();$("avatarVideo").style.display="none";$("avatarFallback").style.display="inline"}else{setupAvatar(avatarCfg)}$("presenceText").textContent=next==="HANDOFF_PENDING"?"Connecting…":"Online";$("humanBtn").classList.toggle("hidden",human);$("input").disabled=next==="HANDOFF_PENDING";$("sendBtn").disabled=next==="HANDOFF_PENDING"}
-  function setupAvatar(cfg={}){avatarCfg=cfg||{};const video=$("avatarVideo"),url=clean(cfg.avatarVideoUrl,2000);if(!url){video.removeAttribute("src");video.style.display="none";$("avatarFallback").style.display="inline";return}video.src=url;video.defaultPlaybackRate=0.75;const apply=()=>{video.playbackRate=0.75;video.muted=true;video.loop=true;video.playsInline=true;video.style.display="block";$("avatarFallback").style.display="none";video.play().catch(()=>{})};video.onloadedmetadata=apply;video.oncanplay=apply}
-  function applyBoot(p={}){boot=p||{};loggedIn=Boolean(p.loggedIn||p.profile?.loggedIn||p.profile?.memberId);setupAvatar(boot.alexandra||{});$("humanBtn").title=loggedIn?"Human Customer Service":"Sign in for human chat";const profile=boot.profile||{};if(!$("contactName").value)$("contactName").value=clean(profile.displayName||[profile.firstName,profile.lastName].filter(Boolean).join(" "),200);if(!$("contactEmail").value)$("contactEmail").value=clean(profile.email,254);const list=Array.isArray(boot.workflows)?boot.workflows:[];$("category").innerHTML=list.map(w=>`<option value="${esc(w.key)}">${esc(w.title||w.key)}</option>`).join("")||'<option value="general">General Support</option>';updateTopics()}
-  function workflow(){return (boot.workflows||[]).find(w=>w.key===$("category").value)||null}
-  function updateTopics(){const w=workflow();$("topic").innerHTML=(w?.topics||[{key:"general-question",title:"General Question"}]).map(t=>`<option value="${esc(t.key)}">${esc(t.title||t.key)}</option>`).join("");$("baggageFields").classList.toggle("hidden",$("category").value!=="baggage");updatePir()}
-  function updatePir(){const yes=$("hasPir").value==="yes",no=$("hasPir").value==="no";$("pirWrap").classList.toggle("hidden",!yes);const w=workflow();$("formNotice").textContent=no?(w?.guidance?.noPir||"A SKANDI support case does not replace the formal baggage report/PIR required by the operating airline or airport baggage service."):"";$("formNotice").classList.toggle("hidden",!no)}
-  async function connectAlex(s){
-    if(!s?.url||!s?.token||!window.LivekitClient){system("Alexandra could not connect. Please try again.");return false}
-    const epoch=++roomEpoch,previous=[alexRoom,humanRoom].filter(Boolean);
-    alexRoom=null;humanRoom=null;alexSession=s;humanSession=null;connected=false;
-    for(const room of previous){try{await room.disconnect()}catch(_){}}
-    if(epoch!==roomEpoch)return;
-    const sdk=window.LivekitClient,r=new sdk.Room({adaptiveStream:true,dynacast:true});
-    r.registerTextStreamHandler(s.transcriptionTopic||"lk.transcription",async(reader,p)=>{
-      if(p?.identity===r.localParticipant?.identity)return;
-      try{const text=await reader.readAll();if(epoch===roomEpoch&&r===alexRoom)message("remote",text,"Alexandra")}catch(_){}
+  function presence(value) { $("presenceText").textContent = value; }
+  function setMode(value) {
+    mode = value;
+    const human = value !== "ALEXANDRA";
+    $("agentName").textContent = human ? "SKANDI Customer Service" : "Alexandra";
+    $("agentRole").textContent = human ? "Human SKANDI Customer Service Agent" : "Digital Customer Service Agent";
+    $("avatarFallback").textContent = human ? "S" : "A";
+    $("humanBtn").classList.toggle("hidden", human);
+    if (human) {
+      $("avatarVideo").pause?.();
+      $("avatarVideo").style.display = "none";
+      $("avatarFallback").style.display = "inline";
+    } else setupAvatar(avatar);
+    presence(humanPending ? "Connecting…" : value === "QUEUED" ? "In queue" : value === "CLOSED" ? "Ended" : room?.state === "connected" ? "Online" : "Ready");
+    commandState();
+  }
+  function render(kind, content, name = "") {
+    const element = document.createElement("div");
+    element.className = `msg ${kind}`;
+    element.innerHTML = (name ? `<strong>${esc(name)}</strong>` : "") + esc(content);
+    $("messages").appendChild(element);
+    requestAnimationFrame(() => { $("messages").scrollTop = $("messages").scrollHeight; });
+  }
+  function system(text) { if (text) render("system", text); }
+  function renderMessage(item) {
+    render(item.role === "user" ? "mine" : "remote", item.content, { user: "You", assistant: "Alexandra", agent: "SKANDI Customer Service" }[item.role]);
+  }
+  function message(role, content) {
+    const text = clean(content);
+    if (!text) return;
+    const item = { role, content: text };
+    transcript.push(item);
+    if (transcript.length > 60) transcript.shift();
+    renderMessage(item);
+    snapshot();
+  }
+
+  function setupAvatar(config) {
+    const video = $("avatarVideo");
+    const url = clean(config.avatarVideoUrl, 2000);
+    if (!url) {
+      video.removeAttribute("src");
+      video.style.display = "none";
+      $("avatarFallback").style.display = "inline";
+      return;
+    }
+    const apply = () => {
+      if (mode !== "ALEXANDRA") return;
+      video.playbackRate = 0.75;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.style.display = "block";
+      $("avatarFallback").style.display = "none";
+      video.play().catch(() => {});
+    };
+    video.onloadedmetadata = apply;
+    video.oncanplay = apply;
+    if (video.getAttribute("src") !== url) video.src = url;
+    else if (video.readyState > 0) apply();
+  }
+  function applyBoot(payload) {
+    boot = payload;
+    avatar = payload.alexandra || {};
+    loggedIn = Boolean(payload.loggedIn || payload.profile?.memberId);
+    if (mode === "ALEXANDRA") setupAvatar(avatar);
+    $("humanBtn").title = loggedIn ? "Human Customer Service" : "Sign in for human chat";
+    const profile = payload.profile || {};
+    if (!$("contactName").value) $("contactName").value = clean(profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(" "), 200);
+    if (!$("contactEmail").value) $("contactEmail").value = clean(profile.email, 254);
+    const category = $("category").value, topic = $("topic").value;
+    $("category").innerHTML = (payload.workflows || []).map(workflow => `<option value="${esc(workflow.key)}">${esc(workflow.title || workflow.key)}</option>`).join("") || '<option value="general">General Support</option>';
+    if ([...$("category").options].some(option => option.value === category)) $("category").value = category;
+    updateTopics();
+    if ([...$("topic").options].some(option => option.value === topic)) $("topic").value = topic;
+  }
+  function workflow() { return (boot.workflows || []).find(item => item.key === $("category").value); }
+  function updateTopics() {
+    $("topic").innerHTML = (workflow()?.topics || [{ key: "general-question", title: "General Question" }])
+      .map(item => `<option value="${esc(item.key)}">${esc(item.title || item.key)}</option>`).join("");
+    $("baggageFields").classList.toggle("hidden", $("category").value !== "baggage");
+    updatePir();
+  }
+  function updatePir() {
+    const no = $("hasPir").value === "no";
+    $("pirWrap").classList.toggle("hidden", $("hasPir").value !== "yes");
+    $("formNotice").textContent = no ? workflow()?.guidance?.noPir || "A SKANDI support case does not replace the formal baggage report/PIR required by the operating airline or airport baggage service." : "";
+    $("formNotice").classList.toggle("hidden", !no);
+  }
+  function openForm(prefill = {}) {
+    $("formSheet").classList.add("open");
+    if (prefill.category) { $("category").value = prefill.category; updateTopics(); }
+    if (prefill.subject) $("subject").value = prefill.subject;
+    if (prefill.message) $("description").value = prefill.message;
+  }
+
+  async function connectRoom(session, nextMode) {
+    const person = nextMode === "HUMAN" ? "Customer Service" : "Alexandra";
+    connectionRequested = false;
+    if (roomSession?.roomName && roomSession.roomName === session?.roomName && (connecting || room?.state === "connected" || room?.state === "reconnecting")) {
+      commandState();
+      return;
+    }
+    if (!session?.url || !session?.token || !window.LivekitClient) {
+      presence("Connection unavailable");
+      system(`${person} could not connect. Please try again.`);
+      commandState();
+      return;
+    }
+    disconnect();
+    const epoch = roomEpoch;
+    const { Room, RoomEvent } = window.LivekitClient;
+    const nextRoom = new Room({ adaptiveStream: true, dynacast: true, disconnectOnPageLeave: false });
+    room = nextRoom;
+    roomSession = session;
+    connecting = true;
+    setMode(nextMode);
+    presence("Connecting…");
+    const isCurrent = () => epoch === roomEpoch && room === nextRoom;
+    const topic = nextMode === "ALEXANDRA" ? session.transcriptionTopic || "lk.transcription" : session.textTopic || HUMAN_TOPIC;
+    nextRoom.registerTextStreamHandler(topic, async (reader, participant) => {
+      if (participant?.identity === nextRoom.localParticipant?.identity) return;
+      try {
+        const text = await reader.readAll();
+        if (isCurrent() && active) message(nextMode === "ALEXANDRA" ? "assistant" : "agent", text);
+      } catch (_) {}
     });
-    r.on(sdk.RoomEvent.TrackSubscribed,track=>{if(track.kind==="audio"){const el=track.attach();el.autoplay=true;document.body.appendChild(el)}});
-    r.on(sdk.RoomEvent.Disconnected,()=>{if(epoch===roomEpoch){connected=false;system("Alexandra disconnected. Reopen the chat to reconnect.")}});
-    r.registerRpcMethod("open_support_form",async(data)=>{let parsed={};try{parsed=JSON.parse(data?.payload||"{}")}catch(_){}openForm(parsed);return JSON.stringify({ok:true})});
-    r.registerRpcMethod("start_human_chat",async(data)=>{let parsed={};try{parsed=JSON.parse(data?.payload||"{}")}catch(_){}await startHuman(parsed);return JSON.stringify({ok:true})});
-    try{await r.connect(s.url,s.token)}catch(error){if(epoch===roomEpoch)system("Alexandra could not connect. Please try again.");return false}
-    if(epoch!==roomEpoch){try{await r.disconnect()}catch(_){}return}
-    alexRoom=r;connected=true;setMode("ALEXANDRA");return true;
-  }
-  async function connectHuman(s){
-    if(!s?.url||!s?.token||!window.LivekitClient){system("Customer Service chat could not connect. Your request remains in the queue.");return false}
-    const epoch=++roomEpoch,previous=[alexRoom,humanRoom].filter(Boolean);
-    alexRoom=null;humanRoom=null;alexSession=null;humanSession=s;connected=false;
-    for(const room of previous){try{await room.disconnect()}catch(_){}}
-    if(epoch!==roomEpoch)return;
-    const sdk=window.LivekitClient,r=new sdk.Room({adaptiveStream:true,dynacast:true});
-    r.registerTextStreamHandler(s.textTopic||HUMAN_TOPIC,async(reader,p)=>{
-      if(p?.identity===r.localParticipant?.identity)return;
-      try{const text=await reader.readAll();if(epoch===roomEpoch&&r===humanRoom)message("remote",text,"SKANDI Customer Service")}catch(_){}
+    nextRoom.on(RoomEvent.TrackSubscribed, track => {
+      if (!isCurrent() || !active || track.kind !== "audio") return;
+      const audio = track.attach();
+      audio.dataset.supportTrack = "";
+      audio.autoplay = true;
+      host.appendChild(audio);
     });
-    r.on(sdk.RoomEvent.TrackSubscribed,track=>{if(track.kind==="audio"){const el=track.attach();el.autoplay=true;document.body.appendChild(el)}});
-    r.on(sdk.RoomEvent.Disconnected,()=>{if(epoch===roomEpoch){connected=false;system("Customer Service chat disconnected. You can continue through your case.")}});
-    try{await r.connect(s.url,s.token)}catch(error){if(epoch===roomEpoch)system("Customer Service chat could not connect. Your request remains in the queue.");return false}
-    if(epoch!==roomEpoch){try{await r.disconnect()}catch(_){}return}
-    humanRoom=r;connected=true;setMode("HUMAN");return true;
+    nextRoom.on(RoomEvent.TrackUnsubscribed, track => track.detach?.().forEach(element => element.remove()));
+    nextRoom.on(RoomEvent.Reconnecting, () => { if (isCurrent()) presence("Reconnecting…"); });
+    nextRoom.on(RoomEvent.Reconnected, () => { if (isCurrent()) presence("Online"); });
+    nextRoom.on(RoomEvent.Disconnected, () => {
+      if (!isCurrent()) return;
+      clearAudio();
+      presence("Disconnected");
+      if (active && open) system(`${person} disconnected. Your messages are still here.`);
+    });
+    if (nextMode === "ALEXANDRA") {
+      nextRoom.registerRpcMethod("open_support_form", async data => {
+        if (isCurrent() && active) openForm(rpcPayload(data));
+        return JSON.stringify({ ok: isCurrent() && active });
+      });
+      nextRoom.registerRpcMethod("start_human_chat", async data => {
+        if (isCurrent() && active) startHuman(rpcPayload(data));
+        return JSON.stringify({ ok: isCurrent() && active });
+      });
+    }
+    try {
+      await nextRoom.connect(session.url, session.token);
+      if (isCurrent()) presence("Online");
+      else await nextRoom.disconnect();
+    } catch (_) {
+      if (isCurrent()) {
+        presence("Connection unavailable");
+        system(`${person} could not connect. Please try again.`);
+      }
+    } finally {
+      if (isCurrent()) { connecting = false; commandState(); }
+    }
   }
-  async function send(){const text=clean($("input").value);if(!text)return;if(mode==="ALEXANDRA"){if(!alexRoom||alexRoom.state!=="connected"){system("Connecting to Alexandra… Your message is still in the text box.");post("SUPPORT_CHAT_START_ALEXANDRA");return}await alexRoom.localParticipant.sendText(text,{topic:alexSession?.textTopic||ALEX_TOPIC});$("input").value="";message("mine",text,"You")}else if(mode==="HUMAN"){if(!caseId){system("No support case is connected yet.");return}$("input").value="";message("mine",text,"You");$("sendBtn").disabled=true;post("SUPPORT_CHAT_HUMAN_MESSAGE",{caseId,content:text})}}
-  async function startHuman(extra={}){
-    if(extra?.caseId&&extra?.livekitSession){caseId=String(extra.caseId);setMode("HANDOFF_PENDING");system(extra.message||"Connecting you with a Human SKANDI Customer Service Agent. Your existing context will be passed along.");try{if(alexRoom)await alexRoom.disconnect()}catch(_){}alexRoom=null;connected=false;if(await connectHuman(extra.livekitSession))system("A Human SKANDI Customer Service Agent can now join this conversation.");return}
-    if(extra?.status==="queued"&&extra?.caseId){caseId=String(extra.caseId);setMode("HUMAN");$("input").disabled=true;$("sendBtn").disabled=true;system(extra.message||"Your request is in the Customer Service queue.");return}
-    if(!loggedIn){system("To start human live chat directly, sign in to your SKANDI account. Alexandra can still collect your contact details and transfer the conversation to Customer Service when needed.");return}
-    setMode("HANDOFF_PENDING");system("Connecting you with a Human SKANDI Customer Service Agent. Your existing context will be passed along.");post("SUPPORT_CHAT_START_HUMAN",{caseId,reason:extra.reason||"Customer requested a human agent.",summary:extra.summary||"",transcript:transcript.slice(-60)})
+  function rpcPayload(data) {
+    try { return JSON.parse(data?.payload || "{}"); }
+    catch (_) { return {}; }
   }
-  function openForm(prefill={}){$("formSheet").classList.add("open");if(prefill.category){$("category").value=prefill.category;updateTopics()}if(prefill.subject)$("subject").value=prefill.subject;if(prefill.message)$("description").value=prefill.message}
-  function formPayload(){const fullName=clean($("contactName").value,200),parts=fullName.split(/\s+/);return{firstName:parts[0]||"",lastName:parts.slice(1).join(" "),fullName,email:clean($("contactEmail").value,254),category:$("category").value,subCategory:$("topic").value,bookingRef:clean($("bookingRef").value,80),pnr:clean($("bookingRef").value,80),subject:clean($("subject").value,240),message:clean($("description").value,12000),hasPir:$("hasPir").value,pirNumber:clean($("pirNumber").value,80),bagTag:clean($("bagTag").value,80),bagType:clean($("bagType").value,120),bagColor:clean($("bagColor").value,120),bagBrand:clean($("bagBrand").value,300),source:"support-chat-form",sourcePage:"/about/support"}}
-  $("launcher").onclick=()=>{openPanel();if(boot.defaultMode==="HUMAN"){startHuman().catch(()=>{})}else if(!connected)post("SUPPORT_CHAT_START_ALEXANDRA")};$("closeBtn").onclick=closePanel;$("humanBtn").onclick=()=>{startHuman().catch(()=>{})};$("sendBtn").onclick=()=>send().catch(e=>system(e.message||"Message failed."));$("input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send().catch(()=>{})}};$("input").oninput=e=>{e.target.style.height="42px";e.target.style.height=Math.min(e.target.scrollHeight,112)+"px"};$("formBtn").onclick=()=>openForm();$("formClose").onclick=()=>$("formSheet").classList.remove("open");$("category").onchange=updateTopics;$("hasPir").onchange=updatePir;$("submitForm").onclick=()=>{const p=formPayload();if(!p.fullName||!p.email){$("formNotice").textContent="Enter your name and email so Customer Service can reply.";$("formNotice").classList.remove("hidden");return}if(!p.subject||!p.message){$("formNotice").textContent="Subject and description are required.";$("formNotice").classList.remove("hidden");return}post("SUPPORT_CHAT_SUBMIT_FORM",{input:p})};
-  window.addEventListener("message",async e=>{const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==="SUPPORT_CHAT_FORCE_CLOSE"){forceClose();return}if(m.type==="SUPPORT_CHAT_BOOTSTRAP"){bootstrapReceived=true;hostBlocked=false;applyBoot(p)}if(m.type==="SUPPORT_CHAT_OPEN"){openPanel();if(p.mode==="FORM"){openForm(p.formPrefill||{});return}if(p.mode==="HANDOFF_PENDING"){setMode("HANDOFF_PENDING");return}if(p.alexandraSession){if(await connectAlex(p.alexandraSession)&&!transcript.length)system("Connected. Waiting for Alexandra…")}}if(m.type==="SUPPORT_CHAT_HUMAN_HANDOFF"){caseId=String(p.caseId||caseId);if(alexRoom){try{await alexRoom.disconnect()}catch(_){}alexRoom=null}connected=false;if(p.status==="live"&&p.livekitSession){if(await connectHuman(p.livekitSession))system("A Human SKANDI Customer Service Agent can now join this conversation.")}else{setMode("HUMAN");$("input").disabled=true;$("sendBtn").disabled=true;system(p.message||"Your request is in the Customer Service queue.")}}if(m.type==="SUPPORT_CHAT_HUMAN_MESSAGE_SAVED"){$("sendBtn").disabled=false;const s=p.livekitSession||humanSession;if(s){if(!humanRoom||humanRoom.state!=="connected")await connectHuman(s);const text=clean(p.sentMessage?.content||p.sentMessage?.body);if(text)await humanRoom.localParticipant.sendText(text,{topic:s.textTopic||HUMAN_TOPIC,attributes:{caseId:String(p.caseId||caseId),messageId:String(p.sentMessage?.messageId||p.sentMessage?.id||""),senderType:"customer"}})}}if(m.type==="SUPPORT_CHAT_CASE_CREATED"){caseId=String(p.caseId||caseId);$("formSheet").classList.remove("open");system(`Support request ${p.caseRef||""} was created.`)}if(m.type==="SUPPORT_CHAT_ERROR"){setMode(mode==="HANDOFF_PENDING"?"ALEXANDRA":mode);system(p.message||"Support action failed.")}});
-  const signalReady=()=>{if(!bootstrapReceived&&!hostBlocked)post("SUPPORT_CHAT_READY",{integrated:true,page:window.location.pathname})};
-  signalReady();setTimeout(signalReady,900);setTimeout(signalReady,2600);
+  function requestConnection() {
+    if (connectionRequested || connecting || room?.state === "reconnecting") return;
+    connectionRequested = true;
+    presence("Connecting…");
+    commandState();
+    post("SUPPORT_CHAT_START_ALEXANDRA", { reconnect: Boolean(roomSession) });
+  }
+  function startHuman(details = {}) {
+    if (humanPending || mode !== "ALEXANDRA") return;
+    if (details.caseId && (details.livekitSession || details.status === "queued")) {
+      void applyHandoff({ ...details, status: details.livekitSession ? "live" : "queued" });
+      return;
+    }
+    if (!loggedIn) {
+      system("Sign in to your SKANDI account to contact a live agent. You can still submit a support request here.");
+      return;
+    }
+    humanPending = true;
+    setMode("HANDOFF_PENDING");
+    system("Connecting you with SKANDI Customer Service. Your messages will be passed along.");
+    post("SUPPORT_CHAT_START_HUMAN", { caseId, reason: details.reason, summary: details.summary, transcript: transcript.slice(-60).map(item => ({ role: { user: "customer", assistant: "alexandra", agent: "human-agent" }[item.role], text: item.content })) });
+  }
+  async function applyHandoff(payload) {
+    caseId = clean(payload.caseId, 160) || caseId;
+    humanPending = false;
+    if (payload.status === "live" && payload.livekitSession) {
+      if (!payload.resume) system(payload.message || "A SKANDI Customer Service agent can now join this conversation.");
+      await connectRoom(payload.livekitSession, "HUMAN");
+      return;
+    }
+    disconnect();
+    setMode(payload.status === "closed" ? "CLOSED" : "QUEUED");
+    system(payload.message || "Your request is in the Customer Service queue.");
+  }
+
+  async function send() {
+    const input = $("input"), text = clean(input.value);
+    if (!active || !text || sending || humanPending || mode === "QUEUED" || mode === "CLOSED") return;
+    if (mode === "HUMAN" && caseId) {
+      sending = true;
+      lastSend = text;
+      commandState();
+      post("SUPPORT_CHAT_HUMAN_MESSAGE", { caseId, content: text });
+      return;
+    }
+    if (mode !== "ALEXANDRA") return;
+    if (room?.state !== "connected") {
+      snapshot();
+      requestConnection();
+      return;
+    }
+    sending = true;
+    commandState();
+    const epoch = roomEpoch;
+    try {
+      await room.localParticipant.sendText(text, { topic: roomSession?.textTopic || ALEX_TOPIC });
+      if (epoch !== roomEpoch) return;
+      if (clean(input.value) === text) input.value = "";
+      message("user", text);
+    } catch (_) {
+      if (epoch === roomEpoch) system("The message could not be sent. It is still in the text box.");
+    } finally {
+      if (epoch === roomEpoch) { sending = false; commandState(); }
+    }
+  }
+  async function humanMessageSaved(payload) {
+    sending = false;
+    const text = clean(payload.sentMessage?.content || payload.sentMessage?.body || lastSend);
+    if (text && clean($("input").value) === lastSend) $("input").value = "";
+    lastSend = "";
+    message("user", text);
+    const session = payload.livekitSession || roomSession;
+    if (session && room?.state !== "connected") await connectRoom(session, "HUMAN");
+    if (text && room?.state === "connected") {
+      try {
+        await room.localParticipant.sendText(text, { topic: session?.textTopic || HUMAN_TOPIC, attributes: { caseId, messageId: String(payload.sentMessage?.messageId || payload.sentMessage?.id || ""), senderType: "customer" } });
+      } catch (_) { system("Your message was saved to the support case."); }
+    }
+    commandState();
+  }
+  function formPayload() {
+    const fullName = clean($("contactName").value, 200), names = fullName.split(/\s+/);
+    const bookingRef = clean($("bookingRef").value, 80);
+    return {
+      firstName: names[0] || "", lastName: names.slice(1).join(" "), fullName, email: clean($("contactEmail").value, 254),
+      category: $("category").value, subCategory: $("topic").value, bookingRef, pnr: bookingRef,
+      subject: clean($("subject").value, 240), message: clean($("description").value, 12000),
+      hasPir: $("hasPir").value, pirNumber: clean($("pirNumber").value, 80), bagTag: clean($("bagTag").value, 80),
+      bagType: clean($("bagType").value, 120), bagColor: clean($("bagColor").value, 120), bagBrand: clean($("bagBrand").value, 300),
+      source: "support-chat-form", sourcePage: pagePath
+    };
+  }
+
+  function applyHost(payload) {
+    configured = true;
+    active = payload.active === true;
+    pagePath = payload.pagePath || pagePath;
+    host.classList.toggle("sitewide", payload.global === true);
+    host.hidden = !active;
+    for (const audio of host.querySelectorAll("audio[data-support-track]")) audio.muted = !active;
+    if (typeof payload.open === "boolean") setPanel(active && payload.open);
+  }
+  function restore(payload) {
+    applyHost(payload);
+    if (!active) return;
+    transcript = Array.isArray(payload.messages) ? payload.messages.slice(-18) : [];
+    $("messages").replaceChildren();
+    transcript.forEach(renderMessage);
+    $("input").value = payload.draft || "";
+    caseId = clean(payload.caseId, 160);
+    if (payload.human && payload.human.status !== "live") void applyHandoff({ ...payload.human, caseId });
+    else if (payload.human?.status === "live" && !room) setMode("HUMAN");
+    if (payload.expired) system("The live session ended. Your messages are here. Try sending again to start a new connection.");
+  }
+  function forceClose() {
+    active = false;
+    connectionRequested = false;
+    sending = false;
+    humanPending = false;
+    lastSend = "";
+    disconnect();
+    caseId = "";
+    transcript = [];
+    loggedIn = false;
+    boot = {};
+    avatar = {};
+    $("messages").replaceChildren();
+    for (const input of host.querySelectorAll(".composer textarea, .sheet input, .sheet textarea, .sheet select")) input.value = "";
+    $("formSheet").classList.remove("open");
+    $("humanBtn").title = "Sign in for human chat";
+    setMode("ALEXANDRA");
+    setPanel(false);
+    host.hidden = true;
+  }
+
+  $("launcher").onclick = () => {
+    if (!active) return;
+    setPanel(true, true);
+    post("SUPPORT_CHAT_PANEL_OPEN");
+    if ((mode === "ALEXANDRA" || mode === "HUMAN") && (!room || room.state === "disconnected")) requestConnection();
+  };
+  $("closeBtn").onclick = () => {
+    snapshot();
+    setPanel(false);
+    post("SUPPORT_CHAT_PANEL_CLOSE");
+    $("launcher").focus();
+  };
+  $("humanBtn").onclick = () => startHuman();
+  $("sendBtn").onclick = () => { void send(); };
+  $("input").onkeydown = event => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void send(); } };
+  $("input").oninput = event => {
+    event.target.style.height = "42px";
+    event.target.style.height = Math.min(event.target.scrollHeight, 112) + "px";
+    snapshot();
+  };
+  $("formBtn").onclick = () => openForm();
+  $("formClose").onclick = () => $("formSheet").classList.remove("open");
+  $("category").onchange = updateTopics;
+  $("hasPir").onchange = updatePir;
+  $("submitForm").onclick = () => {
+    const input = formPayload();
+    if (!input.fullName || !input.email || !input.subject || !input.message) {
+      $("formNotice").textContent = !input.fullName || !input.email ? "Enter your name and email so Customer Service can reply." : "Subject and description are required.";
+      $("formNotice").classList.remove("hidden");
+      return;
+    }
+    post("SUPPORT_CHAT_SUBMIT_FORM", { input });
+  };
+
+  const ready = () => post("SUPPORT_CHAT_READY", { integrated: true });
+  window.addEventListener("message", event => {
+    const msg = event.data || {}, payload = msg.payload || {};
+    if (event.source !== window.parent || msg.source !== PARENT || (payload.instance && payload.instance !== instance)) return;
+    switch (msg.type) {
+      case "SUPPORT_CHAT_PING": ready(); break;
+      case "SUPPORT_CHAT_HOST_STATE": applyHost(payload); break;
+      case "SUPPORT_CHAT_RESTORE": restore(payload); break;
+      case "SUPPORT_CHAT_FORCE_CLOSE": forceClose(); break;
+      case "SUPPORT_CHAT_BOOTSTRAP":
+        // The published Help Center may still be on its prior Wix controller during rollout.
+        if (!configured && !payload.instance) applyHost({ active: true });
+        if (active) applyBoot(payload);
+        break;
+      case "SUPPORT_CHAT_OPEN":
+        if (!active) return;
+        if (payload.open !== false) setPanel(true);
+        if (payload.mode === "FORM") openForm(payload.formPrefill);
+        else if (payload.mode === "HANDOFF_PENDING") { humanPending = true; setMode("HANDOFF_PENDING"); }
+        else if (payload.alexandraSession) void connectRoom(payload.alexandraSession, "ALEXANDRA");
+        break;
+      case "SUPPORT_CHAT_HUMAN_HANDOFF": if (active) void applyHandoff(payload); break;
+      case "SUPPORT_CHAT_HUMAN_MESSAGE_SAVED": if (active) void humanMessageSaved(payload); break;
+      case "SUPPORT_CHAT_CASE_CREATED":
+        if (!active) return;
+        caseId = clean(payload.caseId, 160) || caseId;
+        $("formSheet").classList.remove("open");
+        system(payload.caseRef ? `Support request ${payload.caseRef} was created.` : "Your support request was created.");
+        break;
+      case "SUPPORT_CHAT_ERROR":
+        if (!active) return;
+        connectionRequested = false;
+        sending = false;
+        lastSend = "";
+        if (humanPending) { humanPending = false; setMode("ALEXANDRA"); }
+        if (payload.action === "connect") presence("Connection unavailable");
+        commandState();
+        system(payload.message || "Support action failed.");
+        break;
+    }
+  });
+  ready();
+  for (const delay of [900, 2600]) setTimeout(() => { if (!configured) ready(); }, delay);
 })();
