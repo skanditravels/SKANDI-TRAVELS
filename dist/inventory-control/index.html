@@ -1149,6 +1149,25 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .ic-walkaround-fleet{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-block:8px}
 #skandi-app-root .ic-walkaround-fleet-link{border:0;background:transparent;color:var(--navy);padding:6px 0;text-align:left;font:inherit;font-weight:700;cursor:pointer}
 #skandi-app-root .ic-walkaround-fleet-link:hover{text-decoration:underline}
+
+/* Travel records and field groups */
+#skandi-app-root .ic-navigation-group{margin:0 0 12px}
+#skandi-app-root .ic-navigation-group .group{font-size:max(13px, .78rem);margin:0;padding-block:9px}
+#skandi-app-root .ic-navigation-group .navbtn{width:100%}
+#skandi-app-root .ic-editor-tabs,#skandi-app-root .ic-topic-tabs{gap:6px}
+#skandi-app-root .ic-editor-tabs .tab,#skandi-app-root .ic-topic-tabs .tab{min-height:42px}
+#skandi-app-root .ic-topic-tabs{margin-bottom:11px}
+#skandi-app-root .ic-editor-fieldset{margin:6px 0 0;padding:10px 14px 14px;min-width:0;border:1px solid #dbe5ee;border-radius:7px;background:#fff}
+#skandi-app-root .ic-editor-fieldset legend{font-size:max(13px, .9rem);font-weight:700;padding:0 6px;color:#264663}
+#skandi-app-root .ic-editor-fieldset .formgrid{align-items:start}
+#skandi-app-root .ic-stored-fields{margin-top:13px;padding:9px 12px;border:1px solid #dbe5ee;border-radius:7px;background:#fff}
+#skandi-app-root .ic-stored-fields summary{font-weight:670;cursor:pointer;padding-block:3px}
+#skandi-app-root .ic-stored-fields[open] summary{margin-bottom:9px}
+@media(max-width:650px){
+  #skandi-app-root .ic-editor-fieldset{padding:8px 10px 10px}
+  #skandi-app-root .ic-editor-tabs,#skandi-app-root .ic-topic-tabs{padding-bottom:3px}
+  #skandi-app-root .ic-editor-tabs .tab,#skandi-app-root .ic-topic-tabs .tab{flex-shrink:0}
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -2376,16 +2395,18 @@ function RelationPanel({draft,setDraft,records=[]}){
 }
 
 function Field({label,value,onChange,type="text",options=[],help,disabled=false,full=false,placeholder=""}){
-  return html`<div className=${`field ${full?"full":""}`}><label>${label}</label>
+  const id=React.useId();
+  const hint=help?`${id}-help`:undefined;
+  return html`<div className=${`field ${full?"full":""}`}><label htmlFor=${id}>${label}</label>
     ${type==="textarea"
-      ?html`<textarea className="textarea" value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(e.target.value)} />`
+      ?html`<textarea id=${id} aria-describedby=${hint} className="textarea" value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(e.target.value)} />`
       :type==="select"
-        ?html`<select className="select" value=${value??""} disabled=${disabled} onChange=${e=>onChange(e.target.value)}>
+        ?html`<select id=${id} aria-describedby=${hint} className="select" value=${value??""} disabled=${disabled} onChange=${e=>onChange(e.target.value)}>
             ${!options.some(o=>(typeof o==="string"?o:o.value)==="")?html`<option value="">Choose…</option>`:null}
             ${options.map(o=>html`<option value=${typeof o==="string"?o:o.value} disabled=${typeof o==="object"&&o.disabled===true}>${typeof o==="string"?o:o.label}</option>`)}
           </select>`
-        :html`<input className="input" type=${type} value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(type==="number"?numOrNull(e.target.value):e.target.value)} />`}
-    ${help?html`<small>${help}</small>`:null}
+        :html`<input id=${id} aria-describedby=${hint} className="input" type=${type} value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(type==="number"?numOrNull(e.target.value):e.target.value)} />`}
+    ${help?html`<small id=${hint}>${help}</small>`:null}
   </div>`
 }
 function parseStructuredInput(value){
@@ -2507,7 +2528,7 @@ const ENTITY_SCHEMAS={
     SR("Hotel Facts","details.facts",[SF("Label","label"),SF("Value","value")])
   ],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Operational Notes","operations.notes","textarea")]},
   GUIDED_TOUR:{details:[
-    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Category","details.category"),SF("Tour Type","details.tourType","select",ENUM.tourType),SF("Duration Minutes","details.durationMinutes","number"),SF("Difficulty","details.difficulty","select",ENUM.difficulty),
+    SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Category","details.category"),SF("Tour Type","details.tourType","select",ENUM.tourType),SF("Meeting point","details.meetingPoint","textarea"),SF("Duration Minutes","details.durationMinutes","number"),SF("Difficulty","details.difficulty","select",ENUM.difficulty),
     SF("Minimum Age","details.minimumAge","number"),SF("Child Policy","details.childPolicy","textarea"),SF("Accessibility","details.accessibility","textarea"),SL("Languages","details.languages")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("Adult Price","commercial.adultPrice","number"),SF("Child Price","commercial.childPrice","number"),SF("Infant Price","commercial.infantPrice","number"),SF("Private Price","commercial.privatePrice","number")],operations:[
     SF("Guide Required","operations.guideRequired","boolean"),SF("Languages Required","operations.languagesRequired"),SF("Guide Briefing","operations.guideBriefing","textarea"),
@@ -2523,8 +2544,8 @@ const ENTITY_SCHEMAS={
     SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Vendor Ticket ID","details.vendorTicketId"),SF("Category","details.category"),SF("Ticket Type","details.ticketType","select",ENUM.ticketType),SF("Validity Type","details.validityType","select",ENUM.validityType),SF("Duration","details.duration"),SF("Venue / Meeting Location","details.meetingLocation"),SF("Restrictions","details.restrictions","textarea")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("Adult Price","commercial.adultPrice","number"),SF("Child Price","commercial.childPrice","number")],operations:[SF("Delivery Method","operations.deliveryMethod","select",ENUM.deliveryMethod),SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Policy","operations.cancellationPolicy","textarea"),SF("Operational Notes","operations.notes","textarea")]},
   TRANSFER:{details:[
-    SF("Transfer Type","details.transferType","select",ENUM.transferType),SF("Direction","details.direction","select",ENUM.direction),SF("Airport","details.airportId","reference",[],"",["AIRPORT"]),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Terminal","details.terminal"),SF("Arrival Hall","details.arrivalHall"),SF("Airport Exit Number","details.airportExitNumber"),SF("Waiting Area","details.waitingArea"),SF("Meeting Point","details.meetingPoint"),SF("Meeting Point Description","details.meetingPointDescription","textarea"),SF("Emergency Phone","details.emergencyPhone"),SF("Distance km","details.distanceKm","number"),SF("Zone Code","details.zoneCode"),SF("Zone Name","details.zoneName"),
-    SF("Transport Mode","details.transportMode","select",ENUM.transportMode),SF("Vehicle Type","details.vehicleType"),SF("Vehicle Class","details.vehicleClass","select",ENUM.vehicleClass),SF("Vehicle Capacity","details.vehicleCapacity","number"),SF("Luggage Capacity","details.luggageCapacity","number"),SF("Published Time Min","details.publishedTimeMin","number"),SF("Published Time Max","details.publishedTimeMax","number"),SF("Shared Time Min","details.sharedTimeMin","number"),SF("Shared Time Max","details.sharedTimeMax","number"),SF("Direct Time Min","details.directTimeMin","number"),SF("Direct Time Max","details.directTimeMax","number"),SF("Air Conditioning","details.airConditioning","boolean"),SF("Wi-Fi","details.wifi","boolean"),SF("Toilet","details.toilet","boolean"),SF("Accessible Vehicle Available","details.accessibleVehicleAvailable","boolean"),SF("Accessible Vehicle Guaranteed","details.accessibleVehicleGuaranteed","boolean"),SF("Accessibility Request Required","details.accessibilityRequestRequired","boolean"),SF("Accessibility Notes","details.accessibilityNotes","textarea"),
+    SF("Transfer Type","details.transferType","select",ENUM.transferType),SF("Direction","details.direction","select",ENUM.direction),SF("Pickup location","details.fromLocation"),SF("Drop-off location","details.toLocation"),SF("Airport","details.airportId","reference",[],"",["AIRPORT"]),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area","details.areaId","reference",[],"",["AREA"]),SF("Terminal","details.terminal"),SF("Arrival Hall","details.arrivalHall"),SF("Airport Exit Number","details.airportExitNumber"),SF("Waiting Area","details.waitingArea"),SF("Meeting Point","details.meetingPoint"),SF("Meeting Point Description","details.meetingPointDescription","textarea"),SF("Emergency Phone","details.emergencyPhone"),SF("Distance km","details.distanceKm","number"),SF("Zone Code","details.zoneCode"),SF("Zone Name","details.zoneName"),
+    SF("Transport Mode","details.transportMode","select",ENUM.transportMode),SF("Vehicle Type","details.vehicleType"),SF("Vehicle Class","details.vehicleClass","select",ENUM.vehicleClass),SF("Vehicle Capacity","details.vehicleCapacity","number"),SF("Luggage Capacity","details.luggageCapacity","number"),SF("Estimated minimum time (minutes)","details.publishedTimeMin","number"),SF("Estimated maximum time (minutes)","details.publishedTimeMax","number"),SF("Shared ride minimum (minutes)","details.sharedTimeMin","number"),SF("Shared ride maximum (minutes)","details.sharedTimeMax","number"),SF("Direct ride minimum (minutes)","details.directTimeMin","number"),SF("Direct ride maximum (minutes)","details.directTimeMax","number"),SF("Air Conditioning","details.airConditioning","boolean"),SF("Wi-Fi","details.wifi","boolean"),SF("Toilet","details.toilet","boolean"),SF("Accessible Vehicle Available","details.accessibleVehicleAvailable","boolean"),SF("Accessible Vehicle Guaranteed","details.accessibleVehicleGuaranteed","boolean"),SF("Accessibility Request Required","details.accessibilityRequestRequired","boolean"),SF("Accessibility Notes","details.accessibilityNotes","textarea"),
     SR("Transfer Zones","details.zones",[SF("Code","code"),SF("Name","name"),SF("Description","description","textarea")])
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number"),SF("One-way Supplier Cost","commercial.internalCostOneWay","number"),SF("One-way Public Price","commercial.oneWayPublicPrice","number"),SF("Roundtrip Supplier Cost","commercial.internalCostRoundtrip","number"),SF("Roundtrip Public Price","commercial.roundtripPublicPrice","number"),SF("Child Price","commercial.childPrice","number"),SF("Infant Price","commercial.infantPrice","number"),SF("Child Seat Fee","commercial.childSeatFee","number"),SF("Extra Bag Fee","commercial.extraBagFee","number"),SF("Sports Equipment Fee","commercial.sportsEquipmentFee","number")],operations:[
     SF("Flight Number Required","operations.flightNumberRequired","boolean"),SF("Flight Tracking Enabled","operations.flightTrackingEnabled","boolean"),SF("Delay Protection","operations.delayProtection","boolean"),SF("Maximum Delay Wait Minutes","operations.maximumDelayWaitMinutes","number"),SF("Meet & Greet","operations.meetAndGreet","boolean"),SF("One-way Available","operations.oneWayAvailable","boolean"),SF("Roundtrip Available","operations.roundtripAvailable","boolean"),SF("Hotel Pickup Type","operations.hotelPickupType","select",ENUM.pickupType),SF("Pickup Time Basis","operations.pickupTimeBasis","select",ENUM.pickupTimeBasis),SF("Return Pickup Method","operations.returnPickupMethod","select",ENUM.returnPickupMethod),SF("Reconfirmation Required","operations.reconfirmationRequired","boolean"),SF("Previous Day Notification","operations.previousDayNotification","boolean"),SF("SMS Enabled","operations.smsEnabled","boolean"),SF("App Notification Enabled","operations.appNotificationEnabled","boolean"),SF("Minimum Hotel Stops","operations.minimumHotelStops","number"),SF("Maximum Hotel Stops","operations.maximumHotelStops","number"),SF("Airport Arrival Buffer Minutes","operations.airportArrivalBufferMinutes","number"),SF("Pickup Location Instructions","operations.pickupLocationInstructions","textarea"),SF("After Baggage Instructions","operations.afterBaggageInstructions","textarea"),SF("No-show Rule","operations.noShowRule","textarea"),SF("Lost Baggage Delay Guidance","operations.lostBaggageDelayGuidance","textarea"),SF("Cancellation Policy","operations.cancellationPolicy","textarea"),SF("Amendment Policy","operations.amendmentPolicy","textarea"),SF("Internal Notes","operations.internalNotes","textarea")
@@ -2539,7 +2560,7 @@ const ENTITY_SCHEMAS={
     SF("Extra Type","details.extraType","select",ENUM.ancillaryType),SF("Minimum Age","details.minimumAge","number"),SF("Maximum Age","details.maximumAge","number"),SF("Max Quantity","details.maxQuantity","number"),SF("Refundable","details.refundable","boolean"),SF("Changeable","details.changeable","boolean"),SF("Description","details.description","textarea")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Rule","operations.cancellationRule","textarea"),SF("Internal Operational Notes","operations.internalNotes","textarea")]},
   AIRPORT:{details:[
-    SF("ICAO Code","details.icaoCode"),SF("Country","details.country"),SF("City","details.city"),SF("Timezone","details.timezone"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Distance to City Center km","details.distanceToCityCenterKm","number"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Information","details.information","textarea"),SF("Arrivals Information","details.arrivalInfo","textarea"),SF("Departures Information","details.departureInfo","textarea"),SF("Transfer Information","details.transferInfo","textarea"),SF("Check-in Information","details.checkinInfo","textarea"),SF("Security Information","details.securityInfo","textarea"),SF("Transport Information","details.transportInfo","textarea"),SF("Parking Information","details.parkingInfo","textarea"),SF("Lounges","details.lounges","textarea"),SF("Airport Hotels","details.airportHotels","textarea"),SF("Destinations Served","details.destinationsServing","textarea"),
+    SF("ICAO Code","details.icaoCode"),SF("Country","details.country"),SF("City","details.city"),SF("Timezone","details.timezone"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Distance to City Center km","details.distanceToCityCenterKm","number"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Information","details.information","textarea"),SF("Arrivals Information","details.arrivalInfo","textarea"),SF("Departures Information","details.departureInfo","textarea"),SF("Transfer Information","details.transferInfo","textarea"),SF("Check-in Information","details.checkinInfo","textarea"),SF("Security Information","details.securityInfo","textarea"),SF("Transport Information","details.transportInfo","textarea"),SF("Parking Information","details.parkingInfo","textarea"),SF("Lounges","details.lounges","textarea"),SF("Airport Hotels","details.airportHotels","textarea"),SF("Wi-Fi","details.wifi","textarea"),SF("Destinations Served","details.destinationsServing","textarea"),
     SR("Quick Facts","details.quickFactsJson",[SF("Label","label"),SF("Value","value")]),
     SR("Terminals","details.terminalsJson",[SF("Terminal","terminal"),SF("Name","name"),SF("Description","description","textarea")]),
     SR("Runways","details.runwaysJson",[SF("Runway","runway"),SF("Length","length"),SF("Surface","surface"),SF("Notes","notes","textarea")]),
@@ -2599,7 +2620,12 @@ function SchemaScalar({field,value,onChange,records}){
   const structured=parseStructuredInput(value);
   if(structured&&typeof structured==="object"&&(field.type!=="list"||!Array.isArray(structured)||structured.some(v=>parseStructuredInput(v)&&typeof parseStructuredInput(v)==="object")))
     return html`<${SmartValueEditor} label=${field.label} path=${field.path} value=${structured} onChange=${onChange} full=${true}/>`;
-  if(field.type==="boolean")return html`<${Toggle} label=${field.label} value=${value===true} onChange=${onChange}/>`;
+  if(field.type==="boolean"){
+    const current=value===null||value===undefined||value===""?"":String(bool(value));
+    return html`<${Field} label=${field.label} type="select" value=${current} help=${field.help}
+      options=${[{value:"",label:"Not set"},{value:"true",label:"Yes"},{value:"false",label:"No"}]}
+      onChange=${next=>onChange(next===""?null:next==="true")}/>`;
+  }
   if(field.type==="list")return html`<${ListField} label=${field.label+" — one per line"} value=${value} onChange=${onChange} parseItem=${parseSchemaListLine} help=${field.help}/>`;
   if(field.type==="reference")return html`<${Field} label=${field.label} type="select" options=${referenceList(records,field.refTypes,value)} value=${value||""} onChange=${onChange} help=${field.help}/>`;
   if(field.type==="select")return html`<${Field} label=${field.label} type="select" options=${optionList(field.options,value)} value=${value??""} onChange=${onChange} help=${field.help}/>`;
@@ -2682,11 +2708,105 @@ function AirlineDetailsEditor({record,update,records,relations=[],openAircraft})
     <div className="formgrid three">${group==="profile"?html`<${Field} label="IATA code" value=${record.code||""} onChange=${v=>update("code",v.toUpperCase())}/>`:null}${fields.map(field=>{const value=airlineFieldValue(record,field);const withValue={...record,details:{...(record.details||{}),[field.path.split(".").pop()]:value}};return field.path==="details.boarding"?html`<${AirlineBoardingEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.quickFactsJson"?html`<${AirlineQuickFactsEditor} value=${value} record=${record} onChange=${v=>update(field.path,v)}/>`:field.path==="details.baggageAllowance"?html`<${AirlineBaggageEditor} value=${value} onChange=${v=>update(field.path,v)}/>`:field.path==="details.country"&&relations.some(r=>r.relationType==="COUNTRY"&&r.active!==false&&r.targetEntityId)?html`<${Field} label="Country (linked)" value=${value||""} disabled=${true} help="Change the country in Related inventory."/>`:field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${withValue} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} value=${value} onChange=${v=>update(field.path,v)} records=${records}/>`})}</div>
   </div>`;
 }
+const GEOGRAPHY_GROUPS=[
+  ["Location","countryCode region nearestAirportId secondaryAirportId latitude longitude timezone currency"],
+  ["When to visit","bestTimeToVisit highSeason lowSeason climate"],
+  ["Travel profile","tags goodFor signatureReasons"]
+];
+const INVENTORY_DETAIL_GROUPS={
+  COUNTRY:GEOGRAPHY_GROUPS,
+  REGION:GEOGRAPHY_GROUPS,
+  DESTINATION:GEOGRAPHY_GROUPS,
+  AREA:GEOGRAPHY_GROUPS,
+  AIRPORT:[
+    ["Terminals & check-in","terminalsJson checkinInfo securityInfo arrivalInfo departureInfo transferInfo"],
+    ["Getting there","transportJson transportInfo parkingInfo distanceToCityCenterKm"],
+    ["Airport services","lounges foodDrinksJson airportHotels wifi lostFoundJson destinationsServing"],
+    ["Location & contacts","icaoCode city country timezone latitude longitude website contactUrl summary information"],
+    ["Reference data","quickFactsJson runwaysJson sourceUrlsJson"]
+  ],
+  HOTEL:[
+    ["Stay details","address city postalCode checkinTime checkoutTime minimumCheckinAge petsAllowed smokingPolicy"],
+    ["Rooms & facilities","rooms boardOptions facilities"],
+    ["Property & location","brand propertyType destinationId areaId nearestAirportId latitude longitude distanceToBeach distanceToCenter distanceToAirport transferTimeMinutes"],
+    ["Ratings & references","officialStarRating skandiRating guestRating reviewCount providerAccommodationId facts"]
+  ],
+  TRANSFER:[
+    ["Pickup & drop-off","direction fromLocation toLocation airportId destinationId areaId meetingPoint meetingPointDescription terminal arrivalHall airportExitNumber waitingArea"],
+    ["Vehicle & luggage","transferType transportMode vehicleType vehicleClass vehicleCapacity luggageCapacity airConditioning wifi toilet"],
+    ["Travel time & zones","distanceKm zoneCode zoneName publishedTimeMin publishedTimeMax sharedTimeMin sharedTimeMax directTimeMin directTimeMax zones"],
+    ["Accessibility & contacts","accessibleVehicleAvailable accessibleVehicleGuaranteed accessibilityRequestRequired accessibilityNotes emergencyPhone"]
+  ],
+  GUIDED_TOUR:[
+    ["When & where","destinationId areaId meetingPoint durationMinutes languages"],
+    ["Before you go","difficulty minimumAge childPolicy accessibility"],
+    ["Classification","category tourType"]
+  ],
+  ACTIVITY:[
+    ["When & where","destinationId areaId startLocation meetingPoint pickupAvailable hotelPickupAvailable durationMinutes languages"],
+    ["Before you go","guideType minimumAge maximumAge childPolicy accessibility"],
+    ["Classification","category subcategory activityType"]
+  ],
+  PARTNER_TICKET:[
+    ["Venue & entry","destinationId areaId meetingLocation ticketType validityType duration restrictions"],
+    ["Supplier reference","vendorTicketId category"]
+  ],
+  CAR_RENTAL:[
+    ["Pickup & drop-off","destinationId airportId pickupLocation dropoffLocation"],
+    ["Vehicle","vehicleCategory vehicleName vehicleClass transmission fuelType seats doors largeBags smallBags airConditioning"],
+    ["Rental terms","minimumDriverAge mileagePolicy fuelPolicy depositPolicy insuranceSummary"]
+  ],
+  SUPPLIER:[
+    ["Company & contacts","supplierType legalName country contactName contactEmail phone website"],
+    ["Account & terms","apiProvider accountReference contractStatus paymentTerms commissionModel"]
+  ],
+  PACKAGE:[
+    ["Destination & travel dates","destinationId areaId startDate endDate numberOfDays numberOfNights packageType"]
+  ],
+  ANCILLARY:[
+    ["Extra & eligibility","extraType description minimumAge maximumAge maxQuantity"],
+    ["Change & refund rules","refundable changeable"]
+  ]
+};
+
+function groupedInventoryFields(type,section,fields){
+  const definitions=section==="details"?INVENTORY_DETAIL_GROUPS[type]||[]:[];
+  const remaining=new Map(fields.map(field=>[field.path.split(".").at(-1),field]));
+  const groups=definitions.flatMap(([title,paths])=>{
+    const members=paths.split(" ").flatMap(path=>{
+      const field=remaining.get(path);
+      remaining.delete(path);
+      return field?[field]:[];
+    });
+    return members.length?[{title,fields:members}]:[];
+  });
+  if(remaining.size)groups.push({title:groups.length?"Additional details":section==="commercial"?"Pricing":section==="operations"?"Operating rules":"Details",fields:[...remaining.values()]});
+  return groups;
+}
 function ExplicitSchemaEditor({type,section,record,update,records}){
   const fields=schemaFields(type,section).filter(field=>!["details.countryId","details.regionId","details.destinationId","details.areaId"].includes(field.path));
-  if(!fields.length)return html`<div className="smartempty">No additional fields for this section.</div>`;
-  return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)}/>` )}</div>`;
+  const groups=groupedInventoryFields(type,section,fields);
+  const [selected,setSelected]=useState("");
+  const active=groups.find(group=>group.title===selected)||groups[0];
+  if(!active)return html`<p className="smartempty">No standard fields for this record type.</p>`;
+  return html`<div className="ic-editor-topic">
+    ${groups.length>1?html`<div className="tabs ic-topic-tabs" role="group" aria-label="Information topics">
+      ${groups.map(group=>html`<button key=${group.title} type="button" className=${`tab ${group===active?"active":""}`} aria-pressed=${group===active} onClick=${()=>setSelected(group.title)}>${group.title}</button>`)}
+    </div>`:null}
+    <fieldset className="ic-editor-fieldset"><legend>${active.title}</legend>
+      <div className="formgrid three">${active.fields.map(field=>field.type==="repeat"
+        ?html`<${RepeatSchemaEditor} key=${field.path} field=${field} record=${record} update=${update} records=${records}/>`
+        :html`<${SchemaScalar} key=${field.path} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)}/>`)}</div>
+    </fieldset>
+  </div>`;
 }
+function StoredInventoryFields({title,value,exclude,onChange}){
+  if(!Object.keys(value||{}).some(key=>!exclude.includes(key)))return null;
+  return html`<details className="ic-stored-fields"><summary>${title}</summary>
+    <${SmartObjectEditor} value=${value} exclude=${exclude} onChange=${onChange}/>
+  </details>`;
+}
+
 function knownSectionKeys(type,section){return schemaFields(type,section).map(f=>f.path.split(".")[1]).filter(Boolean)}
 
 
@@ -3056,38 +3176,36 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   }
 
 
-  const tabs=rec.entityType==="AIRLINE"?["identity","details","content","media","relations","catalog","publishing"]:["identity","details","commercial","operations","content","media","relations","catalog","publishing"];
-  const tabNames=rec.entityType==="AIRLINE"?{identity:"Airline identity",details:"Airline information",content:"Page content",media:"Images & logos",relations:"Related inventory",catalog:"Visibility & badges",publishing:"SEO & publishing"}:{};
+  const canEditOperatingFields=rec.entityType!=="AIRLINE";
+  const tabs=["identity","details","content","media","relations",...(canEditOperatingFields?["commercial","operations"]:[]),"catalog","publishing"];
+  const guideLabel=rec.entityType==="AIRLINE"?"Airline information":rec.entityType==="AIRPORT"?"Airport guide":SELLABLE.has(rec.entityType)?"Product details":"Details";
+  const tabNames={identity:"Record & access",details:guideLabel,content:"Page content",media:"Media",relations:"Related inventory",commercial:"Pricing",operations:"Operations",catalog:"Catalog placement",publishing:"Review & SEO"};
   return html`<${Modal} title=${`${rec.entityType} · ${rec.name||"New record"}`} onClose=${onClose} wide=${true}
     actions=${html`<button className="btn small" onClick=${()=>save(rec.status||"DRAFT")}>Save</button><button className="btn small" onClick=${()=>save("REVIEW")}>Review</button><button className="btn small cyan" onClick=${()=>save("PUBLISHED")}>Publish</button>`}>
-    <div className="tabs">${tabs.map(t=>html`<button className=${`tab ${tab===t?"active":""}`} onClick=${()=>setTab(t)}>${tabNames[t]||t[0].toUpperCase()+t.slice(1)}</button>`)}</div>
+    <div className="tabs ic-editor-tabs" role="group" aria-label="Record sections">${tabs.map(t=>html`<button key=${t} type="button" className=${`tab ${tab===t?"active":""}`} aria-pressed=${tab===t} onClick=${()=>setTab(t)}>${tabNames[t]}</button>`)}</div>
     ${tab==="identity"?html`<div className="formgrid three">
-      <${Field} label="Record Type" value=${rec.entityType} disabled=${true}/>
+      <${Field} label="Record type" value=${rec.entityType} disabled=${true}/>
       ${rec.entityType!=="AIRLINE"?html`<${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>`:null}
-      <${Field} label=${rec.entityType==="AIRLINE"?"Airline name":"Master Name / Title"} value=${rec.name} onChange=${v=>update("name",v)}/>
+      <${Field} label=${rec.entityType==="AIRLINE"?"Airline name":"Record name"} value=${rec.name} onChange=${v=>update("name",v)}/>
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Assigned by SKANDI TRAVELS.":"Assigned when the record is saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
-      <div className="notice full">Search order is automatic: Collection level first, then featured status and name.</div>
       <${Toggle} label="Active" value=${rec.active!==false} onChange=${v=>update("active",v)}/>
       <${Toggle} label="Customer Visible" value=${rec.customerVisible===true} onChange=${v=>update("customerVisible",v)}/>
       <${Toggle} label="Staff Visible" value=${rec.staffVisible!==false} onChange=${v=>update("staffVisible",v)}/>
       <${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/>
     </div>`:null}
     ${tab==="details"?html`<div>
-      <div style=${{marginTop:"12px"}}>${rec.entityType==="AIRLINE"?html`<${AirlineDetailsEditor} record=${rec} update=${update} records=${refs} relations=${relations} openAircraft=${openAircraft?id=>{if(draft===initialDraft.current||confirm("Discard unsaved airline edits and open Aircraft & Cabin Studio?"))openAircraft(id)}:null}/>`:html`<${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/>`}</div>
-      <div className="hr"></div><div className="sectiontitle">Additional Stored Fields</div>
-      <${SmartObjectEditor} value=${rec.details||{}} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
+      <div style=${{marginTop:"12px"}}>${rec.entityType==="AIRLINE"?html`<${AirlineDetailsEditor} record=${rec} update=${update} records=${refs} relations=${relations} openAircraft=${openAircraft?id=>{if(draft===initialDraft.current||confirm("Discard unsaved airline edits and open Aircraft & Cabin Studio?"))openAircraft(id)}:null}/>`:html`<${ExplicitSchemaEditor} key=${tab} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/>`}</div>
+      <${StoredInventoryFields} title="Additional saved fields" value=${rec.details} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
     </div>`:null}
     ${tab==="commercial"?html`<div>
-      <${ExplicitSchemaEditor} type=${rec.entityType} section="commercial" record=${rec} update=${update} records=${refs}/>
-      <div className="hr"></div><div className="sectiontitle">Additional Commercial Fields</div>
-      <${SmartObjectEditor} value=${rec.commercial||{}} exclude=${commercialKnown} onChange=${v=>setSection("commercial",v)}/>
+      <${ExplicitSchemaEditor} key=${tab} type=${rec.entityType} section="commercial" record=${rec} update=${update} records=${refs}/>
+      <${StoredInventoryFields} title="Additional pricing fields" value=${rec.commercial} exclude=${commercialKnown} onChange=${v=>setSection("commercial",v)}/>
     </div>`:null}
     ${tab==="operations"?html`<div>
-      <${ExplicitSchemaEditor} type=${rec.entityType} section="operations" record=${rec} update=${update} records=${refs}/>
-      <div className="hr"></div><div className="sectiontitle">Additional Operational Fields</div>
-      <${SmartObjectEditor} value=${rec.operations||{}} exclude=${operationsKnown} onChange=${v=>setSection("operations",v)}/>
+      <${ExplicitSchemaEditor} key=${tab} type=${rec.entityType} section="operations" record=${rec} update=${update} records=${refs}/>
+      <${StoredInventoryFields} title="Additional operating fields" value=${rec.operations} exclude=${operationsKnown} onChange=${v=>setSection("operations",v)}/>
     </div>`:null}
     ${tab==="content"?html`<div>
       <div className="langtabs">${languages.map(l=>html`<button className=${`lang ${lang===l?"active":""}`} onClick=${()=>setLang(l)}>${l}</button>`)}</div>
@@ -3196,9 +3314,10 @@ function updateSavedRecord(setBoot,result){
     return {...previous,records:replace(previous.records),...(record.entityType==="AIRLINE"?{airlines:replace(previous.airlines)}:{})};
   });
 }
-function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView,openAircraft}){
+function ProviderWorkspace({boot,setBoot,setBusy,setToast,initialResource,setView,openAircraft}){
+  const typeOptions=[["HOTEL","Hotels"],["AIRLINE","Airlines"],["AIRPORT","Airports"],["DESTINATION","Destinations / Cities"],["AIRCRAFT","Aircraft reference"]];
   const [mode,setMode]=useState("collection");
-  const [resourceType,setResourceType]=useState("HOTEL");
+  const [resourceType,setResourceType]=useState(()=>typeOptions.some(([type])=>type===initialResource)?initialResource:"HOTEL");
   const [query,setQuery]=useState("");
   const [results,setResults]=useState([]);
   const [detail,setDetail]=useState(null);
@@ -3213,18 +3332,7 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView,o
   const destinations=(boot.records||[]).filter(r=>r.entityType==="DESTINATION"&&r.status!=="ARCHIVED");
   const areas=(boot.records||[]).filter(r=>r.entityType==="AREA"&&r.status!=="ARCHIVED");
   const countries=(boot.records||[]).filter(r=>r.entityType==="COUNTRY"&&r.status!=="ARCHIVED");
-  const typeOptions=[["HOTEL","Hotels"],["AIRLINE","Airlines"],["AIRPORT","Airports"],["DESTINATION","Destinations / Cities"],["AIRCRAFT","Aircraft reference"]];
-  const providerMatchesScope=!masterFilter||["HOTEL","AIRLINE","AIRPORT","DESTINATION"].includes(masterFilter);
-  useEffect(()=>{
-    if(masterFilter&&masterFilter!=="HOTEL")setMode("collection");
-    if(["HOTEL","AIRLINE","AIRPORT","DESTINATION"].includes(masterFilter)){
-      setResourceType(masterFilter);setResults([]);setDetail(null);
-    }
-  },[masterFilter]);
-
-
   async function search(){
-    if(!providerMatchesScope)return setToast("Select Hotels, Airlines, Airports, Destinations or All to search suppliers.",true);
     if(resourceType==="HOTEL"&&query.trim().length<3)return setToast("Enter at least 3 characters for a hotel search.",true);
     if(["AIRPORT","DESTINATION"].includes(resourceType)&&!query.trim())return setToast("Enter an airport, city or IATA code.",true);
     try{setBusy(`Searching ${resourceType.toLowerCase()}…`);const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[]);setDetail(null);if(!(r.items||[]).length)setToast("No matching results found.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
@@ -3304,13 +3412,11 @@ function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView,o
   const detailItem=detail?.item||null, detailResource=detail?.resource||null;
   return html`<div>
     <div className="providerhero"><div><h2>Supplier Directory</h2><p>Find and manage supplier records.</p></div></div>
-    <div className="tabs">${[["collection","Add to Inventory"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} disabled=${k==="rates"&&Boolean(masterFilter)&&masterFilter!=="HOTEL"} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
-    ${!providerMatchesScope?html`<div className="notice warn">Select a supported category to search suppliers. Hotels are managed in Property Director.</div>`:null}
-
+    <div className="tabs">${[["collection","Add to Inventory"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
 
     ${mode==="collection"?html`<div className="grid">
       <div className="card panel"><div className="paneltitle"><span>Find a Supplier</span><span className="matchtag duffel">Supplier</span></div>
-        <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} disabled=${Boolean(masterFilter)} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search Supplier</label><button className="btn primary" disabled=${!providerMatchesScope} onClick=${search}>Search</button></div></div>
+        <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search Supplier</label><button className="btn primary" onClick=${search}>Search</button></div></div>
         ${resourceType==="DESTINATION"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Import geography</div><div className="field"><label>Parent country for new SKANDI destination</label><select className="select" value=${countryId} onChange=${e=>setCountryId(e.target.value)}><option value="">No parent yet · keep Draft</option>${countries.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div>`:null}
         ${resourceType==="HOTEL"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Optional SKANDI geography</div><div className="formgrid"><div className="field"><label>Destination</label><select className="select" value=${destinationId} onChange=${e=>setDestinationId(e.target.value)}><option value="">Assign later</option>${destinations.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div><div className="field"><label>Area</label><select className="select" value=${areaId} onChange=${e=>setAreaId(e.target.value)}><option value="">Assign later</option>${areas.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div></div>`:null}
       </div>
@@ -3388,14 +3494,14 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
   return html`<div className="card panel">
     <div className="paneltitle"><span>Travel Inventory</span>${createButtons}</div>
     <div className="notice">Hotels are managed in Property Director.</div>
-    <div className="filters"><div className="field w240"><label>Record Family</label><select className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("");setPage(1)}}><option value="">All</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>{setTourSubtype(e.target.value);setPage(1)}}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field w180"><label>Status</label><select className="select" value=${statusFilter} onChange=${e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div><div className="field w180"><label>Customer Visible</label><select className="select" value=${customerFilter} onChange=${e=>{setCustomerFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w180"><label>ALTEA Visible</label><select className="select" value=${alteaFilter} onChange=${e=>{setAlteaFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w240"><label>Sort</label><select className="select" value=${sortBy} onChange=${e=>{setSortBy(e.target.value);setPage(1)}}><option value="UPDATED_DESC">Recently updated</option><option value="TITLE_ASC">Title A–Z</option><option value="CODE_ASC">Code A–Z</option><option value="TYPE_ASC">Type / Title</option></select></div><div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Code, title, slug, type or status"/></div></div>
+    <div className="filters"><div className="field w240"><label htmlFor="icInventoryRecordType">Inventory type</label><select id="icInventoryRecordType" className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("");setPage(1)}}><option value="">All inventory types</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>{setTourSubtype(e.target.value);setPage(1)}}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field w180"><label>Status</label><select className="select" value=${statusFilter} onChange=${e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div><div className="field w180"><label>Customer Visible</label><select className="select" value=${customerFilter} onChange=${e=>{setCustomerFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w180"><label>ALTEA Visible</label><select className="select" value=${alteaFilter} onChange=${e=>{setAlteaFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w240"><label>Sort</label><select className="select" value=${sortBy} onChange=${e=>{setSortBy(e.target.value);setPage(1)}}><option value="UPDATED_DESC">Recently updated</option><option value="TITLE_ASC">Title A–Z</option><option value="CODE_ASC">Code A–Z</option><option value="TYPE_ASC">Type / Title</option></select></div><div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Code, title, slug, type or status"/></div></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     <div className="tablewrap"><table className="table inventory-card-table" role="table"><thead role="rowgroup"><tr role="row"><th scope="col">Type</th><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Status</th><th scope="col">Customer</th><th scope="col">ALTEA</th><th scope="col">Updated</th><th scope="col">Actions</th></tr></thead><tbody role="rowgroup">
       ${pageRecords.length?pageRecords.map(r=>html`<tr className="clickrow" role="row" onClick=${()=>open(r)}><td data-label="Type" role="cell">${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType}</td><td data-label="Code" role="cell"><b>${r.code}</b></td><td data-label="Title" role="cell">${r.name}</td><td data-label="Status" role="cell">${statusPill(r.status)}</td><td data-label="Customer" role="cell">${r.customerVisible?"Yes":"No"}</td><td data-label="ALTEA" role="cell">${r.alteaVisible?"Yes":"No"}</td><td data-label="Updated" role="cell">${text(r.updatedAt).slice(0,10)}</td><td data-label="Actions" role="cell"><div className="inventory-row-actions"><button type="button" className="btn small" onClick=${e=>{e.stopPropagation();open(r)}}>Open</button><button type="button" className="btn small danger" onClick=${e=>archived(r,e)}>Archive</button></div></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No matching records.</div></td></tr>`}
     </tbody></table></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
-      <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.filter(t=>t!=="HOTEL").map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
+      <div className="formgrid"><${Field} label="Record type" type="select" options=${TYPES.filter(t=>t!=="HOTEL").map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
     <//>`:null}
     ${editor?html`<${RecordEditor} openAircraft=${openAircraft} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${result=>updateSavedRecord(setBoot,result)} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
@@ -4099,15 +4205,15 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const published=rec.status==="PUBLISHED";
   const locName=(id)=>((boot.records||[]).find(x=>x.id===id)?.name)||"";
   const renderMaster=()=>html`<div className="card panel">
-    <${PDSection} title="General Information" first=${true}>
+    <${PDSection} title="Property details" first=${true}>
       <div className="formgrid three">
         <${PDField} label="System Code" value=${rec.code} onChange=${v=>update("code",v)} help="Unique property code"/>
-        <${PDField} label="Master Name" value=${rec.name} onChange=${v=>update("name",v)}/>
+        <${PDField} label="Hotel name" value=${rec.name} onChange=${v=>update("name",v)}/>
         <${PDField} label="Brand" value=${d.brand||""} disabled=${true} help="Select the hotel chain under Related inventory."/>
         <${PDField} label="Property Type" type="select" options=${ENUM.propertyType} value=${d.propertyType||""} onChange=${v=>setDetails("propertyType",v)}/>
         <${PDField} label="SKANDI Tier" type="select" options=${[{value:"",label:"None"},...["SELECT","SIGNATURE","EXCELSIOR"].map(value=>({value,label:value[0]+value.slice(1).toLowerCase()})),...(!["","SELECT","SIGNATURE","EXCELSIOR"].includes(hotelTierForDisplay(d.skandiTier,catalog.partnerTier))?[{value:hotelTierForDisplay(d.skandiTier,catalog.partnerTier),label:`Previous value: ${hotelTierForDisplay(d.skandiTier,catalog.partnerTier)} — review`,disabled:true}]:[])]} value=${hotelTierForDisplay(d.skandiTier,catalog.partnerTier)} onChange=${v=>setCatalog("partnerTier",v)}/>
         <${PDField} label="Settlement Currency" type="select" options=${ENUM.currency} value=${rec.commercial?.currency||"USD"} onChange=${v=>update("commercial.currency",v)}/>
-        <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from Master Name"/>
+        <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from the hotel name"/>
         <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Assigned by SKANDI TRAVELS"/>
         <${PDField} label="Status" type="select" options=${STATUS} value=${status} onChange=${v=>update("status",v)}/>
       </div>
@@ -4212,20 +4318,18 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     <div className="tablewrap"><table className="table"><thead><tr><th>Timestamp</th><th>Operator</th><th>Action</th><th>Message</th></tr></thead><tbody>${auditRows.length?auditRows.map(x=>html`<tr><td>${String(x.timestamp||"").replace("T"," ").slice(0,19)}</td><td>${x.agentName||"—"}</td><td>${employeeAuditAction(x.eventType)}</td><td>${employeeAuditMessage(x.message)}</td></tr>`):html`<tr><td colSpan="4"><div className="empty">${auditLoading?"Retrieving property history…":"No matching property audit events."}</div></td></tr>`}</tbody></table></div>
   </div>`;
   return html`<div className="property-workspace" style=${{display:"flex",flexDirection:"column",height:"100%"}}>
-    <div className="top"><div><button className="btn small" onClick=${onClose} style=${{marginBottom:"8px"}}>‹ BACK TO DIRECTORY</button><h1>[${rec.code||"NEW"}] ${rec.name||"New Property"}</h1></div><div className="toolbar"><div className="pd-header-status">${statusPill(status)}</div>${rec.id&&status!=="ARCHIVED"?html`<button className="btn small danger" onClick=${archiveProperty}>ARCHIVE PROPERTY</button>`:null}<button className="btn primary" onClick=${save}>COMMIT WORKSPACE</button></div></div>
-    <div className="tabs">${[["MASTER","1. Master & Geo"],["ROOMS","2. Inventory Models"],["CHANNELS","3. Channel Matrix"],["CMS","4. Content & Media"],["AUDIT","5. Audit Gate"]].map(([id,label])=>html`<button className=${`tab ${tab===id?"active":""}`} onClick=${()=>setTab(id)}>${label}</button>`)}</div>
+    <div className="top"><div><button className="btn small" onClick=${onClose} style=${{marginBottom:"8px"}}>Back to hotels</button><h1>[${rec.code||"NEW"}] ${rec.name||"New Property"}</h1></div><div className="toolbar"><div className="pd-header-status">${statusPill(status)}</div>${rec.id&&status!=="ARCHIVED"?html`<button className="btn small danger" onClick=${archiveProperty}>ARCHIVE PROPERTY</button>`:null}<button className="btn primary" onClick=${save}>Save property</button></div></div>
+    <div className="tabs">${[["MASTER","Stay & location"],["ROOMS","Rooms & occupancy"],["CHANNELS","Channels & rates"],["CMS","Content & media"],["AUDIT","Review history"]].map(([id,label])=>html`<button className=${`tab ${tab===id?"active":""}`} onClick=${()=>setTab(id)}>${label}</button>`)}</div>
     <div className="property-body">${tab==="MASTER"?renderMaster():tab==="ROOMS"?renderRooms():tab==="CHANNELS"?renderChannels():tab==="CMS"?renderCms():renderAudit()}</div>
   </div>`;
 }
-function PropertyDirector({boot,masterFilter,setBusy,setToast,onSaved}){
+function PropertyDirector({boot,setBusy,setToast,onSaved}){
   const [query,setQuery]=useState("");
   const [status,setStatus]=useState("");
   const [active,setActive]=useState(null);
   const [page,setPage]=useState(1);
-  const canViewHotels=!masterFilter||masterFilter==="HOTEL";
-  useEffect(()=>{if(!canViewHotels)setActive(null)},[canViewHotels]);
   const rows=(boot.records||[]).filter(x=>x.entityType==="HOTEL");
-  const filtered=canViewHotels?rows.filter(h=>(!status||h.status===status)&&(!query||[h.name,h.code,h.slug,h.details?.city].join(" ").toLowerCase().includes(query.toLowerCase()))):[];
+  const filtered=rows.filter(h=>(!status||h.status===status)&&(!query||[h.name,h.code,h.slug,h.details?.city].join(" ").toLowerCase().includes(query.toLowerCase())));
   const hotels=[...filtered].sort((a,b)=>text(a.name).localeCompare(text(b.name)));
   const pageSize=100;
   const totalPages=Math.max(1,Math.ceil(hotels.length/pageSize));
@@ -4235,24 +4339,24 @@ function PropertyDirector({boot,masterFilter,setBusy,setToast,onSaved}){
   function createHotel(){setActive(recordBundle("HOTEL"))}
   if(active)return html`<${PDPropertyWorkspace} bundle=${active} boot=${boot} onClose=${()=>setActive(null)} onSaved=${onSaved} setBusy=${setBusy} setToast=${setToast}/>`;
   return html`<div className="grid">
-    <div className="top"><div><div className="eyebrow">RIAINTRA / ALTEA</div><h1>Property Master Directory</h1><div className="sub">Choose a hotel to view or edit its details.</div></div><div className="toolbar"><button className="btn primary" disabled=${!canViewHotels} onClick=${createHotel}>+ INITIALIZE PROPERTY</button></div></div>
-    ${!canViewHotels?html`<div className="notice warn">Master Filter is ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}. Choose HOTELS or GLOBAL PORTFOLIO to open the property directory.</div>`:html`<div className="card panel">
+    <div className="top"><div><div className="eyebrow">RIAINTRA / ALTEA</div><h1>Property Master Directory</h1><div className="sub">Choose a hotel to view or edit its details.</div></div><div className="toolbar"><button className="btn primary" onClick=${createHotel}>Add hotel</button></div></div>
+    <div className="card panel">
       <div className="filters"><div className="field grow"><label>Property / Code</label><input className="input" value=${query} onInput=${e=>{setQuery(e.target.value);setPage(1)}} placeholder="Search real hotel records"/></div><div className="field w180"><label>Status</label><select className="select" value=${status} onChange=${e=>{setStatus(e.target.value);setPage(1)}}><option value="">ALL STATUSES</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div></div>
       <div className="tablewrap"><table className="table inventory-card-table" role="table"><thead role="rowgroup"><tr role="row"><th scope="col">Type</th><th scope="col">Sys Code</th><th scope="col">Master Title</th><th scope="col">Dest</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead><tbody role="rowgroup">
         ${visible.length?visible.map(h=>html`<tr className="clickrow" role="row" onClick=${()=>openHotel(h)}><td data-label="Type" role="cell">${h.details?.propertyType||"HOTEL"}</td><td data-label="Code" role="cell"><b>${h.code||"—"}</b></td><td data-label="Property" role="cell">${h.name||"—"}</td><td data-label="Destination" role="cell">${(boot.records||[]).find(x=>x.id===h.details?.destinationId)?.code||h.details?.destinationCode||"—"}</td><td data-label="Status" role="cell">${statusPill(h.status)}</td><td data-label="Actions" role="cell"><button type="button" className="btn small" onClick=${e=>{e.stopPropagation();openHotel(h)}}>Open</button></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No matching hotels found.</div></td></tr>`}
       </tbody></table></div><${Pagination} page=${currentPage} totalPages=${totalPages} total=${hotels.length} pageSize=${pageSize} onPage=${setPage}/>
-    </div>`}
+    </div>
   </div>`;
 }
 
-function Overview({boot,setView,masterFilter}){
+function Overview({boot,masterFilter,openRecords}){
   const q=boot.quality||{},s=boot.stats||{};
   const scopedRecords=(boot.records||[]).filter(r=>!masterFilter||(masterFilter==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType):r.entityType===masterFilter));
   const scopedCount=scopedRecords.length;
   const inScope=Boolean(masterFilter);
   return html`<div className="grid">
     <div className="stats">${(inScope?[["Records in scope",scopedCount],["Published",scopedRecords.filter(r=>r.status==="PUBLISHED").length],["Active",scopedRecords.filter(r=>r.active!==false).length],["Customer visible",scopedRecords.filter(r=>r.customerVisible===true).length],["ALTEA visible",scopedRecords.filter(r=>r.alteaVisible!==false).length]]:[["Travel Records",s.total],["Catalog Placements",s.catalog],["Searchable",s.searchableCatalog],["Aircraft",s.aircraft],["Cabins",s.cabins]]).map(([l,v])=>html`<div className="card stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
-    <div className="split"><div className="card panel"><div className="paneltitle">Inventory Families</div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))"}}>${Object.entries(s.byType||{}).filter(([k])=>!masterFilter||masterFilter===k||(masterFilter==="TOURS_ACTIVITIES"&&["GUIDED_TOUR","ACTIVITY"].includes(k))).map(([k,v])=>html`<button className="btn" onClick=${()=>setView(k==="HOTEL"?"property":"master")}><b>${LABEL[k]||k}</b><br/><span className="sub">${v} records</span></button>`)}</div></div>
+    <div className="split"><div className="card panel"><div className="paneltitle">Inventory by type</div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))"}}>${Object.entries(s.byType||{}).filter(([k])=>!masterFilter||masterFilter===k||(masterFilter==="TOURS_ACTIVITIES"&&["GUIDED_TOUR","ACTIVITY"].includes(k))).map(([k,v])=>html`<button className="btn" onClick=${()=>openRecords(k)}><b>${LABEL[k]||k}</b><br/><span className="sub">${v} ${v===1?"record":"records"}</span></button>`)}</div></div>
       <div className="card panel"><div className="paneltitle">Aircraft Sync Health</div><div className="kpirow"><div className="kpi"><b>${q.aircraftSync?.fleetTemplates??0}</b> fleet templates</div><div className="kpi"><b>${q.aircraftSync?.aircraftRecords??0}</b> aircraft records</div><div className="kpi"><b>${q.aircraftSync?.missing??0}</b> missing</div></div><div className=${`notice ${q.aircraftSync?.missing?"warn":""}`} style=${{marginTop:"12px"}}>${q.aircraftSync?.missing?"Open Aircraft & Cabin Studio and run Smart Sync to create missing records in Review.":"Fleet master is currently reconciled."}</div></div>
     </div>
     <div className="card panel"><div className="paneltitle">Operational Inventory</div><div className="stats">${[["Dated Capacity",s.dated],["Flight Legs",s.flightLegs],["Booking Classes",s.flightClasses],["Schedules",s.schedules],["Nesting Controls",s.nesting]].map(([l,v])=>html`<div className="stat"><span>${l}</span><strong>${v??0}</strong><em>${v?"loaded":"no rows yet"}</em></div>`)}</div></div>
@@ -4273,8 +4377,13 @@ function App(){
   const [connectionError,setConnectionError]=useState("");
   function switchInventoryView(next){
     if(next==="aircraft")setAircraftAirline("");
+    if(next==="master"&&masterFilter==="HOTEL")setMasterFilter("");
     setView(next);
     setMobileMenuOpen(false);
+  }
+  function openRecords(type){
+    setMasterFilter(type);
+    setView(type==="HOTEL"?"property":"master");
   }
   function openAircraft(airlineId){
     setAircraftAirline(airlineId);
@@ -4345,24 +4454,32 @@ function App(){
   },[]);
 
 
-  const nav=[["overview","Workspace Dashboard"],["provider","Supplier & Distribution"],["master","Travel Inventory"],["property","Property Director"],["assets","Asset Library"],["dated","Inventory & Capacity"],["air","Air Inventory"],["aircraft","Aircraft & Cabin Studio"],["quality","Publishing & QA"],["audit","Audit"]];
+  const groups=[
+    ["",[["overview","Workspace Dashboard"]]],
+    ["Records & content",[["master","Travel Inventory"],["property","Property Director"],["aircraft","Aircraft & Cabin Studio"],["assets","Asset Library"]]],
+    ["Suppliers & availability",[["provider","Supplier & Distribution"],["dated","Inventory & Capacity"],["air","Air Inventory"]]],
+    ["Review",[["quality","Publishing & QA"],["audit","Audit"]]]
+  ];
+  const nav=groups.flatMap(([,items])=>items);
+  const canFilter=view==="overview";
   return html`<div className="shell">
     <header className="global-header">
       <div className="global-brand"><strong>ALTEA</strong><span className="system-label">SKANDI TRAVELS · INVENTORY CONTROL</span></div>
       <button type="button" className="inventory-menu-button" aria-label="Inventory sections" aria-controls="inventory-sections" aria-expanded=${mobileMenuOpen} onClick=${()=>setMobileMenuOpen(value=>!value)}><span aria-hidden="true">☰</span> Sections</button>
       <div className="global-controls">
-        <div className="global-scope"><label htmlFor="inventoryMasterScope">Master Filter:</label><select id="inventoryMasterScope" aria-label="Master Filter" value=${masterFilter} onChange=${e=>setMasterFilter(e.target.value)}><option value="">GLOBAL PORTFOLIO</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${(MASTER_FILTER_LABEL[t]||t).toUpperCase()}</option>`)}</select></div>
-        <span className="operator">OPE: RIAINTRA</span>
+        ${canFilter?html`<div className="global-scope"><label htmlFor="inventoryMasterScope">Inventory type</label><select id="inventoryMasterScope" aria-label="Inventory type" value=${masterFilter} onChange=${e=>setMasterFilter(e.target.value)}><option value="">All inventory types</option>${MASTER_FILTERS.map(t=>html`<option key=${t} value=${t}>${MASTER_FILTER_LABEL[t]||t}</option>`)}</select></div>`:null}
       </div>
     </header>
-    <div className="shell-body">${mobileMenuOpen?html`<button type="button" className="inventory-menu-scrim" aria-label="Close sections menu" onClick=${()=>setMobileMenuOpen(false)}></button>`:null}<aside id="inventory-sections" aria-label="Inventory sections" className=${`sidebar ${mobileMenuOpen?"mobile-open":""}`}><div className="inventory-menu-heading"><span>Inventory sections</span><button type="button" aria-label="Close sections menu" onClick=${()=>setMobileMenuOpen(false)}>×</button></div><div className="group">Navigation</div>${nav.map(([k,l])=>html`<button type="button" className=${`navbtn ${view===k?"active":""}`} aria-current=${view===k?"page":undefined} onClick=${()=>switchInventoryView(k)}>${l}</button>`)}</aside>
-    <main className="main" ref=${mainScrollRef}><div className="top"><div><div className="eyebrow">SKANDI TRAVELS · ALTEA · RIAINTRA</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">Manage travel inventory, hotels, suppliers, rates and aircraft.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
-      ${masterFilter&&!["overview","master","property","provider"].includes(view)?html`<div className="scope-label">Showing ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}.</div>`:null}
+    <div className="shell-body">${mobileMenuOpen?html`<button type="button" className="inventory-menu-scrim" aria-label="Close sections menu" onClick=${()=>setMobileMenuOpen(false)}></button>`:null}<aside id="inventory-sections" aria-label="Inventory sections" className=${`sidebar ${mobileMenuOpen?"mobile-open":""}`}><div className="inventory-menu-heading"><span>Inventory sections</span><button type="button" aria-label="Close sections menu" onClick=${()=>setMobileMenuOpen(false)}>×</button></div>${groups.map(([label,items])=>html`<div key=${label||"dashboard"} className="ic-navigation-group">
+      ${label?html`<h2 className="group">${label}</h2>`:null}
+      ${items.map(([key,name])=>html`<button key=${key} type="button" className=${`navbtn ${view===key?"active":""}`} aria-current=${view===key?"page":undefined} onClick=${()=>switchInventoryView(key)}>${name}</button>`)}
+    </div>`)}</aside>
+    <main className="main" ref=${mainScrollRef}><div className="top"><div><div className="eyebrow">SKANDI TRAVELS · ALTEA · RIAINTRA</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
       ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory Control is unavailable":"Connecting to Inventory Control…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
-        view==="overview"?html`<${Overview} boot=${boot} setView=${setView} masterFilter=${masterFilter}/>`:
-        view==="provider"?html`<${ProviderWorkspace} openAircraft=${openAircraft} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setView=${setView}/>`:
+        view==="overview"?html`<${Overview} boot=${boot} masterFilter=${masterFilter} openRecords=${openRecords}/>`:
+        view==="provider"?html`<${ProviderWorkspace} openAircraft=${openAircraft} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} initialResource=${masterFilter} setView=${setView}/>`:
         view==="master"?html`<${MasterRecords} openAircraft=${openAircraft} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setMasterFilter=${setMasterFilter} setView=${setView}/>`:
-        view==="property"?html`<${PropertyDirector} boot=${boot} masterFilter=${masterFilter} setBusy=${setBusy} setToast=${setToast} onSaved=${refresh}/>`:
+        view==="property"?html`<${PropertyDirector} boot=${boot} setBusy=${setBusy} setToast=${setToast} onSaved=${refresh}/>`:
         view==="assets"?html`<${AssetLibraryPanel} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="dated"?html`<${DatedInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="air"?html`<${AirInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
