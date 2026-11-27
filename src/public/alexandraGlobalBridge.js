@@ -9,7 +9,7 @@ import {
   requestCustomerHumanHandoff,
   addCustomerLiveSupportMessage
 } from 'backend/SKANDI_CORE/customerSupport.web';
-import { SITE_MAP, isSafeInternalRoute } from 'public/siteMap';
+import { PAGE_BUILD_INTEGRATIONS, SITE_MAP, getSiteRoute, isSafeInternalRoute, normalizeSitePath } from 'public/siteMap';
 
 export const ALEXANDRA_GLOBAL_PANEL_ID = '#skandiAlexandraGlobalEmbed';
 const LEGACY_LAUNCHER_ID = '#skandiAlexandraLauncherEmbed';
@@ -27,6 +27,9 @@ const AVATAR = {
 };
 const clean = (value, max) => String(value ?? '').trim().slice(0, max);
 const object = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+const inlineChatEmbeds = new Map(Object.entries(PAGE_BUILD_INTEGRATIONS)
+  .filter(([, integration]) => integration.components?.some(component => component.key === 'support-chat'))
+  .map(([key, integration]) => [getSiteRoute(key), integration.embedIds[0]]));
 let bridge;
 
 function conversation(value = {}) {
@@ -109,7 +112,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   };
 
   function widgetContext(host, restore = false) {
-    const ui = { active: host === currentHost, global: host.global, pagePath: path };
+    const ui = { active: host === currentHost, global: host.global || path !== SITE_MAP.support, pagePath: path };
     if (restore && ui.active) {
       const { open, messages, draft, caseId, human, expired } = state;
       post(host, 'SUPPORT_CHAT_RESTORE', { ...ui, open, messages, draft, caseId, human, expired });
@@ -121,7 +124,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   }
 
   function selectHost() {
-    const next = allowed() ? hosts.get('global') || (path === SITE_MAP.support ? hosts.get('help') : null) : null;
+    const next = allowed() ? hosts.get('global') || (inlineChatEmbeds.has(path) ? hosts.get('inline') : null) : null;
     if (next === currentHost) return false;
     const previous = currentHost;
     currentHost = next;
@@ -250,7 +253,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
     await refreshIdentity();
     if (!allowed()) return false;
     if (!currentHost) {
-      if (!panelElement && path !== SITE_MAP.support) return false;
+      if (!panelElement && !inlineChatEmbeds.has(path)) return false;
       pendingOpen = { mode, payload, requestId, retry };
       return true;
     }
@@ -313,7 +316,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
       if (result?.livekitSession) humanRoom = { session: result.livekitSession, expires: Date.now() + 14 * 60 * 1000 };
       post(currentHost, response, object(result), requestId);
       if (response === 'SUPPORT_CHAT_CASE_CREATED' && path === SITE_MAP.support) {
-        post(hosts.get('help'), 'PUBLIC_SUPPORT_CASE_CREATED', object(result), requestId);
+        post(hosts.get('inline'), 'PUBLIC_SUPPORT_CASE_CREATED', object(result), requestId);
       }
     } catch (_) {
       if (started === generation) {
@@ -328,11 +331,11 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   async function handle(element, message, global) {
     if (!allowed() || message.source !== CHAT_SOURCE) return;
     const payload = object(message.payload);
-    const key = global ? 'global' : 'help';
+    const key = global ? 'global' : 'inline';
     const instance = clean(payload.instance, 90);
     let host = hosts.get(key);
     if (message.type === 'SUPPORT_CHAT_READY') {
-      if (!global && path !== SITE_MAP.support) return;
+      if (!global && !inlineChatEmbeds.has(path)) return;
       let newWidget = false;
       if (!host || host.instance !== instance || host.element !== element) {
         host = { element, instance, global };
@@ -389,7 +392,9 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   }
 
   function onRouteChange(nextPath) {
-    path = nextPath || '/';
+    const previousPath = path;
+    const route = nextPath || '/';
+    path = isSafeInternalRoute(route) ? normalizeSitePath(route) : '';
     let panel;
     try {
       const old = wixSelector(LEGACY_LAUNCHER_ID);
@@ -414,7 +419,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
       if (panel) widgetVisibility(panel, false);
       return;
     }
-    if (path !== SITE_MAP.support) hosts.delete('help');
+    if (path !== previousPath) hosts.delete('inline');
     const changed = selectHost();
     if (changed) void restoreConnection(currentHost);
     else if (currentHost) widgetContext(currentHost);
@@ -428,7 +433,14 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
 
   bridge = {
     onRouteChange, open, clear, refreshIdentity,
-    handleSupportMessage: (embed, message) => handle(embed, message, false),
+    handleSupportMessage: (embed, message) => {
+      if (path === SITE_MAP.support) return handle(embed, message, false);
+    },
+    async handlePageChatMessage(embed, message) {
+      if (path === SITE_MAP.support || `#${embed.id}` !== inlineChatEmbeds.get(path)) return false;
+      await handle(embed, message, false);
+      return true;
+    },
     reportSupportCase(result, requestId) {
       if (!allowed() || path !== SITE_MAP.support || !result?.caseId || state.human) return;
       commit({ caseId: result.caseId });

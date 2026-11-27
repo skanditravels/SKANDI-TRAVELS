@@ -93,9 +93,10 @@ export async function inventory(root) {
       if(componentKeys.has(componentKey)||componentMounts.has(mount)) throw new Error(`Conflicting component key or mount for ${key}: ${componentKey}/${mount}`);
       componentKeys.add(componentKey);componentMounts.add(mount);
       const componentFolder=componentDirectory+'/'+componentStem;
-      if(folders.has(componentFolder)||componentFolders.has(componentFolder)) throw new Error(`Conflicting source mapping ${componentFolder}`);
+      const sameSharedComponent=component.shared===true&&folders.get(componentFolder)===component;
+      if(componentFolders.has(componentFolder)||(folders.has(componentFolder)&&!sameSharedComponent)) throw new Error(`Conflicting source mapping ${componentFolder}`);
       componentFolders.add(componentFolder);
-      folders.set(componentFolder,`${key}/${componentKey}`);
+      folders.set(componentFolder,component.shared===true?component:`${key}/${componentKey}`);
       const part=await triplet(root,componentDirectory,componentStem);
       components.push({key:componentKey,sourceDirectory:componentDirectory,stem:componentStem,mount,sources:component.sources||[],status:part.status,files:part.files,missing:part.missing});
     }

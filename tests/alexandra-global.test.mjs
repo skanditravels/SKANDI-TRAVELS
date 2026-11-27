@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import test from 'node:test';
 import vm from 'node:vm';
-import { isSafeInternalRoute, SITE_MAP } from '../src/public/siteMap.js';
+import { getSiteRoute, isSafeInternalRoute, normalizeSitePath, PAGE_BUILD_INTEGRATIONS, SITE_MAP } from '../src/public/siteMap.js';
 
 const require = createRequire(new URL('../scripts/package.json', import.meta.url));
 const { parse } = require('acorn');
@@ -40,7 +40,7 @@ function controller({ store = new Map(), panel = fakeEmbed(), initialPath = '/fl
   const api = vm.runInNewContext(code, {
     session: { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value), removeItem: key => store.delete(key) },
     currentMember: { getMember: async () => member && { _id: member } },
-    SITE_MAP, isSafeInternalRoute, console,
+    SITE_MAP, PAGE_BUILD_INTEGRATIONS, getSiteRoute, isSafeInternalRoute, normalizeSitePath, console,
     startAlexandraLiveKitSession: async input => { requests.push(input); return start ? start(input) : { ok:true, session:fakeRoom }; },
     getCustomerSupportBootstrap: async () => ({ workflows: [] }),
     getCustomerSupportCase: async () => ({ livekitSession: { ...fakeRoom, roomName:'support-room' } }),
@@ -123,6 +123,24 @@ test('the Help Center opens the global chat and ignores a second iframe announci
   assert.equal(requests.length, 1);
   assert.ok(panel.sent.some(m => m.type === 'SUPPORT_CHAT_OPEN'));
   assert.equal(inline.sent.some(m => m.type === 'SUPPORT_CHAT_OPEN'), false);
+});
+
+test('the checkout, order confirmation and profile receivers restore the same chat when a Wix section is unavailable', async () => {
+  const first = controller();
+  await first.panel.receive('SUPPORT_CHAT_READY');
+  await first.panel.receive('SUPPORT_CHAT_START_ALEXANDRA');
+  await first.panel.receive('SUPPORT_CHAT_SNAPSHOT', { draft:'Checkout support question' });
+  for (const key of ['storeCheckout', 'storeConfirmation', 'myProfile']) {
+    const next = controller({ panel:null, initialPath:getSiteRoute(key), store:first.store });
+    const candidate = { ...fakeEmbed(), id:PAGE_BUILD_INTEGRATIONS[key].embedIds[0].slice(1) };
+    const message = { source:'SKANDI_SUPPORT_CHAT', type:'SUPPORT_CHAT_READY', payload:{ instance:key } };
+    assert.equal(await next.bridge.handlePageChatMessage({ ...candidate, id:'someOtherEmbed' }, message), false);
+    assert.equal(await next.bridge.handlePageChatMessage(candidate, message), true);
+    const restored = candidate.sent.find(m => m.type === 'SUPPORT_CHAT_RESTORE');
+    assert.equal(restored.payload.draft, 'Checkout support question');
+    assert.equal(restored.payload.open, true);
+    assert.equal(next.requests[0].resumeTicket, fakeRoom.resumeTicket);
+  }
 });
 
 test('internal navigation blocks the widget and a new member cannot see the old transcript', async () => {
