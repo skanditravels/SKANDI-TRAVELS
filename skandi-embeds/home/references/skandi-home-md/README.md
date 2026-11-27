@@ -4,6 +4,8 @@
 
 ## INFO / LOG — 2026-11-09
 
+2026-11-27 — The [active Home form](../../README.md) now opens its date range inline, keeps selection drafts separate until applied, and exposes the shared traveler controls in all four search modes. The existing `#htmlHome` receiver and `/booking` handoff remain the runtime integration.
+
 The historical Duffel Explorer component below is not the active Home search implementation. The current Home source is `skandi-embeds/home/skandi-home.{html,css,js}`, connected through `src/pages/Home.n73w8.js`. Its flight-only From/To fields now display provider-supplied airport and multi-airport-city suggestions with search details, and pass both the selected code and whether it is a city or airport to the existing booking flow. The historical component and its old installation notes are retained for provenance.
 
 
