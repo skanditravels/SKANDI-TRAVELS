@@ -302,7 +302,7 @@
         "SPECIAL_ASSISTANCE_READY",
         "SPECIAL_ASSISTANCE_REFRESH",
         "SUBSCRIBED",
-        "SUPPORT_CHAT_ERROR",
+        "SUPPORT_CHAT_START_ALEXANDRA",
         "UPDATE_SETTINGS"
       ],
       "output": "dist/flights/index.html",
@@ -627,7 +627,7 @@
         "SPECIAL_ASSISTANCE_READY",
         "SPECIAL_ASSISTANCE_REFRESH",
         "SUBSCRIBED",
-        "SUPPORT_CHAT_ERROR",
+        "SUPPORT_CHAT_START_ALEXANDRA",
         "UPDATE_SETTINGS"
       ],
       "output": "dist/cruises/index.html",
@@ -1272,10 +1272,9 @@
       ],
       "messages": [
         "ALEXANDRA",
-        "ALEXANDRA_WIX_AI",
         "FORM",
-        "HANDOFF_PENDING",
         "HELP_CENTER",
+        "HUMAN",
         "PUBLIC_SUPPORT_BOOTSTRAP",
         "PUBLIC_SUPPORT_CASE_CREATED",
         "PUBLIC_SUPPORT_CREATE_CASE",
@@ -1290,21 +1289,7 @@
         "SKANDI_CLUB_LOGIN",
         "SKANDI_SUPPORT_CHAT",
         "SKANDI_SUPPORT_PUBLIC",
-        "SKANDI_WIX_PARENT",
-        "SUPPORT_CHAT_ALEXANDRA_MESSAGE",
-        "SUPPORT_CHAT_ALEXANDRA_REPLY",
-        "SUPPORT_CHAT_BOOTSTRAP",
-        "SUPPORT_CHAT_CASE_CREATED",
-        "SUPPORT_CHAT_ERROR",
-        "SUPPORT_CHAT_HUMAN_HANDOFF",
-        "SUPPORT_CHAT_HUMAN_MESSAGE",
-        "SUPPORT_CHAT_HUMAN_MESSAGE_SAVED",
-        "SUPPORT_CHAT_NAVIGATE",
-        "SUPPORT_CHAT_OPEN",
-        "SUPPORT_CHAT_READY",
-        "SUPPORT_CHAT_START_ALEXANDRA",
-        "SUPPORT_CHAT_START_HUMAN",
-        "SUPPORT_CHAT_SUBMIT_FORM"
+        "SKANDI_WIX_PARENT"
       ],
       "output": "dist/support/index.html",
       "dynamic": false,
@@ -1312,8 +1297,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/support/skandi-support.receiver.html",
       "receiverFile": "skandi-embeds/support/skandi-support.receiver.html",
-      "sha256": "4f97cba7175d9b366b1891f8097a73ca9c8a878664c74ba3589081dd93ddc1c6",
-      "bytes": 239960
+      "sha256": "1c9da746019077c747050f4824d0947df3e9dd34c52b924800d1fc5f5b7b34ba",
+      "bytes": 246380
     },
     {
       "key": "newsroom",
@@ -1937,7 +1922,7 @@
         "SPECIAL_ASSISTANCE_READY",
         "SPECIAL_ASSISTANCE_REFRESH",
         "SUBSCRIBED",
-        "SUPPORT_CHAT_ERROR",
+        "SUPPORT_CHAT_START_ALEXANDRA",
         "UPDATE_SETTINGS"
       ],
       "output": "dist/cookie-preferences/index.html",
@@ -2532,7 +2517,7 @@
         "SPECIAL_ASSISTANCE_READY",
         "SPECIAL_ASSISTANCE_REFRESH",
         "SUBSCRIBED",
-        "SUPPORT_CHAT_ERROR",
+        "SUPPORT_CHAT_START_ALEXANDRA",
         "UPDATE_SETTINGS"
       ],
       "output": "dist/eos/index.html",
@@ -4582,7 +4567,7 @@
         "SPECIAL_ASSISTANCE_READY",
         "SPECIAL_ASSISTANCE_REFRESH",
         "SUBSCRIBED",
-        "SUPPORT_CHAT_ERROR",
+        "SUPPORT_CHAT_START_ALEXANDRA",
         "UPDATE_SETTINGS"
       ],
       "output": "dist/special-assistance/index.html",
