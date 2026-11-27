@@ -78,11 +78,15 @@ function post(host, type, payload = {}, requestId = '') {
 
 function widgetVisibility(element, visible, expanded = false) {
   try {
-    if (element.customClassList) {
-      element.customClassList.add('skandi-alexandra-host');
-      if (expanded) element.customClassList.add('skandi-alexandra-host-open');
-      else element.customClassList.remove('skandi-alexandra-host-open');
+    // Wix supports custom CSS classes on Sections. The iframe itself has a fixed editor size.
+    const section = element.parent;
+    if (section?.type === '$w.Section' && section.customClassList) {
+      section.customClassList.add('skandi-alexandra-host');
+      if (expanded) section.customClassList.add('skandi-alexandra-host-open');
+      else section.customClassList.remove('skandi-alexandra-host-open');
     }
+  } catch (_) {}
+  try {
     const update = visible ? element.show() : element.hide();
     Promise.resolve(update).catch(() => {});
   } catch (_) {}

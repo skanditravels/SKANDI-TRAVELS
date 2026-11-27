@@ -2,6 +2,8 @@
 
 > Current document: `skandi-embeds/global/alexandra/references/skandi-alexandra-global-launcher-md/README.md`. Original reference: `HTML_REF/skandi/Alexandra Global Launcher.md`.
 
+> The 2026-11-27 [public chat setup](../../README.md) supersedes this launcher. The active Wix HTML component shares the Help Center conversation and uses its containing Wix Section for placement and sizing.
+
 
 ## INFO / LOG
 - Wix site: SKANDI TRAVELS, Wix Studio.
