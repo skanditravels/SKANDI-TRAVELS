@@ -19,6 +19,13 @@
 }
 
 /* The compiled shell scrolls internally and anchors its bar to the iframe viewport. */
+.skandi-compiled-viewport-host,
+.skandi-compiled-viewport-host iframe {
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+}
 @media (max-width: 1020px) {
   .skandi-compiled-mobile-host,
   .skandi-compiled-mobile-host iframe {

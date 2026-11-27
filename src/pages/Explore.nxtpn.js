@@ -17,7 +17,7 @@ const TYPES = new Set(["COUNTRY_READY","UPDATE_SETTINGS","COUNTRY_SELECT_COUNTRY
 let html = null, catalog = [], catalogJob = null, catalogLoadedAt = 0;
 let pageJob = null, searchJob = null, selectionJob = null;
 let settings = { language:"EN", currency:"USD" };
-let currentCountry = null, discoveryTimer = null, discoveryCount = 0;
+let currentCountry = null, currentPlace = null, discoveryTimer = null, discoveryCount = 0;
 const bound = new Set();
 const content = createDestinationContent(() => catalog, () => ({}), LANGUAGES);
 
@@ -65,28 +65,41 @@ async function ensureCatalog(force = false) {
   }
   await catalogJob;
 }
-function requestedCountry(payload = {}, selection = false) {
+function requestedPlace(payload = {}, selection = false) {
   // An iframe URL does not inherit the Wix page's query string.
-  if (selection) return slug(payload.slug);
-  return slug(wixLocationFrontend.query?.country || payload.slug || currentCountry?.slug);
+  if (selection) return {countrySlug:slug(payload.slug)};
+  const query=wixLocationFrontend.query||{};
+  return {
+    countrySlug:slug(query.country||payload.slug),
+    regionSlug:slug(query.region),
+    destinationSlug:slug(query.destination),
+    areaSlug:slug(query.area)
+  };
 }
 function arrivals(record) {
   if (!record) return [];
-  const matches = new Set([record.code,record.name,record.details?.countryCode,record.details?.countryName].map(slug).filter(Boolean));
+  const country=content.countryOf(record);
+  const matches = new Set([country?.code,country?.name,country?.details?.countryCode,country?.details?.countryName].map(slug).filter(Boolean));
   const linked = new Set();
   for (const row of catalog.filter(r => r.id===record.id || content.isUnder(r,record))) {
+    if(row.id===record.id||row.entityType==="AIRPORT") {
+      const airport=content.airportFor(row);
+      if(airport)linked.add(airport.id);
+    }
     if (row.details?.nearestAirportId) linked.add(row.details.nearestAirportId);
     if (row.details?.secondaryAirportId) linked.add(row.details.secondaryAirportId);
     if (row.details?.searchAirportIata) linked.add(row.details.searchAirportIata);
   }
-  return content.airportDirectory().filter(a => /^[A-Z]{3}$/.test(a.iata) &&
-    (matches.has(slug(a.country)) || linked.has(a.id) || linked.has(a.iata)));
+  const airports=content.airportDirectory().filter(a=>/^[A-Z]{3}$/.test(a.iata));
+  const local=airports.filter(a=>linked.has(a.id)||linked.has(a.iata));
+  if(record.entityType!=="COUNTRY"&&local.length)return local;
+  return airports.filter(a=>matches.has(slug(a.country))||local.includes(a));
 }
 async function loadCountry(message) {
   if (selectionJob) throw fail("COUNTRY_SELECTION_PENDING","Please finish the current offer selection first.");
   const payload=obj(message.payload), nextSettings=normalizeSettings(payload.settings || (message.type==="UPDATE_SETTINGS"?payload:settings));
-  const countrySlug=requestedCountry(payload,message.type==="COUNTRY_SELECT_COUNTRY");
-  const key=JSON.stringify({countrySlug,...nextSettings});
+  const scope=requestedPlace(payload,message.type==="COUNTRY_SELECT_COUNTRY");
+  const key=JSON.stringify({...scope,...nextSettings});
   settings=nextSettings;
   if (pageJob?.key===key && (!pageJob.complete || (!payload.force && Date.now()-pageJob.completedAt<60000))) {
     pageJob.requestId=message.requestId;
@@ -94,16 +107,17 @@ async function loadCountry(message) {
     return pageJob.promise;
   }
   const job={key,requestId:message.requestId,settings:{...settings},promise:null,complete:false};
-  pageJob=job; searchJob=null; currentCountry=null;
+  pageJob=job; searchJob=null; currentCountry=null;currentPlace=null;
   job.promise=(async () => {
     try {
       await ensureCatalog(payload.force===true);
       if (pageJob!==job) return;
       const directory=content.records("COUNTRY").map(c => ({slug:slug(c.slug||c.name),name:c.name,code:c.code}));
       if (!directory.length) throw fail("COUNTRY_EMPTY","No countries are currently published.");
-      const record=countrySlug?content.byTypeSlug("COUNTRY",countrySlug):null;
-      if (countrySlug && !record) throw fail("COUNTRY_NOT_FOUND","This country is not currently published. Choose another country from Destinations.");
-      currentCountry=record;
+      const record=content.resolveGeography(scope);
+      if(record===undefined)throw fail("COUNTRY_NOT_FOUND","This place is unavailable. Choose another place from the destinations map.");
+      currentPlace=record;
+      currentCountry=content.countryOf(record);
       const page=record?content.countryPage(record,job.settings.language):null;
       if (page) {
         page.arrivalAirports=arrivals(record);
@@ -116,8 +130,8 @@ async function loadCountry(message) {
             return {name:airport.name,latitude:Number(lat),longitude:Number(lon),path:SITE_MAP.destinations+"?pin="+encodeURIComponent("airport:"+airport.iata)};
           }).filter(Boolean);
         }
-        page.paths={hotels:APP_ROUTES.hotelList+"?country="+encodeURIComponent(page.slug),
-          packages:SITE_MAP.packages+"?country="+encodeURIComponent(page.slug),map:SITE_MAP.ourNetwork};
+        const countrySlug=page.countrySlug;
+        page.paths.packages=SITE_MAP.packages+(countrySlug?"?country="+encodeURIComponent(countrySlug):"");
       }
       job.result={page,directory,settings:job.settings,routes:{...SITE_MAP,...APP_ROUTES},source:"SUPABASE_PUBLIC_INVENTORY"};
       job.complete=true; job.completedAt=Date.now();
@@ -140,8 +154,8 @@ function bookingSearch(raw) {
   let origins=airports.filter(a=>a.iata===originCode);
   if (!origins.length) origins=airports.filter(a=>[a.name,a.city].some(v=>slug(v)===slug(originInput)));
   if(origins.length!==1) throw fail("COUNTRY_ORIGIN_REQUIRED","Choose a departure airport from the list.");
-  const target=arrivals(currentCountry).find(a=>a.iata===clean(raw.destinationIata,3).toUpperCase());
-  if(!target) throw fail("COUNTRY_ARRIVAL_REQUIRED","Choose an arrival airport in this country.");
+  const target=arrivals(currentPlace).find(a=>a.iata===clean(raw.destinationIata,3).toUpperCase());
+  if(!target) throw fail("COUNTRY_ARRIVAL_REQUIRED","Choose an arrival airport from the list.");
   if(origins[0].iata===target.iata) throw fail("COUNTRY_INVALID_ROUTE","Departure and arrival airports must be different.");
   const departureDate=clean(raw.departureDate,10), returnDate=clean(raw.returnDate,10), adults=Number(raw.adults);
   if(!validDate(departureDate)||!validDate(returnDate)||departureDate<new Date().toISOString().slice(0,10)||returnDate<=departureDate)
@@ -225,7 +239,8 @@ async function receive(event,embed) {
         if(!selectedSlug) throw fail("COUNTRY_REQUIRED","Choose a published country.");
         await loadCountry(message);
         const loadedSlug=slug(currentCountry?.slug||currentCountry?.name);
-        if(loadedSlug===selectedSlug&&slug(wixLocationFrontend.query?.country)!==loadedSlug) {
+        const q=wixLocationFrontend.query||{};
+        if(loadedSlug===selectedSlug&&(slug(q.country)!==loadedSlug||q.region||q.destination||q.area)) {
           navigate(APP_ROUTES.country+"?country="+encodeURIComponent(loadedSlug));
         }
         break;

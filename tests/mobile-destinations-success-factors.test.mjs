@@ -13,6 +13,8 @@ async function page(key){return compilePage(root,rows.find(r=>r.key===key));}
 test('mobile map detail opens at medium height and closes accessibly',async()=>{
  const dom=new JSDOM(await page('destinations'),{url:'https://example.test/destinations',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window;w.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});w.scrollTo=()=>{};
+ assert.equal(w.document.querySelector('#skandi-global-footer-root'),null);
+ assert(w.document.querySelector('#skandi-mobile-nav-container'));
  let code=w.document.querySelector('script[data-skandi-part="destinations"]').textContent;
  code=code.replace('  cacheElements();','  cacheElements(); window.__detailTest={show(){renderSelection({id:"TST",name:"Test airport",iata:"TST",tags:[]},"airport")}};');
  w.eval(code);w.document.dispatchEvent(new w.Event('DOMContentLoaded'));

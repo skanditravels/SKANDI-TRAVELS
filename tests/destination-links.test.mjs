@@ -28,7 +28,8 @@ test('hotel and destination links resolve to their dedicated public pages', asyn
 
 test('map data keeps airports and airlines and Wix receives a stable pin URL', async () => {
   const map = { airports:[{id:'ARN'}], airlines:[{id:'SK'}], destinations:[] };
-  const core = vm.createContext({ callPublicContentRpc:async()=>map, getDestinationFlowCatalogCore:async()=>({ok:true,records:[]}) });
+  const core = vm.createContext({ ...routes, URLSearchParams, callPublicContentRpc:async()=>map, getDestinationFlowCatalogCore:async()=>({ok:true,records:[]}) });
+  vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),core);
   vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/networkMap.js')),core);
   const messages=[], urlChanges=[];
   let onMessage, onReady, onChange;
@@ -39,7 +40,7 @@ test('map data keeps airports and airlines and Wix receives a stable pin URL', a
     query:{pin:'airport:ARN'}, onChange:cb=>{onChange=cb;}, to:path=>urlChanges.push(path),
     queryParams:{add:query=>urlChanges.push(query.pin),remove:()=>{}}
   };
-  const context=vm.createContext({ ...routes,$w,wixLocation,console,getPublicNetworkMapData:core.getPublicNetworkMapDataCore });
+  const context=vm.createContext({ ...routes,$w,wixLocation,console,URLSearchParams,getPublicNetworkMapData:core.getPublicNetworkMapDataCore });
   vm.runInContext(withoutImports(await source('src/pages/Our Destinations.wfe5g.js')), context);
   onReady();
   const send = data=>onMessage({data:{source:'SKANDI_PUBLIC_NETWORK_MAP',...data}});
@@ -48,10 +49,16 @@ test('map data keeps airports and airlines and Wix receives a stable pin URL', a
   assert.equal(messages[0].payload.airports[0].id,'ARN');
   assert.equal(messages[0].payload.airlines[0].id,'SK');
   await send({type:'SKANDI_MAP_STATE',state:{type:'destination',id:'stockholm'}});
+  await send({type:'SKANDI_MAP_STATE',state:{type:'destination',id:'city:stockholm:sweden'}});
   await send({type:'SKANDI_MAP_NAVIGATE',url:'/destinations/explore/hotel-list?hotelId=hotel-1'});
-  assert.deepEqual(urlChanges,['destination:stockholm','/destinations/explore/hotel-list?hotelId=hotel-1']);
+  assert.deepEqual(urlChanges,['destination:stockholm','destination:city:stockholm:sweden','/destinations/explore/hotel-list?hotelId=hotel-1']);
+  wixLocation.query={pin:'destination:city:stockholm:sweden'};
   onChange();
   assert.equal(messages.at(-1).type,'SKANDI_MAP_SELECTION');
+  assert.equal(messages.at(-1).payload.id,'city:stockholm:sweden');
+  wixLocation.query={country:'sweden',destination:'stockholm'};
+  onReady();
+  assert.equal(urlChanges.at(-1),'/destinations/explore?country=sweden&destination=stockholm');
 });
 
 test('Hotel List links directly to an unlinked property and its detail blocks booking', async t => {
@@ -83,4 +90,11 @@ test('geography links narrow descendants through region and area, including exis
  for(const ancestor of records.slice(0,4))assert.equal(c.isUnder(hotel,ancestor),true,ancestor.name);
  assert.equal(c.regionOf(hotel).name,'Florida');assert.equal(c.countryOf(hotel).name,'United States');
  assert.equal(c.hotelsForScope(records[1])[0].id,'hotel');
+ assert.equal(c.countryPage(records[0],'EN').regions[0].path,'/destinations/explore?country=united-states&region=florida');
+ const scoped=c.countryPage(records[3],'EN');
+ assert.equal(scoped.paths.hotels,'/destinations/explore/hotel-list?country=united-states&region=florida&destination=orlando&area=disney-area&view=hotels');
+ assert.deepEqual(Array.from(scoped.breadcrumbs,item=>item.name),['United States','Florida','Orlando','Disney Area']);
+ assert.equal(c.resolveGeography({countrySlug:'united-states',regionSlug:'florida',areaSlug:'disney-area'}).id,'disney');
+ assert.equal(c.resolveGeography({countrySlug:'sweden',regionSlug:'florida'}),undefined);
+ assert.equal(c.hotelListPage('united-states','','','EN','florida').previewHotels[0].id,'hotel');
 });

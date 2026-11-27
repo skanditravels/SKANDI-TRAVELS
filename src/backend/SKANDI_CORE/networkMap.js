@@ -1,5 +1,6 @@
 import { callPublicContentRpc } from "backend/SKANDI_CORE/publicContent";
 import { getDestinationFlowCatalogCore } from "backend/SKANDI_CORE/destinationFlow";
+import { createDestinationContent } from "public/destinationContent";
 
 
 export async function getPublicNetworkMapDataCore() {
@@ -12,21 +13,42 @@ export async function getPublicNetworkMapDataCore() {
 
 
   const inventory = hierarchyResult?.ok ? hierarchyResult.records : [];
+  const content = createDestinationContent(() => inventory);
+  const publishedLocations = inventory.filter(r => ["COUNTRY", "REGION", "DESTINATION", "AREA", "HOTEL"].includes(r.entityType));
+  const keyOf = value => String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
+  const countryFor = item => content.byTypeSlug("COUNTRY", item.country) || content.byTypeSlug("COUNTRY",item.countryCode);
   const ranked = (items, type) => (Array.isArray(items) ? items : []).map(item => {
-    const keys = [item.id, item.publicId, item.code, item.slug, item.iata].filter(Boolean).map(x => String(x).toUpperCase());
-    let match = inventory.find(row => row.entityType === type && [row.id, row.publicId, row.code, row.slug].filter(Boolean).some(x => keys.includes(String(x).toUpperCase())));
-    if (!match && type === "DESTINATION" && item.name && item.country) {
-      const candidates = inventory.filter(row => row.entityType === type && String(row.name || "").trim().toUpperCase() === String(item.name).trim().toUpperCase() && String(row.details?.countryName || row.details?.country || "").trim().toUpperCase() === String(item.country).trim().toUpperCase());
-      if (candidates.length === 1) match = candidates[0];
+    const keys = [item.id, item.publicId, item.code, item.slug, item.iata].map(keyOf).filter(Boolean);
+    const country = type==="DESTINATION"?countryFor(item):null;
+    const candidates = inventory.filter(row=>row.entityType===type&&(!country||content.isUnder(row,country)));
+    const exact = candidates.filter(row=>[row.id,row.publicId,row.code,row.slug].map(keyOf).some(key=>keys.includes(key)));
+    const byName = type==="DESTINATION"&&country&&item.name
+      ? candidates.filter(row=>keyOf(row.name)===keyOf(item.name)):[];
+    const match = exact.length===1?exact[0]:byName.length===1?byName[0]:null;
+    const rankedItem = {...item, searchPriority: match?.sortPriority ?? 51};
+    if(type==="HOTEL"&&match)rankedItem.detailPath=content.geographyPath(match);
+    if(type==="DESTINATION") {
+      const place=match||country;
+      rankedItem.guideName=place?.name||"";
+      rankedItem.explorePath=place?content.geographyPath(place):"";
+      rankedItem.hotelsPath=match&&content.hotelsForScope(match).length?content.geographyPath(match,"hotels"):"";
+      rankedItem.placeSummary=match?content.summaryOf(match):"";
     }
-    return {...item, searchPriority: match?.sortPriority ?? 51};
+    return rankedItem;
   }).sort((a,b) => a.searchPriority-b.searchPriority || String(a.name || a.title || a.iata || '').localeCompare(String(b.name || b.title || b.iata || '')));
   return {
     type: "SKANDI_MAP_DATA",
     source: "SKANDI_WIX_PARENT",
     generatedAt: payload.generatedAt || new Date().toISOString(),
     destinations: ranked(payload.destinations,"DESTINATION"),
-    inventoryHierarchy: hierarchyResult?.ok ? hierarchyResult.records.filter(r=>["COUNTRY","REGION","DESTINATION","AREA","HOTEL"].includes(r.entityType)).map(r=>({id:r.id,publicId:r.publicId,type:r.entityType,code:r.code,name:r.name,slug:r.slug,searchPriority:r.sortPriority,parentId:r.parentEntityId,details:{countryId:r.details?.countryId,regionId:r.details?.regionId,destinationId:r.details?.destinationId,areaId:r.details?.areaId},relations:(r.relations||[]).filter(x=>["COUNTRY","REGION","DESTINATION","AREA","PARENT"].includes(x.relationType)).map(x=>({type:x.relationType,id:x.targetEntityId}))})) : null,
+    inventoryHierarchy: hierarchyResult?.ok ? publishedLocations.map(r=>({
+      id:r.id,publicId:r.publicId,type:r.entityType,code:r.code,name:r.name,slug:r.slug,searchPriority:r.sortPriority,
+      parentId:r.parentEntityId,details:{countryId:r.details?.countryId||r.details?.countryEntityId,regionId:r.details?.regionId||r.details?.regionEntityId,
+        destinationId:r.details?.destinationId||r.details?.destinationEntityId,areaId:r.details?.areaId||r.details?.areaEntityId},
+      relations:(r.relations||[]).filter(x=>["COUNTRY","REGION","DESTINATION","AREA","PARENT"].includes(x.relationType)).map(x=>({type:x.relationType,id:x.targetEntityId})),
+      path:content.geographyPath(r),
+      parentNames:content.breadcrumbsFor(r).filter(crumb=>crumb.name!==r.name).map(crumb=>crumb.name)
+    })) : null,
     routes: Array.isArray(payload.routes) ? payload.routes : [],
     hotels: ranked(payload.hotels,"HOTEL"),
     airports: ranked(payload.airports,"AIRPORT"),

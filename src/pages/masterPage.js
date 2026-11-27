@@ -1108,6 +1108,10 @@ async function handleMasterMessage(embed, message = {}) {
     const identity = compiledIdentity(embed, isInternalPath() ? await getStaffState() : {});
     if (identity.allowed && identity.key === payload.key) {
       compiledEmbeds.set(embed.id, identity);
+      if (PAGE_BUILD_INTEGRATIONS[identity.key]?.layout === "viewport") {
+        try { embed.customClassList?.add("skandi-compiled-viewport-host"); }
+        catch (error) { console.warn("[MasterPage] Could not size the full-viewport host.", error); }
+      }
       if (hasPageMobileNavigation(identity.route)) {
         try { embed.customClassList?.add("skandi-compiled-mobile-host"); }
         catch (error) { console.warn("[MasterPage] Could not size the compiled mobile host.", error); }

@@ -4,25 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hotels | SKANDI Travels</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../shared/skandi-travel-discovery.css">
   <link rel="stylesheet" href="skandi-hotel-list.css">
 </head>
 <body>
-  <main class="hs-page" id="hotelListApp">
-    <header class="hs-hero">
-      <img id="hotelHeroImage" alt="" hidden>
-      <div class="hs-shell">
-        <nav id="hotelBreadcrumb" aria-label="Breadcrumb"></nav>
-        <p class="hs-eyebrow">SKANDI Travels</p>
-        <h1 id="hotelTitle">Hotels</h1>
-        <p id="hotelIntro"></p>
+  <main class="sj-page hs-page" id="hotelListApp" aria-busy="true">
+    <div class="sj-shell">
+      <div class="sj-top">
+        <nav class="sj-breadcrumb" id="hotelBreadcrumb" aria-label="Breadcrumb">
+          <a href="https://www.skanditravels.com/destinations" target="_top" data-path="/destinations">Destinations</a>
+        </nav>
       </div>
-    </header>
-    <div class="hs-shell">
-      <div class="hs-state" role="status" id="hotelStatus">Loading hotels…</div>
-      <button class="hs-button" id="hotelRetry" type="button" hidden>Try again</button>
+      <header class="sj-hero" aria-labelledby="hotelTitle">
+        <div class="sj-hero-copy">
+          <p class="sj-context" id="hotelLocation" hidden></p>
+          <h1 id="hotelTitle">Hotels</h1>
+          <p id="hotelIntro" hidden></p>
+          <div class="sj-actions" id="hotelHeroActions" hidden>
+            <button class="sj-button primary" id="hotelAvailabilityLink" type="button" hidden>Check availability</button>
+            <p id="hotelUnavailable" class="hs-unavailable" hidden>Online booking is unavailable for this hotel.</p>
+          </div>
+        </div>
+        <div class="sj-visual" id="hotelVisual" hidden><img id="hotelHeroImage" alt=""></div>
+      </header>
+      <div class="sj-status" role="status" id="hotelStatus">Loading hotels…</div>
+      <button class="sj-button" id="hotelRetry" type="button" hidden>Try again</button>
       <section id="hotelContent" hidden>
         <details class="hs-booking" id="hotelBooking">
-          <summary>Find your stay</summary>
+          <summary>Check dates and availability</summary>
           <form id="hotelBookingForm">
             <div class="hs-fields">
               <label id="hotelPropertyField">Hotel<select id="hotelProperty"></select></label>
@@ -35,19 +45,21 @@
             <div class="hs-fields" id="hotelChildAges"></div>
             <label class="hs-check" id="hotelFlightsField"><input type="checkbox" name="addFlights"> Add flights</label>
             <label id="hotelOriginField" hidden>Flying from<select name="originIata"></select></label>
-            <button class="hs-button" id="hotelBook" type="submit">Check availability</button>
+            <button class="sj-button primary" id="hotelBook" type="submit">Check availability</button>
           </form>
         </details>
-        <button class="hs-button hs-unavailable" id="hotelUnavailable" type="button" disabled hidden>Booking not available</button>
         <div id="hotelDirectory">
           <div class="hs-filters">
             <label>Find a hotel<input id="hotelFilter" type="search" placeholder="Hotel or location"></label>
             <label>Sort by<select id="hotelSort"><option value="recommended">Recommended</option><option value="name">Hotel name</option><option value="rating">Guest rating</option></select></label>
           </div>
           <p id="hotelCount" role="status"></p>
-          <div class="hs-grid" id="hotelCards"></div>
+          <div class="sj-grid" id="hotelCards"></div>
         </div>
-        <article id="hotelDetail" class="hs-detail" hidden></article>
+        <article id="hotelDetail" class="hs-detail" hidden>
+          <nav id="hotelSections" class="sj-controls" aria-label="Hotel information"></nav>
+          <div id="hotelPanels"></div>
+        </article>
       </section>
     </div>
   </main>

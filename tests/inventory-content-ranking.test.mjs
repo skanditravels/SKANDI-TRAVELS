@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import { SITE_MAP, APP_ROUTES } from '../src/public/siteMap.js';
 import { inventorySearchPriority, rankInventoryRows, loadInventoryRankings, loadAllInventoryRows } from '../src/backend/SKANDI_CORE/inventoryRanking.js';
 
 const source=await fs.readFile(new URL('../src/backend/SKANDI_CORE/inventory.js',import.meta.url),'utf8');
@@ -40,10 +41,13 @@ test('translation checks write access before calling the service',async()=>{
 test('network inventory search uses the canonical rank while retaining unmatched map records',async()=>{
  const code=await fs.readFile(new URL('../src/backend/SKANDI_CORE/networkMap.js',import.meta.url),'utf8');
  const records=[{id:'h1',publicId:'HOTEL-H1',entityType:'HOTEL',code:'H1',name:'Z Hotel',sortPriority:11,details:{},relations:[]},{id:'h2',entityType:'HOTEL',code:'H2',name:'A Hotel',sortPriority:31,details:{},relations:[]}];
- const ctx=vm.createContext({Date,String,Array,Promise,callPublicContentRpc:async()=>({hotels:[{id:'h2',name:'A Hotel'},{id:'unknown',name:'Other'},{id:'h1',name:'Z Hotel'}]}),getDestinationFlowCatalogCore:async()=>({ok:true,records})});
+ const ctx=vm.createContext({Date,String,Array,Promise,URLSearchParams,SITE_MAP,APP_ROUTES,callPublicContentRpc:async()=>({hotels:[{id:'h2',name:'A Hotel'},{id:'unknown',name:'Other'},{id:'h1',name:'Z Hotel'}]}),getDestinationFlowCatalogCore:async()=>({ok:true,records})});
+ const content=await fs.readFile(new URL('../src/public/destinationContent.js',import.meta.url),'utf8');
+ vm.runInContext(content.replace(/^import .+;$/gm,'').replace(/^export /gm,''),ctx);
  vm.runInContext(code.replace(/^import .*;\s*$/gm,'').replace('export async function','async function')+'\nthis.run=getPublicNetworkMapDataCore',ctx);
  const result=await ctx.run();
  assert.deepEqual(Array.from(result.hotels,x=>x.id),['h1','h2','unknown']);
+ assert.match(result.hotels[0].detailPath,/hotelId=h1/);
  assert.equal(result.inventoryHierarchy.find(x=>x.id==='h1').searchPriority,11);
 });
 

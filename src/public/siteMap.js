@@ -250,6 +250,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   "destinations": {
     "controller": "src/pages/Our Destinations.wfe5g.js",
     "embedIds": ["#htmlSkandiMap"],
+    "layout": "viewport",
     "sources": ["SKANDI_PUBLIC_NETWORK_MAP"]
   },
   "cookiePreferences": {

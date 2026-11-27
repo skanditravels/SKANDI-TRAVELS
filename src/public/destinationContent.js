@@ -60,9 +60,12 @@ function byId(id) {
   if (!needle) return null;
   return getCatalog().find(r => clean(r.id, 160) === needle || clean(r.publicId, 160) === needle) || null;
 }
+function matchesSlug(record, value) {
+  const needle = slug(value);
+  return Boolean(needle) && [record.slug, record.name, record.code, record.publicId].some(v => slug(v) === needle);
+}
 function byTypeSlug(type, value) {
-  const needle = slug(value); if (!needle) return null;
-  return records(type).find(r => [r.slug, r.name, r.code, r.publicId].some(v => slug(v) === needle)) || null;
+  return records(type).find(r => matchesSlug(r, value)) || null;
 }
 function relationTarget(record, relationTypes = [], targetTypes = []) {
   const rels = new Set(arr(relationTypes).map(v => clean(v, 80).toUpperCase()));
@@ -100,7 +103,13 @@ function geographicParents(record) {
   }
   const rank={COUNTRY:4,REGION:3,DESTINATION:2,AREA:1};
   const ownRank=rank[record.entityType]??0;
-  return [...new Set(ids.filter(Boolean))].map(byId).filter(item=>item&&geoTypes.has(item.entityType)&&rank[item.entityType]>ownRank);
+  const parents=[...new Set(ids.filter(Boolean))].map(byId).filter(item=>item&&geoTypes.has(item.entityType)&&rank[item.entityType]>ownRank);
+  // Some older public records only carry a country code or name.
+  if(record.entityType!=="COUNTRY"&&!parents.length) {
+    const country=byTypeSlug("COUNTRY",first(d.countryCode,d.countryName,d.country));
+    if(country)parents.push(country);
+  }
+  return parents;
 }
 function ancestors(record) {
   const result=[],seen=new Set([record?.id]),queue=geographicParents(record);
@@ -214,12 +223,40 @@ function heroFor(record, language="EN", parentName="") {
   return {kicker:clean(first(d.heroKicker,d.kicker,parentName?`SKANDI · ${parentName}`:"SKANDI DESTINATIONS"),500),title:clean(first(d.heroTitle,l.heroTitle,l.title,record.name),1000),summary:clean(first(d.heroSummary,l.shortDescription,l.short_description,summaryOf(record,language)),5000),images:imagesOf(record)};
 }
 function hierarchy(record) {
-  const country=countryOf(record),destination=destinationOf(record),area=areaOf(record);
-  return {country,destination,area,countrySlug:slug(country?.slug||country?.name),destinationSlug:slug(destination?.slug||destination?.name),areaSlug:slug(area?.slug||area?.name)};
+  const country=countryOf(record),region=regionOf(record),destination=destinationOf(record),area=areaOf(record);
+  return {country,region,destination,area,countrySlug:slug(country?.slug||country?.name),regionSlug:slug(region?.slug||region?.name),destinationSlug:slug(destination?.slug||destination?.name),areaSlug:slug(area?.slug||area?.name)};
 }
 function customPath(level,data={}) {
-  const q=new URLSearchParams(); if(data.countrySlug)q.set("country",data.countrySlug); if(data.destinationSlug)q.set("destination",data.destinationSlug); if(data.areaSlug)q.set("area",data.areaSlug); if(data.hotelSlug)q.set("hotel",data.hotelSlug); if(data.hotelId)q.set("hotelId",data.hotelId); if(level==="hotels"||level==="hotel")q.set("view",level); const qs=q.toString();
-  return `${level==="hotels"||level==="hotel"?APP_ROUTES.hotelList:SITE_MAP.destinations}${qs?`?${qs}`:""}`;
+  const q=new URLSearchParams();
+  for(const field of ["country","region","destination","area","hotel"]) {
+    if(data[field+"Slug"])q.set(field,data[field+"Slug"]);
+  }
+  if(data.hotelId)q.set("hotelId",data.hotelId);
+  const isHotelView=level==="hotels"||level==="hotel";
+  if(isHotelView)q.set("view",level);
+  const route=isHotelView?APP_ROUTES.hotelList:level==="index"?SITE_MAP.destinations:APP_ROUTES.country;
+  return q.size?`${route}?${q}`:route;
+}
+const geographyTypes=["COUNTRY","REGION","DESTINATION","AREA"];
+function resolveGeography(scope={}) {
+  let parent=null;
+  for(const type of geographyTypes) {
+    const key=scope[type.toLowerCase()+"Slug"];
+    if(!key)continue;
+    const matches=records(type).filter(r=>matchesSlug(r,key)&&(!parent||isUnder(r,parent)));
+    if(matches.length!==1)return undefined;
+    parent=matches[0];
+  }
+  return parent;
+}
+function geographyPath(record,level=record?.entityType?.toLowerCase()) {
+  const scope=hierarchy(record);
+  return customPath(level,level==="hotel"?{...scope,hotelId:record.id,hotelSlug:slug(record.slug||record.name)}:scope);
+}
+function breadcrumbsFor(record) {
+  const scope=hierarchy(record);
+  return geographyTypes.map(type=>scope[type.toLowerCase()]).filter(Boolean)
+    .map(place=>({name:clean(place.name,500),path:geographyPath(place)}));
 }
 function directoryDestinations(){return records("DESTINATION").map(d=>{const c=countryOf(d);return{countrySlug:slug(c?.slug||c?.name),countryName:clean(c?.name,500),destinationSlug:slug(d.slug||d.name),slug:slug(d.slug||d.name),name:clean(d.name,500)}})}
 function directoryAreas(){return records("AREA").map(a=>{const c=countryOf(a),d=destinationOf(a);return{countrySlug:slug(c?.slug||c?.name),countryName:clean(c?.name,500),destinationSlug:slug(d?.slug||d?.name),destinationName:clean(d?.name,500),areaSlug:slug(a.slug||a.name),name:clean(a.name,500)}})}
@@ -254,7 +291,7 @@ function hasStayMapping(record){
 }
 function previewHotel(record, language="EN") {
   const d=obj(record.details),h=hierarchy(record),tier=clean(first(d.skandiTier,d.collection),60).toUpperCase(),hotelSlug=slug(record.slug||record.name);
-  return {bookable:hasStayMapping(record),flightsAvailable:hasStayMapping(record)&&Boolean(airportFor(record)),id:record.id,inventoryMasterId:record.id,publicId:record.publicId,hotelId:record.publicId||record.id,hotelSlug,slug:hotelSlug,name:clean(record.name,500),location:clean(first(d.city,d.areaName,d.destinationName,h.area?.name,h.destination?.name,h.country?.name),500),image:cardImageOf(record),imageUrl:cardImageOf(record),heroImage:imageOf(record),classification:numeric(d.officialStarRating,d.classification,d.stars),standard:numeric(d.officialStarRating,d.classification,d.stars),guestRating:numeric(d.guestRating,d.reviewScore),reviewCount:numeric(d.reviewCount),beachDistance:numeric(d.distanceToBeach,99999),centerDistance:numeric(d.distanceToCenter,99999),longitude:coordinate(d.longitude,180),latitude:coordinate(d.latitude,90),facilities:arr(d.facilities),tags:arr(d.tags),boardOptions:arr(d.boardOptions),meal:clean(arr(d.boardOptions)[0],200),skandiTier:tier,collection:tier,details:d,description:summaryOf(record,language),summary:summaryOf(record,language),countrySlug:h.countrySlug,destinationSlug:h.destinationSlug,areaSlug:h.areaSlug,path:customPath("hotel",{countrySlug:h.countrySlug,destinationSlug:h.destinationSlug,areaSlug:h.areaSlug,hotelSlug,hotelId:record.id})};
+  return {bookable:hasStayMapping(record),flightsAvailable:hasStayMapping(record)&&Boolean(airportFor(record)),id:record.id,inventoryMasterId:record.id,publicId:record.publicId,hotelId:record.publicId||record.id,hotelSlug,slug:hotelSlug,name:clean(record.name,500),location:clean(first(d.city,d.areaName,d.destinationName,h.area?.name,h.destination?.name,h.country?.name),500),image:cardImageOf(record),imageUrl:cardImageOf(record),heroImage:imageOf(record),classification:numeric(d.officialStarRating,d.classification,d.stars),standard:numeric(d.officialStarRating,d.classification,d.stars),guestRating:numeric(d.guestRating,d.reviewScore),reviewCount:numeric(d.reviewCount),beachDistance:numeric(d.distanceToBeach,99999),centerDistance:numeric(d.distanceToCenter,99999),longitude:coordinate(d.longitude,180),latitude:coordinate(d.latitude,90),facilities:arr(d.facilities),tags:arr(d.tags),boardOptions:arr(d.boardOptions),meal:clean(arr(d.boardOptions)[0],200),skandiTier:tier,collection:tier,details:d,description:summaryOf(record,language),summary:summaryOf(record,language),countrySlug:h.countrySlug,destinationSlug:h.destinationSlug,areaSlug:h.areaSlug,path:customPath("hotel",{...h,hotelSlug,hotelId:record.id})};
 }
 function mapPoint(record) {
   const details = obj(record?.details);
@@ -263,13 +300,31 @@ function mapPoint(record) {
   return latitude === null || longitude === null || (!latitude && !longitude) ? null : { latitude, longitude };
 }
 function countryPage(record,language){
-  const browse=[...new Map([...directChildren(record,["DESTINATION","AREA"]),...records("DESTINATION").filter(r=>isUnder(r,record))].map(r=>[r.id,r])).values()],d=obj(record.details),regions=browse.map(child=>{const type=clean(child.entityType,60).toUpperCase(),destinationSlug=type==="DESTINATION"?slug(child.slug||child.name):"",areaSlug=type==="AREA"?slug(child.slug||child.name):"";return{name:clean(child.name,500),slug:slug(child.slug||child.name),position:mapPoint(child),image:cardImageOf(child),description:summaryOf(child,language),hotelCount:hotelsForScope(child).length,path:type==="AREA"?customPath("area",{countrySlug:slug(record.slug||record.name),areaSlug}):customPath("destination",{countrySlug:slug(record.slug||record.name),destinationSlug}),hotelsPath:customPath("hotels",{countrySlug:slug(record.slug||record.name),destinationSlug,areaSlug})}});
+  const d=obj(record.details), scope=hierarchy(record);
+  const level=record.entityType.toLowerCase();
+  const children=records("REGION").concat(records("DESTINATION"),records("AREA")).filter(child=>{
+    const parents=geographicParents(child);
+    return geographyTypes.map(type=>parents.find(parent=>parent.entityType===type)).filter(Boolean).at(-1)?.id===record.id;
+  });
+  const regions=children.sort((a,b)=>a.name.localeCompare(b.name)).map(child=>({
+    name:clean(child.name,500),slug:slug(child.slug||child.name),type:child.entityType,position:mapPoint(child),
+    image:cardImageOf(child),description:summaryOf(child,language),hotelCount:hotelsForScope(child).length,
+    path:geographyPath(child),hotelsPath:geographyPath(child,"hotels")
+  }));
   const mapCenter=mapPoint(record);
   const places=regions.filter(r=>r.position).map(r=>({name:r.name,...r.position,path:r.hotelsPath}));
   const practical=arr(d.practicalInfo).map(i=>({icon:clean(first(i.icon,"•"),20),title:clean(first(i.title,i.label),500),summary:clean(first(i.summary,i.text,i.description),5000),path:clean(first(i.path,i.url,"/travel-info"),1000)})).filter(i=>i.title||i.summary);
   const inspiration=arr(d.inspiration).map(i=>({image:mediaUrl(first(i.image,i.imageUrl)),title:clean(first(i.title,i.name),500),path:clean(first(i.path,i.url,"/voy-magazine"),1000)})).filter(i=>i.title);
   const airlines=arr(d.airlines).map(item=>{if(typeof item==="string"){const a=byTypeSlug("AIRLINE",item)||records("AIRLINE").find(r=>clean(r.code,20).toUpperCase()===clean(item,20).toUpperCase());return a?{code:clean(a.code,20),name:clean(a.name,500),summary:summaryOf(a,language),path:"/flights"}:{code:clean(item,20),name:clean(item,500),summary:"",path:"/flights"}}const r=obj(item);return{code:clean(first(r.code,r.iata),20),name:clean(first(r.name,r.title),500),summary:clean(first(r.summary,r.description),2000),path:clean(first(r.path,r.url,"/flights"),1000)}});
-  return{airports:airportDirectory(),id:record.id,name:clean(record.name,500),slug:slug(record.slug||record.name),code:clean(record.code,20).toUpperCase(),hero:heroFor(record,language),directory:records("COUNTRY").map(c=>({slug:slug(c.slug||c.name),name:clean(c.name,500)})),facts:countryFacts(record),intro:introFor(record,language),stories:stories(record),regions,map:{center:mapCenter,places},weather:clean(first(d.weatherSummary,d.weather,d.climateSummary),5000),climate:climate(record),info:practical,inspiration,airlines,faqs:faqs(record)};
+  return {
+    airports:airportDirectory(),id:record.id,name:clean(record.name,500),slug:slug(record.slug||record.name),
+    countrySlug:scope.countrySlug,level,code:clean(record.code,20).toUpperCase(),breadcrumbs:breadcrumbsFor(record),
+    hero:heroFor(record,language),directory:records("COUNTRY").map(c=>({slug:slug(c.slug||c.name),name:clean(c.name,500)})),
+    facts:level==="country"?countryFacts(record):quickFacts(record,{countryName:scope.country?.name}),intro:introFor(record,language),
+    stories:stories(record),regions,hotelCount:hotelsForScope(record).length,map:{center:mapCenter,places},
+    paths:{hotels:geographyPath(record,"hotels"),packages:SITE_MAP.packages,map:SITE_MAP.destinations},
+    weather:clean(first(d.weatherSummary,d.weather,d.climateSummary),5000),climate:climate(record),info:practical,inspiration,airlines,faqs:faqs(record)
+  };
 }
 function destinationPage(record,language){
   const country=countryOf(record),areas=directChildren(record,["AREA"]),directHotels=directChildren(record,["HOTEL"]),d=obj(record.details);
@@ -286,15 +341,21 @@ function areaPage(record,language){
   const match=obj(first(d.match,d.areaMatch,{}));
   return{airports:airportDirectory(),id:record.id,name:clean(record.name,500),slug:slug(record.slug||record.name),countrySlug:slug(country?.slug||country?.name),countryName:clean(country?.name,500),countryCode:clean(country?.code,20).toUpperCase(),destinationSlug:slug(destination?.slug||destination?.name),destinationName:clean(destination?.name,500),hero:heroFor(record,language,destination?.name||country?.name||""),directory:directoryAreas(),quickFacts:quickFacts(record,{countryName:country?.name||""}),intro:introFor(record,language),goodToKnow:arr(first(d.goodToKnow,d.goodFor,[])).map(i=>clean(typeof i==="string"?i:first(i.text,i.title,i.description),1200)).filter(Boolean),match:{title:clean(first(match.title,record.name),500),copy:clean(first(match.copy,match.text,summaryOf(record,language)),5000),values:{beach:numeric(match.beach),dining:numeric(match.dining),evening:numeric(match.evening),family:numeric(match.family),calm:numeric(match.calm),active:numeric(match.active)}},hotels:hotelCards,hotelsPath:customPath("hotels",{countrySlug:slug(country?.slug||country?.name),destinationSlug:slug(destination?.slug||destination?.name),areaSlug:slug(record.slug||record.name)}),guide:guide(record),excursions,practicalFacts,transfer,climate:climate(record),weatherSummary:clean(first(d.weatherSummary,d.weather,d.climateSummary),5000),reviews:obj(first(d.reviewSummary,d.reviewsSummary,{})),nearby:siblings.map(a=>{const c=countryOf(a),x=destinationOf(a);return{image:cardImageOf(a),name:clean(a.name,500),description:summaryOf(a,language),countrySlug:slug(c?.slug||c?.name),destinationSlug:slug(x?.slug||x?.name),areaSlug:slug(a.slug||a.name)}}),inspiration:arr(d.inspiration).map(i=>({image:mediaUrl(first(i.image,i.imageUrl)),title:clean(first(i.title,i.name),500),path:clean(first(i.path,i.url,"/voy-magazine"),1000)})).filter(i=>i.title),faqs:faqs(record)};
 }
-function hotelListPage(countrySlug,destinationSlug,areaSlug,language){
-  const country=byTypeSlug("COUNTRY",countrySlug)||null,destination=byTypeSlug("DESTINATION",destinationSlug),area=byTypeSlug("AREA",areaSlug),scope=area||destination||country,scopeName=clean(first(area?.name,destination?.name,country?.name,"Hotels"),500);
-  return{airports:airportDirectory(),name:scopeName,countrySlug:slug(country?.slug||country?.name),countryName:clean(country?.name,500),destinationSlug:slug(destination?.slug||destination?.name),destinationName:clean(destination?.name,500),areaSlug:slug(area?.slug||area?.name),areaName:clean(area?.name,500),slug:slug(area?.slug||destination?.slug||country?.slug||scopeName),heroImage:imageOf(scope),intro:summaryOf(scope,language),description:descriptionOf(scope,language),previewHotels:hotelsForScope(scope).map(h=>previewHotel(h,language))};
+function hotelListPage(countrySlug,destinationSlug,areaSlug,language,regionSlug=""){
+  const scope=resolveGeography({countrySlug,regionSlug,destinationSlug,areaSlug});
+  const {country,region,destination,area,...slugs}=hierarchy(scope);
+  return {
+    ...slugs,slug:slug(scope?.slug||scope?.name||"hotels"),airports:airportDirectory(),name:clean(first(scope?.name,"Hotels"),500),
+    countryName:country?.name||"",regionName:region?.name||"",destinationName:destination?.name||"",areaName:area?.name||"",
+    breadcrumbs:breadcrumbsFor(scope),heroImage:imageOf(scope),intro:summaryOf(scope,language),description:descriptionOf(scope,language),
+    previewHotels:scope===undefined?[]:hotelsForScope(scope).map(h=>previewHotel(h,language))
+  };
 }
 function normalizeRoom(room={},gallery=[]){return{id:clean(first(room.id,room.code,slug(room.name)),160),code:clean(room.code,80),name:clean(first(room.name,room.code),500),description:readable(room.description).slice(0,6000),image:mediaUrl(first(room.image,room.photo)),capacity:numeric(room.maxGuests,room.capacity),size:numeric(room.sizeSqm,room.size)?`${numeric(room.sizeSqm,room.size)} m²`:"",bedType:readable(room.bedType).slice(0,160),roomType:readable(room.roomType).slice(0,160),features:arr(first(room.features,room.amenities,[])).map(v=>readable(v)).filter(Boolean)}}
 function hotelPage(record,language,query={}){
   const d=obj(record.details),h=hierarchy(record),l=localized(record,language),gallery=imagesOf(record),lat=coordinate(first(d.latitude,record.latitude),90),lng=coordinate(first(d.longitude,record.longitude),180),addressValue=typeof d.address==="object"?[d.address.line1||d.address.addressLine1||d.address.street,d.address.line2||d.address.addressLine2].filter(Boolean).join(", "):readable(d.address),address=[addressValue,d.postalCode,d.city].filter(Boolean).join(", "),food=first(d.food,d.foodDrink,d.dining,{}),poolBeach=first(d.poolBeach,d.poolAndBeach,{}),activities=first(d.activities,d.trainingActivities,{}),accessibility=first(d.accessibility,{}),tier=clean(first(d.skandiTier,d.collection),60).toUpperCase();
   const dep=clean(first(query.QueryDepDate,query.departureDate,query.checkIn),10),explicit=clean(first(query.returnDate,query.checkOutDate),10),legacy=Math.max(0,numeric(query.QueryDur,query.nights,query.duration)),ret=validDate(explicit)?explicit:(validDate(dep)&&legacy?addDays(dep,legacy):"");
-  return{bookable:hasStayMapping(record),flightsAvailable:hasStayMapping(record)&&Boolean(airportFor(record)),airports:airportDirectory(),id:record.id,hotelKey:record.publicId||record.id,hotelSlug:slug(record.slug||record.name),providerHotelId:clean(first(d.duffelAccommodationId,d.providerAccommodationId),180),name:clean(record.name,500),countrySlug:h.countrySlug,countryName:clean(h.country?.name,500),destinationSlug:h.destinationSlug,destinationName:clean(h.destination?.name,500),areaSlug:h.areaSlug,areaName:clean(h.area?.name,500),destinationCode:clean(first(d.searchAirportIata,d.destinationIata),20).toUpperCase(),gallery,galleryMedia:mediaRows(record).map(item=>({url:mediaUrl(item),alt:readable(first(item.altText,item.alt_text,item.caption)),caption:readable(item.caption)})).filter(item=>item.url),heroImage:gallery[0]||"",summary:summaryOf(record,language),about:descriptionOf(record,language),important:readable(first(l.importantInformation,l.important_information,d.importantInformation)).slice(0,6000),skandiTier:tier,collection:tier,officialClassification:numeric(d.officialStarRating,d.classification,d.stars),classification:numeric(d.officialStarRating,d.classification,d.stars),skandiRating:numeric(d.skandiRating),guestRating:numeric(d.guestRating),reviewCount:numeric(d.reviewCount),highlights:[...new Set([...arr(l.highlights),...arr(d.tags),...arr(d.goodFor)].map(v=>readable(v).slice(0,1200)).filter(Boolean))],facilities:arr(d.facilities).map(v=>readable(v)).filter(Boolean),boardOptions:arr(d.boardOptions).map(v=>readable(v)).filter(Boolean),included:arr(l.included).map(v=>readable(v)).filter(Boolean),notIncluded:arr(first(l.notIncluded,l.not_included,[])).map(v=>readable(v)).filter(Boolean),policies:{checkIn:readable(d.checkinTime),checkOut:readable(d.checkoutTime),minimumAge:d.minimumCheckinAge??null,petsAllowed:typeof d.petsAllowed==="boolean"?d.petsAllowed:null,smoking:readable(d.smokingPolicy)},facts:pageFacts(record).map(i=>({label:readable(first(i.label,i.title,i.key)).slice(0,300),value:readable(first(i.value,i.text,i.description)).slice(0,1000)})),roomsIntro:readable(first(d.roomsIntro,d.roomDescription)).slice(0,5000),rooms:arr(d.rooms).map(r=>normalizeRoom(r,gallery)),food,accessibility,poolBeach,activities,locationTransfer:{text:readable(first(d.locationText,d.locationDescription)).slice(0,5000),address,latitude:lat,longitude:lng,airportDistance:numeric(d.distanceToAirport)?`${numeric(d.distanceToAirport)} km`:"",transferTime:numeric(d.transferTimeMinutes)?`${numeric(d.transferTimeMinutes)} min`:"",centerDistance:numeric(d.distanceToCenter)?`${numeric(d.distanceToCenter)} km`:"",beachDistance:numeric(d.distanceToBeach)?`${numeric(d.distanceToBeach)} km`:"",phone:clean(first(d.phone,d.contactPhone),100),email:clean(first(d.email,d.contactEmail),254)},climate:climate(record).map(i=>({month:i.month,air:i.air||i.high||i.temperature,water:i.water})),reviews:arr(d.reviews),selection:{origin:clean(query.origin,100),departureDate:dep,returnDate:ret,nights:nightsBetween(dep,ret),travelers:numeric(query.adults,2)||2,meal:clean(first(query.SelectedMeals,"noselection"),80),roomKey:clean(query.RoomKey,160)},supplier:"DUFFEL_STAYS",liveAvailability:hasStayMapping(record)};
+  return{bookable:hasStayMapping(record),flightsAvailable:hasStayMapping(record)&&Boolean(airportFor(record)),airports:airportDirectory(),id:record.id,hotelKey:record.publicId||record.id,hotelSlug:slug(record.slug||record.name),providerHotelId:clean(first(d.duffelAccommodationId,d.providerAccommodationId),180),name:clean(record.name,500),countrySlug:h.countrySlug,countryName:clean(h.country?.name,500),regionSlug:h.regionSlug,regionName:clean(h.region?.name,500),breadcrumbs:breadcrumbsFor(record),hotelsPath:geographyPath(record,"hotels"),destinationSlug:h.destinationSlug,destinationName:clean(h.destination?.name,500),areaSlug:h.areaSlug,areaName:clean(h.area?.name,500),destinationCode:clean(first(d.searchAirportIata,d.destinationIata),20).toUpperCase(),gallery,galleryMedia:mediaRows(record).map(item=>({url:mediaUrl(item),alt:readable(first(item.altText,item.alt_text,item.caption)),caption:readable(item.caption)})).filter(item=>item.url),heroImage:gallery[0]||"",summary:summaryOf(record,language),about:descriptionOf(record,language),important:readable(first(l.importantInformation,l.important_information,d.importantInformation)).slice(0,6000),skandiTier:tier,collection:tier,officialClassification:numeric(d.officialStarRating,d.classification,d.stars),classification:numeric(d.officialStarRating,d.classification,d.stars),skandiRating:numeric(d.skandiRating),guestRating:numeric(d.guestRating),reviewCount:numeric(d.reviewCount),highlights:[...new Set([...arr(l.highlights),...arr(d.tags),...arr(d.goodFor)].map(v=>readable(v).slice(0,1200)).filter(Boolean))],facilities:arr(d.facilities).map(v=>readable(v)).filter(Boolean),boardOptions:arr(d.boardOptions).map(v=>readable(v)).filter(Boolean),included:arr(l.included).map(v=>readable(v)).filter(Boolean),notIncluded:arr(first(l.notIncluded,l.not_included,[])).map(v=>readable(v)).filter(Boolean),policies:{checkIn:readable(d.checkinTime),checkOut:readable(d.checkoutTime),minimumAge:d.minimumCheckinAge??null,petsAllowed:typeof d.petsAllowed==="boolean"?d.petsAllowed:null,smoking:readable(d.smokingPolicy)},facts:pageFacts(record).map(i=>({label:readable(first(i.label,i.title,i.key)).slice(0,300),value:readable(first(i.value,i.text,i.description)).slice(0,1000)})),roomsIntro:readable(first(d.roomsIntro,d.roomDescription)).slice(0,5000),rooms:arr(d.rooms).map(r=>normalizeRoom(r,gallery)),food,accessibility,poolBeach,activities,locationTransfer:{text:readable(first(d.locationText,d.locationDescription)).slice(0,5000),address,latitude:lat,longitude:lng,airportDistance:numeric(d.distanceToAirport)?`${numeric(d.distanceToAirport)} km`:"",transferTime:numeric(d.transferTimeMinutes)?`${numeric(d.transferTimeMinutes)} min`:"",centerDistance:numeric(d.distanceToCenter)?`${numeric(d.distanceToCenter)} km`:"",beachDistance:numeric(d.distanceToBeach)?`${numeric(d.distanceToBeach)} km`:"",phone:clean(first(d.phone,d.contactPhone),100),email:clean(first(d.email,d.contactEmail),254)},climate:climate(record).map(i=>({month:i.month,air:i.air||i.high||i.temperature,water:i.water})),reviews:arr(d.reviews),selection:{origin:clean(query.origin,100),departureDate:dep,returnDate:ret,nights:nightsBetween(dep,ret),travelers:numeric(query.adults,2)||2,meal:clean(first(query.SelectedMeals,"noselection"),80),roomKey:clean(query.RoomKey,160)},supplier:"DUFFEL_STAYS",liveAvailability:hasStayMapping(record)};
 }
 function hotelSearch(payload={},record={}){
   const d=obj(record.details),departureDate=clean(first(payload.checkInDate,payload.departureDate),10);let returnDate=clean(first(payload.checkOutDate,payload.returnDate),10);if(!validDate(returnDate)&&validDate(departureDate)){const legacy=Math.max(0,Number(first(payload.nights,payload.duration,0))||0);if(legacy)returnDate=addDays(departureDate,legacy)}
@@ -306,5 +367,5 @@ function liveHotel(item,language="EN"){
   return{...preview,...item,id:clean(first(item.id,item.staySearchResultId,preview.id),180),name:clean(first(preview.name,item.title,item.name),500),image:clean(first(preview.image,item.imageUrl),1800),imageUrl:clean(first(preview.image,item.imageUrl),1800),location:clean(first(preview.location,item.location),500),price:numeric(item.total,item.price?.total,item.price?.amount,item.cheapestRateTotalAmount),currency:normalizeCurrency(first(item.currency,item.price?.currency,item.cheapestRateTotalCurrency,"USD")),isLive:true,offer:{...item,itemType:"hotel",tripType:"hotelOnly"},supplier:"DUFFEL_STAYS"};
 }
 
-return { records, byId, byTypeSlug, relationTarget, relatedRecords, parentOf, ancestors, countryOf, regionOf, destinationOf, areaOf, isDirectChild, directChildren, isUnder, hotelsForScope, localized, mediaRows, mediaUrl, imagesOf, imageOf, cardImageOf, summaryOf, descriptionOf, paragraphs, pageFacts, climate, faqs, signature, guide, stories, quickFacts, countryFacts, introFor, heroFor, hierarchy, customPath, directoryDestinations, directoryAreas, airportDirectory, airportFromValue, airportFor, v9BookingSearch, previewHotel, countryPage, destinationPage, areaPage, hotelListPage, normalizeRoom, hotelPage, hotelSearch, sameAccommodation, liveHotel };
+return { records, byId, byTypeSlug, relationTarget, relatedRecords, parentOf, ancestors, countryOf, regionOf, destinationOf, areaOf, isDirectChild, directChildren, isUnder, hotelsForScope, localized, mediaRows, mediaUrl, imagesOf, imageOf, cardImageOf, summaryOf, descriptionOf, paragraphs, pageFacts, climate, faqs, signature, guide, stories, quickFacts, countryFacts, introFor, heroFor, hierarchy, customPath, resolveGeography, geographyPath, breadcrumbsFor, directoryDestinations, directoryAreas, airportDirectory, airportFromValue, airportFor, v9BookingSearch, previewHotel, countryPage, destinationPage, areaPage, hotelListPage, normalizeRoom, hotelPage, hotelSearch, sameAccommodation, liveHotel };
 }

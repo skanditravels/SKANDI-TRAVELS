@@ -104,6 +104,7 @@ export async function inventory(root) {
     const row={key,route,slug,title:reg.EDITORIAL_PAGE_CATALOG?.find(p=>p.key===key)?.label||meta.controller?.split('/').pop().replace(/\.[^.]+\.js$/,'')||key,
       family:reg.getPageFamily(route),chrome:reg.getPageChrome(route),mobileNavigation:reg.hasPageMobileNavigation?.(route) ?? reg.getPageChrome(route)!=='none',sourceDirectory:directory,stem,
       controller:meta.controller||null,embedIds:meta.embedIds||[],sources:meta.sources||[],components,binding:meta.binding||'explicit',
+      ...(meta.layout==='viewport'?{layout:meta.layout}:{}),
       requiresStaff:reg.getPageFamily(route)!=='public' && meta.publicEntry!==true,
       status:source.status,files:source.files,missing:source.missing,issues:evidence.issues,backend:evidence.backend,messages:evidence.messages,
       output:`dist/${slug}/index.html`,dynamic:shape!==pathname};

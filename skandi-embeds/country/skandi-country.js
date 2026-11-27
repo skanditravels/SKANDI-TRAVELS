@@ -45,227 +45,140 @@ function money(amount, currency = settings.currency) {
       return `${amount} ${currency}`;
     }
   }
-function renderPage(data) {
-    page = data;
-    document.title = `${data.name} · SKANDI Travels`;
-    $("breadcrumbCountry").textContent = data.name;
-    $("heroKicker").textContent = data.hero?.kicker || "SKANDI DESTINATIONS";
-    $("heroTitle").textContent = data.hero?.title || data.name;
-    $("heroSummary").textContent = data.hero?.summary || "";
-    ["hero1", "hero2", "hero3"].forEach((id, i) => {
-      const src=imageUrl(data.hero?.images?.[i] || data.hero?.images?.[0]);
-      if(src)$(id).src=src;else $(id).removeAttribute("src");
-      $(id).hidden=!src;
-      $(id).alt = data.name;
-    });
-    directory = data.directory || directory;
-    $("countrySelector").innerHTML = directory
-      .map(
-        (x) =>
-          `<option value="${esc(x.slug)}" ${x.slug === data.slug ? "selected" : ""}>${esc(x.name || x.slug)}</option>`,
-      )
-      .join("");
-    const labels = {
-      currency: "country.fact.currency",
-      language: "country.fact.language",
-      timezone: "country.fact.timezone",
-      flight: "country.fact.flight",
-      season: "country.fact.season",
-      best: "country.fact.best",
-    };
-    $("facts").innerHTML = (data.facts || [])
-      .map(
-        (x) =>
-          `<div class="fact"><div class="fact-label">${esc(x.labelKey?t(x.labelKey,x.label):x.label||(labels[x.key]?t(labels[x.key]):x.key||""))}</div><div class="fact-value">${esc(x.value)}</div></div>`,
-      )
-      .join("");
-    $("introTitle").textContent = data.intro?.title || data.name;
-    $("introCopy").innerHTML = (data.intro?.paragraphs || [])
-      .map((p) => `<p>${esc(p)}</p>`)
-      .join("");
-    $("signatureCopy").textContent = data.intro?.signature || "";
-    $("signatureList").innerHTML = [
-      t("country.hotels"),
-      t("country.nav.info"),
-      t("country.nav.inspiration"),
-    ]
-      .map((x, i) => `<div><span>${i + 1}</span><div>${esc(x)}</div></div>`)
-      .join("");
-    $("storyGrid").innerHTML = (data.stories || [])
-      .map(
-        (x, i) =>
-          `<article class="story-card"><div class="num">0${i + 1}</div><h4>${esc(x.title)}</h4><p>${esc(x.body)}</p></article>`,
-      )
-      .join("");
-    $("dealsTitle").textContent = token(t("country.demo.hero"), {
-      country: data.name,
-    });
-    $("regionsTitle").textContent =
-      `${t("country.section.stay")} · ${data.name}`;
-    $("regionGrid").innerHTML = (data.regions || [])
-      .map(
-        (r) =>
-          `<article class="region-card"><img src="${esc(imageUrl(r.image))}" alt="${esc(r.name)}"><div class="region-content"><h3>${esc(r.name)}</h3><p>${esc(r.description || "")}</p><div class="region-actions"><button class="c-btn light" data-nav="${esc(r.path || routes.destinations || "/destinations")}">${esc(t("country.explore"))}</button><button class="c-btn ghost" data-nav="${esc(r.hotelsPath || page.paths?.hotels || routes.destinations || "/destinations")}">${esc(t("country.allHotels"))}</button></div></div></article>`,
-      )
-      .join("");
-    $("mapTitle").textContent = `Map of ${data.name}`;
-    renderCountryMap(data.map);
-    $("weatherTitle").textContent =
-      `${t("country.section.weather")} · ${data.name}`;
-    $("weatherNoteTitle").textContent = t("country.nav.weather");
-    $("weatherCopy").textContent = data.weather || "";
-    renderClimate(data.climate || []);
-    $("infoTitle").textContent = `${data.name} · ${t("country.section.good")}`;
-    $("infoGrid").innerHTML = (data.info || [])
-      .map(
-        (x) =>
-          `<article class="info-card"><div class="info-icon">${esc(x.icon)}</div><h3>${esc(x.title)}</h3><p>${esc(x.summary)}</p><button class="text-link" data-nav="${esc(x.path)}">${esc(t("country.read"))} →</button></article>`,
-      )
-      .join("");
-    $("inspireTitle").textContent =
-      `${data.name} · ${t("country.section.inspire")}`;
-    $("inspireGrid").innerHTML = (data.inspiration || [])
-      .map(
-        (x) =>
-          `<article class="inspire-card"><img src="${esc(imageUrl(x.image))}" alt="${esc(x.title)}"><div class="inspire-body"><h3>${esc(x.title)}</h3><button class="c-btn" data-nav="${esc(x.path)}">${esc(t("country.read"))}</button></div></article>`,
-      )
-      .join("");
-    $("airlineTitle").textContent =
-      `${data.name} · ${t("country.section.airlines")}`;
-    $("airlineGrid").innerHTML = (data.airlines || [])
-      .map(
-        (x) =>
-          `<article class="airline"><div class="airline-logo">${esc(x.code)}</div><div><h3>${esc(x.name)}</h3><p>${esc(x.summary)}</p></div><button class="c-btn" data-nav="${esc(x.path)}">${esc(t("country.viewFlights"))}</button></article>`,
-      )
-      .join("");
-    $("faqTitle").textContent = `${t("country.section.faq")} · ${data.name}`;
-    $("faqList").innerHTML = (data.faqs || [])
-      .map(
-        (x) =>
-          `<article class="faq-item"><button class="faq-q"><span>${esc(x.q || x.question)}</span><span class="faq-plus">+</span></button><div class="faq-a">${esc(x.a || x.answer)}</div></article>`,
-      )
-      .join("");
-    ["regionGrid","infoGrid","inspireGrid","airlineGrid","faqList"].forEach(id=>{if(!$(id).children.length)$(id).textContent="No published information is available for this section yet.";});
-    $("galleryBtn").disabled=!galleryImages().length;
-    $("hotelBtn").disabled=!data.paths?.hotels;
-    offers = [];
-    renderOffers([]);
-  }
-  let countryMap, mapObserver;
-  function renderCountryMap(config = {}) {
-    mapObserver?.disconnect();
-    countryMap?.remove();
-    countryMap=null;
-    const canvas=$("countryMapCanvas"),status=$("countryMapStatus"),links=$("countryMapLinks");
-    const places=Array.isArray(config.places)?config.places:[];
-    const center=config.center||places[0];
-    links.innerHTML=places.map(place=>`<li><button class="text-link" type="button" data-nav="${esc(place.path)}">${esc(place.name)}</button></li>`).join("");
-    canvas.hidden=!center;
-    status.textContent=center?"":"A map is unavailable for this destination.";
-    if(!center)return;
-    function start(){
-      mapObserver?.disconnect();
-      try {
-        const library=window.maplibregl;
-        if(!library)throw new Error("Map unavailable");
-        const map=new library.Map({container:canvas,style:"https://tiles.openfreemap.org/styles/liberty",
-          center:[center.longitude,center.latitude],zoom:4.2,cooperativeGestures:true,dragRotate:false,
-          pitchWithRotate:false,maxPitch:0,renderWorldCopies:false});
-        countryMap=map;
-        map.addControl(new library.NavigationControl({showCompass:false}),"top-right");
-        let loaded=false;
-        map.on("error",()=>{if(!loaded)status.textContent="The map couldn’t load. You can still use the links below.";});
-        map.on("load",()=>{
-          if(countryMap!==map)return;
-          loaded=true;status.textContent="";
-          const bounds=new library.LngLatBounds();
-          for(const place of places){
-            const position=[place.longitude,place.latitude];
-            bounds.extend(position);
-            const marker=document.createElement("button");
-            marker.type="button";
-            marker.className="country-map-pin";
-            marker.setAttribute("aria-label",place.name);
-            const popup=document.createElement("div");
-            const name=document.createElement("strong");
-            name.textContent=place.name;
-            const link=document.createElement("button");
-            link.type="button";link.className="text-link";link.dataset.nav=place.path;
-            link.textContent="View location";
-            popup.append(name,link);
-            new library.Marker({element:marker}).setLngLat(position)
-              .setPopup(new library.Popup({offset:18}).setDOMContent(popup)).addTo(map);
-          }
-          if(places.length)map.fitBounds(bounds,{padding:54,maxZoom:7,duration:0});
-        });
-      }catch(_){
-        canvas.hidden=true;
-        status.textContent="The map couldn’t load. You can still use the links below.";
-      }
-    }
-    if("IntersectionObserver" in window){
-      mapObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))start();},{rootMargin:"160px"});
-      mapObserver.observe(canvas);
-    }else start();
-  }
-  window.addEventListener("pagehide",event=>{
-    if(event.persisted)return;
-    mapObserver?.disconnect();
-    countryMap?.remove();
+function shortCopy(value, limit=320) {
+  const text=String(value||"").trim().split(/\n/)[0];
+  return text.length>limit?text.slice(0,limit).replace(/\s+\S*$/,"")+"…":text;
+}
+function breadcrumbLink(path, title) {
+  const link=document.createElement("a");
+  link.target="_top";link.href=new URL(path,"https://www.skanditravels.com").href;
+  link.dataset.nav=path;link.textContent=title;
+  return link;
+}
+function renderBreadcrumb(data) {
+  const nav=$("countryBreadcrumb");
+  nav.replaceChildren(breadcrumbLink(routes.destinations||"/destinations",t("country.destinations")));
+  const places=data?.breadcrumbs?.length?data.breadcrumbs:data?.name?[{name:data.name}]:[];
+  places.forEach((place,i)=>{
+    const divider=document.createElement("span");divider.textContent="›";divider.setAttribute("aria-hidden","true");nav.append(divider);
+    if(i<places.length-1&&place.path)nav.append(breadcrumbLink(place.path,place.name));
+    else{const here=document.createElement("span");here.setAttribute("aria-current","page");here.textContent=place.name;nav.append(here)}
   });
+}
+function showView(view, move=false) {
+  if(!$("countryViews").querySelector(`[data-view="${view}"]:not([hidden])`))view="overview";
+  $$("[data-view]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.view===view)));
+  $("countryOverview").hidden=view!=="overview";
+  $("deals").hidden=view!=="deals";
+  $("countryInfo").hidden=view!=="info";
+  if(move)$("countryViews").scrollIntoView({block:"start"});
+  resize();
+}
+function renderPage(data) {
+  page=data;
+  $("countryMain").hidden=false;
+  document.title=`${data.name} · SKANDI Travels`;
+  renderBreadcrumb(data);
+  const parent=data.breadcrumbs?.at(-2)?.name||"";
+  $("heroKicker").textContent=parent;
+  $("heroKicker").hidden=!parent;
+  $("heroTitle").textContent=data.hero?.title||data.name;
+  const summary=shortCopy(data.hero?.summary);
+  $("heroSummary").textContent=summary;
+  $("heroSummary").hidden=!summary;
+  const hero=imageUrl(data.hero?.images?.[0]);
+  $("countryVisual").hidden=!hero;
+  if(hero)$("hero1").src=hero;else $("hero1").removeAttribute("src");
 
+  $("facts").innerHTML=(data.facts||[]).slice(0,6).map(fact=>
+    `<div class="fact"><div class="fact-label">${esc(fact.labelKey?t(fact.labelKey,fact.label):fact.label||fact.key)}</div><div class="fact-value">${esc(fact.value)}</div></div>`
+  ).join("");
+  const intro=(data.intro?.paragraphs||[]).filter(p=>p.trim()!==summary);
+  $("introCopy").innerHTML=intro.map(p=>`<p>${esc(p)}</p>`).join("");
+  const signature=data.intro?.signature||"";
+  $("signatureCopy").innerHTML=signature&&signature!==summary&&!intro.includes(signature)?`<p>${esc(signature)}</p>`:"";
+  $("storyGrid").innerHTML=(data.stories||[]).filter(item=>item.title&&item.body).map(item=>
+    `<article class="story-card"><h3>${esc(item.title)}</h3><p>${esc(item.body)}</p></article>`
+  ).join("");
+  $("countryAbout").hidden=!["facts","introCopy","signatureCopy","storyGrid"].some(id=>$(id).children.length);
+  $("regions").hidden=!data.regions?.length;
+  $("regionGrid").innerHTML=(data.regions||[]).map(place=>{
+    const image=imageUrl(place.image),description=shortCopy(place.description,180);
+    return `<article class="sj-card region-card">${image?`<img class="sj-card-img" src="${esc(image)}" alt="" loading="lazy">`:""}<div class="region-content">
+      <h3>${esc(place.name)}</h3>${description?`<p>${esc(description)}</p>`:""}
+      <div class="sj-actions">${place.path?`<button class="sj-button primary" data-nav="${esc(place.path)}" type="button" aria-label="${esc(t("country.explore")+" "+place.name)}">${esc(t("country.explore"))}</button>`:""}
+      ${place.hotelsPath&&place.hotelCount!==0?`<button class="sj-button" data-nav="${esc(place.hotelsPath)}" type="button" aria-label="${esc(t("country.hotels")+" · "+place.name)}">${esc(t("country.hotels"))}</button>`:""}</div>
+    </div></article>`;
+  }).join("");
+  $("dealsTitle").textContent=token(t("country.demo.hero"),{country:data.name});
+  $("weatherCopy").textContent=data.weather||"";
+  renderClimate(data.climate||[]);
+  $("weather").hidden=!data.weather&&!$("climate").children.length;
+  $("infoGrid").innerHTML=(data.info||[]).map(item=>
+    `<article class="sj-card info-card"><h3>${esc(item.title)}</h3>${item.summary?`<p>${esc(item.summary)}</p>`:""}${item.path?`<button class="sj-button" data-nav="${esc(item.path)}" type="button">${esc(t("country.read"))}</button>`:""}</article>`
+  ).join("");
+  $("inspireGrid").innerHTML=(data.inspiration||[]).map(item=>{
+    const image=imageUrl(item.image);
+    return `<article class="sj-card inspire-card">${image?`<img class="sj-card-img" src="${esc(image)}" alt="" loading="lazy">`:""}<div class="inspire-body"><h3>${esc(item.title)}</h3><button class="sj-button" data-nav="${esc(item.path)}" type="button">${esc(t("country.read"))}</button></div></article>`;
+  }).join("");
+  $("airlineGrid").innerHTML=(data.airlines||[]).map(item=>
+    `<article class="sj-card airline"><h3>${esc(item.name)}</h3>${item.summary?`<p>${esc(shortCopy(item.summary))}</p>`:""}<button class="sj-button" data-nav="${esc(item.path)}" type="button">${esc(t("country.viewFlights"))}</button></article>`
+  ).join("");
+  $("faqList").innerHTML=(data.faqs||[]).filter(item=>(item.q||item.question)&&(item.a||item.answer)).map(item=>
+    `<details class="faq-item"><summary>${esc(item.q||item.question)}</summary><p>${esc(item.a||item.answer)}</p></details>`
+  ).join("");
+  for(const [section,list] of [["travelInfo","infoGrid"],["inspiration","inspireGrid"],["airlineInfo","airlineGrid"],["faq","faqList"]]){
+    $(section).hidden=!$(list).children.length;
+  }
+  $("galleryBtn").hidden=galleryImages().length<2;
+  $("hotelBtn").hidden=!data.paths?.hotels||data.hotelCount===0;
+  $("planBtn").hidden=!data.arrivalAirports?.length;
+  $("countryViews").querySelector('[data-view="deals"]').hidden=$("planBtn").hidden;
+  $("countryViews").querySelector('[data-view="info"]').hidden=[...$("countryInfo").children].every(section=>section.hidden);
+  $("countryViews").hidden=[...$("countryViews").children].filter(button=>!button.hidden).length<2;
+  const active=$("countryViews").querySelector('[aria-pressed="true"]');
+  showView(active?.dataset.view||"overview");
+  renderOffers([]);
+}
 function renderClimate(items) {
   const locale={EN:"en-US",SV:"sv-SE",NO:"nb-NO",DA:"da-DK",ES:"es-ES",FI:"fi-FI",DE:"de-DE","FR-FR":"fr-FR","FR-CA":"fr-CA",TH:"th-TH"}[settings.language]||"en-US";
-  const fmt=new Intl.DateTimeFormat(locale,{month:"short"}), known=x=>x!==null&&x!==undefined&&x!==""&&Number.isFinite(Number(x));
-  const rows=(Array.isArray(items)?items:[]).filter(x=>Number.isInteger(Number(x.month))&&Number(x.month)>=1&&Number(x.month)<=12);
-  if(!rows.length){$("climate").textContent="Monthly climate information has not been published yet.";return;}
-  const max=Math.max(1,...rows.filter(x=>known(x.temperature)).map(x=>Number(x.temperature)));
-  $("climate").innerHTML=rows.map(x=>'<div class="month"><div class="bar-wrap"><div class="bar" style="height:'+(known(x.temperature)?Math.max(18,Math.round(Number(x.temperature)/max*185)):0)+'px" data-temp="'+esc(known(x.temperature)?x.temperature+"°":"—")+'"></div></div><div class="rain">'+esc(known(x.rain)?x.rain+" mm":"—")+'</div><div class="month-label">'+esc(fmt.format(new Date(2026,Number(x.month)-1,1)))+'</div></div>').join("");
+  const fmt=new Intl.DateTimeFormat(locale,{month:"short"}), known=value=>value!==null&&value!==undefined&&value!==""&&Number.isFinite(Number(value));
+  const rows=(Array.isArray(items)?items:[]).filter(item=>Number(item.month)>=1&&Number(item.month)<=12);
+  $("climate").innerHTML=rows.map(item=>`<div class="month"><strong>${esc(fmt.format(new Date(2026,Number(item.month)-1,1)))}</strong>
+    <span>${known(item.temperature)?esc(item.temperature)+" °C":"—"}</span><span>${known(item.rain)?esc(item.rain)+" mm":"—"}</span></div>`).join("");
 }
 function galleryImages() {
-    return [
-      ...(page?.hero?.images || []),
-      ...(page?.regions || []).map((r) => r.image),
-    ].map(imageUrl).filter(Boolean);
-  }
+  return [...new Set((page?.hero?.images||[]).map(imageUrl).filter(Boolean))];
+}
 function setGalleryImage(index) {
-    const images = galleryImages();
-    if (!images.length) return;
-    const safe = Math.max(0, Math.min(index, images.length - 1));
-    $("galleryMain").src = images[safe];
-    $("galleryMain").alt = page?.name || "";
-    $$("[data-gallery-index]").forEach((b) =>
-      b.classList.toggle("active", +b.dataset.galleryIndex === safe),
-    );
-  }
+  const images=galleryImages();
+  if(!images[index])return;
+  $("galleryMain").src=images[index];
+  $("galleryMain").alt=page?.name||"";
+  $$("[data-gallery-index]").forEach(button=>{
+    const selected=Number(button.dataset.galleryIndex)===index;
+    button.classList.toggle("active",selected);
+    button.setAttribute("aria-pressed",String(selected));
+  });
+}
 function openGallery() {
-    const images = galleryImages();
-    if (!images.length) return;
-    $("galleryTitle").textContent =
-      `${t("country.gallery")} · ${page?.name || ""}`;
-    $("galleryThumbs").innerHTML = images
-      .map(
-        (src, i) =>
-          `<button class="gallery-thumb ${i === 0 ? "active" : ""}" data-gallery-index="${i}"><img src="${esc(src)}" alt=""></button>`,
-      )
-      .join("");
-    setGalleryImage(0);
-    $("galleryModal").classList.add("open");
-    $("galleryModal").setAttribute("aria-hidden", "false");
-    document.documentElement.style.overflow = "hidden";
-  }
-function closeGallery() {
-    $("galleryModal").classList.remove("open");
-    $("galleryModal").setAttribute("aria-hidden", "true");
-    document.documentElement.style.overflow = "";
-  }
+  const images=galleryImages();
+  if(!images.length)return;
+  $("galleryTitle").textContent=page.name;
+  $("galleryThumbs").innerHTML=images.map((src,index)=>
+    `<button type="button" aria-label="${esc(t("country.gallery"))} ${index+1}" data-gallery-index="${index}"><img src="${esc(src)}" alt=""></button>`
+  ).join("");
+  setGalleryImage(0);
+  $("galleryModal").showModal();
+}
+function closeGallery() { $("galleryModal").close(); }
   const VERSION = "V12-COUNTRY-2026.10.06";
-  const COUNTRY_SOURCE="SKANDI_DYNAMIC_COUNTRY_PAGE", HEADER_SOURCE="SKANDI_CUSTOMER_HEADER_EXPANDBAR", PARENT_SOURCE="SKANDI_WIX_PARENT";
+  const COUNTRY_SOURCE="SKANDI_DYNAMIC_COUNTRY_PAGE", PARENT_SOURCE="SKANDI_WIX_PARENT";
   const SETTINGS_KEY="skandi_user_settings", CURRENCIES=["USD","SEK","NOK","DKK","EUR"];
   const $=id=>document.getElementById(id), $$=s=>Array.from(document.querySelectorAll(s));
   const PARENT_ORIGIN="*";
-  let settings={language:"EN",currency:"USD"},page=null,directory=[],offers=[],routes={},masterSettingsReceived=false;
-  let readyTimer=null,settingsTimer=null,resizeTimer=null;
+  let settings={language:"EN",currency:"USD"},page=null,directory=[],offers=[],routes={};
+  let readyTimer=null,resizeTimer=null;
   const pending={page:null,search:null,selection:null};
   const t=(key,f="")=>I18N[settings.language]?.[key]||I18N.EN?.[key]||f||key;
   const esc=v=>String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -340,9 +253,9 @@ function closeGallery() {
     clearInterval(readyTimer);
     if(pending.search)release("search",pending.search.id);
     offers=[];renderOffers([]);
-    $("countryPage").setAttribute("aria-busy","true");state("Loading country information…");
+    $("countryPage").setAttribute("aria-busy","true");state("Loading destination information…");
     const query=new URLSearchParams(window.__SKANDI_FLOW_QUERY||location.search).get("country");
-    const job=request("page",type,{slug:selectedSlug||page?.slug||query||"",settings:{...settings},force},30000);
+    const job=request("page",type,{slug:selectedSlug||page?.countrySlug||query||"",settings:{...settings},force},30000);
     if(pending.page===job) readyTimer=setInterval(()=>{if(pending.page===job)post(job.type,job.payload,job.id);},1500);
   }
   function nav(path) {if(path)post("COUNTRY_NAVIGATE",{path});}
@@ -351,7 +264,6 @@ function closeGallery() {
     resizeTimer=setTimeout(()=>post("RESIZE_IFRAME",{height:Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)}),120);
   }
   function syncSettings() {
-    $("welcomeLang").value=settings.language;$("welcomeCurr").value=settings.currency;
     $("arrivalLabel").textContent=label("arrival");$("countryRetry").textContent=label("retry");
   }
   function applyI18n() {
@@ -361,12 +273,11 @@ function closeGallery() {
     $$("[data-i18n-aria-label]").forEach(el=>el.setAttribute("aria-label",t(el.dataset.i18nAriaLabel)));
     syncSettings();
   }
-  function saveSettings(value,{notify=false,reload=true}={}) {
+  function saveSettings(value) {
     const next=normalizeSettings(value), changed=JSON.stringify(next)!==JSON.stringify(settings);
     settings=next;try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(_){}
     applyI18n();
-    if(notify)emit(HEADER_SOURCE,"UPDATE_SETTINGS",{...settings});
-    if(reload&&(changed||notify))requestPage("UPDATE_SETTINGS");
+    if(changed)requestPage("UPDATE_SETTINGS");
   }
   function renderDirectory(rows,selected="") {
     directory=Array.isArray(rows)?rows:[];
@@ -387,7 +298,7 @@ function closeGallery() {
       const currency=o.price?.currency||o.currency||settings.currency;
       const tags=Array.isArray(o.includes||o.tags)?o.includes||o.tags:[];
       const image=imageUrl(o.image||o.imageUrl||page?.hero?.images?.[0]);
-      return `<article class="offer">${image?`<img src="${esc(image)}" alt="">`:""}<div class="offer-body"><div class="loc">${esc(o.location||o.destinationName||page?.name||"")}</div><h3>${esc(o.title||o.hotelName||t("country.offer.option"))}</h3><div class="offer-tags">${tags.slice(0,4).map(x=>`<span>${esc(x)}</span>`).join("")}</div><div class="offer-price"><div><strong>${known?esc(money(raw,currency)):"Price unavailable"}</strong><small>${esc(label("total"))}</small></div><button class="c-btn" data-offer="${i}" data-unpriced="${!known}"${!known||pending.selection?" disabled":""}>${esc(t("country.offer.view"))}</button></div></div></article>`;
+      return `<article class="sj-card offer">${image?`<img src="${esc(image)}" alt="">`:""}<div class="offer-body"><div class="loc">${esc(o.location||o.destinationName||page?.name||"")}</div><h3>${esc(o.title||o.hotelName||t("country.offer.option"))}</h3><div class="offer-tags">${tags.slice(0,4).map(x=>`<span>${esc(x)}</span>`).join("")}</div><div class="offer-price"><div><strong>${known?esc(money(raw,currency)):"Price unavailable"}</strong><small>${esc(label("total"))}</small></div><button class="sj-button primary" data-offer="${i}" data-unpriced="${!known}"${!known||pending.selection?" disabled":""}>${esc(t("country.offer.view"))}</button></div></div></article>`;
     }).join("");
     $("offerStatus").style.display=offers.length?"none":"block";
     if(!offers.length&&!pending.search&&!pending.selection)setSearchState(t("country.search.empty"));
@@ -397,9 +308,9 @@ function closeGallery() {
     routes={...routes,...(payload.routes||{})};settings=normalizeSettings(payload.settings||settings);applyI18n();
     if(payload.page) {
       if(!payload.page.slug||!payload.page.name)throw new Error("Invalid country page");
-      renderPage(payload.page);renderDirectory(payload.directory||payload.page.directory,payload.page.slug);renderAirports(payload.page);state("");
+      renderPage(payload.page);renderDirectory(payload.directory||payload.page.directory,payload.page.countrySlug||payload.page.slug);renderAirports(payload.page);state("");
     } else {
-      page=null;renderDirectory(payload.directory);
+      page=null;renderBreadcrumb();$("countryMain").hidden=true;renderDirectory(payload.directory);
       state(directory.length?label("choose"):"No countries are currently published.",!directory.length,false);
       $("heroTitle").textContent=label("choose");
     }
@@ -407,9 +318,12 @@ function closeGallery() {
   }
   document.addEventListener("click",e=>{
     const b=e.target.closest("button");if(b?.disabled)return;
-    const n=e.target.closest("[data-nav]");if(n){nav(n.dataset.nav);return;}
-    const s=e.target.closest("[data-scroll]");if(s){$(s.dataset.scroll)?.scrollIntoView({behavior:"smooth"});return;}
-    const q=e.target.closest(".faq-q");if(q){q.closest(".faq-item")?.classList.toggle("open");resize();return;}
+    const n=e.target.closest("[data-nav]");
+    if(n){
+      if(n.tagName==="A"&&(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey))return;
+      e.preventDefault();nav(n.dataset.nav);return;
+    }
+    const view=e.target.closest("[data-view]");if(view){showView(view.dataset.view);return;}
     const g=e.target.closest("[data-gallery-index]");if(g){setGalleryImage(+g.dataset.galleryIndex);return;}
     const o=e.target.closest("[data-offer]");
     if(o&&!pending.selection){const selected=offers[+o.dataset.offer];if(!selected)return;setSearchState("Confirming this offer…");request("selection","COUNTRY_SELECT_OFFER",{offer:{id:selected.id}},90000);}
@@ -422,21 +336,14 @@ function closeGallery() {
     e.preventDefault();if(!page||pending.search||pending.selection||pending.page)return;
     if(!$("searchForm").reportValidity())return;
     offers=[];$("offerGrid").innerHTML="";$("offerStatus").dataset.busy="1";setSearchState(t("country.search.loading"));
-    request("search","COUNTRY_SEARCH_OFFERS",{countrySlug:page.slug,search:{
+    request("search","COUNTRY_SEARCH_OFFERS",{countrySlug:page.countrySlug||page.slug,search:{
       origin:$("origin").value.trim(),destinationIata:$("arrival").value,departureDate:$("depart").value,returnDate:$("return").value,adults:Number($("travelers").value)
     }},90000);
   };
-  $("planBtn").onclick=$("packageBtn").onclick=()=>$("deals").scrollIntoView({behavior:"smooth"});
-  $("hotelBtn").onclick=()=>{if(page)nav(page.paths?.hotels);};
-  $("mapBtn").onclick=()=>nav(page?.paths?.map||routes.ourNetwork);
-  $("weatherBtn").onclick=()=>$("climate").scrollIntoView({behavior:"smooth"});
+  $("planBtn").onclick=()=>showView("deals",true);
+  $("hotelBtn").onclick=()=>{if(page)nav(page.paths?.hotels)};
   $("galleryBtn").onclick=openGallery;$("galleryClose").onclick=closeGallery;
-  $("galleryModal").addEventListener("click",e=>{if(e.target===$("galleryModal"))closeGallery();});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeGallery();});
-  $("welcomeSaveBtn").onclick=()=>{
-    $("welcomeSettingsModal").classList.remove("active");
-    saveSettings({language:$("welcomeLang").value,currency:$("welcomeCurr").value},{notify:true});
-  };
+  $("galleryModal").addEventListener("click",event=>{if(event.target===$("galleryModal"))closeGallery()});
   window.addEventListener("message",event=>{
     if(event.source!==window.parent)return;
     let message=event.data;if(typeof message==="string"){try{message=JSON.parse(message);}catch(_){return;}}
@@ -444,7 +351,7 @@ function closeGallery() {
     if(["SKANDI_MASTER_CONFIG","CUSTOMER_SETTINGS_STATE","CUSTOMER_SETTINGS_SAVED"].includes(message.type)){
       routes={...routes,...(p.routes||{})};
       const incoming=message.type==="SKANDI_MASTER_CONFIG"?p.settings:message.type==="CUSTOMER_SETTINGS_SAVED"?p.state:p;
-      if(incoming){masterSettingsReceived=true;clearTimeout(settingsTimer);$("welcomeSettingsModal").classList.remove("active");saveSettings(incoming);}return;
+      if(incoming)saveSettings(incoming);return;
     }
     if(message.type==="BOOKING_SEARCH_NAVIGATING"){setSearchState("Opening your travel results…");return;}
     if(message.type==="COUNTRY_HOST_READY"||message.type==="DESTINATION_BRIDGE_READY"){
@@ -466,21 +373,15 @@ function closeGallery() {
       }
       release(kind,message.requestId);
       const code=/^[A-Z][A-Z0-9_]{1,79}$/.test(p.code||"")?" ["+p.code+"]":"";
-      if(kind==="page"){page=null;controls();state((p.message||t("country.error"))+code,true,true);}
+      if(kind==="page"){page=null;$("countryMain").hidden=true;controls();state((p.message||t("country.error"))+code,true,true);}
       else setSearchState((p.message||t("country.error"))+code,true);
     }
   });
-  window.addEventListener("scroll",()=>{
-    let current="overview";
-    ["overview","deals","regions","weather","travelInfo","inspiration","faq"].forEach(id=>{if($(id)?.getBoundingClientRect().top<=180)current=id;});
-    $$("[data-scroll]").forEach(b=>b.classList.toggle("active",b.dataset.scroll===current));
-  },{passive:true});
   window.addEventListener("pagehide",()=>{
-    clearInterval(readyTimer);clearTimeout(settingsTimer);clearTimeout(resizeTimer);Object.values(pending).forEach(job=>clearTimeout(job?.timer));
+    clearInterval(readyTimer);clearTimeout(resizeTimer);Object.values(pending).forEach(job=>clearTimeout(job?.timer));
   });
   document.addEventListener("load",event=>{if(event.target?.tagName==="IMG")resize();},true);
-  let firstVisit=true;
-  try{const raw=localStorage.getItem(SETTINGS_KEY);firstVisit=!raw;settings=normalizeSettings(JSON.parse(raw||"{}"));}catch(_){}
+  try{const raw=localStorage.getItem(SETTINGS_KEY);settings=normalizeSettings(JSON.parse(raw||"{}"));}catch(_){}
   applyI18n();controls();$("depart").min=new Date().toISOString().slice(0,10);$("depart").onchange=()=>{$("return").min=$("depart").value;};
   
   requestPage();emit(COUNTRY_SOURCE,"MASTER_CONFIG_REQUEST",{context:"country"});
