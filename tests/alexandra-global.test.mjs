@@ -20,14 +20,14 @@ const storageKey = 'skandi_alexandra_livekit_chat_v12';
 const fakeRoom = { sessionId:'session-1', roomName:'room-1', url:'wss://example.test', token:'only-in-memory', resumeTicket:'slot-proof' };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
-function fakeEmbed() {
+function fakeEmbed(parentType = '$w.Section') {
   const sent = [], classes = new Set();
   let receive, visible = false;
   return {
     sent, classes, get visible() { return visible; },
     show() { visible = true; },
     hide() { visible = false; },
-    customClassList: { add: key => classes.add(key), remove: key => classes.delete(key) },
+    parent: { type: parentType, customClassList: { add: key => classes.add(key), remove: key => classes.delete(key) } },
     onMessage(handler) { assert.equal(receive, undefined, 'only one listener per widget'); receive = handler; },
     postMessage(data) { sent.push(data); },
     receive(type, payload = {}, instance = 'widget-1') { return receive({ data: { source:'SKANDI_SUPPORT_CHAT', type, payload:{ instance, ...payload } } }); }
@@ -102,6 +102,15 @@ test('replacing the global frame reconnects a minimized conversation without exp
   assert.equal(requests[1].resumeTicket, fakeRoom.resumeTicket);
   assert.equal(panel.sent.filter(m => m.type === 'SUPPORT_CHAT_OPEN').at(-1).payload.open, false);
   assert.equal(panel.classes.has('skandi-alexandra-host-open'), false);
+});
+
+test('the host layout is applied to a Wix Section without restyling the enclosing page', async () => {
+  const panel = fakeEmbed('$w.Page');
+  const { bridge } = controller({ panel });
+  await panel.receive('SUPPORT_CHAT_READY');
+  await bridge.open();
+  assert.equal(panel.visible, true);
+  assert.equal(panel.classes.size, 0);
 });
 
 test('the Help Center opens the global chat and ignores a second iframe announcing itself', async () => {

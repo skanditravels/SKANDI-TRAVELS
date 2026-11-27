@@ -37,7 +37,13 @@ html {
   touch-action: manipulation;
 }
 
-/* One public chat iframe, resized in place so its LiveKit connection stays active. */
+/* The dedicated Wix Section controls the size of its single chat iframe. */
+div:has(> .skandi-alexandra-host) {
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  z-index: 1200 !important;
+}
 .skandi-alexandra-host {
   position: fixed !important;
   inset: auto 0 0 auto !important;
@@ -46,8 +52,26 @@ html {
   height: 94px !important;
   min-width: 0 !important;
   min-height: 0 !important;
-  z-index: 1200;
+  max-width: none !important;
+  max-height: none !important;
+  background: transparent !important;
+  z-index: 1200 !important;
 }
+/* Stretch Wix's content container and HTML wrapper inside the fixed section. */
+.skandi-alexandra-host > [data-testid="responsive-container-content"],
+.skandi-alexandra-host > [data-testid="responsive-container-content"] > :has(wix-iframe) {
+  position: absolute !important;
+  inset: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  max-height: none !important;
+  max-width: none !important;
+}
+.skandi-alexandra-host > [data-testid="responsive-container-content"],
+.skandi-alexandra-host > [data-testid="responsive-container-content"] > :has(wix-iframe),
+.skandi-alexandra-host wix-iframe,
 .skandi-alexandra-host iframe {
   width: 100% !important;
   height: 100% !important;

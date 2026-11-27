@@ -5,7 +5,7 @@ The public master controller owns the Wix HTML component `#skandiAlexandraGlobal
 ## Wix Studio installation
 
 1. Sync the tested GitHub code to the SKANDI TRAVELS Wix site. Install the complete standalone `skandi-alexandra-chat.html` from the Wix installation ZIP in the existing `#skandiAlexandraGlobalEmbed`, or create an HTML Embed Code component with that ID if it is absent.
-2. Place the component in a dedicated global section. Use **Global Sections → Add to** to include all editable customer-facing pages, including Wix Stores product and cart templates, Club member pages, dynamic destinations, Booking and SKANDI's custom Store checkout. Wix hosts its separate native payment checkout outside the page editor. Include the section in new public page templates. Pin the HTML component **to Page** at the bottom right at all breakpoints and bring it to the front. Keep the section visible and give its layout minimal height. The shared `src/styles/global.css` sets the minimized and expanded iframe sizes. Keep the existing Help Center receiver and component ID.
+2. Place the component directly in a dedicated global section named **Alexandra Chat**. Use **Global Sections → Add to More Pages** for editable customer-facing pages, including Wix Stores product and cart templates, Club member pages, dynamic destinations, Booking and SKANDI's custom Store checkout. Wix hosts its separate native payment checkout outside the page editor. Include the section in new public page templates. Keep the section and component visible at all breakpoints and retain their default positioning. The master applies Wix custom classes to the section and `src/styles/global.css` anchors it in the viewport and resizes the iframe. Keep the existing Help Center receiver and component ID.
 3. Preview and test Home, Travel Info, the Help Center, a destination, Booking, and a native Stores page on desktop and mobile. Start one chat, switch pages, minimize and reopen it, and check that a draft and the same room survive. Check that the panel stays hidden on RIA INTRA and ALTEA. Publish the site after Wix preview validation and deployment approval.
 
 ## Conversation lifecycle
@@ -17,3 +17,7 @@ While the shared widget stays mounted, it keeps the active LiveKit connection an
 - [HTML_REF/skandi/Alexandra Global Launcher.md](references/skandi-alexandra-global-launcher-md/README.md)
 - [HTML_REF/riaintra/Alexandra Chat.md](references/riaintra-alexandra-chat-md/README.md)
 - [HTML_REF/riaintra/Alexandra Global Launcher.md](references/riaintra-alexandra-global-launcher-md/README.md)
+
+## Change log
+
+- 2026-11-27 — Wix Preview preserved an unsent draft from Home to Travel Info and showed the opened iframe clipped to its editor size. The containing Wix Section now owns the chat sizing. Wix moves a page-pinned element out of its global section, so keep the HTML component attached to the dedicated section.
