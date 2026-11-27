@@ -50,22 +50,34 @@ test('Explore renders the selected country even when Wix keeps the current page 
     source=source.slice(0,node.start)+source.slice(node.end);
   }
   const records=[{id:'gr',slug:'greece',name:'Greece',entityType:'COUNTRY'},{id:'se',slug:'sweden',name:'Sweden',entityType:'COUNTRY'}];
+  const stockholm={id:'sto',slug:'stockholm',name:'Stockholm',entityType:'DESTINATION'};
   const posted=[],navigated=[];
+  let ready,change;
+  const embed={id:'exploreEmbed',postMessage:message=>posted.push(message),onMessage:()=>{}};
+  const $w=()=>embed;
+  $w.onReady=fn=>{ready=fn;};
   const context={
-    ...routes,console,setTimeout,clearTimeout,$w:{onReady:()=>{}},
-    wixLocationFrontend:{query:{country:'greece'},to:path=>navigated.push(path)},
+    ...routes,console,setTimeout,clearTimeout,$w,
+    wixLocationFrontend:{query:{country:'greece'},to:path=>navigated.push(path),onChange:fn=>{change=fn;}},
     getDestinationFlowCatalog:async()=>({ok:true,records}),
     createDestinationContent:()=>({
-      records:()=>records,resolveGeography:scope=>records.find(row=>row.slug===scope.countrySlug),
-      countryPage:record=>({...record,paths:{}}),countryOf:record=>record,airportFor:()=>null,
+      records:()=>records,resolveGeography:scope=>scope.destinationSlug==='stockholm'?stockholm:records.find(row=>row.slug===scope.countrySlug)??null,
+      countryPage:record=>({...record,paths:{}}),countryOf:record=>record===stockholm?records[1]:record,airportFor:()=>null,
       isUnder:()=>false,airportDirectory:()=>[]
     })
   };
   vm.createContext(context);vm.runInContext(source,context);
-  const embed={id:'exploreEmbed',postMessage:message=>posted.push(message)};
+  ready();
   await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_READY',requestId:'ready'}},embed);
   await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_SELECT_COUNTRY',requestId:'select',payload:{slug:'sweden'}}},embed);
   assert.equal(posted.at(-1).requestId,'select');
   assert.equal(posted.at(-1).payload.page.name,'Sweden');
   assert.deepEqual(navigated,['/destinations/explore?country=sweden']);
+  change({path:['destinations','explore'],query:{country:'sweden',destination:'stockholm'}});
+  assert.equal(posted.at(-1).type,'DESTINATION_ROUTE_CHANGED');
+  await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_READY',requestId:'retained',payload:{slug:'greece'}}},embed);
+  assert.equal(posted.at(-1).payload.page.name,'Stockholm');
+  change({path:['destinations','explore'],query:{}});
+  await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_READY',requestId:'index',payload:{slug:'sweden'}}},embed);
+  assert.equal(posted.at(-1).payload.page,null);
 });

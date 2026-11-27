@@ -348,6 +348,10 @@ function closeGallery() { $("galleryModal").close(); }
     if(event.source!==window.parent)return;
     let message=event.data;if(typeof message==="string"){try{message=JSON.parse(message);}catch(_){return;}}
     if(!message||message.source!==PARENT_SOURCE)return;const p=message.payload||{};
+    if(message.type==="DESTINATION_ROUTE_CHANGED"){
+      if(!pending.selection){$("countryMain").hidden=true;requestPage();}
+      return;
+    }
     if(["SKANDI_MASTER_CONFIG","CUSTOMER_SETTINGS_STATE","CUSTOMER_SETTINGS_SAVED"].includes(message.type)){
       routes={...routes,...(p.routes||{})};
       const incoming=message.type==="SKANDI_MASTER_CONFIG"?p.settings:message.type==="CUSTOMER_SETTINGS_SAVED"?p.state:p;

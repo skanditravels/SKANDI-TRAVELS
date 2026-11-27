@@ -23,7 +23,7 @@
     retry.hidden=true;
     find("hotelBook").disabled=true;
     post(type,payload,pending);
-    timer=setTimeout(()=>{pending=null;status.textContent="We couldn’t load this request. Try again.";retry.hidden=false;updateBooking();},26000);
+    timer=setTimeout(()=>{pending=null;root.setAttribute("aria-busy","false");status.textContent="We couldn’t load this request. Try again.";retry.hidden=false;updateBooking();},26000);
   }
   function load(force=false){request("HOTEL_SEARCH_READY",{settings,force});}
   function nav(path){post("HOTEL_SEARCH_NAVIGATE",{path});}
@@ -219,6 +219,18 @@
     const message=event.data;
     if(message?.source!=="SKANDI_WIX_PARENT")return;
     const payload=message.payload||{};
+    if(message.type==="DESTINATION_ROUTE_CHANGED"){
+      root.setAttribute("aria-busy","true");
+      selected=null;hotels=[];
+      find("hotelTitle").textContent="Hotels";
+      find("hotelLocation").hidden=true;
+      find("hotelIntro").hidden=true;
+      find("hotelVisual").hidden=true;
+      find("hotelContent").hidden=true;
+      find("hotelHeroActions").hidden=true;
+      load();
+      return;
+    }
     if(message.type==="DESTINATION_BRIDGE_READY"&&!booted){booted=true;load();return;}
     if(["SKANDI_MASTER_CONFIG","CUSTOMER_SETTINGS_STATE","CUSTOMER_SETTINGS_SAVED"].includes(message.type)){
       const next=payload.settings||payload.state||payload;
@@ -236,6 +248,7 @@
       render(payload.page,detail);
     }else if(["HOTEL_SEARCH_ERROR","HOTEL_DETAIL_ERROR"].includes(message.type)){
       clearTimeout(timer);pending=null;status.textContent=payload.message||"We couldn’t load this request. Try again.";
+      root.setAttribute("aria-busy","false");
       retry.hidden=false;updateBooking();
     }
   });

@@ -5,7 +5,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import { getDestinationFlowCatalog } from "backend/SKANDI_CORE/destinationFlow.web";
 import { searchUnifiedOffers, createBookingCartFromOffer } from "backend/SKANDI_CORE/customerBooking.web";
 import { createDestinationContent } from "public/destinationContent";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute, normalizeSitePath } from "public/siteMap";
 import { openCustomerLogin } from "public/customerAuthUi";
 
 const VERSION = "V12-COUNTRY-2026.10.06";
@@ -18,6 +18,7 @@ let html = null, catalog = [], catalogJob = null, catalogLoadedAt = 0;
 let pageJob = null, searchJob = null, selectionJob = null;
 let settings = { language:"EN", currency:"USD" };
 let currentCountry = null, currentPlace = null, discoveryTimer = null, discoveryCount = 0;
+let exploreRouteQuery;
 const bound = new Set();
 const content = createDestinationContent(() => catalog, () => ({}), LANGUAGES);
 
@@ -65,12 +66,10 @@ async function ensureCatalog(force = false) {
   }
   await catalogJob;
 }
-function requestedPlace(payload = {}, selection = false) {
-  // An iframe URL does not inherit the Wix page's query string.
-  if (selection) return {countrySlug:slug(payload.slug)};
-  const query=wixLocationFrontend.query||{};
+function requestedPlace(query = {}) {
+  query=obj(query);
   return {
-    countrySlug:slug(query.country||payload.slug),
+    countrySlug:slug(query.country),
     regionSlug:slug(query.region),
     destinationSlug:slug(query.destination),
     areaSlug:slug(query.area)
@@ -98,7 +97,8 @@ function arrivals(record) {
 async function loadCountry(message) {
   if (selectionJob) throw fail("COUNTRY_SELECTION_PENDING","Please finish the current offer selection first.");
   const payload=obj(message.payload), nextSettings=normalizeSettings(payload.settings || (message.type==="UPDATE_SETTINGS"?payload:settings));
-  const scope=requestedPlace(payload,message.type==="COUNTRY_SELECT_COUNTRY");
+  const query=message.type==="COUNTRY_SELECT_COUNTRY"?{country:payload.slug}:exploreRouteQuery??wixLocationFrontend.query;
+  const scope=requestedPlace(query);
   const key=JSON.stringify({...scope,...nextSettings});
   settings=nextSettings;
   if (pageJob?.key===key && (!pageJob.complete || (!payload.force && Date.now()-pageJob.completedAt<60000))) {
@@ -272,4 +272,15 @@ function discover() {
   if(discoveryCount<40)discoveryTimer=setTimeout(discover,500);
   else console.error("[Explore] No page response from #exploreEmbed.");
 }
-$w.onReady(discover);
+$w.onReady(() => {
+  let currentKey=JSON.stringify(requestedPlace(wixLocationFrontend.query));
+  wixLocationFrontend.onChange?.(location=>{
+    if(Array.isArray(location?.path)&&normalizeSitePath("/"+location.path.join("/"))!==APP_ROUTES.country)return;
+    const query=location?.query??wixLocationFrontend.query;
+    const key=JSON.stringify(requestedPlace(query));
+    if(key===currentKey)return;
+    currentKey=key;exploreRouteQuery=query;
+    post("DESTINATION_ROUTE_CHANGED");
+  });
+  discover();
+});
