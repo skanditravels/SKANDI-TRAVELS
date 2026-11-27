@@ -3751,6 +3751,7 @@
         "COUNTRY_SELECT_COUNTRY",
         "COUNTRY_SELECT_OFFER",
         "COUNTRY_TIMEOUT",
+        "DESTINATION_ROUTE_CHANGED",
         "LOGIN_CANCELLED",
         "LOGIN_REQUIRED",
         "RESIZE_IFRAME",
@@ -3766,8 +3767,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/country/skandi-country.receiver.html",
       "receiverFile": "skandi-embeds/country/skandi-country.receiver.html",
-      "sha256": "a50fd2fdcb1e07a2c34756e7828f0032e01782ed35e714eda7082a886ca7df5a",
-      "bytes": 360580
+      "sha256": "c9db895670d97a76459dbddf423542ab631f7177daa924da0b41b6f55fcb8ca8",
+      "bytes": 360726
     },
     {
       "key": "hotelList",
@@ -3809,8 +3810,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
       "receiverFile": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
-      "sha256": "a876438c15710ecad3637c668981eb01b4df8e3ce1827e511659d3c04a7ca0c0",
-      "bytes": 191152
+      "sha256": "53589085bf969d45bac07b5021d9f5a12e5c7be4873d9a85fc3cf7c783308c10",
+      "bytes": 191648
     },
     {
       "key": "bookingFlow",
