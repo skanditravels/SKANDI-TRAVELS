@@ -30,8 +30,6 @@ function stopRecord(record,kind){
     image,mobile,alt:text(read(record,"alt_text","altText")),caption:text(read(record,"summary","caption")),credit:text(record.credit),
     forward:key(read(record,"forward_scene_code","forwardSceneCode")),
     backward:key(read(record,"back_scene_code","backSceneCode")),
-    forwardLabel:text(read(record,"forward_label","forwardLabel")),
-    backwardLabel:text(read(record,"back_label","backLabel")),
     cabinId:key(read(record,"cabin_id","cabinId")),viewType:key(read(record,"view_type","viewType")),
     isDefault:read(record,"is_default","isDefault")===true,
     panorama:/^(360|PANO|PANORAMA|EQUIRECTANGULAR|SPHERICAL)$/i.test(text(read(record,"view_type","viewType","projection"))) ||
@@ -46,7 +44,7 @@ function stopPoint(record,index,stop,stops,cabins){
   const cabin=cabins.find(c=>key(read(c,"cabin_code","cabinCode"))===cabinCode);
   const target=move ? stops.find(s=>s.ref===move[1]) : action==="CABIN"&&cabin ? stops.find(s=>s.cabinId===key(cabin.id)&&s.ref!==stop.ref) : null;
   const inspect=action==="SEAT_ROW"||action==="ZOOM"||action==="FOCUS"||key(record.hotspot_type)==="SEAT_ROW";
-  const title=text(read(record,"title","label"))||target?.title||text(read(cabin,"cabin_name","cabinName"))||(inspect?"seat row":"Cabin information");
+  const title=target?.title||text(read(record,"title","label"))||text(read(cabin,"cabin_name","cabinName"))||(inspect?"seat row":"Cabin information");
   const description=text(read(record,"description","summary"))||text(read(cabin,"summary","description"));
   const thumbnail=mediaUrl(read(record,"thumbnail_url","thumbnailUrl"));
   if((action.startsWith("MOVE:")&&!target)||target?.ref===stop.ref)return null;
@@ -78,6 +76,15 @@ function makeWalkaround(bundle,aircraft,airline){
   for(const [id,label,image_url] of [["EXTERIOR","Aircraft exterior",exterior],["SEATMAP","Seat map",seatmap]]){
     if(image_url&&!stops.some(s=>s.image===image_url))stops.push(stopRecord({id,label,image_url},"AIRCRAFT"));
   }
+  const sameTitle=new Map();
+  for(const stop of stops){
+    const titleKey=key(stop.title);
+    if(!sameTitle.has(titleKey))sameTitle.set(titleKey,[]);
+    sameTitle.get(titleKey).push(stop);
+  }
+  for(const group of sameTitle.values()){
+    if(group.length>1)group.forEach((stop,index)=>{stop.title=`${stop.title} · View ${index+1}`});
+  }
   const findScene=code=>code?scenes.find(s=>s.code===code):null;
   const defaultScene=findScene(key(read(aircraft,"walkthrough_start_scene_code","walkthroughStartSceneCode")));
   // An unlinked neighboring record is a separate viewpoint. Only saved links move the camera.
@@ -91,9 +98,9 @@ function makeWalkaround(bundle,aircraft,airline){
     const source=stop.legacyPoints||(stop.kind==="SCENE"?bundle.sceneHotspots:bundle.hotspots);
     const points=list(source).filter(p=>p.active!==false&&(stop.legacyPoints||key(read(p,stop.kind==="SCENE"?"scene_id":"view_id",stop.kind==="SCENE"?"sceneId":"viewId"))===stop.id))
       .slice().sort(order).map((p,i)=>stopPoint(p,i,stop,stops,cabins)).filter(Boolean);
-    const moves=[["back",findScene(stop.backward),stop.backwardLabel],["forward",findScene(stop.forward),stop.forwardLabel]]
-      .filter(([,target])=>target&&target.ref!==stop.ref).map(([direction,target,label])=>({
-        direction,target:target.ref,title:label||target.title
+    const moves=[["back",findScene(stop.backward)],["forward",findScene(stop.forward)]]
+      .filter(([,target])=>target&&target.ref!==stop.ref).map(([direction,target])=>({
+        direction,target:target.ref,title:target.title
       })).filter(move=>!points.some(p=>p.target===move.target));
     return {...stop,points,moves};
   });

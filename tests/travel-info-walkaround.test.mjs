@@ -120,6 +120,27 @@ test('walkaround uses explicit links, retains legacy imagery and does not link i
   assert.equal(door.points[1].focusY,.6);
 });
 
+test('movement shows the real destination and separates scenes with identical names',()=>{
+  const {make}=projectionModel();
+  const aircraft={id:'plane',walkthroughStartSceneCode:'BOARD'};
+  const photo='https://media.example/cabin.jpg';
+  const bundle={
+    walkScenes:[
+      {id:'board',aircraft_id:'plane',scene_code:'BOARD',title:'Entrance',image_url:photo,forward_scene_code:'ECONOMY_A',forward_label:'SAS Business'},
+      {id:'eco-a',aircraft_id:'plane',scene_code:'ECONOMY_A',title:'Economy',image_url:photo}
+    ],
+    views:[{id:'eco-b',aircraft_id:'plane',label:'Economy',image_url:photo}],
+    sceneHotspots:[{id:'move',scene_id:'board',action:'MOVE:VIEW:ECO-B',title:'SAS Business',x:40,y:50}]
+  };
+  const model=make(bundle,aircraft,{});
+  const [board,first,second]=model.stops;
+  assert.equal(first.title,'Economy · View 1');
+  assert.equal(second.title,'Economy · View 2');
+  assert.equal(board.moves[0].title,first.title);
+  assert.equal(board.points[0].title,second.title);
+  assert.equal(board.points[0].target,second.ref);
+});
+
 test('a panorama point follows the same angle as the camera and disappears behind it',()=>{
   const {project}=projectionModel();
   const camera={yaw:90,pitch:0,zoom:1};
