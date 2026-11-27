@@ -21,8 +21,10 @@ function bounded(promise) {
 }
 export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]} = {}) {
   let html = null, merged = false, catalog = [], catalogJob = null, loadedAt = 0, discoveryTimer = null;
+  const retainedHotelPage=entry==="hotels"&&Boolean(embedId);
   let hotelRouteQuery;
   let flowState = initialState(), settings = {language:"EN",currency:"USD"};
+  let hotelRouteKey=JSON.stringify(flowState);
   const bound = new Set(), jobs = new Map();
   const content = createDestinationContent(()=>catalog,()=>flowState,LANGUAGES);
   function initialState(query=hotelRouteQuery??wixLocation.query) {
@@ -32,6 +34,13 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
     return {...state,level};
   }
   function post(type,payload={},requestId="",flowEpoch="") { html?.postMessage({source:PARENT,type,payload,requestId,flowEpoch,timestamp:new Date().toISOString()}); }
+  function refreshHotelRoute(query) {
+    const key=JSON.stringify(initialState(query));
+    if(key===hotelRouteKey)return;
+    hotelRouteKey=key;hotelRouteQuery=query;
+    jobs.clear();
+    post("DESTINATION_ROUTE_CHANGED");
+  }
   function report(kind,error,m) {
     post(ERRORS[kind]||ERRORS.flow,{action:m.type,code:clean(error?.code||"DESTINATION_REQUEST_FAILED",100),message:clean(error?.publicMessage||"Destination information is temporarily unavailable. Select Retry.",500)},m.requestId||"",m.flowEpoch||"");
   }
@@ -55,6 +64,10 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
     }
     if(u.pathname==="/hotel-detail")path=content.customPath("hotel",{countrySlug:u.searchParams.get("country")||"",destinationSlug:u.searchParams.get("destination")||"",areaSlug:u.searchParams.get("area")||"",hotelSlug:u.searchParams.get("hotel")||"",hotelId:u.searchParams.get("hotelId")||""});
     wixLocation.to(path);
+    // Wix can keep the embed mounted and omit a location event for same-page links.
+    if(retainedHotelPage&&normalizeSitePath(path)===APP_ROUTES.hotelList) {
+      refreshHotelRoute(Object.fromEntries(new URL(path,"https://www.skanditravels.com").searchParams));
+    }
   }
   function settingsFrom(p) {
     const s=obj(p.settings||p),language=clean(s.language||settings.language,12).toUpperCase(),currency=clean(s.currency||settings.currency,3).toUpperCase();
@@ -232,16 +245,10 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
     if(attempts<60)discoveryTimer=setTimeout(discover,500);
     else console.error("[Destinations V12] No destination embed handshake received.");
   }
-  if(entry==="hotels"&&embedId&&typeof wixLocation.onChange==="function") {
-    let currentKey=JSON.stringify(initialState());
+  if(retainedHotelPage&&typeof wixLocation.onChange==="function") {
     wixLocation.onChange(location=>{
       if(Array.isArray(location?.path)&&normalizeSitePath("/"+location.path.join("/"))!==APP_ROUTES.hotelList)return;
-      const query=location?.query??wixLocation.query;
-      const key=JSON.stringify(initialState(query));
-      if(key===currentKey)return;
-      currentKey=key;hotelRouteQuery=query;
-      jobs.clear();
-      post("DESTINATION_ROUTE_CHANGED");
+      refreshHotelRoute(location?.query??wixLocation.query);
     });
   }
   discover();
