@@ -18,13 +18,22 @@
   bottom: 0 !important;
 }
 
-/* The compiled shell scrolls internally and anchors its bar to the iframe viewport. */
-.skandi-compiled-viewport-host,
-.skandi-compiled-viewport-host iframe {
+/* Size the dedicated Wix Section and its HTML embed to the same viewport. */
+.skandi-compiled-viewport-host {
   height: 100vh !important;
   height: 100dvh !important;
   min-height: 0 !important;
-  max-height: 100dvh !important;
+}
+.skandi-compiled-viewport-host,
+.skandi-compiled-viewport-host > [data-testid="responsive-container-content"] {
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+.skandi-compiled-viewport-host > [data-testid="responsive-container-content"],
+.skandi-compiled-viewport-host > [data-testid="responsive-container-content"] > :has(> wix-iframe),
+.skandi-compiled-viewport-host iframe {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
 }
 @media (max-width: 1020px) {
   .skandi-compiled-mobile-host,
