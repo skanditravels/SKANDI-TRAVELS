@@ -16,6 +16,8 @@ const LEGACY_LAUNCHER_ID = '#skandiAlexandraLauncherEmbed';
 const CHAT_SOURCE = 'SKANDI_SUPPORT_CHAT';
 const STORAGE_KEY = 'skandi_alexandra_livekit_chat_v12';
 const LEGACY_KEY = 'skandi_alexandra_wix_ai_chat_v127';
+const GREETING_KEY = 'skandi_alexandra_greeting_seen';
+const GREETING_DELAY_MS = 2600;
 const LOCALES = { EN: 'en-US', SV: 'sv-SE', NO: 'nb-NO', DA: 'da-DK', FI: 'fi-FI' };
 const AVATAR = {
   avatarAssetKey: 'alexandra-support-avatar',
@@ -79,7 +81,7 @@ function post(host, type, payload = {}, requestId = '') {
   } catch (_) { /* Wix may be replacing the component during navigation. */ }
 }
 
-function widgetVisibility(element, visible, expanded = false) {
+function widgetVisibility(element, visible, expanded = false, greeting = false) {
   try {
     // Wix supports custom CSS classes on Sections. The iframe itself has a fixed editor size.
     const section = element.parent;
@@ -87,6 +89,8 @@ function widgetVisibility(element, visible, expanded = false) {
       section.customClassList.add('skandi-alexandra-host');
       if (expanded) section.customClassList.add('skandi-alexandra-host-open');
       else section.customClassList.remove('skandi-alexandra-host-open');
+      if (greeting && !expanded) section.customClassList.add('skandi-alexandra-host-greeting');
+      else section.customClassList.remove('skandi-alexandra-host-greeting');
     }
   } catch (_) {}
   try {
@@ -105,6 +109,9 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   const bound = new WeakSet();
   let path = initialPath, currentHost, panelElement, state = conversation(), memberId, bootstrap, profilePromise;
   let generation = 0, launch, alexandraRoom, humanRoom, pendingOpen;
+  let greetingTimer, greetingOwner, greetingSeen;
+  try { greetingSeen = session.getItem(GREETING_KEY) === '1'; }
+  catch (_) { greetingSeen = true; }
   const allowed = () => enabled() && isSafeInternalRoute(path) && !/^\/(?:riaintra|altea|intra|staff|admin|_functions)(?:\/|$)/i.test(path);
   const commit = updates => {
     state = conversation({ ...state, ...updates });
@@ -112,7 +119,14 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   };
 
   function widgetContext(host, restore = false) {
-    const ui = { active: host === currentHost, global: host.global || path !== SITE_MAP.support, pagePath: path };
+    const active = host === currentHost && allowed();
+    const ui = {
+      active,
+      global: host.global || path !== SITE_MAP.support,
+      pagePath: path,
+      greeting: active && host === greetingOwner && !state.open,
+      language: settings()?.language
+    };
     if (restore && ui.active) {
       const { open, messages, draft, caseId, human, expired } = state;
       post(host, 'SUPPORT_CHAT_RESTORE', { ...ui, open, messages, draft, caseId, human, expired });
@@ -120,12 +134,51 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   }
 
   function updateSize() {
-    if (currentHost?.global) widgetVisibility(currentHost.element, allowed(), state.open);
+    if (currentHost?.global) widgetVisibility(currentHost.element, allowed(), state.open, currentHost === greetingOwner);
+  }
+
+  function rememberGreeting() {
+    if (greetingSeen) return false;
+    greetingSeen = true;
+    try {
+      // Claim the tab session before opening the bubble, even across Wix document reloads.
+      if (session.getItem(GREETING_KEY) === '1') return false;
+      session.setItem(GREETING_KEY, '1');
+      return session.getItem(GREETING_KEY) === '1';
+    } catch (_) { return false; }
+  }
+
+  function clearGreeting() {
+    if (greetingTimer !== undefined) {
+      clearTimeout(greetingTimer);
+      greetingTimer = undefined;
+    }
+    if (!greetingOwner) return;
+    const owner = greetingOwner;
+    greetingOwner = undefined;
+    updateSize();
+    widgetContext(owner);
+  }
+
+  function scheduleGreeting(host) {
+    if (host !== currentHost || !host.greetingSupported || greetingSeen || greetingTimer !== undefined) return;
+    if (state.open || state.draft || state.resumeTicket || state.messages.length || state.caseId) {
+      rememberGreeting();
+      return;
+    }
+    greetingTimer = setTimeout(() => {
+      greetingTimer = undefined;
+      if (!allowed() || currentHost !== host || state.open || !rememberGreeting()) return;
+      greetingOwner = host;
+      updateSize();
+      widgetContext(host);
+    }, GREETING_DELAY_MS);
   }
 
   function selectHost() {
     const next = allowed() ? hosts.get('global') || (inlineChatEmbeds.has(path) ? hosts.get('inline') : null) : null;
     if (next === currentHost) return false;
+    clearGreeting();
     const previous = currentHost;
     currentHost = next;
     if (previous) widgetContext(previous);
@@ -137,6 +190,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
   }
 
   function clear() {
+    clearGreeting();
     ++generation;
     launch = null;
     alexandraRoom = null;
@@ -250,6 +304,8 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
 
   async function open({ mode = 'ALEXANDRA', payload = {}, requestId = '', retry = false } = {}) {
     if (!allowed()) return false;
+    rememberGreeting();
+    clearGreeting();
     await refreshIdentity();
     if (!allowed()) return false;
     if (!currentHost) {
@@ -338,7 +394,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
       if (!global && !inlineChatEmbeds.has(path)) return;
       let newWidget = false;
       if (!host || host.instance !== instance || host.element !== element) {
-        host = { element, instance, global };
+        host = { element, instance, global, greetingSupported: payload.greetingSupported === true };
         hosts.set(key, host);
         newWidget = true;
       }
@@ -361,6 +417,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
         widgetContext(host);
         if (!instance) await pushBootstrap(host, message.requestId);
       }
+      scheduleGreeting(host);
       return;
     }
     if (!host || host !== currentHost || host.element !== element || host.instance !== instance) return;
@@ -377,8 +434,14 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
         updateSize();
         break;
       case 'SUPPORT_CHAT_PANEL_OPEN':
+        rememberGreeting();
+        clearGreeting();
         commit({ open: true });
         updateSize();
+        break;
+      case 'SUPPORT_CHAT_GREETING_DISMISS':
+        rememberGreeting();
+        clearGreeting();
         break;
       case 'SUPPORT_CHAT_START_HUMAN':
       case 'SUPPORT_CHAT_HUMAN_MESSAGE':
@@ -395,6 +458,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
     const previousPath = path;
     const route = nextPath || '/';
     path = isSafeInternalRoute(route) ? normalizeSitePath(route) : '';
+    if (path !== previousPath) clearGreeting();
     let panel;
     try {
       const old = wixSelector(LEGACY_LAUNCHER_ID);
@@ -408,6 +472,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
       panel.onMessage(event => handle(panel, object(event?.data), true));
     }
     if (!allowed()) {
+      clearGreeting();
       for (const host of hosts.values()) post(host, 'SUPPORT_CHAT_FORCE_CLOSE');
       hosts.clear();
       currentHost = null;
@@ -426,7 +491,7 @@ export function bindAlexandraGlobal({ wixSelector, navigate, enabled, settings, 
     // An existing frame may survive Wix navigation. Request its current instance,
     // without disconnecting it or triggering a new provider dispatch.
     if (panel) {
-      widgetVisibility(panel, true, currentHost?.global && state.open);
+      widgetVisibility(panel, true, currentHost?.global && state.open, Boolean(currentHost?.global && currentHost === greetingOwner));
       post({ element: panel }, 'SUPPORT_CHAT_PING');
     }
   }

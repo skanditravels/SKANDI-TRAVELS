@@ -2,15 +2,36 @@
   "use strict";
   const SOURCE = "SKANDI_SUPPORT_CHAT", PARENT = "SKANDI_WIX_PARENT";
   const ALEX_TOPIC = "lk.chat", HUMAN_TOPIC = "skandi.support.chat";
+  const GREETING = {
+    EN: ["Hi, can I help you?", "Dismiss Alexandra’s greeting"],
+    SV: ["Hej, kan jag hjälpa dig?", "Stäng Alexandras hälsning"],
+    NO: ["Hei, kan jeg hjelpe deg?", "Lukk Alexandras hilsen"],
+    DA: ["Hej, kan jeg hjælpe dig?", "Luk Alexandras hilsen"],
+    FI: ["Hei, voinko auttaa?", "Sulje Alexandran tervehdys"]
+  };
   const $ = id => document.getElementById(id);
   const clean = (value, length = 30000) => String(value ?? "").trim().slice(0, length);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
   const instance = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const host = $("launcher").parentElement;
-  let boot = {}, avatar = {}, mode = "ALEXANDRA", caseId = "", pagePath = "/about/support";
+  const portrait = $("alexandraPortrait"), portraitImage = $("alexandraPortraitImage");
+  let portraitReady = portraitImage.complete && portraitImage.naturalWidth > 0;
+  let boot = {}, mode = "ALEXANDRA", caseId = "", pagePath = "/about/support";
   let transcript = [], room = null, roomSession = null, roomEpoch = 0, connecting = false;
   let active = false, configured = false, loggedIn = false, humanPending = false, sending = false, lastSend = "", open = false;
   let connectionRequested = false, panelFocusTimer;
+
+  function updatePortrait() {
+    const destination = open ? $("avatarSlot") : $("launcher");
+    if (portrait.parentElement !== destination) destination.prepend(portrait);
+    const showPortrait = portraitReady && (!open || mode === "ALEXANDRA");
+    portrait.hidden = !showPortrait;
+    $("launcherFallback").hidden = portraitReady;
+    $("avatarFallback").hidden = open && showPortrait;
+  }
+  portraitImage.addEventListener("load", () => { portraitReady = true; updatePortrait(); });
+  portraitImage.addEventListener("error", () => { portraitReady = false; updatePortrait(); });
+  updatePortrait();
 
   function post(type, payload = {}) {
     window.parent.postMessage({ source: SOURCE, type, requestId: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, payload: { ...payload, instance } }, "*");
@@ -33,14 +54,13 @@
     $("panel").classList.toggle("open", show);
     $("launcher").classList.toggle("hidden", show);
     $("launcher").setAttribute("aria-expanded", String(show));
+    if (show) $("alexandraGreeting").hidden = true;
+    updatePortrait();
     clearTimeout(panelFocusTimer);
     if (show) {
       setViewport();
       if (focus) panelFocusTimer = setTimeout(() => $("input").focus(), 80);
     } else $("input").blur();
-  }
-  function clearAudio() {
-    host.querySelectorAll("audio[data-support-track]").forEach(element => element.remove());
   }
   function disconnect() {
     roomEpoch++;
@@ -49,7 +69,6 @@
     roomSession = null;
     connecting = false;
     sending = false;
-    clearAudio();
     try { Promise.resolve(previous?.disconnect()).catch(() => {}); } catch (_) {}
   }
   function commandState() {
@@ -64,12 +83,7 @@
     $("agentName").textContent = human ? "SKANDI Customer Service" : "Alexandra";
     $("agentRole").textContent = human ? "Human SKANDI Customer Service Agent" : "Digital Customer Service Agent";
     $("avatarFallback").textContent = human ? "S" : "A";
-    $("humanBtn").classList.toggle("hidden", human);
-    if (human) {
-      $("avatarVideo").pause?.();
-      $("avatarVideo").style.display = "none";
-      $("avatarFallback").style.display = "inline";
-    } else setupAvatar(avatar);
+    updatePortrait();
     presence(humanPending ? "Connecting…" : value === "QUEUED" ? "In queue" : value === "CLOSED" ? "Ended" : room?.state === "connected" ? "Online" : "Ready");
     commandState();
   }
@@ -94,36 +108,9 @@
     snapshot();
   }
 
-  function setupAvatar(config) {
-    const video = $("avatarVideo");
-    const url = clean(config.avatarVideoUrl, 2000);
-    if (!url) {
-      video.removeAttribute("src");
-      video.style.display = "none";
-      $("avatarFallback").style.display = "inline";
-      return;
-    }
-    const apply = () => {
-      if (mode !== "ALEXANDRA") return;
-      video.playbackRate = 0.75;
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.style.display = "block";
-      $("avatarFallback").style.display = "none";
-      video.play().catch(() => {});
-    };
-    video.onloadedmetadata = apply;
-    video.oncanplay = apply;
-    if (video.getAttribute("src") !== url) video.src = url;
-    else if (video.readyState > 0) apply();
-  }
   function applyBoot(payload) {
     boot = payload;
-    avatar = payload.alexandra || {};
     loggedIn = Boolean(payload.loggedIn || payload.profile?.memberId);
-    if (mode === "ALEXANDRA") setupAvatar(avatar);
-    $("humanBtn").title = loggedIn ? "Human Customer Service" : "Sign in for human chat";
     const profile = payload.profile || {};
     if (!$("contactName").value) $("contactName").value = clean(profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(" "), 200);
     if (!$("contactEmail").value) $("contactEmail").value = clean(profile.email, 254);
@@ -184,19 +171,10 @@
         if (isCurrent() && active) message(nextMode === "ALEXANDRA" ? "assistant" : "agent", text);
       } catch (_) {}
     });
-    nextRoom.on(RoomEvent.TrackSubscribed, track => {
-      if (!isCurrent() || !active || track.kind !== "audio") return;
-      const audio = track.attach();
-      audio.dataset.supportTrack = "";
-      audio.autoplay = true;
-      host.appendChild(audio);
-    });
-    nextRoom.on(RoomEvent.TrackUnsubscribed, track => track.detach?.().forEach(element => element.remove()));
     nextRoom.on(RoomEvent.Reconnecting, () => { if (isCurrent()) presence("Reconnecting…"); });
     nextRoom.on(RoomEvent.Reconnected, () => { if (isCurrent()) presence("Online"); });
     nextRoom.on(RoomEvent.Disconnected, () => {
       if (!isCurrent()) return;
-      clearAudio();
       presence("Disconnected");
       if (active && open) system(`${person} disconnected. Your messages are still here.`);
     });
@@ -211,7 +189,7 @@
       });
     }
     try {
-      await nextRoom.connect(session.url, session.token);
+      await nextRoom.connect(session.url, session.token, { autoSubscribe: false });
       if (isCurrent()) presence("Online");
       else await nextRoom.disconnect();
     } catch (_) {
@@ -326,8 +304,12 @@
     pagePath = payload.pagePath || pagePath;
     host.classList.toggle("sitewide", payload.global === true);
     host.hidden = !active;
-    for (const audio of host.querySelectorAll("audio[data-support-track]")) audio.muted = !active;
     if (typeof payload.open === "boolean") setPanel(active && payload.open);
+    const language = clean(payload.language, 16).toUpperCase().split("-")[0];
+    const [greeting, dismiss] = GREETING[language] || GREETING.EN;
+    $("greetingOpen").textContent = greeting;
+    $("greetingDismiss").setAttribute("aria-label", dismiss);
+    $("alexandraGreeting").hidden = !active || open || payload.greeting !== true;
   }
   function restore(payload) {
     applyHost(payload);
@@ -352,21 +334,27 @@
     transcript = [];
     loggedIn = false;
     boot = {};
-    avatar = {};
     $("messages").replaceChildren();
     for (const input of host.querySelectorAll(".composer textarea, .sheet input, .sheet textarea, .sheet select")) input.value = "";
     $("formSheet").classList.remove("open");
-    $("humanBtn").title = "Sign in for human chat";
     setMode("ALEXANDRA");
     setPanel(false);
+    $("alexandraGreeting").hidden = true;
     host.hidden = true;
   }
 
-  $("launcher").onclick = () => {
+  function openChat() {
     if (!active) return;
     setPanel(true, true);
     post("SUPPORT_CHAT_PANEL_OPEN");
     if ((mode === "ALEXANDRA" || mode === "HUMAN") && (!room || room.state === "disconnected")) requestConnection();
+  }
+  $("launcher").onclick = openChat;
+  $("greetingOpen").onclick = openChat;
+  $("greetingDismiss").onclick = () => {
+    $("alexandraGreeting").hidden = true;
+    post("SUPPORT_CHAT_GREETING_DISMISS");
+    $("launcher").focus();
   };
   $("closeBtn").onclick = () => {
     snapshot();
@@ -374,7 +362,6 @@
     post("SUPPORT_CHAT_PANEL_CLOSE");
     $("launcher").focus();
   };
-  $("humanBtn").onclick = () => startHuman();
   $("sendBtn").onclick = () => { void send(); };
   $("input").onkeydown = event => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void send(); } };
   $("input").oninput = event => {
@@ -396,7 +383,7 @@
     post("SUPPORT_CHAT_SUBMIT_FORM", { input });
   };
 
-  const ready = () => post("SUPPORT_CHAT_READY", { integrated: true });
+  const ready = () => post("SUPPORT_CHAT_READY", { integrated: true, greetingSupported: true });
   window.addEventListener("message", event => {
     const msg = event.data || {}, payload = msg.payload || {};
     if (event.source !== window.parent || msg.source !== PARENT || (payload.instance && payload.instance !== instance)) return;

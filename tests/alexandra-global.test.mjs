@@ -17,6 +17,7 @@ for (const node of imports.reverse()) code = code.slice(0, node.start) + code.sl
 code = code.replace(/^export /gm, '') + '\n({ bindAlexandraGlobal });';
 
 const storageKey = 'skandi_alexandra_livekit_chat_v12';
+const greetingKey = 'skandi_alexandra_greeting_seen';
 const fakeRoom = { sessionId:'session-1', roomName:'room-1', url:'wss://example.test', token:'only-in-memory', resumeTicket:'slot-proof' };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
@@ -36,8 +37,12 @@ function fakeEmbed(parentType = '$w.Section') {
 
 function controller({ store = new Map(), panel = fakeEmbed(), initialPath = '/flights', start, human } = {}) {
   const requests = [], paths = [];
+  const timers = new Map();
+  let timerId = 0;
   let member = 'member-one';
   const api = vm.runInNewContext(code, {
+    setTimeout: callback => { timers.set(++timerId, callback); return timerId; },
+    clearTimeout: id => timers.delete(id),
     session: { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value), removeItem: key => store.delete(key) },
     currentMember: { getMember: async () => member && { _id: member } },
     SITE_MAP, PAGE_BUILD_INTEGRATIONS, getSiteRoute, isSafeInternalRoute, normalizeSitePath, console,
@@ -48,7 +53,16 @@ function controller({ store = new Map(), panel = fakeEmbed(), initialPath = '/fl
   });
   const options = { wixSelector: id => id === '#skandiAlexandraGlobalEmbed' && panel, enabled: () => true, navigate: path => paths.push(path), settings: () => ({ locale:'sv-SE', currency:'SEK' }), initialPath };
   const bridge = api.bindAlexandraGlobal(options);
-  return { bridge, panel, requests, store, paths, options, bind:api.bindAlexandraGlobal, memberAs: value => { member = value; } };
+  return {
+    bridge, panel, requests, store, paths, options, timers,
+    showScheduledGreeting() {
+      for (const [id, callback] of [...timers]) {
+        timers.delete(id);
+        callback();
+      }
+    },
+    bind:api.bindAlexandraGlobal, memberAs: value => { member = value; }
+  };
 }
 
 test('every public page uses the existing chat host and one dispatch, including Booking and native commerce', async () => {
@@ -145,6 +159,50 @@ test('the checkout, order confirmation and profile receivers restore the same ch
   }
 });
 
+test('duplicate ready messages, navigation, and a reload can only show one greeting per tab session', async () => {
+  const first = controller();
+  const greet = { greetingSupported: true };
+  await first.panel.receive('SUPPORT_CHAT_READY', greet);
+  await first.panel.receive('SUPPORT_CHAT_READY', greet);
+  assert.equal(first.timers.size, 1);
+  first.bridge.onRouteChange('/travel-info');
+  assert.equal(first.timers.size, 0);
+  await first.panel.receive('SUPPORT_CHAT_READY', greet);
+  first.showScheduledGreeting();
+  assert.equal(first.store.get(greetingKey), '1');
+  assert.equal(first.panel.sent.at(-1).payload.greeting, true);
+  assert.ok(first.panel.classes.has('skandi-alexandra-host-greeting'));
+  assert.equal(first.requests.length, 0);
+  await first.panel.receive('SUPPORT_CHAT_GREETING_DISMISS');
+  assert.equal(first.panel.sent.at(-1).payload.greeting, false);
+  assert.equal(first.panel.classes.has('skandi-alexandra-host-greeting'), false);
+  first.bridge.onRouteChange('/booking');
+  await first.panel.receive('SUPPORT_CHAT_READY', greet, 'widget-2');
+  assert.equal(first.timers.size, 0);
+  const reloaded = controller({store:first.store});
+  await reloaded.panel.receive('SUPPORT_CHAT_READY', greet);
+  assert.equal(reloaded.timers.size, 0);
+
+  const newTab = controller();
+  await newTab.panel.receive('SUPPORT_CHAT_READY', greet);
+  newTab.showScheduledGreeting();
+  assert.equal(newTab.panel.sent.at(-1).payload.greeting, true);
+  newTab.bridge.onRouteChange('/about');
+  assert.equal(newTab.panel.classes.has('skandi-alexandra-host-greeting'), false);
+  await newTab.panel.receive('SUPPORT_CHAT_READY', greet, 'widget-3');
+  assert.equal(newTab.timers.size, 0);
+});
+
+test('opening Alexandra early consumes the greeting without showing it after minimizing', async () => {
+  const first = controller();
+  await first.panel.receive('SUPPORT_CHAT_READY', { greetingSupported: true });
+  await first.panel.receive('SUPPORT_CHAT_PANEL_OPEN');
+  await first.panel.receive('SUPPORT_CHAT_PANEL_CLOSE');
+  first.showScheduledGreeting();
+  assert.equal(first.store.get(greetingKey), '1');
+  assert.equal(first.panel.sent.some(message => message.payload.greeting), false);
+});
+
 test('internal navigation blocks the widget and a new member cannot see the old transcript', async () => {
   const { bridge, panel, memberAs, requests, store } = controller();
   await panel.receive('SUPPORT_CHAT_READY');
@@ -206,7 +264,7 @@ test('the actual widget keeps its LiveKit room on minimize and ignores messages 
     registerTextStreamHandler(topic, fn) { this.reply = fn; }
     registerRpcMethod() {}
     on(name, handler) { this.callbacks.set(name, handler); }
-    async connect() { this.state = 'connected'; }
+    async connect(_url, _token, options) { this.connectOptions = options; this.state = 'connected'; }
     async disconnect() { this.state = 'disconnected'; }
   }
   w.LivekitClient = { Room, RoomEvent:{ TrackSubscribed:'track', TrackUnsubscribed:'untrack', Disconnected:'disconnected', Reconnecting:'reconnecting', Reconnected:'reconnected' } };
@@ -215,6 +273,9 @@ test('the actual widget keeps its LiveKit room on minimize and ignores messages 
   send('SUPPORT_CHAT_RESTORE', {active:true, open:true, draft:'Still typing', messages:[{role:'assistant',content:'Earlier reply'}]});
   send('SUPPORT_CHAT_OPEN', {alexandraSession:fakeRoom});
   await tick();
+  assert.equal(rooms[0].connectOptions.autoSubscribe, false);
+  assert.equal(rooms[0].callbacks.has('track'), false);
+  assert.equal(w.document.querySelector('audio, #humanBtn'), null);
   send('SUPPORT_CHAT_FORCE_CLOSE', {}, {});
   assert.equal(rooms[0].state, 'connected');
   w.document.querySelector('#closeBtn').click();
@@ -226,4 +287,37 @@ test('the actual widget keeps its LiveKit room on minimize and ignores messages 
   assert.equal(w.document.querySelector('#input').value, 'Still typing');
   assert.match(w.document.querySelector('#messages').textContent, /Reply while minimized/);
   assert.ok(sent.some(m => m.type === 'SUPPORT_CHAT_PANEL_CLOSE'));
+});
+
+test('the portrait follows the launcher and the greeting can open the chat or be dismissed', t => {
+  const sent = [], parent = { postMessage: message => sent.push(message) };
+  const dom = new JSDOM(browserMarkup, { runScripts:'outside-only', url:'https://embed.example', pretendToBeVisual:true });
+  t.after(() => dom.window.close());
+  const w = dom.window;
+  Object.defineProperty(w, 'parent', { value: parent });
+  w.eval(browserSource);
+  const widget = id => w.document.getElementById(id);
+  const receive = payload => w.dispatchEvent(new w.MessageEvent('message', {
+    source:parent, data:{source:'SKANDI_WIX_PARENT', type:'SUPPORT_CHAT_HOST_STATE', payload}
+  }));
+  const portrait = widget('alexandraPortrait');
+  widget('alexandraPortraitImage').dispatchEvent(new w.Event('load'));
+  receive({active:true, greeting:true, language:'SV'});
+  assert.equal(widget('greetingOpen').textContent, 'Hej, kan jag hjälpa dig?');
+  assert.equal(portrait.parentElement.id, 'launcher');
+  assert.equal(portrait.hidden, false);
+  assert.equal(widget('alexandraGreeting').hidden, false);
+  widget('greetingDismiss').click();
+  assert.equal(widget('alexandraGreeting').hidden, true);
+  assert.equal(widget('launcher').getAttribute('aria-expanded'), 'false');
+  assert.ok(sent.some(message => message.type === 'SUPPORT_CHAT_GREETING_DISMISS'));
+
+  receive({active:true, greeting:true, language:'EN'});
+  widget('greetingOpen').click();
+  assert.equal(widget('alexandraGreeting').hidden, true);
+  assert.equal(widget('launcher').getAttribute('aria-expanded'), 'true');
+  assert.equal(portrait.parentElement.id, 'avatarSlot');
+  widget('closeBtn').click();
+  assert.equal(portrait.parentElement.id, 'launcher');
+  assert.equal(widget('alexandraGreeting').hidden, true);
 });
