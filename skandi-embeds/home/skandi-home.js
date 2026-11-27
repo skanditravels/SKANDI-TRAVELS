@@ -158,6 +158,11 @@ const I18N = {
     "home.results.copy": "Results will appear here.",
     "home.results.edit": "Edit Search",
     "home.date.kicker": "Select Travel Dates",
+    "home.date.close": "Close date picker",
+    "home.date.previousMonth": "Previous month",
+    "home.date.nextMonth": "Next month",
+    "home.date.selectFrom": "Choose the first date.",
+    "home.date.selectTo": "Choose the last date.",
     "home.date.clear": "Clear",
     "home.date.apply": "Apply Dates",
     "home.sections.discovery.title": "Explore SKANDI",
@@ -383,6 +388,11 @@ const I18N = {
     "home.results.copy": "Resultaten visas här.",
     "home.results.edit": "Ändra sökning",
     "home.date.kicker": "Välj resedatum",
+    "home.date.close": "Stäng datumväljaren",
+    "home.date.previousMonth": "Föregående månad",
+    "home.date.nextMonth": "Nästa månad",
+    "home.date.selectFrom": "Välj det första datumet.",
+    "home.date.selectTo": "Välj det sista datumet.",
     "home.date.clear": "Rensa",
     "home.date.apply": "Använd datum",
     "home.sections.destinations.title": "Populära destinationer",
@@ -604,6 +614,11 @@ const I18N = {
     "home.results.copy": "Resultatene vises her.",
     "home.results.edit": "Endre søk",
     "home.date.kicker": "Velg reisedatoer",
+    "home.date.close": "Lukk datovelgeren",
+    "home.date.previousMonth": "Forrige måned",
+    "home.date.nextMonth": "Neste måned",
+    "home.date.selectFrom": "Velg den første datoen.",
+    "home.date.selectTo": "Velg den siste datoen.",
     "home.date.clear": "Tøm",
     "home.date.apply": "Bruk datoer",
     "home.sections.destinations.title": "Populære reisemål",
@@ -825,6 +840,11 @@ const I18N = {
     "home.results.copy": "Resultaterne vises her.",
     "home.results.edit": "Ændre søgning",
     "home.date.kicker": "Vælg rejsedatoer",
+    "home.date.close": "Luk datovælgeren",
+    "home.date.previousMonth": "Forrige måned",
+    "home.date.nextMonth": "Næste måned",
+    "home.date.selectFrom": "Vælg den første dato.",
+    "home.date.selectTo": "Vælg den sidste dato.",
     "home.date.clear": "Ryd",
     "home.date.apply": "Anvend datoer",
     "home.sections.destinations.title": "Populære destinationer",
@@ -1046,6 +1066,11 @@ const I18N = {
     "home.results.copy": "Los resultados aparecerán aquí.",
     "home.results.edit": "Modificar búsqueda",
     "home.date.kicker": "Selecciona las fechas de viaje",
+    "home.date.close": "Cerrar el selector de fechas",
+    "home.date.previousMonth": "Mes anterior",
+    "home.date.nextMonth": "Mes siguiente",
+    "home.date.selectFrom": "Elige la primera fecha.",
+    "home.date.selectTo": "Elige la última fecha.",
     "home.date.clear": "Limpiar",
     "home.date.apply": "Aplicar fechas",
     "home.sections.destinations.title": "Destinos populares",
@@ -1267,6 +1292,11 @@ const I18N = {
     "home.results.copy": "Tulokset näkyvät tässä.",
     "home.results.edit": "Muokkaa hakua",
     "home.date.kicker": "Valitse matkapäivät",
+    "home.date.close": "Sulje päivämäärävalitsin",
+    "home.date.previousMonth": "Edellinen kuukausi",
+    "home.date.nextMonth": "Seuraava kuukausi",
+    "home.date.selectFrom": "Valitse ensimmäinen päivä.",
+    "home.date.selectTo": "Valitse viimeinen päivä.",
     "home.date.clear": "Tyhjennä",
     "home.date.apply": "Käytä päivämääriä",
     "home.sections.destinations.title": "Suositut kohteet",
@@ -1488,6 +1518,11 @@ const I18N = {
     "home.results.copy": "Les résultats s'afficheront ici.",
     "home.results.edit": "Modifier la recherche",
     "home.date.kicker": "Sélectionnez les dates de voyage",
+    "home.date.close": "Fermer le calendrier",
+    "home.date.previousMonth": "Mois précédent",
+    "home.date.nextMonth": "Mois suivant",
+    "home.date.selectFrom": "Choisissez la première date.",
+    "home.date.selectTo": "Choisissez la dernière date.",
     "home.date.clear": "Effacer",
     "home.date.apply": "Valider les dates",
     "home.sections.destinations.title": "Destinations populaires",
@@ -1717,6 +1752,11 @@ const I18N = {
     "home.results.copy": "Les résultats s'afficheront ici.",
     "home.results.edit": "Modifier la recherche",
     "home.date.kicker": "Sélectionnez les dates de voyage",
+    "home.date.close": "Fermer le calendrier",
+    "home.date.previousMonth": "Mois précédent",
+    "home.date.nextMonth": "Mois suivant",
+    "home.date.selectFrom": "Choisissez la première date.",
+    "home.date.selectTo": "Choisissez la dernière date.",
     "home.date.clear": "Effacer",
     "home.date.apply": "Valider les dates",
     "home.sections.destinations.title": "Destinations populaires",
@@ -1930,6 +1970,11 @@ const I18N = {
     "home.results.copy": "Die Ergebnisse werden hier angezeigt.",
     "home.results.edit": "Suche bearbeiten",
     "home.date.kicker": "Reisedaten auswählen",
+    "home.date.close": "Datumsauswahl schließen",
+    "home.date.previousMonth": "Vorheriger Monat",
+    "home.date.nextMonth": "Nächster Monat",
+    "home.date.selectFrom": "Wählen Sie das erste Datum.",
+    "home.date.selectTo": "Wählen Sie das letzte Datum.",
     "home.date.clear": "Löschen",
     "home.date.apply": "Daten übernehmen",
     "home.sections.destinations.title": "Beliebte Reiseziele",
@@ -2151,6 +2196,11 @@ const I18N = {
     "home.results.copy": "ผลลัพธ์จะแสดงที่นี่",
     "home.results.edit": "แก้ไขการค้นหา",
     "home.date.kicker": "เลือกวันที่เดินทาง",
+    "home.date.close": "ปิดตัวเลือกวันที่",
+    "home.date.previousMonth": "เดือนก่อนหน้า",
+    "home.date.nextMonth": "เดือนถัดไป",
+    "home.date.selectFrom": "เลือกวันแรก",
+    "home.date.selectTo": "เลือกวันสุดท้าย",
     "home.date.clear": "ล้างข้อมูล",
     "home.date.apply": "ใช้ตัวเลือกวันที่",
     "home.sections.destinations.title": "จุดหมายปลายทางยอดนิยม",
@@ -2367,10 +2417,6 @@ function applyControlTranslations() {
   setOptionText("sig-nights", "10", "home.option.nights10");
   setOptionText("sig-nights", "14", "home.option.nights14");
 
-  const dateHeading = document.getElementById("dateRangeHeading");
-  if (dateHeading) {
-    dateHeading.innerHTML = `${skandiTranslate("home.fields.from")} <span></span> ${skandiTranslate("home.fields.to")}`;
-  }
 }
 
 function applyTranslations() {
@@ -2406,6 +2452,7 @@ function applyTranslations() {
     if (state.usingFallback?.trust) state.trust = fallbackTrust();
 
     applyDateLabelsOnly();
+    if (dateDraft) renderCalendar();
     renderPax();
     renderSelectOptions();
     renderTrust();
@@ -2700,7 +2747,8 @@ function nightsBetween(from,to){
   const a=new Date(from+"T00:00:00"), b=new Date(to+"T00:00:00");
   return Math.max(0,Math.round((b-a)/86400000));
 }
-function activeRange(){ return state.dateRanges[state.activeDateRange] || state.dateRanges.holidays; }
+let dateDraft = null;
+let dateTrigger = null;
 function setInitialDates(){
   const dep=todayPlus(60), ret=todayPlus(67);
   Object.keys(state.dateRanges).forEach(key=>{ state.dateRanges[key]={from:dep,to:ret}; });
@@ -2712,8 +2760,12 @@ function applyDateLabelsOnly(){
     const fromInput=$(cfg.fromInput), toInput=$(cfg.toInput), fromLabel=$(cfg.fromLabel), toLabel=$(cfg.toLabel);
     if(fromInput)fromInput.value=range.from||"";
     if(toInput)toInput.value=range.to||"";
-    if(fromLabel)fromLabel.textContent=range.from?formatDate(range.from):skandiTranslate("home.fields.from");
-    if(toLabel)toLabel.textContent=range.to?formatDate(range.to):skandiTranslate("home.fields.to");
+    const fromText=range.from?formatDate(range.from):skandiTranslate("home.fields.from");
+    const toText=range.to?formatDate(range.to):skandiTranslate("home.fields.to");
+    if(fromLabel)fromLabel.textContent=fromText;
+    if(toLabel)toLabel.textContent=toText;
+    $(cfg.button)?.setAttribute("aria-label",
+      `${skandiTranslate("home.fields.travelDates")}, ${fromText} – ${toText}`);
   });
 }
 
@@ -2826,22 +2878,48 @@ function matchingLocationOptions(kind,query){
 function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId="",typeId="",valueMode="canonical"}){
   const input=$(inputId),hidden=$(valueId),box=$(boxId),iata=iataId?$(iataId):null,type=typeId?$(typeId):null;
   if(!input||!hidden||!box)return;
+  input.setAttribute("role","combobox");
+  input.setAttribute("aria-autocomplete","list");
+  input.setAttribute("aria-controls",boxId);
+  input.setAttribute("aria-expanded","false");
+  box.setAttribute("role","listbox");
   let matches=[],activeIndex=-1,remote=[],requestId="",placeTimer=null,remoteUnavailable=false;
+  let dismissed=false;
   const useProvider=kind==="flight";
+  const placeKey=item=>item
+    ?`${item.type}:${item.type==="AIRPORT"?item.iata||item.value:item.canonicalValue||item.value}`
+    :"";
   const available=()=>{
     const combined=useProvider?[...remote,...buildLocationOptions(kind)]:buildLocationOptions(kind),seen=new Set();
-    return combined.filter(item=>{const key=`${item.type}:${item.iata||item.value}`;if(seen.has(key))return false;seen.add(key);return true;});
+    return combined.filter(item=>{const key=placeKey(item);if(seen.has(key))return false;seen.add(key);return true;});
   };
-  const close=()=>{box.classList.remove("active");input.setAttribute("aria-expanded","false");activeIndex=-1;};
+  const close=()=>{
+    box.classList.remove("active");
+    input.setAttribute("aria-expanded","false");
+    input.removeAttribute("aria-activedescendant");
+    activeIndex=-1;
+  };
+  const updateActive=(reveal=false)=>{
+    const options=[...box.querySelectorAll(".airport-option")], active=options[activeIndex];
+    options.forEach((el,index)=>el.setAttribute("aria-selected",String(index===activeIndex)));
+    if(active){
+      input.setAttribute("aria-activedescendant",active.id);
+      if(reveal)active.scrollIntoView({block:"nearest"});
+    } else input.removeAttribute("aria-activedescendant");
+  };
   const render=()=>{
+    if(dismissed)return;
+    const highlighted=placeKey(matches[activeIndex]);
     matches=available().map(item=>({...item,_score:scoreLocationOption(item,input.value)})).filter(item=>item._score>=0).sort((a,b)=>b._score-a._score||String(a.title||"").localeCompare(String(b.title||""))).slice(0,10);
+    activeIndex=matches.findIndex(item=>placeKey(item)===highlighted);
     const catalogueReady=(state.airports||[]).length>0||(state.searchDestinations||[]).length>0;
-    box.innerHTML=matches.length?matches.map((item,index)=>`<button type="button" class="airport-option" role="option" data-index="${index}">
+    box.innerHTML=matches.length?matches.map((item,index)=>`<button type="button" class="airport-option" id="${boxId}-${index}" role="option" tabindex="-1" data-index="${index}">
       <span class="airport-option-type">${esc(item.type==="AREA"?"RESORT":item.type)}</span>
       <span class="airport-option-copy"><strong>${esc(item.label||item.title||item.value)}</strong><small>${esc(item.subtitle||"")}</small></span>
     </button>`).join(""):`<div style="padding:13px 14px;color:#667482;font-size:12px">${remoteUnavailable?"Airport search is unavailable. Try another search.":catalogueReady?"No matching locations":"Loading destinations and airports…"}</div>`;
     if(remoteUnavailable&&matches.length)box.insertAdjacentHTML("beforeend",'<div style="padding:10px 14px;color:#667482;font-size:12px">Some locations could not be loaded. Saved locations are shown.</div>');
     box.classList.add("active");input.setAttribute("aria-expanded","true");
+    updateActive();
   };
   const choose=item=>{
     if(!item)return;
@@ -2853,14 +2931,19 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
   const resolveExact=()=>{
     if(hidden.value)return true;
     const q=normalizeSearchText(input.value);if(!q)return false;
-    const exact=available().find(item=>[item.value,item.iata,item.icao,item.title,item.label].map(normalizeSearchText).includes(q));
+    const locations=available();
+    const exact=locations.find(item=>item.type==="AIRPORT"&&[item.iata,item.icao].map(normalizeSearchText).includes(q))||
+      locations.find(item=>[item.value,item.canonicalValue,item.iata,item.icao,item.title,item.label].map(normalizeSearchText).includes(q));
     if(exact){choose(exact);return true;}return false;
   };
   input.addEventListener("focus",()=>{
+    dismissed=false;
     if(!state.locationsLoaded)send("HOME_LOCATIONS_REQUEST",{});
     render();
   });
   input.addEventListener("input",()=>{
+    dismissed=false;
+    activeIndex=-1;
     hidden.value="";if(iata)iata.value="";if(type)type.value="";
     if(useProvider)delete input.dataset.placeType;
     if(!state.locationsLoaded)send("HOME_LOCATIONS_REQUEST",{});
@@ -2875,17 +2958,24 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
     render();
   });
   input.addEventListener("keydown",e=>{
-    if(!box.classList.contains("active")&&["ArrowDown","ArrowUp"].includes(e.key)){render();e.preventDefault();return;}
+    if(e.key==="Escape"&&box.classList.contains("active")){
+      dismissed=true;close();e.preventDefault();e.stopPropagation();return;
+    }
+    if(!box.classList.contains("active")&&["ArrowDown","ArrowUp"].includes(e.key)){
+      dismissed=false;render();e.preventDefault();
+    }
     if(!matches.length)return;
     if(e.key==="ArrowDown"){activeIndex=Math.min(matches.length-1,activeIndex+1);e.preventDefault();}
-    else if(e.key==="ArrowUp"){activeIndex=Math.max(0,activeIndex-1);e.preventDefault();}
-    else if(e.key==="Enter"&&activeIndex>=0){choose(matches[activeIndex]);e.preventDefault();return;}
-    else if(e.key==="Escape"){close();return;} else return;
-    [...box.querySelectorAll(".airport-option")].forEach((el,i)=>el.style.background=i===activeIndex?"#eef7fb":"");
+    else if(e.key==="ArrowUp"){activeIndex=activeIndex<0?matches.length-1:Math.max(0,activeIndex-1);e.preventDefault();}
+    else if(e.key==="Enter"&&activeIndex>=0&&box.classList.contains("active")){choose(matches[activeIndex]);e.preventDefault();return;}
+    else return;
+    updateActive(true);
   });
   box.addEventListener("mousedown",e=>e.preventDefault());
   box.addEventListener("click",e=>{const opt=e.target.closest(".airport-option");if(opt)choose(matches[Number(opt.dataset.index||0)]);});
-  input.addEventListener("blur",()=>setTimeout(()=>{resolveExact();close();},120));
+  input.addEventListener("blur",()=>setTimeout(()=>{
+    if(document.activeElement!==input){resolveExact();close();}
+  },120));
   input.__resolveLocationSelection=resolveExact;
   input.__refreshLocationSuggestions=render;
   if(useProvider)input.__acceptFlightPlaces=message=>{
@@ -2901,6 +2991,7 @@ function ensureLocationSelection(inputId){
 function setupTabs(){
   document.querySelectorAll(".tab-btn").forEach(btn=>{
     btn.addEventListener("click",()=>{
+      closeDatePicker();
       document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
       btn.classList.add("active");
@@ -2928,18 +3019,17 @@ function clampPax(type,value){
   renderPax();
 }
 function renderPax(){
-  ["adultsCount","holAdultsCount"].forEach(id=>{const e=$(id); if(e)e.textContent=state.adults;});
-  ["childrenCount","holChildrenCount"].forEach(id=>{const e=$(id); if(e)e.textContent=state.children;});
-  ["infantsCount","holInfantsCount"].forEach(id=>{const e=$(id); if(e)e.textContent=state.infants;});
+  document.querySelectorAll(".pax-row .counter").forEach(counter=>{
+    const count=counter.querySelector("span"), type=counter.querySelector("[data-counter]").dataset.counter;
+    count.textContent=state[type];
+  });
   state.childAges=state.childAges.slice(0,state.children);
   state.infantAges=state.infantAges.slice(0,state.infants);
   while(state.childAges.length<state.children)state.childAges.push(2);
   while(state.infantAges.length<state.infants)state.infantAges.push(0);
-  renderAgeFields("ageFields");
-  renderAgeFields("holAgeFields");
+  document.querySelectorAll("[data-home-ages]").forEach(renderAgeFields);
 }
-function renderAgeFields(boxId){
-  const box=$(boxId); if(!box)return;
+function renderAgeFields(box){
   let html="";
   if(state.children>0){
     html+=`<div class="field-row">`;
@@ -2961,93 +3051,110 @@ function renderAgeFields(boxId){
 }
 
 function renderCalendar(){
-  const grid=$("calendarGrid"), title=$("calendarTitle"), range=activeRange();
-  if(!grid||!title)return;
-  
-  const a=state.calendarMonth, b=addMonths(state.calendarMonth,1);
-  const isMobile = window.innerWidth <= 720;
-  const months = isMobile ? [a] : [a, b];
-  
-  // Smart Title: "October 2026" on mobile, "October – November 2026" on desktop
-  if (isMobile) {
-    title.textContent = a.toLocaleDateString(skandiLocale(), { month: "long", year: "numeric" });
-  } else {
-    const titleA = a.toLocaleDateString(skandiLocale(), { month: "long" });
-    const titleB = b.toLocaleDateString(skandiLocale(), { month: "long", year: "numeric" });
-    title.textContent = `${titleA} – ${titleB}`;
-  }
-  
-  $("pickedFrom").textContent = range.from ? formatDate(range.from) : skandiTranslate("home.fields.from");
-  $("pickedTo").textContent = range.to ? formatDate(range.to) : skandiTranslate("home.fields.to");
-  
-  grid.innerHTML = months.map(renderMonth).join("");
+  const grid=$("calendarGrid"), locale=skandiLocale(), today=todayPlus(0);
+  const firstMonth=state.calendarMonth;
+  const months=window.innerWidth<=760?[firstMonth]:[firstMonth,addMonths(firstMonth,1)];
+  const monthName=new Intl.DateTimeFormat(locale,{month:"long",year:"numeric"});
+  const dayName=new Intl.DateTimeFormat(locale,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  const calendarLocale=typeof Intl.Locale==="function"?new Intl.Locale(locale):null;
+  const weekInfo=calendarLocale?.getWeekInfo?.()||calendarLocale?.weekInfo;
+  const firstWeekday=(weekInfo?.firstDay??7)%7;
+  const activeDay=grid.contains(document.activeElement)?document.activeElement.dataset.date:"";
+
+  $("calendarTitle").textContent=months.map(month=>monthName.format(month)).join(" – ");
+  $("pickedFrom").textContent=formatDate(dateDraft.from)||"—";
+  $("pickedTo").textContent=formatDate(dateDraft.to)||"—";
+  $("prevMonth").disabled=isoDate(firstMonth).slice(0,7)<=today.slice(0,7);
+  $("clearDates").disabled=!dateDraft.from&&!dateDraft.to;
+  $("applyDates").disabled=!isCompleteDateDraft();
+  $("dateSelectionHint").textContent=dateDraft.to?"":skandiTranslate(
+    dateDraft.from?"home.date.selectTo":"home.date.selectFrom",
+    dateDraft.from?"Choose the last date.":"Choose the first date."
+  );
+  grid.innerHTML=months.map(month=>renderMonth(month,{today,firstWeekday,monthName,dayName,locale})).join("");
+  if(activeDay)grid.querySelector(`[data-date="${activeDay}"]:not(:disabled)`)?.focus({preventScroll:true});
 }
-function renderMonth(monthDate){
-  const range=activeRange();
+function renderMonth(monthDate,{today,firstWeekday,monthName,dayName,locale}){
   const year=monthDate.getFullYear(), month=monthDate.getMonth();
-  const first=new Date(year,month,1), last=new Date(year,month+1,0);
-  const today=new Date(); today.setHours(0,0,0,0);
-  const weekdays=Array.from({length:7},(_,index)=>{
-    const day=new Date(2026,0,4+index);
-    return day.toLocaleDateString(skandiLocale(),{weekday:"narrow"});
-  });
-  let days="";
-  for(let i=0;i<first.getDay();i++)days+=`<div></div>`;
-  for(let day=1;day<=last.getDate();day++){
+  const leading=(monthDate.getDay()-firstWeekday+7)%7;
+  const weekdays=Array.from({length:7},(_,index)=>new Date(2026,0,4+firstWeekday+index)
+    .toLocaleDateString(locale,{weekday:"short"}));
+  let days="<div aria-hidden=\"true\"></div>".repeat(leading);
+  const dayCount=new Date(year,month+1,0).getDate();
+  for(let day=1;day<=dayCount;day++){
     const date=new Date(year,month,day), value=isoDate(date);
-    const selectingTo=Boolean(range.from&&!range.to);
-    const disabled=date<today||(selectingTo&&value<range.from);
-    const selected=value===range.from||value===range.to;
-    const inRange=range.from&&range.to&&value>range.from&&value<range.to;
-    days+=`<button type="button" class="day-btn ${disabled?"disabled":""} ${selected?"selected":""} ${inRange?"in-range":""}" data-date="${value}" ${disabled?"disabled":""}>${day}</button>`;
+    const selected=value===dateDraft.from||value===dateDraft.to;
+    const inRange=dateDraft.from&&dateDraft.to&&value>dateDraft.from&&value<dateDraft.to;
+    days+=`<button type="button" class="day-btn${selected?" selected":""}${inRange?" in-range":""}" data-date="${value}" aria-label="${escAttr(dayName.format(date))}" aria-pressed="${selected}" ${value<today?"disabled":""}>${day}</button>`;
   }
-  return `<div class="month-box"><h4>${monthDate.toLocaleDateString(skandiLocale(),{month:"long",year:"numeric"})}</h4><div class="month-weekdays">${weekdays.map(day=>`<div>${esc(day)}</div>`).join("")}</div><div class="month-days">${days}</div></div>`;
+  return `<div class="month-box"><h4>${esc(monthName.format(monthDate))}</h4><div class="month-weekdays" aria-hidden="true">${weekdays.map(day=>`<div>${esc(day)}</div>`).join("")}</div><div class="month-days">${days}</div></div>`;
 }
-function pickDate(value){
-  const range=activeRange();
-  if(!range.from||range.to){ range.from=value; range.to=""; renderCalendar(); return; }
-  if(value<=range.from){ range.from=value; range.to=""; renderCalendar(); return; }
-  range.to=value; renderCalendar();
+function isCompleteDateDraft(){
+  return dateDraft?.from>=todayPlus(0)&&dateDraft.to>dateDraft.from;
 }
-function closeDatePicker(){
-  const pop=$("datePickerOverlay");
-  if(pop)pop.classList.remove("active");
-  document.querySelectorAll("[data-date-range]").forEach(btn=>btn.setAttribute("aria-expanded","false"));
+function closeDatePicker(restoreFocus=false){
+  if(!dateTrigger)return;
+  $("datePickerOverlay").hidden=true;
+  dateTrigger.setAttribute("aria-expanded","false");
+  if(restoreFocus)dateTrigger.focus();
+  dateTrigger=null;
+  dateDraft=null;
 }
-function applyDates(){
-  const range=activeRange();
-  if(!range.from){ showStatus(skandiTranslate("home.status.selectDepartureDate"),true); return; }
-  if(!range.to){ showStatus(skandiTranslate("home.status.selectReturnDate","Select a To date."),true); return; }
+function applyDates(restoreFocus=true){
+  if(!isCompleteDateDraft())return false;
+  state.dateRanges[state.activeDateRange]=dateDraft;
   applyDateLabelsOnly();
-  closeDatePicker();
+  closeDatePicker(restoreFocus);
+  return true;
 }
-function openDatePicker(mode,button){
+function openDatePicker(button){
+  if(button===dateTrigger){ closeDatePicker(true); return; }
+  closeDatePicker();
+  const mode=button.dataset.dateRange;
   state.activeDateRange=mode;
-  const range=activeRange();
-  if(range.from){ const d=new Date(range.from+"T00:00:00"); state.calendarMonth=new Date(d.getFullYear(),d.getMonth(),1); }
-  const pop=$("datePickerOverlay");
-  const host=button.closest(".date-field");
-  if(host&&pop&&pop.parentElement!==host)host.appendChild(pop);
-  document.querySelectorAll("[data-date-range]").forEach(btn=>btn.setAttribute("aria-expanded",btn===button?"true":"false"));
-  pop.classList.add("active");
+  dateDraft={...state.dateRanges[mode]};
+  dateTrigger=button;
+  const firstDate=new Date((dateDraft.from>=todayPlus(0)?dateDraft.from:todayPlus(0))+"T00:00:00");
+  state.calendarMonth=addMonths(firstDate,0);
+  const picker=$("datePickerOverlay");
+  button.closest(".date-field").appendChild(picker);
+  button.setAttribute("aria-expanded","true");
+  picker.hidden=false;
   renderCalendar();
+  picker.querySelector(".calendar-scroll").scrollTop=0;
+  requestAnimationFrame(()=>{
+    if(dateTrigger!==button)return;
+    picker.scrollIntoView({block:"nearest",inline:"nearest"});
+    $("dateRangeHeading").focus({preventScroll:true});
+  });
 }
 function setupDatePicker(){
-  document.querySelectorAll("[data-date-range]").forEach(button=>{
-    button.onclick=(event)=>{ event.stopPropagation(); openDatePicker(button.dataset.dateRange,button); };
-  });
-  $("closeDatePicker").onclick=closeDatePicker;
+  const picker=$("datePickerOverlay");
+  document.querySelectorAll("[data-date-range]").forEach(button=>button.onclick=()=>openDatePicker(button));
+  $("closeDatePicker").onclick=()=>closeDatePicker(true);
   $("prevMonth").onclick=()=>{state.calendarMonth=addMonths(state.calendarMonth,-1);renderCalendar();};
   $("nextMonth").onclick=()=>{state.calendarMonth=addMonths(state.calendarMonth,1);renderCalendar();};
-  $("clearDates").onclick=()=>{ const range=activeRange(); range.from="";range.to="";renderCalendar();applyDateLabelsOnly(); };
-  $("applyDates").onclick=applyDates;
-  $("calendarGrid").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b&&!b.disabled)pickDate(b.dataset.date);});
-  document.addEventListener("click",e=>{
-    const pop=$("datePickerOverlay");
-    if(pop?.classList.contains("active")&&!pop.contains(e.target)&&!e.target.closest("[data-date-range]"))closeDatePicker();
+  $("clearDates").onclick=()=>{dateDraft={from:"",to:""};renderCalendar();};
+  $("applyDates").onclick=()=>applyDates();
+  $("calendarGrid").addEventListener("click",event=>{
+    const button=event.target.closest("[data-date]");
+    if(!button||button.disabled||!dateDraft)return;
+    const day=button.dataset.date;
+    if(!dateDraft.from||dateDraft.to||day<=dateDraft.from)dateDraft={from:day,to:""};
+    else dateDraft.to=day;
+    renderCalendar();
   });
-  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDatePicker();});
-  window.addEventListener("resize",()=>{if($("datePickerOverlay")?.classList.contains("active"))renderCalendar();});
+  document.addEventListener("click",event=>{
+    // Selecting a day redraws its button before this event reaches the document.
+    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search]"))closeDatePicker();
+  });
+  document.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&dateDraft){event.preventDefault();closeDatePicker(true);}
+  });
+  const narrow=window.matchMedia?.("(max-width: 760px)");
+  const syncWidth=()=>{if(dateDraft)renderCalendar();};
+  if(narrow?.addEventListener)narrow.addEventListener("change",syncWidth);
+  else narrow?.addListener?.(syncWidth);
 }
 
 function renderLocationData(payload={}){
@@ -3635,7 +3742,9 @@ function getHotelSearch(){
     rooms:Number($("hotel-rooms").value||1),
     adults:state.adults,
     children:state.children,
+    infants:state.infants,
     childAges:[...state.childAges],
+    infantAges:[...state.infantAges],
     guests:stayGuestsForHome(),
     currency: SKANDI_USER_SETTINGS.currency || "USD"
   };
@@ -3678,9 +3787,15 @@ function validateSearch(search){
 }
 function runSearch(mode, overrideSearch=null){
   if(pending.search||pending.selection)return;
+  if(dateDraft&&mode===state.activeDateRange&&!overrideSearch&&!applyDates(false)){
+    $("datePickerOverlay").scrollIntoView({block:"nearest"});
+    $("dateRangeHeading").focus({preventScroll:true});
+    return;
+  }
   const search = overrideSearch || (mode==="flights"?getFlightSearch():mode==="holidays"?getHolidaySearch():mode==="hotels"?getHotelSearch():mode==="signature"?getSignatureSearch():getHolidaySearch());
   const warning=validateSearch(search);
   if(warning){ showInlineStatus(warning,true); return; }
+  showInlineStatus("");
   
   state.lastSearch=search;
   state.lastResults=[];
@@ -3728,9 +3843,13 @@ function showStatus(msg,isError=false,ok=false){
 }
 function showInlineStatus(msg,isError=false){
   const panel=document.querySelector(".tab-panel.active");
+  if(!panel)return;
   let inline=panel.querySelector(".inline-status-card");
+  if(!msg){ inline?.remove();return; }
   if(!inline){ inline=document.createElement("div"); inline.className="inline-status-card"; inline.style.marginTop="14px"; panel.appendChild(inline); }
+  inline.setAttribute("role",isError?"alert":"status");
   inline.innerHTML=`<div class="status-card ${isError?"error":""}">${esc(msg)}</div>`;
+  inline.scrollIntoView({block:"nearest"});
 }
 function renderResults(items=[]){
   if(!pending.search&&!pending.selection)showPageLoader(false);
@@ -3863,13 +3982,12 @@ window.addEventListener("message",event=>{
       : "The travel provider could not complete this search. Please try again.",true);
   }
   if(msg.type==="HOME_NAVIGATE_TO_OFFER"&&(pending.selection?.requestId===msg.requestId||pending.search?.requestId===msg.requestId)){
-    if(pending.selection){clearTimeout(pending.selection.timer);pending.selection.timer=null;} if(pending.search){clearTimeout(pending.search.timer);pending.search.timer=null;}
     showStatus("Opening your travel results…",false,true);
   }
   if(msg.type==="HOME_FOCUS_SEARCH"){
     document.body.classList.remove("search-mode");
     document.getElementById("hero-wrap")?.scrollIntoView({behavior:"smooth",block:"start"});
-    window.setTimeout(()=>document.getElementById("from")?.focus(),350);
+    window.setTimeout(()=>$("panel-"+state.activeTab)?.querySelector(".airport-field input[type='text']")?.focus(),350);
   }
   if(msg.type==="FOOTER_NEWSLETTER_RESULT"){
     const toast=document.getElementById("skandiToast");
@@ -3958,10 +4076,9 @@ initializeBridge();
   const mobile = window.matchMedia('(max-width: 760px)');
 
   // Keep the original counters and age controls; the summary is derived from them.
-  function setupTravelers(panelId, agesId) {
-    const panel = document.getElementById(panelId);
-    const row = panel && panel.querySelector('.pax-row');
-    const ages = document.getElementById(agesId);
+  function setupTravelers(panel) {
+    const row = panel.querySelector('.pax-row');
+    const ages = panel.querySelector('[data-home-ages]');
     if (!row || !ages || row.parentNode !== ages.parentNode) return;
     const details = document.createElement('details');
     details.className = 'home-travelers';
@@ -3999,14 +4116,9 @@ initializeBridge();
     update();
     return details;
   }
-  const travelerPanels = [
-    setupTravelers('panel-flights', 'ageFields'),
-    setupTravelers('panel-holidays', 'holAgeFields')
-  ].filter(Boolean);
-  let syncCalendar = function () {};
+  const travelerPanels = Array.from(root.querySelectorAll('.tab-panel'), setupTravelers).filter(Boolean);
   function updateLayout() {
     travelerPanels.forEach(details => { details.open = !mobile.matches; });
-    syncCalendar();
     updateKeyboard();
   }
   if (mobile.addEventListener) mobile.addEventListener('change', updateLayout);
@@ -4043,51 +4155,6 @@ initializeBridge();
       tabs[next].scrollIntoView({block:'nearest', inline:'nearest'});
     });
     syncTabs();
-  }
-
-  // The existing date picker remains the owner of date state and validation.
-  const overlay = document.getElementById('datePickerOverlay');
-  const modal = overlay && overlay.querySelector('.date-modal');
-  const close = document.getElementById('closeDatePicker');
-  if (overlay && modal && close) {
-    let returnFocus = null;
-    let wasOpen = false;
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-labelledby', 'dateRangeHeading');
-    modal.tabIndex = -1;
-    if (!close.hasAttribute('aria-label')) close.setAttribute('aria-label', 'Close date picker');
-    function calendarState() {
-      const open = overlay.classList.contains('active');
-      const mobileOpen = open && mobile.matches;
-      overlay.setAttribute('aria-hidden', String(!open));
-      if (mobileOpen) modal.setAttribute('aria-modal', 'true');
-      else modal.removeAttribute('aria-modal');
-      document.body.classList.toggle('skandi-home-calendar-open', mobileOpen);
-      if (mobileOpen && !wasOpen) {
-        returnFocus = root.querySelector('[data-date-range][aria-expanded="true"]');
-        requestAnimationFrame(() => { if (overlay.classList.contains('active')) modal.focus({preventScroll:true}); });
-      } else if (!open && wasOpen && returnFocus) {
-        returnFocus.focus({preventScroll:true});
-        returnFocus = null;
-      }
-      wasOpen = mobileOpen;
-    }
-    new MutationObserver(calendarState).observe(overlay, {attributes:true, attributeFilter:['class']});
-    overlay.addEventListener('click', event => { if (mobile.matches && event.target === overlay) close.click(); });
-    overlay.addEventListener('keydown', event => {
-      if (!mobile.matches || event.key !== 'Tab' || !overlay.classList.contains('active')) return;
-      const controls = Array.from(modal.querySelectorAll('button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex="0"]'))
-        .filter(element => element.offsetParent !== null);
-      if (!controls.length) { event.preventDefault(); modal.focus({preventScroll:true}); return; }
-      const first = controls[0], last = controls[controls.length - 1];
-      if (event.shiftKey && (document.activeElement === first || document.activeElement === modal)) {
-        event.preventDefault(); last.focus({preventScroll:true});
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault(); first.focus({preventScroll:true});
-      }
-    });
-    syncCalendar = calendarState;
-    calendarState();
   }
 
   // Only a top-level page can observe its own keyboard viewport reliably.
