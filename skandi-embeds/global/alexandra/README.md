@@ -14,6 +14,8 @@ While the shared widget stays mounted, it keeps the active LiveKit connection an
 
 Alexandra receives text through the existing LiveKit stream and joins without subscribing to media tracks. The widget keeps its support-request form. The launcher and chat header share one portrait made from the existing Alexandra clip with its white backdrop removed. The still version follows the browser’s reduced-motion preference.
 
+The compact launcher places the portrait in front of the rounded top and behind the navy band with Alexandra’s name.
+
 The greeting appears once per browser tab session, after a short delay. Clicking it opens the chat, and the X dismisses it. Opening chat before the greeting, dismissing it, or navigating after it appears prevents another greeting in that tab, including after a reload.
 
 ## Reference documents
@@ -27,3 +29,4 @@ The greeting appears once per browser tab session, after a short delay. Clicking
 - 2026-11-27 — Wix Preview preserved an unsent draft from Home to Travel Info and showed the opened iframe clipped to its editor size. The containing Wix Section now owns the chat sizing. Wix moves a page-pinned element out of its global section, so keep the HTML component attached to the dedicated section.
 - 2026-11-27 — Wix Studio returned an invalid section index for My Club Profile, the custom Store checkout and its order confirmation. These three pages compile the same Alexandra component into their existing receivers. The master accepts chat messages from the registered page component and prefers the global section when it is available.
 - 2026-11-27 — Changed the widget to text-only playback, removed its human-chat button and added the frameless portrait and session greeting. The existing `#skandiAlexandraGlobalEmbed` needs the regenerated standalone HTML. The Help Center and other compiled receivers pick up the shared source in the website build.
+- 2026-11-27 — Added the rounded launcher and foreground name band that overlap the moving portrait. Replace the HTML in `#skandiAlexandraGlobalEmbed` with the regenerated installation file.
