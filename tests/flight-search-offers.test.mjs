@@ -33,20 +33,39 @@ test('place lookup is directly registered as a public Wix web method',async()=>{
 
 test('existing airport metadata preserves verified city and ICAO codes in Home content',async()=>{
   const source=await read('src/backend/SKANDI_CORE/homeContent.js');const ctx=vm.createContext({obj:x=>x||{},upper:(x,n)=>String(x||'').toUpperCase().slice(0,n),clean:(x,n)=>String(x||'').slice(0,n)});
+  ctx.placeGeography = (_records, airport) => ({region:'',country:airport.details.country});
   vm.runInContext(functionSource(source,'airportDto')+';this.run=airportDto;',ctx);
-  const airport=ctx.run({id:'arn',code:'ARN',name:'Stockholm Arlanda Airport',details:{city:'Stockholm',icaoCode:'ESSA',duffel:{iataCityCode:'STO'},country:'Sweden'}});
+  const airport=ctx.run([], {id:'arn',code:'ARN',name:'Stockholm Arlanda Airport',details:{city:'Stockholm',icaoCode:'ESSA',duffel:{iataCityCode:'STO'},country:'Sweden'}});
   assert.equal(airport.iata,'ARN');assert.equal(airport.icao,'ESSA');assert.equal(airport.cityCode,'STO');
 });
 
-test('Home flight search selects a provider city and airport with their types intact',async t=>{
-  const outer=new JSDOM('<!doctype html><iframe></iframe>',{runScripts:'outside-only',url:'https://www.skanditravels.com/',pretendToBeVisual:true});t.after(()=>outer.window.close());
-  const w=outer.window.document.querySelector('iframe').contentWindow,doc=w.document,sent=[];w.scrollTo=()=>{};outer.window.postMessage=message=>sent.push(message);
-  doc.body.innerHTML=await read('skandi-embeds/home/skandi-home.html');w.eval(await read('skandi-embeds/home/skandi-home.js'));
-  const from=doc.getElementById('from');from.focus();from.value='Stockholm';from.dispatchEvent(new w.Event('input',{bubbles:true}));
-  await new Promise(resolve=>setTimeout(resolve,400));const request=sent.find(x=>x.type==='HOME_FLIGHT_PLACES_QUERY');assert(request);
-  w.dispatchEvent(new w.MessageEvent('message',{source:outer.window,data:{source:'SKANDI_WIX_PARENT',type:'HOME_FLIGHT_PLACES_RESULT',requestId:request.requestId,payload:{inputId:'from',query:'Stockholm',items:formatFlightPlaces([city,airport])}}}));
-  const options=[...doc.querySelectorAll('#fromSuggestions .airport-option')];assert(options.some(x=>x.textContent.includes('Stockholm (STO)')));assert(options.some(x=>x.textContent.includes('ESSA')));
-  options.find(x=>x.textContent.includes('Stockholm (STO)')).click();assert.equal(doc.getElementById('fromIata').value,'STO');assert.equal(from.dataset.placeType,'CITY');
+test('Home displays only airports in the flight search and retains the selected airport code', async t => {
+  const outer=new JSDOM('<!doctype html><iframe></iframe>',{runScripts:'outside-only',url:'https://www.skanditravels.com/',pretendToBeVisual:true});
+  t.after(()=>outer.window.close());
+  const w=outer.window.document.querySelector('iframe').contentWindow, doc=w.document, sent=[];
+  outer.window.postMessage=message=>sent.push(message);
+  doc.body.innerHTML=await read('skandi-embeds/home/skandi-home.html');
+  w.eval(await read('skandi-embeds/home/skandi-home.js'));
+  const from=doc.getElementById('from');
+  from.focus();
+  from.value='Stockholm';
+  from.dispatchEvent(new w.Event('input',{bubbles:true}));
+  await new Promise(resolve=>setTimeout(resolve,400));
+  const request=sent.find(x=>x.type==='HOME_FLIGHT_PLACES_QUERY');
+  assert(request);
+  w.dispatchEvent(new w.MessageEvent('message',{source:outer.window,data:{
+    source:'SKANDI_WIX_PARENT',type:'HOME_FLIGHT_PLACES_RESULT',requestId:request.requestId,
+    payload:{inputId:'from',query:'Stockholm',items:formatFlightPlaces([city,airport],{airportsOnly:true})}
+  }}));
+  const options=[...doc.querySelectorAll('#fromSuggestions .airport-option')];
+  assert.equal(options.length,2);
+  assert.equal(options.some(x=>x.textContent.includes('(STO)')),false);
+  const option=options.find(x=>x.textContent.includes('(ARN)'));
+  assert.equal(option.querySelector('strong').textContent,'STOCKHOLM ARLANDA AIRPORT (ARN)');
+  assert.equal(option.querySelector('small').textContent,'Stockholm • Sweden');
+  option.click();
+  assert.equal(doc.getElementById('fromIata').value,'ARN');
+  assert.equal(from.dataset.placeType,'AIRPORT');
 });
 
 test('Flights search ignores stale place responses and passes selected city types to booking',async t=>{
@@ -69,8 +88,11 @@ test('Home and Flights hosts return correlated provider suggestions only for the
   const homeCtx=vm.createContext({obj:x=>x||{},clean:(x,n)=>String(x||'').trim().slice(0,n),boundedRead:x=>x,searchDuffelPlaces:async()=>({items:[city,airport]}),formatFlightPlaces,postToHtml:(html,type,payload,id)=>homeReplies.push({type,payload,id})});
   vm.runInContext(functionSource(home,'handleHomeMessage')+';this.run=handleHomeMessage;',homeCtx);
   await homeCtx.run({}, {type:'HOME_FLIGHT_PLACES_QUERY',requestId:'h1',payload:{inputId:'from',query:'Stockholm'}});
-  assert.equal(homeReplies[0].id,'h1');assert.equal(homeReplies[0].payload.items[0].iata,'STO');
-  await homeCtx.run({}, {type:'HOME_FLIGHT_PLACES_QUERY',requestId:'h2',payload:{inputId:'other',query:'Stockholm'}});assert.equal(homeReplies.length,1);
+  assert.equal(homeReplies[0].id,'h1');assert.equal(homeReplies[0].payload.items[0].iata,'ARN');
+  await homeCtx.run({}, {type:'HOME_FLIGHT_PLACES_QUERY',requestId:'h2',payload:{inputId:'hol-from-search',query:'Stockholm'}});
+  assert.equal(homeReplies[1].payload.items[0].iata,'ARN');
+  await homeCtx.run({}, {type:'HOME_FLIGHT_PLACES_QUERY',requestId:'h3',payload:{inputId:'hol-destination-search',query:'Stockholm'}});
+  assert.equal(homeReplies.length,2);
   let source=await read('src/public/flightsPageHost.js');const ast=parse(source,{ecmaVersion:'latest',sourceType:'module'});for(const node of ast.body.filter(n=>n.type==='ImportDeclaration').reverse())source=source.slice(0,node.start)+source.slice(node.end);source=source.replace(/export function /g,'function ');
   const replies=[],context=vm.createContext({setTimeout,clearTimeout,searchDuffelPlaces:async()=>({items:[city,airport]}),formatFlightPlaces});vm.runInContext(source+';this.factory=createFlightsPageHost;',context);
   const host=context.factory({post:(type,payload,id)=>replies.push({type,payload,id}),navigate(){},settings:()=>({})});
@@ -94,10 +116,28 @@ test('an airport selected by its exact code cannot be replaced by another airpor
 test('outbound and return search retain the selected city and airport types',async()=>{
   const source=await read('src/backend/SKANDI_CORE/bookingMapper.js');
   const ctx=vm.createContext({record:x=>x||{},arr:x=>Array.isArray(x)?x:[],iata:x=>String(x).toUpperCase(),isoDate:x=>x,upper:(x,n)=>String(x||'').toUpperCase().slice(0,n),lower:(x,n)=>String(x||'').toLowerCase().slice(0,n),CABINS:new Set(['economy']),bookingError:(c,m)=>new Error(m)});
-  vm.runInContext(functionSource(source,'toDuffelOfferSearch')+';this.run=toDuffelOfferSearch;',ctx);
+  vm.runInContext(['number','toDuffelOfferSearch'].map(name=>functionSource(source,name)).join('\n')+';this.run=toDuffelOfferSearch;',ctx);
   const result=ctx.run({origin:'STO',originType:'CITY',destination:'JFK',destinationType:'AIRPORT',departureDate:'2027-03-01',returnDate:'2027-03-08',adults:1});
   assert.equal(result.searchContext.slices[0].originType,'CITY');assert.equal(result.searchContext.slices[0].destinationType,'AIRPORT');
   assert.equal(result.searchContext.slices[1].originType,'AIRPORT');assert.equal(result.searchContext.slices[1].destinationType,'CITY');
+  assert.equal(result.coreRequest.maxConnections,4);
+  const route={origin:'ARN',destination:'JFK',departureDate:'2027-03-01',adults:1};
+  assert.equal(ctx.run({...route,nonStop:true}).coreRequest.maxConnections,0);
+  assert.equal(ctx.run({...route,maxStops:0}).coreRequest.maxConnections,0);
+  assert.equal(ctx.run({...route,maxConnections:9}).coreRequest.maxConnections,4);
+
+  const duffel=await read('src/backend/SKANDI_CORE/duffelAir.js');
+  const requests=[];
+  Object.assign(ctx,{
+    integer:(n,min,max,fallback)=>n==null?fallback:Math.max(min,Math.min(max,Math.trunc(n))),
+    isoFutureDate:value=>value,
+    normalizeOffer:value=>value,
+    duffelRequest:async (path,request)=>{requests.push({path,request});return {data:{offers:[]}};}
+  });
+  vm.runInContext(['validateSearch','searchDuffelOffersCore'].map(name=>functionSource(duffel,name)).join('\n')+';this.search=searchDuffelOffersCore;',ctx);
+  await ctx.search(result.coreRequest);
+  assert.equal(requests[0].path,'/air/offer_requests');
+  assert.equal(requests[0].request.body.data.max_connections,4);
 });
 
 async function bookingFrame(t){

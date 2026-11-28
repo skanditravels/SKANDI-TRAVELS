@@ -12,11 +12,24 @@ function countryName(countryCode) {
   catch (_) { return value; }
 }
 
-export function formatFlightPlaces(places = []) {
-  return list(places).flatMap(place => {
+export function formatFlightPlaces(places = [], { airportsOnly = false } = {}) {
+  const input = list(places);
+  const candidates = airportsOnly
+    ? [...input.filter(place=>place.placeType === 'airport'),
+      ...input.filter(place=>place.placeType === 'city').flatMap(place=>list(place.airports).map(airport=>({
+        ...airport, placeType:'airport',
+        cityName:airport.cityName || place.cityName || place.name,
+        iataCityCode:airport.iataCityCode || place.iataCode,
+        iataCountryCode:airport.iataCountryCode || place.iataCountryCode
+      })))]
+    : input;
+  const seen = new Set();
+  return candidates.flatMap(place => {
     const type = clean(place.placeType).toLowerCase();
     const iata = code(place.iataCode), cityCode = code(place.iataCityCode || place.city?.iataCode);
     if (!/^[A-Z]{3}$/.test(iata) || !['airport','city'].includes(type)) return [];
+    if (airportsOnly && seen.has(iata)) return [];
+    seen.add(iata);
     const airports = list(place.airports).filter(a => /^[A-Z]{3}$/.test(code(a.iataCode)));
     if (type === 'city' && new Set(airports.map(a => code(a.iataCode))).size < 2) return [];
     const city = clean(place.cityName || place.city?.name || (type === 'city' ? place.name : ''));
@@ -32,7 +45,7 @@ export function formatFlightPlaces(places = []) {
     const secondary = uniq([country, region, ...(type === 'city' ? airports.map(a => clean(a.name)) : [city, name]), code(place.icaoCode), iata, cityCode, ...airportCodes]);
     return [{
       type:type.toUpperCase(), value:iata, canonicalValue:iata, iata,
-      icao:code(place.icaoCode), cityCode, title:name, city, airportName:type === 'airport' ? name : '', country,
+      icao:code(place.icaoCode), cityCode, title:name, city, airportName:type === 'airport' ? name : '', country, countryCode,
       label:`${displayName} (${iata})`, subtitle:secondary.join(' · '),
       terms:uniq([name,city,country,region,iata,cityCode,code(place.icaoCode),...airports.flatMap(a=>[a.name,a.iataCode,a.icaoCode])])
     }];

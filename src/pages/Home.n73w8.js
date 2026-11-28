@@ -57,9 +57,10 @@ function postPlanning(html) {
 function postVoyStory(html) {
   if (!storyRequest) storyRequest = boundedRead(getVoyFeaturedStory(),5000).catch(()=>null);
   void storyRequest.then(story=>{
-    if (!story?.title || !story.issue || !story.index) return;
-    const params = new URLSearchParams({issue:story.issue,page:String(story.index)});
-    postToHtml(html, "HOME_VOY_STORY", {title:story.title, path:SITE_MAP.voy+"?"+params.toString()});
+    if (!story?.issue) return;
+    const params = new URLSearchParams({issue:story.issue});
+    if (story.index) params.set("page", String(story.index));
+    postToHtml(html, "HOME_VOY_STORY", {title:story.title, image:story.image, path:SITE_MAP.voy+"?"+params.toString()});
   });
 }
 
@@ -261,10 +262,12 @@ async function handleHomeMessage(html, message) {
       return;
     case "HOME_FLIGHT_PLACES_QUERY": {
       const query = clean(payload.query, 120), inputId = clean(payload.inputId, 80);
-      if (!["from", "to"].includes(inputId) || query.length < 2) return;
+      if (!["from", "to", "hol-from-search", "sig-from-search"].includes(inputId) || query.length < 2) return;
       try {
         const result = await boundedRead(searchDuffelPlaces({query,limit:30}), 15000);
-        postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {inputId,query,items:formatFlightPlaces(result?.items)}, clean(message.requestId,160));
+        postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {
+          inputId, query, items:formatFlightPlaces(result?.items, {airportsOnly:true})
+        }, clean(message.requestId,160));
       } catch (error) {
         console.warn("[Flight place lookup unavailable]", {
           name: clean(error?.name || "Error", 80),

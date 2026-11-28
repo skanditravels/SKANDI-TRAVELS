@@ -303,7 +303,11 @@ test('the portrait follows the launcher and the greeting can open the chat or be
   const portrait = widget('alexandraPortrait');
   widget('alexandraPortraitImage').dispatchEvent(new w.Event('load'));
   receive({active:true, greeting:true, language:'SV'});
-  assert.equal(widget('greetingOpen').textContent, 'Hej, kan jag hjälpa dig?');
+  assert.equal(widget('greetingOpen').textContent, 'Vart vill du resa härnäst?');
+  w.dispatchEvent(new w.MessageEvent('message', {source:parent, data:{
+    source:'SKANDI_WIX_PARENT', type:'SKANDI_MASTER_CONFIG', payload:{settings:{language:'FI'}}
+  }}));
+  assert.equal(widget('greetingOpen').textContent, 'Minne haluaisit matkustaa seuraavaksi?');
   assert.equal(portrait.parentElement.id, 'launcher');
   assert.equal(portrait.hidden, false);
   assert.equal(widget('alexandraGreeting').hidden, false);

@@ -29,7 +29,12 @@ $w.onReady(function () {
   const host = createBookingFlowHost({
     html,
     location:wixLocationFrontend,
-    onReturnHome:searchId => wixLocationFrontend.to(SITE_MAP.home + (searchId ? "?editSearch=1&searchId="+encodeURIComponent(searchId) : ""))
+    onReturnHome(searchId, {restoreSearch = false} = {}) {
+      const params = new URLSearchParams();
+      if (searchId || restoreSearch) params.set("editSearch", "1");
+      if (searchId) params.set("searchId", searchId);
+      wixLocationFrontend.to(SITE_MAP.home + (params.size ? "?"+params.toString() : ""));
+    }
   });
 
   html.onMessage(event => {

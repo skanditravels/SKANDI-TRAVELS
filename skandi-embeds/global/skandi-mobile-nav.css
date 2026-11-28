@@ -160,14 +160,69 @@ body.drawer-open{min-height:100%;height:100%}
 #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
 
 
-/* Home-specific mobile navigation sizing from the approved Home design. */
-@media (max-width: 760px) {
-  body:has(#skandi-home-content) { height:auto; min-height:0; padding-bottom:env(safe-area-inset-bottom, 0px); background:#022e64; }
-  body:has(#skandi-home-content) .skmn { height:68px; min-height:68px; padding:3px 5px 2px; border-top:1px solid rgba(255,255,255,.14); }
-  body:has(#skandi-home-content) .skmn-btn { min-height:56px; gap:3px; }
-  body:has(#skandi-home-content) .skmn-btn[aria-current="page"] svg { stroke-width:2.3; }
-  body.skandi-home-keyboard:has(#skandi-home-content) { display:none !important; }
-  @media (display-mode: standalone) { body:has(#skandi-home-content) { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
+/* Customer navigation and menu share the same SKANDI navy. */
+.skmn.skandi-public-bar {
+  height: 80px;
+  min-height: 80px;
+  flex: 0 0 100%;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 4px;
+  padding: 5px 7px 12px;
+  border-top: 1px solid rgba(255,255,255,.19);
+  background: #022e64;
+}
+.skandi-public-bar .skmn-btn { min-height: 55px; gap: 5px; }
+.skandi-public-bar .skmn-btn[aria-current="page"] {
+  color: #a6e6ed;
+  background: rgba(255,255,255,.1);
+}
+.skandi-public-bar .skmn-btn[aria-current="page"] svg { stroke-width: 2.2; }
+#overlay.skandi-public-overlay { background: rgba(0,17,38,.56); backdrop-filter: blur(2px); }
+#drawer.skandi-public-drawer {
+  width: min(384px, calc(100% - 16px));
+  background: linear-gradient(160deg,#022e64 0%,#08274d 57%,#061c38 100%);
+  border-left: 1px solid rgba(166,210,231,.32);
+  color: #fff;
+}
+.skandi-public-drawer .drawer-head {
+  align-items: start;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 18px 11px;
+  background: transparent;
+  border: 0;
+}
+.skandi-public-drawer .eyebrow { color: #a6e6ed; font-size: 13px; letter-spacing: .08em; }
+.skandi-public-drawer .drawer-head h2 { color: #fff; margin-top: 8px; font-size: 26px; font-weight: 700; }
+.skandi-public-drawer #closeBtn { color: #fff; background: #123e70; border-color: #4c739b; }
+.skandi-public-drawer #drawer-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 7px;
+  row-gap: 6px;
+  padding: 4px 16px 13px;
+  background: transparent;
+  border: 0;
+}
+.skandi-public-drawer .drawer-cta {
+  min-height: 44px;
+  border-radius: 8px;
+  color: #062846;
+  border-color: #b5edf1;
+  background: #b5edf1;
+}
+.skandi-public-drawer .drawer-cta.secondary { color: #fff; background: transparent; border-color: #5381a6; }
+.skandi-public-drawer .drawer-cta:hover, .skandi-public-drawer .drawer-cta:focus-visible { background: #e1f6fe; color: #022e64; }
+.skandi-public-drawer #alexandraLink { grid-column: 1 / -1; }
+.skandi-public-drawer.chat-mode #drawer-actions { display: none; }
+.skandi-public-drawer .drawer-scroll { padding: 0 16px max(16px, var(--safe)); }
+.skandi-public-drawer .drawer-group { border: 0; border-top: 1px solid rgba(193,225,243,.23); }
+.skandi-public-drawer .group-heading { min-height: 48px; padding-inline: 7px; color: #fff; }
+.skandi-public-drawer .group-heading::after { color: #a6e6ed; }
+.skandi-public-drawer .drawer-link { min-height: 44px; padding-inline: 13px 7px; color: #e4f2fc; }
+.skandi-public-drawer .drawer-link:hover, .skandi-public-drawer .drawer-link:focus-visible,
+.skandi-public-drawer .drawer-link[aria-current="page"] { background: #123e70; border-color: #426d95; }
+@media(max-width: 360px) {
+  .skandi-public-bar .skmn-btn { font-size: 12px; }
 }
 
 /* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */

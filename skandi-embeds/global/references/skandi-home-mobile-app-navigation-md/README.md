@@ -39,6 +39,8 @@
 
 - 2026-10-26 — Removed the retired `/offers` destination from the mobile navigation route table. The passenger booking journey remains available at `/booking`.
 
+- 2026-11-28 — The active [public mobile navigation](../../README.md#info--log--2026-11-28) uses Home, Explore, Travel Info and Menu with the shared navy drawer. The complete HTML below records the superseded standalone implementation.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

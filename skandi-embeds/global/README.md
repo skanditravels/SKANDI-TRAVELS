@@ -29,3 +29,7 @@
 ## INFO / LOG — 2026-11-11
 
 2026-11-11 — The shared mobile navigation applies the supplied Home-specific sizing only when Home is present; other pages retain their existing navigation. Keyboard hiding is limited to the Home keyboard state. Source-tested; live mobile verification remains required.
+
+## INFO / LOG — 2026-11-28
+
+The current public mobile navigation uses Home, Explore, Travel Info and Menu. The taller navy tab bar and matching slide-out provide direct access to trip search, My Trips and Alexandra. Navigation links use the master page’s route configuration. The staff and ALTEA tabs continue to use their authenticated navigation. Home’s mobile hero and Wix host use the menu navy. Existing compiled receivers load the shared build. Legacy and native routes with a standalone global navigation embed require the complete updated HTML in #skandiMobileAppNavEmbed.

@@ -12,21 +12,22 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     support:'/about/support',theStore:'/the-store',about:'/about'
   };
   const publicGroups=[
-    {title:'Book & travel',keys:[['Book a trip','home'],['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
+    {title:'Book & travel',keys:[['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
     {title:'Explore',keys:[['Destinations','destinations'],['SKANDI Collection','skandiCollection'],['VOY Magazine','voy']]},
     {title:'Travel help',keys:[['Travel information','travelInfo'],['Flight status','flightStatus'],['Passport & visa','passportVisa'],['Baggage allowance','baggageAllowance'],['Travel insurance','travelInsurance'],['Special assistance','specialAssistance'],['Help Center','support']]},
-    {title:'Your SKANDI',keys:[['My Trips','myTrips'],['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
+    {title:'My SKANDI',keys:[['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
     {title:'About SKANDI',keys:[['About','about'],['Newsroom','newsroom'],['Careers','careers'],['Legal','legal'],['Policies','policies'],['Cookie preferences','cookiePreferences'],['Staff login','riaintra']]}
   ];
   const $=id=>document.getElementById(id);
   const bar=$('skandi-mobile-nav-root');
-  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
-  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const drawer=$('drawer');
   const status=$('status');
   const shell=window.__SKANDI_SHELL__?.root;
   const family=shell?.dataset.skandiFamily||'public';
   const isStaff=family==='riaintra'||family==='altea';
+  if(!isStaff)bar.querySelector('[data-staff-only]').remove();
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const brand=family==='altea'?'ALTEA':family==='riaintra'?'RIAINTRA':'SKANDI TRAVELS';
   const staffIcons={
     workspace:'M3 9l9-6 9 6v11H3z M9 20v-7h6v7',
@@ -36,13 +37,16 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     reservations:'M3 7h18v10H3z M8 7v10 M13 11h5',
     eos:'M7 3h10v18H7z M10 17h4'
   };
-  const drawerTitle=isStaff?brand+' menu':'Explore SKANDI';
+  const drawerTitle=isStaff?brand+' menu':'Menu';
   const state={routes:{...defaults},currentPath:'/',request:0,drawerOpen:false,drawerPending:'',drawerTimer:null,chatOpen:false,lastFocused:null,staffNavigation:null};
   bar.setAttribute('aria-label',brand+' mobile navigation');
   $('drawer-brand').textContent=brand;
   $('drawer-title').textContent=drawerTitle;
   if(isStaff) {
     drawer.dataset.staffMenu='';
+    drawer.classList.remove('skandi-public-drawer');
+    $('overlay').classList.remove('skandi-public-overlay');
+    bar.classList.remove('skandi-public-bar');
     $('drawer-actions').hidden=true;
   }
   let focusTransitionToken=0;
@@ -59,11 +63,13 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   function pathFor(key){return safePath(state.routes[key])||safePath(defaults[key]);}
   function updateActive(){
     const current=safePath(state.currentPath)||'/';
-    const normalized=current.split('?')[0];
+    const normalized=current.split(/[?#]/)[0].replace(/\/+$/,'')||'/';
     for(const button of BUTTONS){
       const key=button.dataset.skandiMobileRoute;
       const path=isStaff?safePath(button.dataset.path):pathFor(key);
-      const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
+      const active=path&&(path.includes('?')?current===path:normalized===path
+        || !isStaff && key==='home' && normalized==='/home'
+        || !isStaff && ['destinations','travelInfo'].includes(key) && normalized.startsWith(path+'/'));
       if(active)button.setAttribute('aria-current','page');
       else button.removeAttribute('aria-current');
     }
@@ -98,6 +104,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         const button=document.createElement('button');
         button.type='button';button.className='drawer-link';
         button.dataset.menuKey=link.path;renderedItems.set(link.path,button);
+        if(link.path===state.currentPath)button.setAttribute('aria-current','page');
         const text=document.createElement('span');text.textContent=link.label;
         const chevron=document.createElement('b');chevron.textContent='›';chevron.setAttribute('aria-hidden','true');
         button.append(text,chevron);
@@ -243,7 +250,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     closeDrawer();
     post('RIAINTRA_LOGOUT',{},nextId('sign-out'));
   });
-  $('profileLink').addEventListener('click',()=>navigate('myProfile'));
+  $('profileLink').addEventListener('click',()=>navigate('myTrips'));
   $('searchLink').addEventListener('click',()=>{
     closeDrawer();
     post('HOME_APP_FOCUS_SEARCH',{},nextId('focus'));
@@ -291,6 +298,14 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         const logo=config.brand?.assets?.toolWordmarks?.[family];
         if(/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo||'')){
           $('drawer-logo').src=logo;
+          $('drawer-logo').hidden=false;
+          $('drawer-brand').hidden=true;
+        }
+      } else {
+        const logo=config.brand?.assets?.logos?.customerFooter;
+        if(/^https:\/\//i.test(logo||'')){
+          $('drawer-logo').src=logo;
+          $('drawer-logo').alt=brand;
           $('drawer-logo').hidden=false;
           $('drawer-brand').hidden=true;
         }

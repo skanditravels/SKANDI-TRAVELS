@@ -15,8 +15,8 @@ const strings = ["tripType","productType","accommodationType","origin","originIa
 export function normalizeBookingSearch(input = {}) {
   const search = {};
   for (const key of strings) if (typeof input[key] === "string") search[key] = input[key].trim().slice(0,240);
-  for (const key of ["adults","children","infants","rooms","nights","maxStops"]) {
-    if (input[key] !== undefined && input[key] !== "") {
+  for (const key of ["adults","children","infants","rooms","nights","maxStops","maxConnections"]) {
+    if (input[key] != null && input[key] !== "") {
       const n = Number(input[key]);
       if (Number.isFinite(n)) search[key] = n;
     }

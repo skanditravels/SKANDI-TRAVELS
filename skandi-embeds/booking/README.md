@@ -72,3 +72,7 @@ A follow-up formats `bookingDate` as `YYYY-MM-DD` and `confirmationDate` as a UT
 ## INFO / LOG — 2026-11-11
 
 2026-11-11 — Integrated the supplied mobile progress header, responsive layout and collapsible filters/planner into the existing single booking flow. The controls reflect the existing journey and do not own a second cart or alter payment/provider contracts. Source-tested; actual Wix, Stripe, Duffel and confirmation delivery require live verification.
+
+## INFO / LOG — 2026-11-28
+
+The existing customer booking mapper and Duffel Air adapter accept up to four connections per flight direction by default. The explicit nonstop option is passed as zero. Previously selected and newly refreshed supplier offers are checked for expiration before checkout. BOOKING_SEARCH_AGAIN refreshes the active search or opens Home with the existing saved criteria. The restart action is offered on applicable pre-payment errors. Cart ownership and the existing #bookingFlowEmbed receiver remain in effect. Live Wix and Duffel verification remains required.
