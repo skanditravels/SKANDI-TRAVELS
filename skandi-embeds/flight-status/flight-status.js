@@ -796,9 +796,9 @@ function render(items, meta) {
     const activeFlightNo = (displayOperating && item.operatingFlightIata) || item.flightIata || item.flightIcao;
     
     const rules = lastFlightMeta.boardingRules || {};
-    const carrierName = rules[activeAirline]?.name || item.airlineName || activeAirline;
-    const canonicalLogo = safeUrl(displayOperating ? item.operatingAirlineLogoUrl || item.airlineLogoUrl : item.airlineLogoUrl);
-    const logoUrl = canonicalLogo || KNOWN_AIRLINE_LOGOS[activeAirline] || "";
+    const separateOperatingCarrier = displayOperating && activeAirline !== item.airlineIata;
+    const carrierName = rules[activeAirline]?.name || (separateOperatingCarrier ? item.operatingAirlineName : item.airlineName) || activeAirline || "Airline";
+    const canonicalLogo = safeUrl(separateOperatingCarrier ? item.operatingAirlineLogoUrl : item.airlineLogoUrl);
 
     // Safely fetch city tracking values out of the schema models without duplication loops
     const publishedPlace = boardLanguage === "sv" ? destination?.airportSv || destination?.airport : destination?.airport || destination?.airportSv;
@@ -848,13 +848,10 @@ function render(items, meta) {
     const codeshareLabel = codeshares.length ? codeshares.join(", ") : "No codeshare";
     const displayCodeshare = codeshares.length ? codeshares[codeshareIndex % codeshares.length] : "—";
     const cells = {
-      airline: `<div class="fids-carrier" title="${escapeHtml(carrierName)}">
-        <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
-          <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
-          ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
-        </span>
-        <span class="fids-carrier-name">${escapeHtml(carrierName)}</span>
-      </div>`,
+      airline: airportFids.carrier({
+        code: activeAirline, name: carrierName, logo: canonicalLogo, fallbackLogo: KNOWN_AIRLINE_LOGOS[activeAirline],
+        color: separateOperatingCarrier ? item.operatingAirlineColor : item.airlineColor
+      }),
       flight: `<div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong></div>`,
       time: `<div class="fids-time"><strong class="fids-time-main">${escapeHtml(timeDisplayValue)}</strong></div>`,
       place: `<div class="fids-destination"><strong>${cleanDestinationLabel}</strong></div>`,
@@ -907,9 +904,7 @@ function render(items, meta) {
     });
   }
 
-  rows.querySelectorAll(".fids-tail img").forEach(img => img.addEventListener("error", () => {
-    img.hidden = true; img.parentElement.classList.add("fallback"); img.parentElement.querySelector(".fids-logo-fallback").hidden = false;
-  }, { once: true }));
+  airportFids.bindCarrierImages(rows);
   
   el("boardMeta").textContent = boardMeta || `Displaying ${sorted.length} flights`;
   setStatusLabels(updated ? `Updated ${updated}` : "Updated", `${sorted.length} ${sorted.length === 1 ? "Flight" : "Flights"}`);

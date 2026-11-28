@@ -176,13 +176,20 @@ function facilityList(value, iata) {
     items: list(value).map(fields).filter(row => text(row.name) && (!row.airportiata || upper(row.airportiata) === iata))
       .map(row => {
         const location = fields(row.location);
+        const appImage = bookingLink(row.appimgurl, "https://www.swedavia.com");
+        const photo = bookingLink(row.photoimgurl, "https://www.swedavia.com");
+        const isLogo = url => url && /(?:logo|logotyp)/i.test(new URL(url).pathname);
+        const logoUrl = [appImage, photo].find(isLogo);
+        const imageUrl = [photo, appImage].find(url => url && !isLogo(url));
         return {
           name: plainText(row.name, 160),
           description: plainText(row.description),
           openingHours: plainText(row.openinghours, 800),
           terminal: plainText(location.terminalname || location.terminalid, 100),
           place: plainText(location.place, 200),
-          beforeSecurity: typeof location.beforesecurity === "boolean" ? location.beforesecurity : null
+          beforeSecurity: typeof location.beforesecurity === "boolean" ? location.beforesecurity : null,
+          ...(logoUrl ? { logoUrl } : {}),
+          ...(imageUrl ? { imageUrl } : {})
         };
       }).filter(item => item.name)
   };
@@ -201,12 +208,47 @@ async function airportFacilities(iata, language) {
     AIRPORT_INFO, `${iata}/${kind}?langcode=${providerLanguage}`, TTL.facilities, value => facilityList(value, iata)
   )));
   const groups = Object.fromEntries(FACILITIES.map((kind, index) => [kind, results[index]]));
+  if (groups.restaurants.items?.length) {
+    const logos = await deadline(restaurantLogos(), 800).catch(() => new Map());
+    groups.restaurants = {
+      ...groups.restaurants,
+      items: groups.restaurants.items.map(item => {
+        const logoUrl = logos.get(venueKey(item.name));
+        return logoUrl ? { ...item, logoUrl } : item;
+      })
+    };
+  }
   return { status: results.some(result => result.status === "ready") ? "ready" : "unavailable", providerLanguage, groups };
 }
 
-function bookingLink(value) {
+function venueKey(value) {
+  return lower(value, 160).normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]+/g, "");
+}
+
+function restaurantLogos() {
+  return cache.getOrLoad("restaurant-public-logos", async () => {
+    const rows = await restRequest({
+      table: "platform_assets",
+      query: {
+        select: "brand,public_url", category: "eq.AIRPORT_RESTAURANT_LOGO", status: "eq.ACTIVE",
+        visibility: "eq.PUBLIC", asset_type: "eq.IMAGE", order: "updated_at.desc", limit: "250"
+      }
+    });
+    const logos = new Map();
+    for (const row of Array.isArray(rows) ? rows : []) {
+      const name = venueKey(row.brand);
+      const logo = bookingLink(row.public_url);
+      if (name && logo && !logos.has(name)) logos.set(name, logo);
+    }
+    return logos;
+  }, TTL.facilities);
+}
+
+function bookingLink(value, imageBase) {
   try {
-    const link = new URL(text(value, 2048));
+    const raw = text(value, 2048);
+    if (!raw) return "";
+    const link = new URL(raw, imageBase && raw.startsWith("/") ? imageBase : undefined);
     return link.protocol === "https:" && !link.username && !link.password ? link.href : "";
   } catch (_) { return ""; }
 }
@@ -243,7 +285,7 @@ function destinations(value) {
   return { items: [...routes].map(([iata, airlines]) => ({ iata, airlines: [...airlines] })) };
 }
 
-async function routeAirportNames(items) {
+async function routeAirportNames(items, loadGeography) {
   if (!items.length) return items;
   const codes = items.map(item => item.iata);
   // The view exposes the approved airport directory. Bound the IN list per call.
@@ -252,16 +294,29 @@ async function routeAirportNames(items) {
     const batch = codes.slice(index, index + 100);
     lookups.push(restRequest({
       table: "inventory_public_entities_v",
-      query: { select: "code,name,city:details->>city", entity_type: "eq.AIRPORT", code: `in.(${batch.join(",")})`, limit: "100" }
+      query: {
+        select: "code,name,city:details->>city,country:details->>country,countryCode:details->>countryCode",
+        entity_type: "eq.AIRPORT", code: `in.(${batch.join(",")})`, limit: "100"
+      }
     }));
   }
-  const rows = (await Promise.allSettled(lookups)).flatMap(outcome =>
-    outcome.status === "fulfilled" && Array.isArray(outcome.value) ? outcome.value : []
-  );
+  const [rows, geography] = await Promise.all([
+    Promise.allSettled(lookups.map(lookup => deadline(lookup, 900))).then(results => results.flatMap(outcome =>
+      outcome.status === "fulfilled" && Array.isArray(outcome.value) ? outcome.value : []
+    )),
+    loadGeography ? deadline(loadGeography(), 2200).catch(() => new Map()) : new Map()
+  ]);
   const names = new Map(rows.map(row => [upper(row.code), row]));
   return items.map(item => {
     const airport = names.get(item.iata);
-    return airport ? { ...item, name: plainText(airport.name, 180), city: plainText(airport.city, 140) } : item;
+    const fallback = geography.get(item.iata);
+    const name = plainText(airport?.name || fallback?.name, 180);
+    const city = plainText(airport?.city || fallback?.city, 140);
+    const country = plainText(airport?.country, 140);
+    const storedCode = upper(airport?.countryCode || country, 8);
+    const countryCode = /^[A-Z]{2}$/.test(storedCode) ? storedCode : fallback?.countryCode;
+    return { ...item, ...(name ? { name } : {}), ...(city ? { city } : {}), ...(country ? { country } : {}),
+      ...(/^[A-Z]{2}$/.test(countryCode) ? { countryCode } : {}) };
   });
 }
 
@@ -382,7 +437,7 @@ export async function getSwedaviaFlightBoardCore({ iata, boardType, date } = {})
   return { status: "ready", items: [...items.values()], updatedAt: main.updatedAt, partial: previous.status !== "ready" };
 }
 
-export async function getSwedaviaAirportInfoCore(input = {}) {
+export async function getSwedaviaAirportInfoCore(input = {}, loadGeography) {
   const { iata: rawIata, scope: rawScope, language: rawLanguage } = record(input);
   const iata = upper(rawIata);
   const scope = lower(rawScope);
@@ -403,12 +458,15 @@ export async function getSwedaviaAirportInfoCore(input = {}) {
     case "parking":
       return { ...context, ...await readSection(AIRPORT_INFO, `${iata}/parkinglots/`, TTL.parking, value => parkingLots(value, iata)) };
     case "routes": {
-      const result = await readSection(AIRPORT_INFO, `${iata}/destinations?startMonth=0&endMonth=2&minimumDepartures=1`, TTL.routes, async value => {
-        const data = destinations(value);
-        const items = await deadline(routeAirportNames(data.items), 800).catch(() => data.items);
-        return { items };
-      });
-      return { ...context, ...result };
+      const result = await readSection(AIRPORT_INFO, `${iata}/destinations?startMonth=0&endMonth=2&minimumDepartures=1`, TTL.routes, destinations);
+      if (!result.items?.length) return { ...context, ...result };
+      const key = `route-geography:${iata}`;
+      const cached = cache.get(key);
+      if (cached?.source === result.items) return { ...context, ...result, items: cached.items };
+      const items = await routeAirportNames(result.items, loadGeography);
+      // Retry missing reference data sooner while keeping every route visible.
+      cache.set(key, { source: result.items, items }, items.some(item => !item.countryCode && !item.country) ? TTL.security : TTL.routes);
+      return { ...context, ...result, items };
     }
     default:
       return { ...context, status: "unsupported" };

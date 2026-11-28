@@ -20,9 +20,12 @@ const PUBLIC_ENTITY_TYPES = new Set(["TRANSFER", "HOTEL", "DESTINATION", "GUIDED
 const DIRECTORY_TTL_MS = 5 * 60 * 1000;
 const CONTEXT_TTL_MS = 2 * 60 * 1000;
 const FLIGHT_TTL_MS = 60 * 1000;
+const AIRPORT_GEOGRAPHY_TTL_MS = 24 * 60 * 60 * 1000;
 
 let airlabsKeyPromise = null;
 let directoryCache = null;
+let airportGeographyCache = null;
+let airportGeographyRequest = null;
 const contextCache = new Map();
 const flightCache = new Map();
 const flightRequests = new Map();
@@ -151,6 +154,31 @@ async function callAirlabs(endpoint, params = {}) {
 }
 function airlabsResponse(payload) {
   return payload && typeof payload === "object" && Object.prototype.hasOwnProperty.call(payload, "response") ? payload.response : payload;
+}
+
+export function getAirlabsAirportGeographyCore() {
+  if (airportGeographyCache?.expiresAt > Date.now()) return Promise.resolve(airportGeographyCache.airports);
+  if (!airportGeographyRequest) {
+    airportGeographyRequest = callAirlabs("airports", { _fields: "iata_code,name,city,country_code" })
+      .then(payload => {
+        const airports = new Map();
+        for (const row of arr(airlabsResponse(payload))) {
+          const iata = upper(row?.iata_code, 4);
+          const countryCode = upper(row?.country_code, 3);
+          if (!/^[A-Z]{3}$/.test(iata) || !/^[A-Z]{2}$/.test(countryCode)) continue;
+          airports.set(iata, { countryCode, name: text(row.name, 180), city: text(row.city, 140) });
+        }
+        airportGeographyCache = { airports, expiresAt: Date.now() + (airports.size ? AIRPORT_GEOGRAPHY_TTL_MS : FLIGHT_TTL_MS) };
+        return airports;
+      })
+      .catch(() => {
+        const airports = airportGeographyCache?.airports || new Map();
+        airportGeographyCache = { airports, expiresAt: Date.now() + FLIGHT_TTL_MS };
+        return airports;
+      })
+      .finally(() => { airportGeographyRequest = null; });
+  }
+  return airportGeographyRequest;
 }
 function utcTimestamp(utcValue, localValue) {
   const utc = text(utcValue, 50).trim();
@@ -281,17 +309,16 @@ async function applyAirlineBranding(items = []) {
   return items.map(item => {
     const marketingIata = cleanCode(item?.airlineIata, 4);
     const operatingIata = cleanCode(item?.operatingAirlineIata, 4);
-    const airlineLogoUrl =
-      directory.get(marketingIata)?.logoUrl ||
-      text(item?.airlineLogoUrl, 3000);
-    const operatingAirlineLogoUrl =
-      directory.get(operatingIata)?.logoUrl ||
-      text(item?.operatingAirlineLogoUrl, 3000);
-
+    const marketingBrand = directory.get(marketingIata);
+    const operatingBrand = directory.get(operatingIata);
+    const airlineLogoUrl = marketingBrand?.logoUrl || text(item?.airlineLogoUrl, 3000);
+    const operatingAirlineLogoUrl = operatingBrand?.logoUrl || text(item?.operatingAirlineLogoUrl, 3000);
     return {
       ...item,
       ...(airlineLogoUrl ? { airlineLogoUrl } : {}),
-      ...(operatingAirlineLogoUrl ? { operatingAirlineLogoUrl } : {})
+      ...(operatingAirlineLogoUrl ? { operatingAirlineLogoUrl } : {}),
+      ...(marketingBrand?.color ? { airlineColor: marketingBrand.color } : {}),
+      ...(operatingBrand?.color ? { operatingAirlineColor: operatingBrand.color } : {})
     };
   });
 }

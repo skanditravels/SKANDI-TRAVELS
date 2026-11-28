@@ -77,8 +77,15 @@ test('AirportInfo v2 selects an advertised language and retains independently wo
     return [{
       Name: 'Terminal café', AirportIata: 'ARN', Description: '<p>Breakfast &amp; lunch</p>', OpeningHours: '06:00–21:00',
       PhotoImgURL: 'https://provider.test/image',
+      AppImgURL: '/globalassets/cafe-logo.svg',
       Location: { TerminalName: 'Terminal 5', Place: 'Gate F', BeforeSecurity: false }
-    }, { Name: 'Another airport café', AirportIata: 'GOT' }];
+    }, { Name: 'Another airport café', AirportIata: 'GOT' },
+    { Name: 'Gate kiosk', PhotoImgURL: 'javascript:alert(1)', AppImgURL: 'https://secret:password@provider.test/logo.svg' }];
+  }, undefined, async ({ table, query }) => {
+    assert.equal(table, 'platform_assets');
+    assert.equal(query.visibility, 'eq.PUBLIC');
+    assert.equal(query.status, 'eq.ACTIVE');
+    return [{ brand: 'Terminal Café', public_url: 'https://assets.example/approved-cafe.svg' }];
   });
   const input = { iata: 'ARN', scope: 'services' };
   const sv = await source.execute({ ...input, language: 'sv' });
@@ -90,7 +97,10 @@ test('AirportInfo v2 selects an advertised language and retains independently wo
   assert.equal(sv.groups.services.status, 'ready');
   assert.deepEqual(comparable(sv.groups.restaurants.items), [{
     name: 'Terminal café', description: 'Breakfast & lunch', openingHours: '06:00–21:00',
-    terminal: 'Terminal 5', place: 'Gate F', beforeSecurity: false
+    terminal: 'Terminal 5', place: 'Gate F', beforeSecurity: false,
+    logoUrl: 'https://assets.example/approved-cafe.svg', imageUrl: 'https://provider.test/image'
+  }, {
+    name: 'Gate kiosk', description: '', openingHours: '', terminal: '', place: '', beforeSecurity: null
   }]);
   assert.equal(source.requests.filter(({ target }) => target.pathname.endsWith('/languages')).length, 1);
   assert.deepEqual(source.secretsRead, ['SWEDAVIA_AIRPORT_INFO_SUBSCRIPTION_KEY']);
@@ -106,13 +116,14 @@ test('parking and destination lookups use their documented routes and return pas
     return { CityDestinations: [
       { IATA: 'CPH', Operators: [{ Name: 'SAS' }, { Name: 'SAS' }] },
       { IATA: 'CPH', Operators: [{ Name: 'Norwegian' }] },
+      { IATA: 'LIS', Operators: [{ Name: 'TAP' }] },
       { IATA: 'XXX' }
     ] };
   }, undefined, async ({ table, query }) => {
     assert.equal(table, 'inventory_public_entities_v');
     assert.equal(query.entity_type, 'eq.AIRPORT');
-    assert.equal(query.code, 'in.(CPH,XXX)');
-    return [{ code: 'CPH', city: 'Copenhagen', name: 'Copenhagen Kastrup Airport' }];
+    assert.equal(query.code, 'in.(CPH,LIS,XXX)');
+    return [{ code: 'CPH', city: 'Copenhagen', name: 'Copenhagen Kastrup Airport', country: 'Denmark', countryCode: 'DK' }];
   });
   const parking = await source.execute({ iata: 'GOT', scope: 'parking' });
   assert.equal(parking.items[0].name, 'P1');
@@ -120,9 +131,13 @@ test('parking and destination lookups use their documented routes and return pas
   assert.equal(parking.bookingUrl, 'https://www.swedavia.se/parkering/');
   assert.equal('isSoldOut' in parking.items[0], false);
   assert.equal((await source.execute({ iata: 'KRN', scope: 'parking' })).bookingUrl, '');
-  const routes = await source.execute({ iata: 'GOT', scope: 'routes' });
+  const routes = await source.execute({ iata: 'GOT', scope: 'routes' }, async () => new Map([
+    ['CPH',{ name:'Provider Copenhagen',countryCode:'SE' }],
+    ['LIS',{ name:'Lisbon Airport',city:'Lisbon',countryCode:'PT' }]
+  ]));
   assert.deepEqual(comparable(routes.items), [
-    { iata: 'CPH', airlines: ['SAS', 'Norwegian'], city: 'Copenhagen', name: 'Copenhagen Kastrup Airport' },
+    { iata: 'CPH', airlines: ['SAS', 'Norwegian'], city: 'Copenhagen', name: 'Copenhagen Kastrup Airport', country: 'Denmark', countryCode: 'DK' },
+    { iata: 'LIS', airlines: ['TAP'], city: 'Lisbon', name: 'Lisbon Airport', countryCode: 'PT' },
     { iata: 'XXX', airlines: [] }
   ]);
   assert.equal(source.requests.at(-1).target.search, '?startMonth=0&endMonth=2&minimumDepartures=1');
@@ -177,9 +192,9 @@ test('FlightInfo uses the Sweden-local service day and maps the documented arriv
 
 test('the canonical Flight Status board selects Swedavia for Swedish IATA and ICAO and labels the fallback', async () => {
   const officialCalls = [], airlabsCalls = [];
-  const execute = vm.runInNewContext(
+  const { execute, geography } = vm.runInNewContext(
     withoutImports(flightStatusSource).replace(/^export (?=(?:async )?function)/gm, '').replace(/^export \{ FLIGHT_STATUS_CORE_VERSION \};$/m, '') +
-      '\nsearchFlightStatusCore;',
+      '\n({execute:searchFlightStatusCore,geography:getAirlabsAirportGeographyCore});',
     {
       URLSearchParams, lower, record, safeNumber, text, upper, SkandiError: Error,
       elevate: method => method, secrets: { getSecretValue: async () => ({ value: 'airlabs-test-only' }) },
@@ -192,7 +207,15 @@ test('the canonical Flight Status board selects Swedavia for Swedish IATA and IC
         return { status: 'ready', items: [], partial: false, updatedAt: '2026-11-28T12:00:00Z' };
       },
       fetch: async url => {
-        airlabsCalls.push(new URL(url).pathname);
+        const target = new URL(url);
+        airlabsCalls.push(target.pathname);
+        if (target.pathname.endsWith('/airports')) {
+          assert.equal(target.searchParams.get('_fields'), 'iata_code,name,city,country_code');
+          return Response.json({ response: [
+            { iata_code:'GOT',name:'Landvetter',city:'Gothenburg',country_code:'SE' },
+            { iata_code:'INVALID',country_code:'SE' }
+          ] });
+        }
         return Response.json({ response: [] });
       }
     }
@@ -214,6 +237,10 @@ test('the canonical Flight Status board selects Swedavia for Swedish IATA and IC
   await execute({ mode: 'flight', flightNumber: 'SK903' });
   assert.equal(officialCalls.length, 2);
   assert.ok(airlabsCalls.some(url => url.endsWith('/flight')));
+  const [first, second] = await Promise.all([geography(), geography()]);
+  assert.equal(second, first);
+  assert.deepEqual(comparable([...first]), [['GOT',{ name:'Landvetter',city:'Gothenburg',countryCode:'SE' }]]);
+  assert.equal(airlabsCalls.filter(url=>url.endsWith('/airports')).length, 1);
 });
 
 test('unsupported parameters make no provider calls and missing credentials affect only their product', async () => {

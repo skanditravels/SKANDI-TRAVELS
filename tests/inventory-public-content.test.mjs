@@ -104,4 +104,12 @@ test('Travel Info shares the selected brand asset while keeping card thumbnails 
   assert.equal(fallback.logoIcon,suppliedThumb);
   const snapshot=inventoryMedia.referenceInventoryBrand({inventory_details:{duffel:{logoLockupUrl:suppliedLogo,logoSymbolUrl:suppliedThumb}}});
   assert.deepEqual(snapshot,{logoUrl:suppliedLogo,thumbnailUrl:suppliedThumb});
+  const legacy=inventoryMedia.referenceInventoryBrand({
+    logoFile:'wix:vector://v1/example_logo.svg/branding.svg',
+    logoIcon:'wix:image://v1/example_airline~mv2.png/icon.png#originWidth=72'
+  });
+  assert.deepEqual(legacy,{
+    logoUrl:'https://static.wixstatic.com/shapes/example_logo.svg',
+    thumbnailUrl:'https://static.wixstatic.com/media/example_airline~mv2.png'
+  });
 });

@@ -183,7 +183,8 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   const dining=get('[data-ti-swedavia="services"]');
   assert.equal(queries().at(-1).payload.scope,'services');
   assert.equal(queries().at(-1).payload.language,'sv');
-  const venues=[{name:'Terminal café',terminal:'Terminal 5',place:'After security',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>'},
+  const venues=[{name:'Terminal café',terminal:'Terminal 5',place:'After security',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>',
+    logoUrl:'https://images.example/cafe.svg',imageUrl:'https://images.example/cafe.jpg'},
     ...Array.from({length:13},(_,index)=>({name:'Bistro '+(index+1),terminal:'Terminal 2',beforeSecurity:index%2===0}))];
   reply({
     providerLanguage:'en',
@@ -211,6 +212,10 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   assert.doesNotMatch(dining.querySelector('li').textContent,/After security/);
   assert.equal(dining.querySelector('li h3').getAttribute('lang'),'en');
   assert.equal(dining.querySelector('script'),null);
+  assert.equal(dining.querySelector('.ti-venue-logo').src,'https://images.example/cafe.svg');
+  assert.equal(dining.querySelector('.ti-venue-photo').src,'https://images.example/cafe.jpg');
+  dining.querySelector('.ti-venue-photo').dispatchEvent(new w.Event('error'));
+  assert.equal(dining.querySelector('.ti-venue-photo').hidden,true);
   filter('services','area','before');
   assert.match(dining.textContent,/Inga resultat matchar dina filter/);
   filter('services','area','');
@@ -224,7 +229,23 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   get('[data-airport-tab="routes"]').click();
   const routes=directory('routes');
   assert.doesNotMatch(get('#tiDetailMount').textContent,/Destinations served|Old route guide/);
-  reply({items:[{iata:'CPH',city:'Köpenhamn',name:'Kastrup',airlines:['SAS']},{iata:'HEL',city:'Helsinki',airlines:['Finnair']}]});
+  reply({items:[
+    {iata:'HEL',city:'Helsinki',countryCode:'FI',airlines:['Finnair']},
+    {iata:'LIS',city:'Lissabon',countryCode:'PT',airlines:['TAP']},
+    {iata:'CPH',city:'Köpenhamn',name:'Kastrup',countryCode:'DK',airlines:['SAS']},
+    {iata:'BLL',city:'Billund',countryCode:'DK',airlines:['SAS']},
+    {iata:'XXX',airlines:[]}
+  ]});
+  const countryHeadings=()=>Array.from(routes.querySelectorAll('.ti-route-country h3'),h=>h.textContent);
+  assert.deepEqual(countryHeadings(),['Danmark','Finland','Portugal','Land saknas']);
+  assert.deepEqual(Array.from(routes.querySelectorAll('.ti-route-country:first-child h4'),h=>h.textContent),['Billund','Köpenhamn']);
+  assert.equal(routes.querySelector('[data-ti-route-initial="Z"]').disabled,true);
+  routes.querySelector('[data-ti-route-initial="D"]').click();
+  assert.deepEqual(countryHeadings(),['Danmark']);
+  assert.equal(routes.querySelector('[data-ti-route-initial="D"]').getAttribute('aria-pressed'),'true');
+  filter('routes','country','finland');
+  assert.deepEqual(countryHeadings(),['Finland']);
+  routes.querySelector('[data-ti-route-initial=""]').click();
   filter('routes','airline','SAS');
   assert.match(routes.textContent,/Köpenhamn.*CPH.*SAS/s);
   assert.doesNotMatch(routes.querySelector('[data-ti-swedavia-body]').textContent,/Helsinki/);
@@ -256,6 +277,7 @@ test('the Travel Info board shows official remarks, codeshares and local update 
     meta:{provider:'swedavia',providerUpdatedAt:'2026-11-28T12:30:00Z'},
     items:[{
       id:'SK903|ARN|EWR',flightIata:'SK903',airlineIata:'SK',airlineName:'SAS',codeshareFlightIatas:['DL1234'],
+      airlineLogoUrl:'https://inventory.example/sk.svg',airlineColor:'#00205b',
       status:'scheduled',fidsRemarks:{en:'Go to gate',sv:'Gå till gate'},checkInDesks:'14–20',
       departure:{scheduledLocal:'14:53',terminal:'T5',gate:'F62'},arrival:{airport:'Newark',airportSv:'New York Newark',iata:'EWR'}
     }]
@@ -271,6 +293,16 @@ test('the Travel Info board shows official remarks, codeshares and local update 
   assert.match(get('#tiAirportFlightRows').textContent,/14:53.*SK 903.*DL 1234.*Go to gate.*14–20.*F62/s);
   assert.match(get('#tiAirportBoardMeta').textContent,/Source: Swedavia.*13:30/s);
   assert.doesNotMatch(get('#tiAirportFlightRows').textContent,/FINAL CALL|ON TIME/);
+  const mark=get('.fids-carrier-mark');
+  const logo=mark.querySelector('img');
+  assert.equal(logo.src,'https://inventory.example/sk.svg');
+  assert.match(mark.getAttribute('style'),/#00205b/i);
+  logo.dispatchEvent(new casing.ownerDocument.defaultView.Event('error'));
+  assert.match(logo.src,/static\.wixstatic\.com/);
+  assert.equal(mark.classList.contains('is-light-mark'),true);
+  logo.dispatchEvent(new casing.ownerDocument.defaultView.Event('error'));
+  assert.equal(mark.classList.contains('fallback'),true);
+  assert.equal(mark.querySelector('.fids-logo-fallback').hidden,false);
   receive('SKANDI_MASTER_CONFIG',{settings:{language:'SV'}});
   assert.match(get('#tiAirportFlightRows').textContent,/Gå till gate/);
   assert.equal(get('#tiAirportPlaceHeader').textContent,'Till / To');
