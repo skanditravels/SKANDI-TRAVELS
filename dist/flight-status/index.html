@@ -4195,7 +4195,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .flight-board-shell.airport-fids-screen .board-scroll { background: var(--board-surface); }
 #skandi-app-root .flight-board-shell.airport-fids-screen .board-scroll {
   min-height: 0;
-  max-height: min(66vh, 620px);
+  max-height: min(76vh, 760px);
   padding: 0;
   overflow: auto;
   scrollbar-color: #8a97df var(--board-header);
@@ -4221,8 +4221,8 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 }
 #skandi-app-root .flight-board-shell.airport-fids-screen .fids-layout {
   display: grid;
-  grid-template-columns: minmax(3.1rem,.52fr) minmax(8rem,1.55fr) minmax(4.1rem,.74fr) minmax(4rem,.73fr)
-    minmax(5.25rem,.85fr) minmax(4.5rem,.74fr) minmax(8.5rem,1.6fr) minmax(3.3rem,.58fr);
+  grid-template-columns: minmax(3.1rem,.51fr) minmax(7rem,1.5fr) minmax(7.25rem,1.24fr) minmax(3.75rem,.64fr)
+    minmax(5.15rem,.83fr) minmax(4rem,.66fr) minmax(8.4rem,1.72fr) minmax(3.25rem,.54fr);
   grid-template-areas: "time place airline flight codeshare terminal remarks facility";
   grid-auto-flow: row;
   grid-auto-rows: auto;
@@ -4233,9 +4233,9 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .flight-board-shell.airport-fids-screen .fids-row {
   min-width: 0;
   width: 100%;
-  min-height: 42px;
+  min-height: 38px;
   height: auto;
-  padding: 7px 14px;
+  padding: 3px 12px;
   border: 0;
   border-bottom: 1px solid var(--board-line);
 }
@@ -4260,6 +4260,11 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   border-radius: 0;
   background: var(--board-row);
   box-shadow: none;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row .ti-fids-check-in {
+  margin-top: 2px;
+  font-size: max(13px, .78rem);
+  line-height: 1.2;
 }
 #skandi-app-root .flight-board-shell.airport-fids-screen .fids-row:hover { background: var(--board-hover); }
 #skandi-app-root .flight-board-shell.airport-fids-screen .fids-cell {
@@ -4298,33 +4303,33 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   overflow-wrap: anywhere;
 }
 #skandi-app-root .flight-board-shell .fids-tail.fids-carrier-mark {
+  position: relative;
   width: 100%;
   max-width: 100%;
-  height: 28px;
+  height: 34px;
   display: grid;
   place-items: center;
-  isolation: isolate;
   overflow: hidden;
   padding: 0;
   border: 0;
   border-radius: 2px;
   box-shadow: none;
-  background: #c6d7f3;
-  background: color-mix(in srgb, var(--fids-brand-color, #6987ac) 22%, #dbe6f9);
+  background: var(--fids-native-matte, #fff);
 }
-#skandi-app-root .flight-board-shell .fids-carrier-mark img {
+#skandi-app-root .flight-board-shell .fids-tail.fids-carrier-mark img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
-  mix-blend-mode: multiply;
+  object-fit: contain !important;
 }
 #skandi-app-root .flight-board-shell .fids-carrier-mark.is-light-mark {
   background: var(--fids-brand-color, #022e64);
 }
-#skandi-app-root .flight-board-shell .fids-carrier-mark.is-light-mark img { mix-blend-mode: normal; }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row .fids-carrier-name { display: none; }
 #skandi-app-root .flight-board-shell .fids-carrier-mark.fallback {
   background: #284777;
   color: #f3f7ff;
@@ -4342,6 +4347,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 }
 #skandi-app-root .flight-board-shell.airport-fids-screen[data-fids-direction="arrivals"] .fids-gate { color: var(--board-green); }
 #skandi-app-root .flight-board-shell.airport-fids-screen .fids-status {
+  min-height: 0;
   padding: 0;
   border: 0;
   background: none;
@@ -4366,6 +4372,13 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   background: var(--board-header);
   border-color: var(--board-line);
 }
+#skandi-app-root .ti-board-footer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+}
 #skandi-app-root .flight-board-shell.airport-fids-screen :focus-visible { outline-offset: -2px; outline: 2px solid var(--board-yellow); }
 #skandi-app-root .flight-board-shell .board-columns > [hidden] { display: none; }
 
@@ -4377,7 +4390,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
     width: auto;
     margin: 7px 8px !important;
     padding: 10px;
-    gap: 10px 8px;
+    gap: 7px 8px;
     border: 1px solid var(--board-line) !important;
     border-radius: 4px !important;
   }
@@ -4395,6 +4408,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
     text-transform: uppercase;
   }
   #skandi-app-root .flight-board-shell.airport-fids-screen .board-top { padding: 9px 12px; }
+  #skandi-app-root .flight-board-shell.airport-fids-screen .fids-carrier-mark { height: 29px; }
 }
 
 @media(prefers-reduced-motion: reduce) {
@@ -6531,6 +6545,8 @@ const airportFids = (() => {
   };
   const lightFallbacks = new Set(["AS", "DL", "F9", "B6", "DY", "D8", "SK", "LX", "UA"]);
   const fallbackColors = { DY: "#d81939", D8: "#d81939", SK: "#1d4ed8" };
+  const logoMattes = new Map();
+  const serviceDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit" });
   const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[char]);
@@ -6547,11 +6563,49 @@ const airportFids = (() => {
     </span><span class="fids-carrier-name">${escape(name)}</span></div>`;
   }
 
+  function nativeMatte(src) {
+    if (!logoMattes.has(src)) {
+      const probe = new Image();
+      probe.crossOrigin = "anonymous";
+      probe.src = src;
+      logoMattes.set(src, probe.decode().then(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 48;
+        canvas.height = 32;
+        const context = canvas.getContext("2d");
+        context.drawImage(probe, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        // Ignore subpixel borders on the supplied solid-background SVGs.
+        for (let y = 1; y < canvas.height - 1; y++) {
+          for (let x = 1; x < canvas.width - 1; x++) {
+            if (pixels[(y * canvas.width + x) * 4 + 3] < 250) return "";
+          }
+        }
+        const topLeft = canvas.width + 1;
+        const bottomLeft = canvas.width * (canvas.height - 2) + 1;
+        const corners = [topLeft, topLeft + canvas.width - 3, bottomLeft, bottomLeft + canvas.width - 3];
+        const rgb = pixels.slice(topLeft * 4, topLeft * 4 + 3);
+        if (corners.some(index => rgb.some((value, offset) => Math.abs(pixels[index * 4 + offset] - value) > 16))) return "";
+        return `rgb(${rgb.join(", ")})`;
+      }).catch(() => ""));
+    }
+    return logoMattes.get(src);
+  }
+
   function bindCarrierImages(root) {
     root.querySelectorAll(".fids-carrier-mark img").forEach(image => {
+      const tile = image.parentElement;
+      const loaded = () => {
+        tile.style.removeProperty("--fids-native-matte");
+        if (tile.classList.contains("is-light-mark")) return;
+        const src = image.currentSrc || image.src;
+        nativeMatte(src).then(matte => {
+          if (matte && image.isConnected && image.src === src) tile.style.setProperty("--fids-native-matte", matte);
+        });
+      };
       const failed = () => {
-        const tile = image.parentElement;
         const backup = image.dataset.fidsLogoBackup;
+        tile.style.removeProperty("--fids-native-matte");
         if (backup) {
           delete image.dataset.fidsLogoBackup;
           tile.classList.toggle("is-light-mark", image.dataset.fidsBackupLight === "true");
@@ -6562,9 +6616,21 @@ const airportFids = (() => {
         tile.classList.add("fallback");
         tile.querySelector(".fids-logo-fallback").hidden = false;
       };
+      image.addEventListener("load", loaded);
       image.addEventListener("error", failed);
-      if (image.complete && image.naturalWidth === 0) failed();
+      if (image.complete) {
+        if (image.naturalWidth) loaded();
+        else failed();
+      }
     });
+  }
+
+  function dateInSweden() {
+    return serviceDate.format(new Date());
+  }
+
+  function daysFrom(date, days) {
+    return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
   }
 
   function locale(value) {
@@ -6612,7 +6678,7 @@ const airportFids = (() => {
     return { message, tone };
   }
 
-  return { columns, iata, labels, locale, officialStatus, carrier, bindCarrierImages };
+  return { columns, iata, labels, locale, officialStatus, carrier, bindCarrierImages, dateInSweden, daysFrom };
 })();
 
 const SOURCE = "SKANDI_FLIGHT_STATUS";
@@ -6621,9 +6687,10 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             let clockTimer = 0;
             let searchTimer = 0;
             let searchSerial = 0,
-                pendingSearch = "",
-                lastQuery = "",
-                refreshTimer = 0;
+                pendingSearch = "";
+            let pendingQuery = null;
+            let hostReady = false;
+            const airportSnapshots = new Map();
             let contextTimer = 0;
             const SEARCH_TIMEOUT_MS = 25000;
             const CONTEXT_TIMEOUT_MS = 15000;
@@ -6806,17 +6873,15 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             }
 
             function setDateLimits() {
-                const todayLive = isoDate(new Date());
-
-                // AirLabs /schedules owns the current live schedule window and does not
-                // accept a date query parameter. Keep one current display date only.
-                el("date").min = todayLive;
-                el("date").max = todayLive;
-                el("date").value = todayLive;
-                el("date").disabled = true;
-
-                el("dateHint").textContent = `Current schedule · ${todayLive} · Refreshes every 60 seconds`;
-                if (el("dateWindow")) el("dateWindow").textContent = todayLive;
+                const swedavia = currentMode === "airport" && airportFids.iata(resolveAirportField("airport"));
+                const today = swedavia ? airportFids.dateInSweden() : isoDate(new Date());
+                const date = el("date");
+                date.min = today;
+                date.max = swedavia ? airportFids.daysFrom(today, 90) : today;
+                date.disabled = !swedavia;
+                if (!date.value || date.value < date.min || date.value > date.max) date.value = today;
+                el("dateHint").textContent = swedavia ? "Choose a date up to 90 days ahead, then select Show board." : `Current schedule · ${today}`;
+                if (el("dateWindow")) el("dateWindow").textContent = date.value;
             }
 
             function setMode(mode = "airport") {
@@ -6852,6 +6917,7 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                     "Enter at least an origin or destination airport to review flights on that route.";
                 el("boardMeta").textContent = meta;
                 if (el("querySummary")) el("querySummary").textContent = currentMode === "airport" ? "Select an airport to load the board" : currentMode === "flight" ? "Enter a flight number" : "Enter a route";
+                setDateLimits();
                 updateBoardType();
                 setNotice("");
             }
@@ -6930,6 +6996,7 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                 const input = el(fieldId);
                 if (input) input.value = code;
                 closeAirportSuggestions(fieldId);
+                if (fieldId === "airport") setDateLimits();
                 if (searchNow) search();
             }
 
@@ -7053,7 +7120,7 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
 
             function clearRequestTimeouts() {
                 pendingSearch = "";
-                lastQuery = "";
+                pendingQuery = null;
                 displayedAirport = "";
                 lastFlightItems = [];
                 lastFlightMeta = {};
@@ -7063,18 +7130,12 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                 clearContextTimeout();
             }
 
-            function hasReadySearch() {
-                const v = values();
-                if (currentMode === "airport") return Boolean(v.airport);
-                if (currentMode === "flight") return Boolean(v.flightNumber);
-                return Boolean(v.from || v.to);
-            }
-
             function armSearchTimeout() {
                 clearSearchTimeout();
                 searchTimer = window.setTimeout(() => {
                     searchTimer = 0;
                     pendingSearch = "";
+                    pendingQuery = null;
                     setBoardBusy(false);
                     el("hardwareCasing")?.classList.remove("is-searching");
                     el("rows")?.closest(".board-screen")?.setAttribute("aria-busy", "false");
@@ -7097,8 +7158,19 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                 }, CONTEXT_TIMEOUT_MS);
             }
 
+            function airportSnapshotKey(query, direction = query.boardType) {
+                return [airportFids.iata(query.airport) || query.airport, query.date, direction].join("|");
+            }
+
+            function renderAirportSnapshot(board) {
+                render(board.items || [], board.meta || {});
+                if (!board.error) return;
+                setBoardMessage("BOARD UNAVAILABLE", board.error, "flap-bad");
+                el("boardMeta").textContent = board.error;
+                setStatusLabels("Update failed", "");
+            }
+
             function search() {
-                clearSearchTimeout();
                 setDateLimits();
                 const v = values();
                 const error = validate(v);
@@ -7106,6 +7178,10 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                     setNotice(error, true);
                     return;
                 }
+                const includeBoth = v.mode === "airport" && Boolean(airportFids.iata(v.airport));
+                if (includeBoth && pendingQuery?.mode === "airport" &&
+                    airportSnapshotKey(v, "") === airportSnapshotKey(pendingQuery, "")) return;
+                clearSearchTimeout();
                 setNotice("");
                 closeAllAirportSuggestions();
                 if (v.mode === "airport") {
@@ -7130,22 +7206,28 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                 }
                 updateBoardType();
                 updateClock();
+                el("querySummary").textContent = describeQuery(v);
+                el("screenAirport").textContent = v.mode === "airport" ? v.airport : v.mode === "flight" ? v.flightNumber : `${v.from || "ANY"}→${v.to || "ANY"}`;
+                el("screenDate").textContent = v.date;
+                const snapshot = v.mode === "airport" && airportSnapshots.get(airportSnapshotKey(v));
+                if (snapshot && !snapshot.error) {
+                    pendingQuery = null;
+                    pendingSearch = "";
+                    renderAirportSnapshot(snapshot);
+                    return;
+                }
                 setBoardBusy(true);
                 el("hardwareCasing")?.classList.add("is-searching");
                 el("rows")?.closest(".board-screen")?.setAttribute("aria-busy", "true");
                 setStatusLabels("Updating", "");
-                el("querySummary").textContent = describeQuery(v);
-                if (el("screenAirport")) {
-                    el("screenAirport").textContent = v.mode === "airport" ? (v.airport || "---") : v.mode === "flight" ? (v.flightNumber || "---") : `${v.from||"ANY"}→${v.to||"ANY"}`;
-                }
-                if (el("screenDate")) el("screenDate").textContent = v.date || "---";
                 if (el("boardStatusEcho")) el("boardStatusEcho").textContent = "";
                 setBoardMessage("UPDATING FIDS", "Loading the latest available flight information", "flap-warn", true);
                 armSearchTimeout();
                 pendingSearch = String(++searchSerial);
-                lastQuery = JSON.stringify(v);
+                pendingQuery = v;
                 post("FLIGHT_STATUS_SEARCH", {
                     ...v,
+                    includeBoth,
                     requestId: pendingSearch
                 });
             }
@@ -7838,8 +7920,24 @@ function render(items, meta) {
                     if (!pendingSearch || String(payload.requestId) !== pendingSearch) return;
                     pendingSearch = "";
                     clearSearchTimeout();
+                    const query = pendingQuery;
+                    pendingQuery = null;
                     if (payload.airportContext) renderAirportContext(payload.airportContext);
-                    render(payload.items || [], payload.meta || {});
+                    if (query?.mode === "airport") {
+                        airportSnapshots.set(airportSnapshotKey(query), payload);
+                        if (payload.alternate) {
+                            const alternate = query.boardType === "arrivals" ? "departures" : "arrivals";
+                            airportSnapshots.set(airportSnapshotKey(query, alternate), payload.alternate);
+                        }
+                        const selected = airportSnapshots.get(airportSnapshotKey(query, el("boardType").value));
+                        if (selected) {
+                            renderAirportSnapshot(selected);
+                            return;
+                        }
+                        search();
+                        return;
+                    }
+                    renderAirportSnapshot(payload);
                     return;
                 }
 
@@ -7900,7 +7998,20 @@ function render(items, meta) {
                 }
 
                 if (data.type === "FLIGHT_STATUS_HOST_READY") {
-                    post("FLIGHT_STATUS_AIRPORTS_REQUEST", {});
+                    if (hostReady) return;
+                    hostReady = true;
+                    const query = data.payload || {};
+                    const airport = airportFids.iata(query.airport) || cleanIata(query.airport);
+                    if (!airport) return;
+                    el("airport").value = airport;
+                    setSelectedIata("airport", airport);
+                    el("boardType").value = query.boardType === "arrivals" ? "arrivals" : "departures";
+                    setDateLimits();
+                    if (!el("date").disabled) {
+                        const date = query.upcoming ? airportFids.daysFrom(airportFids.dateInSweden(), 1) : query.date;
+                        if (date && date >= el("date").min && date <= el("date").max) el("date").value = date;
+                    }
+                    search();
                     return;
                 }
 
@@ -7908,6 +8019,7 @@ function render(items, meta) {
                     const payload = data.payload || {};
                     if (!pendingSearch || String(payload.requestId) !== pendingSearch) return;
                     pendingSearch = "";
+                    pendingQuery = null;
                     clearSearchTimeout();
                     setBoardBusy(false);
                     el("hardwareCasing")?.classList.remove("is-searching");
@@ -8071,10 +8183,16 @@ function render(items, meta) {
 
             document.querySelectorAll("[data-board-view]").forEach((button) => {
                 button.addEventListener("click", () => {
-                    if (button.dataset.boardView !== el("boardType").value) showHistoricalFlights = false;
+                    if (button.dataset.boardView === el("boardType").value) return;
+                    showHistoricalFlights = false;
                     el("boardType").value = button.dataset.boardView;
                     updateBoardType();
                     const v = values();
+                    const cached = v.mode === "airport" && airportSnapshots.get(airportSnapshotKey(v));
+                    if (cached) {
+                        renderAirportSnapshot(cached);
+                        return;
+                    }
                     if ((currentMode === "airport" && v.airport) || (currentMode === "flight" && v.flightNumber) || (currentMode === "route" && (v.from || v.to))) search();
                 });
             });
@@ -8109,6 +8227,7 @@ function render(items, meta) {
                 document.body.classList.remove("has-airport-selection", "has-airport-context");
                 setContextState("welcome");
                 if (el("boardStatusEcho")) el("boardStatusEcho").textContent = "";
+                setDateLimits();
                 updateBoardType();
             });
 
@@ -8117,6 +8236,7 @@ function render(items, meta) {
                 if (!input) return;
                 input.addEventListener("input", () => {
                     setSelectedIata(fieldId, "");
+                    if (fieldId === "airport") setDateLimits();
                     suggestionIndex[fieldId] = 0;
                     renderAirportSuggestions(input.value, fieldId);
                 });
@@ -8175,8 +8295,7 @@ function render(items, meta) {
             });
 
             el("date").addEventListener("change", () => {
-                if (el("screenDate")) el("screenDate").textContent = el("date").value || "---";
-                if (hasReadySearch()) search();
+                if (el("dateWindow")) el("dateWindow").textContent = el("date").value;
             });
 
             setDateLimits();
@@ -8191,7 +8310,6 @@ function render(items, meta) {
             setBoardMessage("FLIGHT INFORMATION", "Choose an airport and select Show board.", "flap-ok");
             window.addEventListener("pagehide", () => {
                 window.clearInterval(clockTimer);
-                window.clearInterval(refreshTimer);
                 clearRequestTimeouts();
             }, {
                 once: true
@@ -8200,10 +8318,6 @@ function render(items, meta) {
                 version: "V12"
             });
             post("FLIGHT_STATUS_AIRPORTS_REQUEST", {});
-            refreshTimer = window.setInterval(() => {
-                if (document.visibilityState === "hidden" || pendingSearch || !lastQuery) return;
-                if (JSON.stringify(values()) === lastQuery) search();
-            }, 60000);
 
 
 })();</script>

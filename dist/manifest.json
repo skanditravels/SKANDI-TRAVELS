@@ -840,6 +840,7 @@
         "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR",
         "TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST",
         "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT",
+        "TRAVEL_INFO_AIRPORT_SCHEDULE",
         "TRAVEL_INFO_AI_ASK",
         "TRAVEL_INFO_BOOTSTRAP_TIMEOUT",
         "TRAVEL_INFO_DATA",
@@ -872,8 +873,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "c7d3d6ddb3186490e588f12388cd19137abb13c21320d80cf9c026583c03eee4",
-      "bytes": 547810
+      "sha256": "39c6a2761651f36045de2d7eb30e12c348a00d1c4075cfe16435f931b9cc04d3",
+      "bytes": 551267
     },
     {
       "key": "transfers",
@@ -4708,8 +4709,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flight-status/flight-status.receiver.html",
       "receiverFile": "skandi-embeds/flight-status/flight-status.receiver.html",
-      "sha256": "89b232abd580203beff2de682788b33774f8c0606811488b2746a6a0ae5552eb",
-      "bytes": 371116
+      "sha256": "b1f74cbe3beb3cf038a62222fb8ed872a0d6af3e89f4ed109e28113eff73f040",
+      "bytes": 376572
     }
   ],
   "globalComponents": {
