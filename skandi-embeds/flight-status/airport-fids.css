@@ -186,6 +186,7 @@
   color: var(--board-white);
   text-align: start;
 }
+.flight-board-shell.airport-fids-screen .fids-row .fids-cell::before { content: none; }
 .flight-board-shell.airport-fids-screen [data-fids-column="time"] { grid-area: time; }
 .flight-board-shell.airport-fids-screen [data-fids-column="place"] { grid-area: place; }
 .flight-board-shell.airport-fids-screen [data-fids-column="airline"] { grid-area: airline; }
@@ -273,7 +274,7 @@
 @container (max-width: 790px) {
   .flight-board-shell.airport-fids-screen .board-columns.fids-layout { display: none; }
   .flight-board-shell.airport-fids-screen .fids-row.fids-layout {
-    grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+    grid-template-columns: minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) !important;
     grid-template-areas: "time place facility" "airline flight codeshare" "terminal remarks remarks";
     width: auto;
     margin: 7px 8px !important;
