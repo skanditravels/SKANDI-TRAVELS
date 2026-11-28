@@ -2381,6 +2381,10 @@ const HOME_PLANNING_COPY = {
   "searchType": ["Search by trip type", "Sök efter restyp", "Søk etter reisetype", "Søg efter rejsetype", "Hae matkatyypin mukaan"],
   "signaturePackages": ["Signature packages", "Signature-paket", "Signature-pakker", "Signature-pakker", "Signature-paketit"],
   "searchSignature": ["Search Signature packages", "Sök Signature-paket", "Søk Signature-pakker", "Søg Signature-pakker", "Hae Signature-paketteja"],
+  "airportPlaceholder": ["City or airport", "Stad eller flygplats", "By eller flyplass", "By eller lufthavn", "Kaupunki tai lentoasema"],
+  "datePlaceholder": ["Select dates", "Välj datum", "Velg datoer", "Vælg datoer", "Valitse päivät"],
+  "search": ["Search", "Sök", "Søk", "Søg", "Hae"],
+  "swap": ["Swap origin and destination", "Byt plats på avreseort och resmål", "Bytt om avreise og reisemål", "Byt afrejse og rejsemål", "Vaihda lähtöpaikka ja kohde"],
   "destinationPlaceholder": ["City, resort or airport", "Stad, resmål eller flygplats", "By, reisemål eller flyplass", "By, rejsemål eller lufthavn", "Kaupunki, matkakohde tai lentoasema"],
   "travelers": ["Travelers", "Resenärer", "Reisende", "Rejsende", "Matkustajat"],
   "done": ["Done", "Klar", "Ferdig", "Færdig", "Valmis"],
@@ -2792,8 +2796,11 @@ function applyDateLabelsOnly(){
     const toText=range.to?formatDate(range.to):skandiTranslate("home.fields.to");
     if(fromLabel)fromLabel.textContent=fromText;
     if(toLabel)toLabel.textContent=toText;
-    $(cfg.button)?.setAttribute("aria-label",
-      `${skandiTranslate("home.fields.travelDates")}, ${fromText} – ${toText}`);
+    const button = $(cfg.button);
+    const empty = !range.from || !range.to;
+    button.classList.toggle("is-empty", empty);
+    button.setAttribute("aria-label", skandiTranslate("home.fields.travelDates")+", "+
+      (empty ? skandiTranslate("home.plan.datePlaceholder") : fromText+" – "+toText));
   });
 }
 
@@ -3258,13 +3265,18 @@ function renderMixedFeed() {
     cards.push({kind,item,title,photo,path,canSearch});
     if (cards.length === 6) break;
   }
+  grid.classList.toggle("is-editorial", state.facet === "all" && cards.length >= 3 && Boolean(cards[0].photo));
   grid.innerHTML = cards.map(({kind,item,title,photo,canSearch},index)=>{
     const type = skandiTranslate({offer:"home.card.offer",destination:"home.card.destination",hotel:"home.plan.hotel"}[kind]);
     const cta = skandiTranslate(canSearch ? "home.plan.checkAvailability" : "home.plan.viewDetails");
-    return `<article class="home-trip-card">${photo?`<img src="${escAttr(photo.href)}" loading="lazy" decoding="async" alt="">`:""}
-      <div class="home-trip-card-body"><small>${esc(type)}</small><h3>${esc(title)}</h3>${discoveryPrice(item,kind)}
-      <button type="button" class="home-text-button" data-home-card="${index}" aria-label="${escAttr(cta+" · "+title)}">${esc(cta)} →</button></div></article>`;
+    return `<article class="home-trip-card${photo?"":" home-trip-card--text"}">${photo?`<img src="${escAttr(photo.href)}" loading="lazy" decoding="async" alt="">`:""}
+      <div class="home-trip-card-body"><small>${esc(type)}</small><h3>${esc(title)}</h3>${discoveryPrice(item,kind)}</div>
+      <button type="button" class="home-trip-action" data-home-card="${index}" aria-label="${escAttr(cta+" · "+title)}"><span aria-hidden="true"></span></button></article>`;
   }).join("");
+  grid.querySelectorAll(".home-trip-card img").forEach(img=>img.addEventListener("error", ()=>{
+    img.closest(".home-trip-card").classList.add("home-trip-card--text");
+    img.remove();
+  }, {once:true}));
   grid.querySelectorAll("[data-home-card]").forEach(button=>button.onclick=()=>{
     const card = cards[Number(button.dataset.homeCard)];
     if (card.canSearch) {
@@ -3939,18 +3951,21 @@ initializeBridge();
     label.className = 'home-travelers-label';
     label.dataset.i18n = 'home.plan.travelers';
     label.textContent = typeof skandiTranslate === 'function' ? skandiTranslate(label.dataset.i18n) : 'Travelers';
-    summary.append(icon, label, text);
+    summary.append(label, icon, text);
     row.parentNode.insertBefore(details, row);
-    details.append(summary, row, ages);
+    const fields = document.createElement('div');
+    fields.className = 'home-traveler-fields';
+    fields.append(row, ages);
+    details.append(summary, fields);
     const extra = panel.querySelector('[data-home-traveler-options]');
-    if (extra) details.append(extra);
+    if (extra) fields.append(extra);
     const done = document.createElement('button');
     done.type = 'button';
     done.className = 'home-text-button';
     done.dataset.i18n = 'home.plan.done';
     done.textContent = typeof skandiTranslate === 'function' ? skandiTranslate(done.dataset.i18n) : 'Done';
     done.onclick = () => { details.open = false; summary.focus(); };
-    details.append(done);
+    fields.append(done);
     function update() {
       const parts = [];
       row.querySelectorAll('.field').forEach(field => {

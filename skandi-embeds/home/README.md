@@ -28,3 +28,9 @@ A single discovery section uses published Inventory Control cards and suppresses
 Home and Booking use the existing booking search handoff. A recent search keeps travel criteria for up to 30 days in the browser. A resumable draft stays in the same tab, and the cart capability stays private to Booking. Signed-in My Trips uses the existing account and booking ownership. Explore anywhere uses published destinations and opens a date draft for the chosen month and stay length. Its optional budget filters comparable live Flight + Hotel totals in Booking. Empty results let travelers try adjacent dates with the rest of their criteria carried forward.
 
 The active receivers remain #htmlHome and #bookingFlowEmbed. The existing builder supplies these pages and the VOY reader. Wix runtime and live-provider behavior are verified separately from the build.
+
+## INFO / LOG — Homepage design refresh
+
+Home uses a full-width landscape and a single desktop row for the route, dates, travelers and search action. The calendar expands within the search form. On narrow screens the form flows into smaller rows and the traveler controls open inline. The editorial trip grid uses the same published inventory, with a full-card action for each trip. Continue planning, Explore Anywhere and the Velo message contracts keep their existing behavior.
+
+The default hero is skandi-embeds/home/assets/skandi-home-aegean.webp, an original generated editorial landscape inspired by the Aegean coast. The image is illustrative. The published home-hero slot in Media Control takes precedence. The existing builder compiles the bundled WebP with the active Home source.

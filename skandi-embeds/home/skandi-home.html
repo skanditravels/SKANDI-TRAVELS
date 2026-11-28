@@ -1,3 +1,4 @@
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <div id="pageLoader" class="sk-page-loader">
   <div class="sk-page-loader-box">
     <div class="sk-page-loader-spinner"></div>
@@ -7,8 +8,10 @@
 <div id="homeConnectionStatus" role="status" aria-live="polite" hidden style="margin:12px 32px"></div>
 <section id="hero-wrap" data-media-slot="home-hero">
   <header class="home-hero-copy">
-    <h1 id="hero-title" data-content-id="home-hero-title" data-i18n="home.plan.hero">Signature Travels, Unforgettable Moments.</h1>
-    <p id="hero-sub" data-content-id="home-hero-intro" data-i18n="home.plan.intro">Flights, stays and Scandinavian-style holidays, planned around you.</p>
+    <div class="home-hero-inner">
+      <h1 id="hero-title" data-content-id="home-hero-title" data-i18n="home.plan.hero">Signature Travels, Unforgettable Moments.</h1>
+      <p id="hero-sub" data-content-id="home-hero-intro" data-i18n="home.plan.intro">Flights, stays and Scandinavian-style holidays, planned around you.</p>
+    </div>
   </header>
 
   <div id="search-tabs">
@@ -22,32 +25,35 @@
     <div id="tab-content">
       <!-- FLIGHTS PANEL -->
       <div class="tab-panel" id="panel-flights">
-        <div class="field-row">
+        <div class="field-row search-route">
           <div class="field airport-field">
             <label for="from" data-i18n="home.fields.from">From</label>
-            <input type="text" id="from" data-i18n-placeholder="home.placeholders.airport" autocomplete="off" placeholder="City, airport, IATA or ICAO">
+            <input type="text" id="from" data-i18n-placeholder="home.plan.airportPlaceholder" autocomplete="off" placeholder="City or airport">
             <input type="hidden" id="fromIata">
             <div class="airport-suggestions" id="fromSuggestions"></div>
           </div>
 
           <div class="field airport-field">
             <label for="to" data-i18n="home.fields.to">To</label>
-            <input type="text" id="to" data-i18n-placeholder="home.placeholders.airport" autocomplete="off" placeholder="City, airport, IATA or ICAO">
+            <input type="text" id="to" data-i18n-placeholder="home.plan.airportPlaceholder" autocomplete="off" placeholder="City or airport">
             <input type="hidden" id="toIata">
             <div class="airport-suggestions" id="toSuggestions"></div>
           </div>
         </div>
 
-        <div class="field-row">
+        <div class="field-row search-dates">
           <div class="field date-field">
-            <label for="dateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
-            <button type="button" id="dateRangeButton" class="date-range-button" data-date-range="flights" aria-controls="datePickerOverlay" aria-expanded="false">
-              <span id="dateFromLabel" data-i18n="home.fields.from">From</span>
-              <span class="date-line"></span>
-              <span id="dateToLabel" data-i18n="home.fields.to">To</span>
-            </button>
-            <input type="hidden" id="depart">
-            <input type="hidden" id="return">
+            <div class="home-date-input">
+              <label for="dateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
+              <button type="button" id="dateRangeButton" class="date-range-button is-empty" data-date-range="flights" aria-controls="datePickerOverlay" aria-expanded="false">
+                <span class="home-date-placeholder" data-i18n="home.plan.datePlaceholder">Select dates</span>
+                  <span id="dateFromLabel" data-i18n="home.fields.from">From</span>
+                <span class="date-line" aria-hidden="true">–</span>
+                <span id="dateToLabel" data-i18n="home.fields.to">To</span>
+              </button>
+              <input type="hidden" id="depart">
+              <input type="hidden" id="return">
+            </div>
           </div>
         </div>
 
@@ -84,21 +90,21 @@
           <label class="home-direct-option"><input id="flight-direct" type="checkbox"> <span data-i18n="home.plan.direct">Nonstop only</span></label>
         </div>
 
-        <button class="search-submit" data-search="flights" data-i18n="home.search.flights">Search Flights</button>
+        <button type="button" class="search-submit" data-search="flights" data-i18n="home.plan.search" data-i18n-aria-label="home.search.flights" aria-label="Search Flights">Search</button>
       </div>
 
       <!-- FLIGHT + HOTEL PANEL -->
       <div class="tab-panel active" id="panel-holidays">
-        <div class="field-row">
+        <div class="field-row search-route">
           <div class="field airport-field">
             <label for="hol-from-search" data-i18n="home.fields.departureAirport">Departure Airport</label>
-            <input type="text" id="hol-from-search" data-i18n-placeholder="home.placeholders.airport" autocomplete="off" placeholder="City, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="hol-from-search" data-i18n-placeholder="home.plan.airportPlaceholder" autocomplete="off" placeholder="City or airport" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="hol-from-iata">
             <div class="airport-suggestions" id="hol-from-suggestions" role="listbox"></div>
           </div>
-          <button type="button" class="swap-btn" id="swapAirports" aria-label="Swap origin and destination">
-  <svg viewBox="0 0 24 24"><path d="M7 10l5-5 5 5M7 14l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-</button>
+          <button type="button" class="swap-btn" id="swapAirports" aria-label="Swap origin and destination" data-i18n-aria-label="home.plan.swap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
           <div class="field airport-field">
             <label for="hol-destination-search" data-i18n="home.fields.destination">Destination</label>
             <input type="text" id="hol-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
@@ -108,13 +114,18 @@
             <div class="airport-suggestions" id="hol-destination-suggestions" role="listbox"></div>
           </div>
         </div>
-        <div class="field-row">
+        <div class="field-row search-dates">
           <div class="field date-field">
-            <label for="holDateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
-            <button type="button" id="holDateRangeButton" class="date-range-button" data-date-range="holidays" aria-controls="datePickerOverlay" aria-expanded="false">
-              <span id="holDateFromLabel" data-i18n="home.fields.from">From</span><span class="date-line"></span><span id="holDateToLabel" data-i18n="home.fields.to">To</span>
-            </button>
-            <input type="hidden" id="hol-departure-date"><input type="hidden" id="hol-return-date">
+            <div class="home-date-input">
+              <label for="holDateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
+              <button type="button" id="holDateRangeButton" class="date-range-button is-empty" data-date-range="holidays" aria-controls="datePickerOverlay" aria-expanded="false">
+                <span class="home-date-placeholder" data-i18n="home.plan.datePlaceholder">Select dates</span>
+                  <span id="holDateFromLabel" data-i18n="home.fields.from">From</span>
+                <span class="date-line" aria-hidden="true">–</span>
+                <span id="holDateToLabel" data-i18n="home.fields.to">To</span>
+              </button>
+              <input type="hidden" id="hol-departure-date"><input type="hidden" id="hol-return-date">
+            </div>
           </div>
         </div>
         <div class="field-row pax-row">
@@ -127,12 +138,12 @@
           <span id="package-budget-value"></span>
           <button class="home-text-button" type="button" id="package-budget-clear" data-i18n="home.date.clear">Clear</button>
         </div>
-        <button class="search-submit" data-search="holidays" data-i18n="home.search.holidays">Search Flight + Hotel</button>
+        <button type="button" class="search-submit" data-search="holidays" data-i18n="home.plan.search" data-i18n-aria-label="home.search.holidays" aria-label="Search Flight + Hotel">Search</button>
       </div>
 
       <!-- HOTELS PANEL -->
       <div class="tab-panel" id="panel-hotels">
-        <div class="field-row">
+        <div class="field-row search-route">
           <div class="field airport-field">
             <label for="hotel-destination-search" data-i18n="home.fields.destination">Destination</label>
             <input type="text" id="hotel-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
@@ -142,13 +153,18 @@
             <div class="airport-suggestions" id="hotel-destination-suggestions" role="listbox"></div>
           </div>
         </div>
-        <div class="field-row">
+        <div class="field-row search-dates">
           <div class="field date-field">
-            <label for="hotelDateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
-            <button type="button" id="hotelDateRangeButton" class="date-range-button" data-date-range="hotels" aria-controls="datePickerOverlay" aria-expanded="false">
-              <span id="hotelDateFromLabel" data-i18n="home.fields.from">From</span><span class="date-line"></span><span id="hotelDateToLabel" data-i18n="home.fields.to">To</span>
-            </button>
-            <input type="hidden" id="hotel-in"><input type="hidden" id="hotel-out">
+            <div class="home-date-input">
+              <label for="hotelDateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
+              <button type="button" id="hotelDateRangeButton" class="date-range-button is-empty" data-date-range="hotels" aria-controls="datePickerOverlay" aria-expanded="false">
+                <span class="home-date-placeholder" data-i18n="home.plan.datePlaceholder">Select dates</span>
+                  <span id="hotelDateFromLabel" data-i18n="home.fields.from">From</span>
+                <span class="date-line" aria-hidden="true">–</span>
+                <span id="hotelDateToLabel" data-i18n="home.fields.to">To</span>
+              </button>
+              <input type="hidden" id="hotel-in"><input type="hidden" id="hotel-out">
+            </div>
           </div>
         </div>
         <div class="field-row pax-row">
@@ -160,12 +176,12 @@
         <div class="field-row" data-home-traveler-options>
           <div class="field"><label for="hotel-rooms" data-i18n="home.fields.rooms">Rooms</label><select id="hotel-rooms"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
         </div>
-        <button class="search-submit" data-search="hotels" data-i18n="home.search.hotels">Search Hotels</button>
+        <button type="button" class="search-submit" data-search="hotels" data-i18n="home.plan.search" data-i18n-aria-label="home.search.hotels" aria-label="Search Hotels">Search</button>
       </div>
 
       <!-- SIGNATURE COLLECTION PANEL -->
       <div class="tab-panel" id="panel-signature">
-        <div class="field-row">
+        <div class="field-row search-route">
           <div class="field airport-field">
             <label for="sig-destination-search" data-i18n="home.fields.destination">Destination</label>
             <input type="text" id="sig-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
@@ -176,18 +192,23 @@
           </div>
           <div class="field airport-field">
             <label for="sig-from-search" data-i18n="home.fields.departureAirport">Departure Airport</label>
-            <input type="text" id="sig-from-search" data-i18n-placeholder="home.placeholders.airport" autocomplete="off" placeholder="City, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="sig-from-search" data-i18n-placeholder="home.plan.airportPlaceholder" autocomplete="off" placeholder="City or airport" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="sig-from-iata">
             <div class="airport-suggestions" id="sig-from-suggestions" role="listbox"></div>
           </div>
         </div>
-        <div class="field-row">
+        <div class="field-row search-dates">
           <div class="field date-field">
-            <label for="sigDateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
-            <button type="button" id="sigDateRangeButton" class="date-range-button" data-date-range="signature" aria-controls="datePickerOverlay" aria-expanded="false">
-              <span id="sigDateFromLabel" data-i18n="home.fields.from">From</span><span class="date-line"></span><span id="sigDateToLabel" data-i18n="home.fields.to">To</span>
-            </button>
-            <input type="hidden" id="sig-departure-date"><input type="hidden" id="sig-return-date">
+            <div class="home-date-input">
+              <label for="sigDateRangeButton" data-i18n="home.fields.travelDates">Travel Dates</label>
+              <button type="button" id="sigDateRangeButton" class="date-range-button is-empty" data-date-range="signature" aria-controls="datePickerOverlay" aria-expanded="false">
+                <span class="home-date-placeholder" data-i18n="home.plan.datePlaceholder">Select dates</span>
+                  <span id="sigDateFromLabel" data-i18n="home.fields.from">From</span>
+                <span class="date-line" aria-hidden="true">–</span>
+                <span id="sigDateToLabel" data-i18n="home.fields.to">To</span>
+              </button>
+              <input type="hidden" id="sig-departure-date"><input type="hidden" id="sig-return-date">
+            </div>
           </div>
         </div>
         <div class="field-row pax-row">
@@ -196,7 +217,7 @@
           <div class="field"><label data-i18n="home.fields.infants">Infants</label><div class="counter"><button type="button" data-counter="infants" data-step="-1">−</button><span>0</span><button type="button" data-counter="infants" data-step="1">+</button></div><small data-i18n="home.age.infants">Under 2 years</small></div>
         </div>
         <div id="sigAgeFields" data-home-ages></div>
-        <button class="search-submit" data-search="signature" data-i18n="home.plan.searchSignature">Search Signature packages</button>
+        <button type="button" class="search-submit" data-search="signature" data-i18n="home.plan.search" data-i18n-aria-label="home.plan.searchSignature" aria-label="Search Signature packages">Search</button>
       </div>
     </div>
   </div>
@@ -258,29 +279,29 @@
 </section>
 
 <section class="content-section mixed-section home-discovery" id="mixed-section" aria-labelledby="discovery-title" hidden>
+  <h2 class="section-title" id="discovery-title" data-i18n="home.plan.discovery">Trips worth considering</h2>
   <div class="home-section-head">
-    <h2 class="section-title" id="discovery-title" data-i18n="home.plan.discovery">Trips worth considering</h2>
-    <button type="button" class="home-text-button" data-route-key="destinations" data-i18n="home.plan.map">Explore the map</button>
-  </div>
-  <div class="home-facets" role="group" aria-label="Filter trip ideas" data-i18n-aria-label="home.plan.filters">
-    <button type="button" data-home-facet="all" aria-pressed="true" data-i18n="home.plan.picks">Top picks</button>
+    <div class="home-facets" role="group" aria-label="Filter trip ideas" data-i18n-aria-label="home.plan.filters">
+      <button type="button" data-home-facet="all" aria-pressed="true" data-i18n="home.plan.picks">Top picks</button>
     <button type="button" data-home-facet="offer" aria-pressed="false" data-i18n="home.plan.offers">Offers</button>
     <button type="button" data-home-facet="destination" aria-pressed="false" data-i18n="home.plan.destinations">Destinations</button>
-    <button type="button" data-home-facet="hotel" aria-pressed="false" data-i18n="home.tabs.hotels">Hotels</button>
+      <button type="button" data-home-facet="hotel" aria-pressed="false" data-i18n="home.tabs.hotels">Hotels</button>
+    </div>
+    <button type="button" class="home-text-button home-map-link" data-route-key="destinations" data-i18n="home.plan.map">Explore the map</button>
   </div>
   <div class="home-discovery-grid" id="mixed-feed"></div>
   <p id="home-discovery-status" class="home-visually-hidden" aria-live="polite"></p>
 </section>
 
 <section class="content-section home-explore" id="home-explore" aria-labelledby="explore-title">
-  <div>
+  <div class="home-explore-copy">
     <h2 id="explore-title" data-i18n="home.plan.explore">Explore anywhere</h2>
     <p data-i18n="home.plan.exploreCopy">Choose when and how you’d like to travel. Pick an idea, then check prices for your dates and travelers.</p>
   </div>
   <form class="home-explore-form" id="explore-form">
     <div class="field airport-field">
       <label for="explore-origin" data-i18n="home.fields.departureAirport">Departure airport</label>
-      <input id="explore-origin" autocomplete="off" data-i18n-placeholder="home.placeholders.airport" placeholder="City, airport, IATA or ICAO" required>
+      <input id="explore-origin" autocomplete="off" data-i18n-placeholder="home.plan.airportPlaceholder" placeholder="City or airport" required>
       <input type="hidden" id="explore-origin-iata">
       <div class="airport-suggestions" id="explore-origin-suggestions" role="listbox"></div>
     </div>
