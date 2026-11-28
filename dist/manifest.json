@@ -93,8 +93,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
       "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "8a32dec87de4597ab798cf873910f1e49135465a426e18b7a7f4372a96ff6305",
-      "bytes": 446161
+      "sha256": "2d0e96cdff235eaeb5015fe1a8c419102d01071573a0bff818c072e553a67915",
+      "bytes": 446233
     },
     {
       "key": "search",
@@ -778,8 +778,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "0dbecc30780fa704360bba365cd699c38f119479eec6499d17564c364f2bf447",
-      "bytes": 313126
+      "sha256": "e4af636cb1177a4ef01be8fee9311eec2d413687c79ebb6615b22642c8cf4265",
+      "bytes": 312757
     },
     {
       "key": "travelInfo",
@@ -819,12 +819,15 @@
       ],
       "messages": [
         "ACTIVITY",
+        "AIRLINE",
+        "AIRPORT",
         "AIRPORT_CONTEXT",
         "ALEXANDRA_MESSAGE",
         "ALEXANDRA_RESET",
         "ALEXANDRA_RESPONSE",
         "DESTINATION",
         "EXPERIENCE",
+        "HERO",
         "HOTEL",
         "MASTER_NAVIGATE",
         "PASSPORT",
@@ -873,8 +876,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "39c6a2761651f36045de2d7eb30e12c348a00d1c4075cfe16435f931b9cc04d3",
-      "bytes": 551267
+      "sha256": "cd4819261e69bb58808af13a39d88fc3da760fc1ba6e2a5078f2a5518edc86d8",
+      "bytes": 559834
     },
     {
       "key": "transfers",
@@ -1233,8 +1236,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/about/skandi-about.receiver.html",
       "receiverFile": "skandi-embeds/about/skandi-about.receiver.html",
-      "sha256": "26f246dc7bd90ab921be4b3f24fdf2128aba898bbe7a854557ed5acf57fe63e5",
-      "bytes": 243596
+      "sha256": "174b9884891d48708258aef39d527e061dd612f16413abb26c66fe840248103a",
+      "bytes": 243745
     },
     {
       "key": "support",
@@ -2628,8 +2631,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "53c02a87363a82c58fed184de9490e45f3100ce490e3d7db7e668cfb8988f71d",
-      "bytes": 404521
+      "sha256": "0d177b992fa4f57c84c09a231943303635877700937aed7f8c9761da6f1e6b7c",
+      "bytes": 414702
     },
     {
       "key": "uniformCenter",
@@ -4418,8 +4421,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
       "receiverFile": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
-      "sha256": "d501f028b5d0fe7b50f88dd331249c9c3888b2e2d7a3aec08d7459d8e0e00182",
-      "bytes": 206291
+      "sha256": "8de0b0778924e6ced7730bb6baabd4e5e4eec9086dbadca9c7882907e220dca7",
+      "bytes": 207457
     },
     {
       "key": "travelInsurance",

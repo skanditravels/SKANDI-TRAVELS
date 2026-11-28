@@ -4345,7 +4345,7 @@ function closeSearch(){
   el.searchLayer.classList.remove("open");el.searchLayer.inert=true;el.searchLayer.setAttribute("aria-hidden","true");
   state.searchTrigger?.focus();
 }
-function placeType(type){return {country:"Country",region:"Region",destination:"Destination",area:"Area",hotel:"Hotel",collection:"Collection",airport:"Airport",airline:"Airline",route:"Route"}[type]}
+function placeType(type){return {country:"Country",state:"State",region:"Region",city:"City",destination:"Destination",area:"Area",hotel:"Hotel",collection:"Collection",airport:"Airport",airline:"Airline",route:"Route"}[type]}
 function renderSearchResults(query=""){
   const tokens=slugify(query).split("-").filter(Boolean);
   const hierarchy=state.model.inventoryHierarchy||[];
@@ -4353,7 +4353,7 @@ function renderSearchResults(query=""){
     ["destination","Places",state.model.destinations,item=>[item.name,item.country,item.region,item.iata,item.slug]],
     ["collection","Collection hotels",state.model.hotels,item=>[item.name,item.city,item.country,item.area]],
     ["hotel","Hotels",hierarchy.filter(row=>row.path&&row.type==="HOTEL"&&!state.model.hotels.some(h=>h.detailPath===row.path||h.id===row.id)),item=>[item.name,...(item.parentNames||[])]],
-    ["geography","Countries and areas",hierarchy.filter(row=>row.path&&["COUNTRY","REGION","AREA"].includes(row.type)),item=>[item.name,...(item.parentNames||[])]],
+    ["geography","Countries and areas",hierarchy.filter(row=>row.path&&["COUNTRY","STATE","REGION","CITY","AREA"].includes(row.type)),item=>[item.name,...(item.parentNames||[])]],
     ["airport","Airports",state.model.airports,item=>[item.iata,item.icao,item.name,item.city,item.country]],
     ["airline","Airlines",state.model.airlines,item=>[item.iata,item.icao,item.name]],
     ["route","Routes",state.model.routes,item=>[item.fromId,item.toId,routeTitle(item),...item.airlineIds]]
@@ -4408,13 +4408,13 @@ function renderDirectory(){
   }
   const byId=new Map();
   hierarchy.forEach(row=>{byId.set(row.id,row);if(row.publicId)byId.set(row.publicId,row)});
-  const types=["COUNTRY","REGION","DESTINATION","AREA"],rank={COUNTRY:4,REGION:3,DESTINATION:2,AREA:1};
-  const selected=state.directorySelection||(state.directorySelection={COUNTRY:"",REGION:"",DESTINATION:"",AREA:""});
+  const types=["COUNTRY","STATE","REGION","CITY","AREA"],rank={COUNTRY:6,STATE:5,REGION:4,DESTINATION:3,CITY:2,AREA:1};
+  const selected=state.directorySelection||(state.directorySelection={});
   function ancestors(row){
     const seen=new Set([row.id]),path=[],queue=[row];
     while(queue.length){
-      const current=queue.shift(),d=current.details||{};
-      const ids=[current.parentId,d.countryId,d.regionId,d.destinationId,d.areaId,...(current.relations||[]).map(r=>r.id)];
+      const current=queue.shift();
+      const ids=[current.parentId];
       for(const id of ids){
         const parent=byId.get(id);
         if(!parent||seen.has(parent.id)||(rank[parent.type]||0)<=(rank[current.type]||0))continue;
@@ -4425,17 +4425,15 @@ function renderDirectory(){
   }
   const under=(row,id)=>!id||row.id===id||ancestors(row).some(place=>place.id===id);
   const filters=document.createElement("div");filters.className="directory-filters";
-  const country=byId.get(selected.COUNTRY);
-  const isUS=["US","USA","UNITED STATES","UNITED STATES OF AMERICA"].includes(String(country?.code||country?.name||"").toUpperCase());
   types.forEach((type,index)=>{
     const label=document.createElement("label"),name=document.createElement("span"),select=document.createElement("select");
-    name.textContent=type==="REGION"&&isUS?"State":placeType(type.toLowerCase());
+    name.textContent=placeType(type.toLowerCase());
     select.setAttribute("aria-label",name.textContent);
-    select.append(new Option(index===0?"All countries":index===1?(isUS?"All states":"All regions"):index===2?"All destinations":"All areas",""));
+    select.append(new Option(["All countries","All states","All regions","All cities","All areas"][index],""));
     const options=hierarchy.filter(row=>row.type===type&&types.slice(0,index).every(t=>under(row,selected[t])))
       .sort((a,b)=>a.name.localeCompare(b.name));
     options.forEach(row=>select.append(new Option(row.name,row.id)));
-    select.value=selected[type];select.disabled=!options.length;
+    select.value=selected[type]||"";select.disabled=!options.length;
     select.addEventListener("change",()=>{
       selected[type]=select.value;types.slice(index+1).forEach(t=>selected[t]="");
       renderDirectory();
@@ -4451,7 +4449,7 @@ function renderDirectory(){
   for(const row of choices){
     const button=document.createElement("button");button.type="button";button.className="directory-link";
     const name=document.createElement("strong");name.textContent=row.name;
-    const type=document.createElement("span");type.className="result-type";type.textContent=row.type==="REGION"&&isUS?"State":placeType(row.type.toLowerCase());
+    const type=document.createElement("span");type.className="result-type";type.textContent=placeType(row.type.toLowerCase());
     button.append(name,type);
     button.addEventListener("click",()=>{
       closeSearch();

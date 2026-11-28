@@ -7144,7 +7144,7 @@ function destinationOptions(requireAirport = false) {
     const value = String(item.destinationCode || item.code || item.slug || "");
     const iata = String(item.iata || "").toUpperCase();
     const title = item.title || item.name || "";
-    if (!["DESTINATION","AREA"].includes(type) || !value || !title || (requireAirport && !/^[A-Z]{3}$/.test(iata))) return [];
+    if (!["CITY","DESTINATION","AREA"].includes(type) || !value || !title || (requireAirport && !/^[A-Z]{3}$/.test(iata))) return [];
     const country = locationCountry(item.country);
     return [{
       type, value, iata, title, country,
@@ -7156,7 +7156,7 @@ function destinationOptions(requireAirport = false) {
 }
 function scoreLocationOption(item,query){
   const q=normalizeSearchText(query);
-  if(!q)return item.type==="DESTINATION"||item.type==="AREA"?600:400;
+  if(!q)return ["CITY","DESTINATION","AREA"].includes(item.type)?600:400;
   const bracketed=String(query||"").match(/\(([A-Za-z]{3})\)/);
   if(bracketed && [item.iata,item.value].some(value=>String(value||"").toUpperCase()===bracketed[1].toUpperCase()))return 1300;
   const compact=q.replace(/\s+/g,"");
@@ -7169,7 +7169,7 @@ function scoreLocationOption(item,query){
     else if(value.includes(q))best=Math.max(best,620);
     else if(q.split(" ").filter(Boolean).length>1&&q.split(" ").filter(Boolean).every(term=>value.includes(term)))best=Math.max(best,560);
   }
-  if(best>=0&&(item.type==="DESTINATION"||item.type==="AREA"))best+=25;
+  if(best>=0&&(["CITY","DESTINATION","AREA"].includes(item.type)))best+=25;
   return best;
 }
 function setupLocationSearch({inputId,valueId,boxId,kind,iataId="",typeId=""}){
@@ -7499,6 +7499,7 @@ function renderBootstrap(payload={}){
 
 const DISCOVERY_CATEGORIES = Object.freeze({
   DESTINATION:"home.plan.destinations",
+  CITY:"home.plan.destinations",
   AREA:"home.plan.resorts",
   COUNTRY:"home.plan.countries",
   HOTEL:"home.tabs.hotels",
@@ -7547,7 +7548,7 @@ function discoveryPrice(item, kind) {
     : [skandiTranslate("home.plan.recentEstimate")];
   quoteBasis.push(skandiInterpolate("home.plan.guestCount",{n:guests}));
   const basis = [formatDate(from)+" – "+formatDate(to), quoteBasis.join(" · ")];
-  if (["DESTINATION","AREA","COUNTRY"].includes(kind) && isStay && item.liveAccommodationName) basis.push(item.liveAccommodationName);
+  if (["CITY","DESTINATION","AREA","COUNTRY"].includes(kind) && isStay && item.liveAccommodationName) basis.push(item.liveAccommodationName);
   if (!isStay && period.origin && period.destination) basis.push(period.origin+" → "+period.destination);
   return `<p class="home-price"><strong>${esc(skandiTranslate("home.card.from"))} ${esc(formatCurrencyAmount(price,item.currency))}</strong><span>${esc(basis.join(" · "))}</span></p>`;
 }
@@ -8066,7 +8067,7 @@ function boot(){
     ensureLocationSelection("hol-from-search");ensureLocationSelection("hol-destination-search");
     const origin=$("hol-from-iata").value,destination=$("hol-destination-iata").value;
     if(!origin||!destination)return showInlineStatus(skandiTranslate("home.status.selectPackageRoute"),true);
-    const places = destinationOptions(true).filter(place=>place.iata===origin && place.type==="DESTINATION");
+    const places = destinationOptions(true).filter(place=>place.iata===origin && ["CITY","DESTINATION"].includes(place.type));
     if (places.length !== 1) {
       $("hol-destination-search").focus();
       return showInlineStatus(skandiTranslate("home.plan.swapUnavailable"), true);

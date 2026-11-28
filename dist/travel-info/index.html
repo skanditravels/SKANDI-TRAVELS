@@ -5020,6 +5020,15 @@ html.ti-lock #skandi-app-root,html.ti-lock body #skandi-app-root{overflow:hidden
   #skandi-app-root .ti-airport-guide .ti-guide-tabs button .ti-icon { width: 14px; height: 14px; }
 }
 
+#skandi-app-root .ti-brand-images{display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;overflow:hidden;min-width:0;width:100%;height:100%}
+#skandi-app-root .ti-brand-images>*{flex:1 1 0;min-width:0;text-align:center}
+#skandi-app-root .ti-brand-images img{width:0;max-width:100%;height:100%;max-height:72px;object-fit:contain}
+#skandi-app-root .ti-airline-header>.ti-brand-images{width:min(100%,220px);height:66px}
+#skandi-app-root .ti-guide-result-media>.ti-brand-images img{padding:0}
+#skandi-app-root .ti-topic-picker{display:grid;gap:6px;max-width:430px;margin:12px 0;color:inherit}
+#skandi-app-root .ti-topic-picker select{width:100%;min-height:44px;padding:8px;border:1px solid #b8c9d8;border-radius:6px;background:#fff;color:#10294a}
+#skandi-app-root #tiTopicReferenceResult{display:grid;gap:8px}
+
 #skandi-app-root .flight-board-shell.airport-fids-screen {
   --board-frame: #070a24;
   --board-header: #0b1047;
@@ -7703,13 +7712,28 @@ const LIBRARIES=[
   {key:"tickets",title:"Tickets & Vouchers",short:"Tickets",icon:"ticket"}
 ];
 function libraryDef(key){return LIBRARIES.find(x=>x.key===key)}
-function itemsFor(key){return key==="faq"?arr(DATA.helpCenter?.topics):key==="articles"?arr(DATA.articles):arr(DATA[key])}
-function itemTitle(x){return formatTextValue(x?.name??x?.title??x?.shortName??x?.code??x?.iataCode??x?.iata)||"Untitled"}
+function itemsFor(key){
+  if(key==="faq")return arr(DATA.helpCenter?.topics);
+  if(key==="articles")return arr(DATA.articles);
+  if(key==="airlines")return arr(DATA.airlines).filter(item=>!item.displayGroup||item.displayGroup.id===item.id);
+  return arr(DATA[key]);
+}
+function itemTitle(x){return formatTextValue(x?.displayGroup?.name??x?.name??x?.title??x?.shortName??x?.code??x?.iataCode??x?.iata)||"Untitled"}
 function itemSummary(x){return formatTextValue(x?.summary??x?.subtitle??x?.description??x?.excerpt??x?.body??x?.information??x?.city??x?.country??"")}
 function itemLogoUrl(x){return safeExternal(text(x?.logo||x?.logoIcon||x?.logoUrl||x?.logoIconUrl||""))}
 function itemHeroUrl(x){return safeExternal(text(x?.heroImage||x?.heroImageUrl||x?.image||x?.image_url||x?.imageUrl||""))}
 function itemImage(x){return itemHeroUrl(x)||itemLogoUrl(x)}
+function directoryCode(x){return x?.displayGroup?.codes?.join(" / ")||itemCode(x)}
 function itemCode(x){return text(x?.iataCode||x?.iata||x?.code||x?.icaoCode||x?.icao||"")}
+function airlineBrandHtml(item,placement){
+  const group=item.displayGroup;
+  const sources=placement==="thumbnail"?group?.thumbnails:group?.logos;
+  if(!sources?.length)return "";
+  return `<span class="ti-brand-images">${sources.map((source,index)=>{
+    const url=safeExternal(source);
+    return url?`<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:`<span>${esc(group.codes[index]||"")}</span>`;
+  }).join("")}</span>`;
+}
 function directoryImageUrl(x){
   return ["airlines","airports"].includes(x._library)?safeExternal(x.logoIcon)||itemLogoUrl(x):safeExternal(x.thumbnail)||safeExternal(x.image)||itemHeroUrl(x);
 }
@@ -7720,7 +7744,7 @@ function searchKey(value){
   return text(value).normalize("NFD").replace(/\p{Diacritic}/gu,"").toLowerCase().replace(/[–—_.-]+/g," ").replace(/\s+/g," ").trim();
 }
 function contentSearchText(x){
-  return searchKey([itemTitle(x),itemCode(x),x?.icaoCode,x?.icao,x?.city,x?.country,x?.summary,x?.subtitle,x?.description,x?.excerpt,x?.body,x?.category,x?.destination,x?.tags,x?.meetingPoint,x?.fromLocation,x?.toLocation].flat().join(" "));
+  return searchKey([itemTitle(x),directoryCode(x),x?.icaoCode,x?.icao,x?.city,x?.country,x?.summary,x?.subtitle,x?.description,x?.excerpt,x?.body,x?.category,x?.destination,x?.tags,x?.meetingPoint,x?.fromLocation,x?.toLocation].flat().join(" "));
 }
 function normalizeContentItem(item,library){return {...item,_library:library,_search:contentSearchText(item)}}
 function isSpecialAssistanceContent(x){
@@ -7810,7 +7834,7 @@ function directoryRows(){
     (Number(a.sortOrder)||100)-(Number(b.sortOrder)||100)||itemTitle(a).localeCompare(itemTitle(b)));
 }
 function directoryMeta(item){
-  const code=["airlines","airports"].includes(item._library)?itemCode(item):"";
+  const code=["airlines","airports"].includes(item._library)?directoryCode(item):"";
   return uniq([code,item.city,item.country].map(text).filter(Boolean)).join(" · ");
 }
 function renderDirectory(){
@@ -7829,7 +7853,7 @@ function renderDirectory(){
     const definition=libraryDef(item._library);
     const meta=directoryMeta(item);
     const subtitle=item._library==="faq"||item._library==="articles"?text(item.subtitle||item.excerpt):"";
-    return `<button class="ti-guide-result" type="button" data-directory-index="${i}" aria-label="Open ${esc(itemTitle(item))}"><span class="ti-guide-result-media${url&&isLogo?" is-logo":""}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:icon(definition?.icon||"help")}</span><span class="ti-guide-result-title"><strong>${esc(itemTitle(item))}</strong>${meta||subtitle?`<small>${esc((meta||subtitle).slice(0,180))}</small>`:""}</span><span aria-hidden="true">${icon("chevron")}</span></button>`;
+    return `<button class="ti-guide-result" type="button" data-directory-index="${i}" aria-label="Open ${esc(itemTitle(item))}"><span class="ti-guide-result-media${url&&isLogo?" is-logo":""}" aria-hidden="true">${airlineBrandHtml(item,"thumbnail")||(url?`<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:icon(definition?.icon||"help"))}</span><span class="ti-guide-result-title"><strong>${esc(itemTitle(item))}</strong>${meta||subtitle?`<small>${esc((meta||subtitle).slice(0,180))}</small>`:""}</span><span aria-hidden="true">${icon("chevron")}</span></button>`;
   }).join("");
   host.querySelectorAll("[data-directory-index]").forEach(button=>button.addEventListener("click",()=>openDetail(visible[Number(button.dataset.directoryIndex)],button)));
   if(remaining)$("tiLoadMore").textContent=`Show ${Math.min(PAGE_SIZE,remaining)} more`;
@@ -9084,30 +9108,121 @@ function airlineLounges(value){
   })));
   return airlineDisclosure("Airport lounges",entries.length?entries:data);
 }
+const AIRLINE_TOPICS={
+  baggage:["Baggage","baggage"],
+  "check-in":["Check-in & boarding","checkInDeadline","boarding"],
+  "food-drink":["Meals & drinks","mealInfo"],
+  "wifi-power":["Wi-Fi & power","wifiInfo"],
+  "seat-cabin":["Seats & cabins","cabins","ticketTypes"],
+  "flight-preview":["On board","cabins","mealInfo","wifiInfo"],
+  "cancellations-delays":["Cancellations & delays","disruption"],
+  "missed-connection":["Disruption support","disruption"],
+  "damaged-baggage":["Damaged baggage","damagedBaggage"],
+  "delayed-baggage":["Delayed or lost baggage","lostBaggage"],
+  "children-infants":["Children, infants & unaccompanied minors","childrenInfants"],
+  "special-assistance":["Special assistance","specialAssistance"],
+  "airline-info":["Airline overview","summary","quickFacts"]
+};
+const REFERENCE_TOPICS={
+  "hotel-checkin":{library:"hotels",fields:[["Check-in & check-out","policies"]]},
+  "hotel-fees":{library:"hotels",fields:[["Policies","policies"],["Before you arrive","important"]]},
+  "room-types":{library:"hotels",fields:[["Rooms","rooms"]]},
+  "hotel-issue":{library:"hotels",fields:[["Property information","summary"]]},
+  "signature-hotels":{library:"hotels",fields:[["Property information","summary"]]},
+  "airport-arrival":{library:"airports",fields:[["Arrival","arrival"],["Terminals","terminals"],["Security","security"]]},
+  "airport-transfer":{library:"transfers",fields:[["Pickup details","transferDetails"]]},
+  "return-transfer":{library:"transfers",fields:[["Pickup details","transferDetails"]]},
+  "excursions":{library:"tours",fields:[["Practical information","practical"],["Itinerary","itinerary"]]},
+  "tickets-documents":{library:"tickets",fields:[["Ticket information","practical"]]}
+};
+const AIRLINE_FIELD_LABELS={
+  checkInDeadline:"Check-in & bag drop",boarding:"Boarding",mealInfo:"Meals & drinks",wifiInfo:"Wi-Fi & power",
+  cabins:"Cabin classes",ticketTypes:"Fare types",disruption:"Cancellations & delays",
+  damagedBaggage:"Damaged baggage",lostBaggage:"Delayed or lost baggage",childrenInfants:"Children & infants",
+  specialAssistance:"Special assistance",summary:"Overview",quickFacts:"Quick facts"
+};
+function policyValue(item,key){
+  const sections=obj(item.sections);
+  const aliases={checkInDeadline:"checkin",mealInfo:"food",wifiInfo:"wifi",specialAssistance:"assistance"};
+  return sections[aliases[key]||key]?.body??sections[aliases[key]||key]??item[key];
+}
+function travelTopicId(item){
+  const input=lower(item.topicId||item.slug||"").replace(/[_ ]+/g,"-");
+  return ({"baggage-allowance":"baggage","flight-check-in":"check-in","in-flight-wi-fi":"wifi-power"})[input]||input;
+}
+function topicReference(item){
+  const topic=travelTopicId(item),airline=AIRLINE_TOPICS[topic];
+  if(airline)return {library:"airlines",fields:airline.slice(1).map(key=>[AIRLINE_FIELD_LABELS[key]||airline[0],key])};
+  return REFERENCE_TOPICS[topic];
+}
+function topicReferencePicker(item){
+  const config=topicReference(item);
+  if(!config||!arr(DATA[config.library]).length)return "";
+  const label={airlines:"Airline",airports:"Airport",hotels:"Hotel",transfers:"Transfer",tours:"Tour",tickets:"Ticket"}[config.library];
+  const rows=arr(DATA[config.library]).slice().sort((a,b)=>itemTitle(a).localeCompare(itemTitle(b)));
+  return guideCard(`${label} information`,`<div class="ti-topic-picker"><label for="tiTopicReference">Select ${label.toLowerCase()==="airline"||label==="Airport"?"an":"a"} ${label.toLowerCase()}</label><select id="tiTopicReference"><option value="">Choose…</option>${rows.map(row=>`<option value="${esc(row.id)}">${esc([config.library==="airlines"?row.name:itemTitle(row),itemCode(row)].filter(Boolean).join(" · "))}</option>`).join("")}</select></div><div id="tiTopicReferenceResult" aria-live="polite"></div>`);
+}
+function bindBaggageFares(root){
+  root.querySelector("#tiAirlineFare")?.addEventListener("change",event=>{
+    root.querySelectorAll("[data-airline-fare]").forEach(row=>{row.hidden=row.dataset.airlineFare!==event.target.value});
+  });
+}
+function bindTopicReference(item,root){
+  const picker=root.querySelector("#tiTopicReference"),result=root.querySelector("#tiTopicReferenceResult");
+  if(!picker||!result)return;
+  const {library,fields}=topicReference(item);
+  picker.addEventListener("change",()=>{
+    const row=arr(DATA[library]).find(entry=>String(entry.id)===picker.value);
+    if(!row){result.replaceChildren();return;}
+    const content=fields.map(([label,key])=>{
+      if(key==="baggage")return airlineBaggage(row);
+      if(key==="checkInDeadline")return airlineCheckIn(policyValue(row,key));
+      const info=policyValue(row,key);
+      const body=key==="cabins"?airlineCabins(info):guideBodyHtml(info);
+      return body?guideCard(label,body):"";
+    }).join("");
+    result.innerHTML=content||'<p class="ti-guide-empty">This information is currently unavailable for your selection.</p>';
+    const link=document.createElement("button");
+    link.className="ti-btn ti-btn-quiet";link.type="button";link.textContent="Open full guide";
+    link.addEventListener("click",()=>openDetail(normalizeContentItem(row,library),STATE.detailReturnFocus));
+    result.append(link);
+    bindBaggageFares(result);
+  });
+}
 function renderAirlineDetail(x){
-  const name=itemTitle(x),code=itemCode(x),logo=itemLogoUrl(x);
+  const name=itemTitle(x),code=directoryCode(x),logo=itemLogoUrl(x);
+  const members=arr(DATA.airlines).filter(item=>x.displayGroup&&item.displayGroup?.id===x.displayGroup.id);
+  const carrier=members.length>1?`<label class="ti-topic-picker" for="tiOperatingAirline">Operating airline<select id="tiOperatingAirline">${members.map(item=>`<option value="${esc(item.id)}"${item.id===x.id?" selected":""}>${esc(item.name)} (${esc(itemCode(item))})</option>`).join("")}</select></label>`:"";
   const sections=obj(x.sections);
   const checkIn=airlineCheckIn(sections.checkin?.body||x.checkInDeadline);
-  const before=`<div class="ti-airline-before">${airlineBaggage(x)}${checkIn}</div>${airlineDisclosure("Boarding",sections.boarding?.body||x.boarding)}${airlineLounges(x.lounges)}${airlineDisclosure("Travel with children",x.childrenInfants)}`;
+  const before=`<div class="ti-airline-before">${airlineBaggage(x)}${checkIn}</div>${airlineDisclosure("Boarding",sections.boarding?.body||x.boarding)}${airlineLounges(x.lounges)}${airlineDisclosure("Travel with children",x.childrenInfants)}${airlineDisclosure("Special assistance",x.specialAssistance)}`;
   const cabinList=airlineCabins(sections.cabins?.body||x.cabins);
   const inFlight=`${cabinList?`<section class="ti-airline-card"><h2>Cabin classes</h2>${cabinList}</section>`:""}${airlineDisclosure("Meals & drinks",sections.food?.body||x.mealInfo)}${airlineDisclosure("Wi-Fi",sections.wifi?.body||x.wifiInfo)}${airlineDisclosure("Fare types",x.ticketTypes)}`;
   const fleet=[...new Set(arr(parseStructuredValue(x.fleetSummary)).map(a=>formatTextValue(a?.aircraft||a?.aircraftName||a?.name||a?.title||(typeof a==="string"?a:""))).filter(Boolean))];
   const aircraft=`<section id="tiSec-aircraft" class="ti-airline-aircraft" aria-label="Aircraft walkaround"><div id="onboardReactRoot" class="ti-aircraft-host"></div></section>${fleet.length?`<details class="ti-airline-disclosure"><summary>Fleet list</summary><ul class="ti-airline-cabins">${fleet.map(model=>`<li>${esc(model)}</li>`).join("")}</ul></details>`:""}`;
-  const tabs=[{id:"before",label:"Baggage & check-in",content:before},{id:"onboard",label:"On board",content:inFlight},{id:"aircraft",label:"Walkaround",content:aircraft}].filter(tab=>tab.content);
+  const support=[["Cancellations & delays",x.disruption],["Damaged baggage",x.damagedBaggage],["Delayed or lost baggage",x.lostBaggage],["Quick facts",x.quickFacts],["Sources",x.sourceLinks]]
+    .map(([label,value])=>guideDisclosure(label,guideBodyHtml(value))).join("");
+  const tabs=[{id:"before",label:"Baggage & check-in",content:before},{id:"onboard",label:"On board",content:inFlight},{id:"aircraft",label:"Walkaround",content:aircraft},{id:"support",label:"Support & sources",content:support}].filter(tab=>tab.content);
   const active=tabs.some(tab=>tab.id===STATE.activeAirlineTab)?STATE.activeAirlineTab:"before";
   const links=[["Airline website",x.website],["Contact airline",x.contactUrl],[x.loyaltyProgram||"Loyalty program",x.loyaltyProgramUrl]];
   const seen=new Set();
   $("tiDetailMount").innerHTML=`<div class="ti-airline-guide">
     <header class="ti-airline-header">
-      ${logo?`<img class="ti-airline-logo" src="${esc(logo)}" alt="" referrerpolicy="no-referrer">`:""}
+      ${airlineBrandHtml(x,"logo")||(logo?`<img class="ti-airline-logo" src="${esc(logo)}" alt="" referrerpolicy="no-referrer">`:"")}
       <div><h1>${esc(name)}</h1>${code?`<span class="ti-airline-code">${esc(code)}</span>`:""}</div>
       <div class="ti-airline-links">${links.map(([label,url])=>{const href=safeExternal(url);if(!href||seen.has(href))return "";seen.add(href);return `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(label)} ${icon("external")}</a>`}).join("")}</div>
     </header>
+    ${carrier}
     <div class="ti-section-nav-wrap"><nav class="ti-section-nav" data-mode="airline-tabs" role="tablist" aria-label="${esc(name)} travel information">${tabs.map(tab=>`<button id="tiAirlineTab-${tab.id}" class="ti-section-link" type="button" role="tab" data-airline-tab="${tab.id}" aria-controls="tiAirlinePanel-${tab.id}" aria-selected="${tab.id===active}" tabindex="${tab.id===active?0:-1}">${esc(tab.label)}</button>`).join("")}</nav></div>
     ${tabs.map(tab=>`<div id="tiAirlinePanel-${tab.id}" class="ti-airline-panel" data-airline-panel="${tab.id}" role="tabpanel" aria-labelledby="tiAirlineTab-${tab.id}"${tab.id===active?"":" hidden"}>${tab.content}</div>`).join("")}
   </div>`;
-  $("tiAirlineFare")?.addEventListener("change",event=>{
-    $("tiDetailMount").querySelectorAll("[data-airline-fare]").forEach(row=>{row.hidden=row.dataset.airlineFare!==event.target.value});
+  bindBaggageFares($("tiDetailMount"));
+  $("tiOperatingAirline")?.addEventListener("change",event=>{
+    const selected=members.find(item=>String(item.id)===event.target.value);
+    if(!selected)return;
+    STATE.activeDetail=normalizeContentItem(selected,"airlines");
+    renderDetail(STATE.activeDetail);
+    $("tiOperatingAirline")?.focus();
   });
   bindDetailInteractions(x);
   activateAirlineTab(active,x,false);
@@ -9192,10 +9307,12 @@ function renderOtherGuide(x){
   const quick=factsHtml(facts);
   const intro=introduction||x.bullets?.length?guideCard(layout?(quick?"About":"Guide"):"Answer",introduction+guideBodyHtml(normalizeBullets(x.bullets))):"";
   const remaining=sections.map(section=>guideSectionHtml(section)).join("");
-  const content=(layout?guideCard(layout.primary,quick):"")+intro+remaining;
+  const baggageLink=travelTopicId(x)==="baggage"
+    ?'<button class="ti-btn ti-btn-quiet" type="button" data-detail-action="compare-baggage">Compare baggage allowances</button>':"";
+  const content=(layout?guideCard(layout.primary,quick):"")+intro+remaining+baggageLink;
   $("tiDetailMount").innerHTML=`<div class="ti-guide">
     ${guideHeaderHtml(x,{subtitle:uniq([x.city,x.country].map(text).filter(Boolean)).join(" · "),showGuide:kind==="hotels"})}
-    <div class="ti-guide-stack">${content||'<p class="ti-guide-empty">There are no published details for this guide. Contact SKANDI for help with your booking.</p>'}</div>
+    <div class="ti-guide-stack">${content||'<p class="ti-guide-empty">There are no published details for this guide. Contact SKANDI for help with your booking.</p>'}${topicReferencePicker(x)}</div>
     ${guideSupportHtml()}
   </div>`;
   bindDetailInteractions(x);
@@ -9210,6 +9327,7 @@ function renderDetail(x){
 
 function bindDetailInteractions(x){
   const root=$("tiDetailMount");if(!root)return;
+  bindTopicReference(x,root);
   root.querySelectorAll("[data-airline-tab]").forEach(btn=>{
     btn.addEventListener("click",()=>activateAirlineTab(btn.dataset.airlineTab,x,true));
     btn.addEventListener("keydown",event=>{if(event.key!=="ArrowRight"&&event.key!=="ArrowLeft"&&event.key!=="Home"&&event.key!=="End")return;const tabs=[...root.querySelectorAll("[data-airline-tab]")];if(!tabs.length)return;event.preventDefault();const index=tabs.indexOf(btn);const next=event.key==="Home"?0:event.key==="End"?tabs.length-1:(index+(event.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;tabs[next].focus();activateAirlineTab(tabs[next].dataset.airlineTab,x,false)})
@@ -9289,7 +9407,11 @@ function tiOpenBaggageFinder() {
 }
 
 function openAction(action){
-  if(action==="baggage")tiOpenBaggageFinder();
+  if(action==="baggage"){
+    const guide=publicHelpTopics().find(item=>travelTopicId(item)==="baggage");
+    if(guide)openDetail(normalizeContentItem(guide,"faq"));else tiOpenBaggageFinder();
+  }
+  else if(action==="compare-baggage")post("TRAVEL_INFO_OPEN_BAGGAGE");
   else if(action==="assistance")post("TRAVEL_INFO_NAVIGATE",{path:"/travel-info/special-assistance"});
   else if(action==="requirements")openOverlay("requirements","Travel requirements","Check passport and entry guidance before departure.",requirementsPanelHtml(),"#tiPassportCountry");
   else if(action==="support")openOverlay("support","Contact Travel Support","Send an itinerary or travel-information question to SKANDI.",supportPanelHtml(),"#tiSupportName");
@@ -9372,7 +9494,13 @@ function findUpdatedDetail(current){
 }
 function loadData(payload){
   clearBootstrapWatchdog();DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();if(STATE.overlayMode==="baggage"){tiUpdateBaggageCabins();tiRenderBaggageFinder()}
-  if(!STATE.initialSectionApplied && payload?.initialSection === "transfers") {STATE.initialSectionApplied=true;setLibrary("transfers",true)}
+  if(!STATE.initialSectionApplied&&payload?.initialSection){
+    STATE.initialSectionApplied=true;
+    setLibrary(payload.initialSection,true);
+    const requested=lower(payload.initialItem);
+    const selected=arr(DATA[payload.initialSection]).find(item=>[item.id,item.slug,itemCode(item)].some(value=>requested&&lower(value)===requested));
+    if(selected)openDetail(normalizeContentItem(selected,payload.initialSection));
+  }
   if(STATE.activeDetail){const updated=findUpdatedDetail(STATE.activeDetail);if(updated){STATE.activeDetail=updated;renderDetail(updated)}else closeDetail()}
 }
 function retryData(){STATE.dataState="loading";setStatus("Refreshing Travel Info…");renderDirectory();armBootstrapWatchdog();post("TRAVEL_INFO_REFRESH",{settings:{language:"EN"}})}
