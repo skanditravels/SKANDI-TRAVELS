@@ -872,8 +872,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "ade2ae072dd59a21245a80102480cade9d927eb8b5d65dd58c8c49e7035efb76",
-      "bytes": 520014
+      "sha256": "551d32c3bca4adb03ff4beb0034f9b930241dbdc7ad25a85519f76e733094e55",
+      "bytes": 520473
     },
     {
       "key": "transfers",

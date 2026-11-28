@@ -7623,9 +7623,13 @@ function tiSwedaviaSecurityHtml(panel,items,copy){
 
 function tiSwedaviaFacilitiesHtml(data,items,copy){
   const contentLanguage=/^[a-z]{2}$/.test(data.providerLanguage)?` lang="${data.providerLanguage}"`:"";
+  const providerLanguage=["nb","nn"].includes(data.providerLanguage)?"no":data.providerLanguage;
+  const providerCopy=SWEDAVIA_COPY[providerLanguage]||copy;
   return tiSwedaviaCards(items,item=>{
-    const access=item.beforeSecurity===true?copy.beforeSecurity:item.beforeSecurity===false?copy.afterSecurity:"";
-    const location=uniq([item.terminal,item.place]).join(" · ");
+    const zone=item.beforeSecurity===true?"beforeSecurity":item.beforeSecurity===false?"afterSecurity":"";
+    const access=zone?copy[zone]:"";
+    const repeated=[access,zone?providerCopy[zone]:""].map(searchKey);
+    const location=uniq([item.terminal,item.place]).filter(value=>!repeated.includes(searchKey(value))).join(" · ");
     return `<h3${contentLanguage}>${esc(item.name)}</h3>
       ${location?`<p${contentLanguage}>${esc(location)}</p>`:""}${access?`<p>${esc(access)}</p>`:""}
       ${item.openingHours?`<p><strong>${esc(copy.hours)}</strong><br><span${contentLanguage}>${esc(item.openingHours)}</span></p>`:""}
@@ -7658,6 +7662,7 @@ function tiSwedaviaOptions(panel,key,label,options,value){
   const markup=options.map(([id,title])=>`<option value="${esc(id)}">${esc(title)}</option>`).join("");
   if(select.innerHTML!==markup)select.innerHTML=markup;
   select.value=value;
+  select.disabled=options.length<=1;
 }
 
 function tiSwedaviaDirectory(panel,scope,data,copy){
@@ -7699,7 +7704,10 @@ function tiSwedaviaDirectory(panel,scope,data,copy){
   const filtered=items.filter(item=>{
     const match=searchKey([item.name,item.city,item.iata,item.place,item.terminal,...arr(item.airlines)].filter(Boolean).join(" "));
     return terms.every(term=>match.includes(term));
-  }).sort((a,b)=>compare(a.city||a.name||a.iata,b.city||b.name||b.iata)||compare(a.iata||a.terminal,b.iata||b.terminal));
+  }).sort((a,b)=>{
+    const namedFirst=services?0:Number(!a.city&&!a.name)-Number(!b.city&&!b.name);
+    return namedFirst||compare(a.city||a.name||a.iata,b.city||b.name||b.iata)||compare(a.iata||a.terminal,b.iata||b.terminal);
+  });
   const slice=filtered.slice(0,filters.limit);
   const more=panel.querySelector("[data-ti-swedavia-more]");
   more.textContent=copy.more;
