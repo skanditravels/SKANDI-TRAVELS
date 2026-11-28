@@ -873,7 +873,7 @@ img,video,svg{max-width:100%}
 }
 
 /* Homepage search and published travel ideas. */
-#skandi-home-content {
+:root {
   --home-ink: #152b45;
   --home-copy: #425668;
   --home-line: #dbe5e7;
@@ -883,7 +883,7 @@ img,video,svg{max-width:100%}
   color: var(--home-ink);
 }
 #tab-header .tab-btn[hidden],
-#skandi-home-content [hidden] { display: none !important; }
+[hidden] { display: none !important; }
 
 #hero-wrap .home-travelers { padding: 0; margin: 0 0 10px; }
 #hero-wrap .home-travelers > summary {
@@ -968,7 +968,7 @@ img,video,svg{max-width:100%}
   text-underline-offset: 4px;
 }
 .home-text-button:hover { text-decoration: underline; }
-#skandi-home-content :is(button, summary, input, select):focus-visible {
+:is(button, summary, input, select):focus-visible {
   outline: 2px solid #087683;
   outline-offset: 2px;
 }
