@@ -215,13 +215,15 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[],
         if(m.type==="DESTINATION_FLOW_READY") {post("DESTINATION_FLOW_HOST_READY",{initialState:flowState,protocolVersion:"V12",routes:{...SITE_MAP,...APP_ROUTES}});return;}
         if(m.type==="DESTINATION_FLOW_REFRESH"){await ensureCatalog(true);jobs.clear();post("DESTINATION_FLOW_SET_STATE",{state:flowState});return;}
         if(m.type==="DESTINATION_FLOW_STATE_CHANGED"){
-          if(!["index","country","destination","area","hotels","hotel"].includes(p.level))return;
-          const next={level:p.level,countrySlug:slug(p.countrySlug),destinationSlug:slug(p.destinationSlug),citySlug:slug(p.citySlug||q.city||outer.citySlug),areaSlug:slug(p.areaSlug),hotelSlug:slug(p.hotelSlug),hotelId:clean(p.hotelId,160)};
+          if(!["index","country","state","region","destination","city","area","hotels","hotel"].includes(p.level))return;
+          const levels=["country","state","region","destination","city","area","hotel"];
+          const next={level:p.level,...Object.fromEntries(levels.map(key=>[key+"Slug",slug(p[key+"Slug"])])),hotelId:clean(p.hotelId,160)};
           if(JSON.stringify(next)!==JSON.stringify(flowState))jobs.clear();
           flowState=next;
-          const query={};for(const [k,v] of [["country",flowState.countrySlug],["destination",flowState.destinationSlug],["area",flowState.areaSlug],["hotel",flowState.hotelSlug],["hotelId",flowState.hotelId]])if(v)query[k]=v;
+          const query=Object.fromEntries(levels.map(key=>[key,flowState[key+"Slug"]]).filter(([,value])=>value));
+          if(flowState.hotelId)query.hotelId=flowState.hotelId;
           if(["hotels","hotel"].includes(p.level))query.view=p.level;
-          const remove=["country","destination","area","hotel","hotelId","view"].filter(k=>!query[k]&&wixLocation.query?.[k]!==undefined);
+          const remove=[...levels,"hotelId","view"].filter(key=>!query[key]&&wixLocation.query?.[key]!==undefined);
           if(remove.length)wixLocation.queryParams?.remove(remove);wixLocation.queryParams?.add(query);return;
         }
         if(m.type==="DESTINATION_FLOW_NAVIGATE_EXTERNAL"){navigate(p.path);return;}

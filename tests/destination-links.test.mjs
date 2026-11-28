@@ -175,3 +175,23 @@ test('Explore resolves optional levels, canonical hotel links and older Florida 
  assert.equal(content.hotelListPage('united-states','','','EN','central-florida','florida','orlando').previewHotels[0].name,'Disney Hotel');
  assert.equal(content.resolveGeography({stateSlug:'florida',regionSlug:'central-florida',citySlug:'miami'}),undefined);
 });
+
+test('the retained Explore bridge updates and clears the full geography query',async()=>{
+ const added=[], removed=[];
+ let receive;
+ const wixLocation={query:{destination:'old-city'},queryParams:{
+  add:query=>added.push(query),remove:keys=>removed.push(keys)
+ }};
+ const embed={id:'destinationFlowEmbed',postMessage(){},onMessage:handler=>{receive=handler}};
+ const context=vm.createContext({
+  ...routes,inventoryCardImage,wixLocation,URLSearchParams,setTimeout,clearTimeout
+ });
+ vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
+ vm.runInContext(withoutImports(await source('src/public/destinationFlowBridge.js')),context);
+ context.bindDestinationFlow(selector=>selector==='#destinationFlowEmbed'?embed:null,'index');
+ const send=(type,payload={})=>receive({data:{source:'SKANDI_DESTINATION_FLOW',type,payload}});
+ await send('DESTINATION_FLOW_READY');
+ await send('DESTINATION_FLOW_STATE_CHANGED',{level:'city',countrySlug:'United States',stateSlug:'Florida',regionSlug:'Central Florida',citySlug:'Orlando'});
+ assert.deepEqual(JSON.parse(JSON.stringify(added.at(-1))),{country:'united-states',state:'florida',region:'central-florida',city:'orlando'});
+ assert.deepEqual(Array.from(removed.at(-1)),['destination']);
+});
