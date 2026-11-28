@@ -3531,13 +3531,13 @@
     },
     {
       "key": "transportCompliance",
-      "route": "/riaintra/success-factors/document-control-1",
+      "route": "/riaintra/success-factors/altea/transport-compliance",
       "slug": "transport-compliance",
       "title": "transportCompliance",
-      "family": "riaintra",
-      "chrome": "riaintra",
+      "family": "altea",
+      "chrome": "altea",
       "mobileNavigation": true,
-      "sourceDirectory": "riaintra-embeds/transport-compliance",
+      "sourceDirectory": "altea-embeds/transport-compliance",
       "stem": "skandi-transport-compliance",
       "controller": null,
       "embedIds": [],
@@ -3547,14 +3547,14 @@
       "requiresStaff": true,
       "status": "PENDING SOURCE",
       "files": [
-        "riaintra-embeds/transport-compliance/skandi-transport-compliance.html",
-        "riaintra-embeds/transport-compliance/skandi-transport-compliance.css",
-        "riaintra-embeds/transport-compliance/skandi-transport-compliance.js"
+        "altea-embeds/transport-compliance/skandi-transport-compliance.html",
+        "altea-embeds/transport-compliance/skandi-transport-compliance.css",
+        "altea-embeds/transport-compliance/skandi-transport-compliance.js"
       ],
       "missing": [
-        "riaintra-embeds/transport-compliance/skandi-transport-compliance.html",
-        "riaintra-embeds/transport-compliance/skandi-transport-compliance.css",
-        "riaintra-embeds/transport-compliance/skandi-transport-compliance.js"
+        "altea-embeds/transport-compliance/skandi-transport-compliance.html",
+        "altea-embeds/transport-compliance/skandi-transport-compliance.css",
+        "altea-embeds/transport-compliance/skandi-transport-compliance.js"
       ],
       "issues": [
         "No verified canonical controller mapping."

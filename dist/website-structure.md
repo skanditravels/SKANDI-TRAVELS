@@ -56,7 +56,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | helpDesk | /riaintra/success-factors/helpdesk | riaintra-embeds/help-desk/skandi-help-desk.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
 | financeControl | /riaintra/success-factors/finance-control | riaintra-embeds/finance-control/skandi-finance-control.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
 | documentControl | /riaintra/success-factors/document-control | riaintra-embeds/document-control/skandi-document-control.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
-| transportCompliance | /riaintra/success-factors/document-control-1 | riaintra-embeds/transport-compliance/skandi-transport-compliance.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| transportCompliance | /riaintra/success-factors/altea/transport-compliance | altea-embeds/transport-compliance/skandi-transport-compliance.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
 | internalPolicies | /riaintra/success-factors/legal-internal/policies-internal | riaintra-embeds/internal-policies/skandi-internal-policies.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
 | infoControl | /riaintra/success-factors/altea/info-control | altea-embeds/info-control/skandi-info-control.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
 | payroll | /riaintra/success-factors/payroll | riaintra-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
