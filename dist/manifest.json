@@ -872,8 +872,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "8f543f8de8bbbdb861c1a4a524242f4a160d08bf03738af63a33d7e9256c3da9",
-      "bytes": 536316
+      "sha256": "c7d3d6ddb3186490e588f12388cd19137abb13c21320d80cf9c026583c03eee4",
+      "bytes": 547810
     },
     {
       "key": "transfers",
@@ -4708,8 +4708,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flight-status/flight-status.receiver.html",
       "receiverFile": "skandi-embeds/flight-status/flight-status.receiver.html",
-      "sha256": "c32f3d021cbb9e54bf58f6cae40b839e9d6c9ca8f42fcd57a6d8184f4fc929e2",
-      "bytes": 369034
+      "sha256": "89b232abd580203beff2de682788b33774f8c0606811488b2746a6a0ae5552eb",
+      "bytes": 371116
     }
   ],
   "globalComponents": {

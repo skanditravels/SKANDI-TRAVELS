@@ -4297,28 +4297,40 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   white-space: normal;
   overflow-wrap: anywhere;
 }
-#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail,
-#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail.fallback {
-  width: 74px;
+#skandi-app-root .flight-board-shell .fids-tail.fids-carrier-mark {
+  width: 100%;
   max-width: 100%;
-  height: 25px;
-  padding: 2px 4px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 0;
   border: 0;
   border-radius: 2px;
   box-shadow: none;
+  background: #c6d7f3;
+  background: color-mix(in srgb, var(--fids-brand-color, #6987ac) 22%, #dbe6f9);
 }
-#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail img {
-  width: auto;
-  height: auto;
+#skandi-app-root .flight-board-shell .fids-carrier-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
-#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail.fallback {
-  background: #edf2ff;
-  color: var(--board-header);
+#skandi-app-root .flight-board-shell .fids-carrier-mark.is-light-mark {
+  background: var(--fids-brand-color, #022e64);
+}
+#skandi-app-root .flight-board-shell .fids-carrier-mark.is-light-mark img { mix-blend-mode: normal; }
+#skandi-app-root .flight-board-shell .fids-carrier-mark.fallback {
+  background: #284777;
+  color: #f3f7ff;
   font: 750 .82rem var(--board-mono);
 }
+#skandi-app-root .flight-board-shell .fids-carrier-mark [hidden] { display: none; }
 #skandi-app-root .flight-board-shell.airport-fids-screen .fids-gate {
   display: inline;
   min-width: 0;
@@ -6517,6 +6529,43 @@ const airportFids = (() => {
     en: { departed: "Departed", landed: "Landed", cancelled: "Cancelled", diverted: "Diverted" },
     sv: { departed: "Avgått", landed: "Landat", cancelled: "Inställt", diverted: "Omdirigerat" }
   };
+  const lightFallbacks = new Set(["AS", "DL", "F9", "B6", "DY", "D8", "SK", "LX", "UA"]);
+  const fallbackColors = { DY: "#d81939", D8: "#d81939", SK: "#1d4ed8" };
+  const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[char]);
+
+  function carrier({ code, name, logo, fallbackLogo, color }) {
+    const iataCode = String(code || "").toUpperCase();
+    const src = logo || fallbackLogo;
+    const light = Boolean(src && src === fallbackLogo && lightFallbacks.has(iataCode));
+    const backup = src !== fallbackLogo ? fallbackLogo : "";
+    const background = /^#[0-9a-f]{6}$/i.test(color || "") ? color : fallbackColors[iataCode] || "";
+    return `<div class="fids-carrier" title="${escape(name)}"><span class="fids-tail fids-carrier-mark${src ? "" : " fallback"}${light ? " is-light-mark" : ""}"${background ? ` style="--fids-brand-color:${background}"` : ""}>
+      ${src ? `<img src="${escape(src)}" alt="${escape(name)}" decoding="async"${backup ? ` data-fids-logo-backup="${escape(backup)}" data-fids-backup-light="${lightFallbacks.has(iataCode)}"` : ""}>` : ""}
+      <span class="fids-logo-fallback"${src ? " hidden" : ""}>${escape(iataCode || "—")}</span>
+    </span><span class="fids-carrier-name">${escape(name)}</span></div>`;
+  }
+
+  function bindCarrierImages(root) {
+    root.querySelectorAll(".fids-carrier-mark img").forEach(image => {
+      const failed = () => {
+        const tile = image.parentElement;
+        const backup = image.dataset.fidsLogoBackup;
+        if (backup) {
+          delete image.dataset.fidsLogoBackup;
+          tile.classList.toggle("is-light-mark", image.dataset.fidsBackupLight === "true");
+          image.src = backup;
+          return;
+        }
+        image.remove();
+        tile.classList.add("fallback");
+        tile.querySelector(".fids-logo-fallback").hidden = false;
+      };
+      image.addEventListener("error", failed);
+      if (image.complete && image.naturalWidth === 0) failed();
+    });
+  }
 
   function locale(value) {
     const code = String(value || "").trim().toLowerCase().split(/[-_]/)[0];
@@ -6563,7 +6612,7 @@ const airportFids = (() => {
     return { message, tone };
   }
 
-  return { columns, iata, labels, locale, officialStatus };
+  return { columns, iata, labels, locale, officialStatus, carrier, bindCarrierImages };
 })();
 
 const SOURCE = "SKANDI_FLIGHT_STATUS";
@@ -7364,9 +7413,9 @@ function render(items, meta) {
     const activeFlightNo = (displayOperating && item.operatingFlightIata) || item.flightIata || item.flightIcao;
     
     const rules = lastFlightMeta.boardingRules || {};
-    const carrierName = rules[activeAirline]?.name || item.airlineName || activeAirline;
-    const canonicalLogo = safeUrl(displayOperating ? item.operatingAirlineLogoUrl || item.airlineLogoUrl : item.airlineLogoUrl);
-    const logoUrl = canonicalLogo || KNOWN_AIRLINE_LOGOS[activeAirline] || "";
+    const separateOperatingCarrier = displayOperating && activeAirline !== item.airlineIata;
+    const carrierName = rules[activeAirline]?.name || (separateOperatingCarrier ? item.operatingAirlineName : item.airlineName) || activeAirline || "Airline";
+    const canonicalLogo = safeUrl(separateOperatingCarrier ? item.operatingAirlineLogoUrl : item.airlineLogoUrl);
 
     // Safely fetch city tracking values out of the schema models without duplication loops
     const publishedPlace = boardLanguage === "sv" ? destination?.airportSv || destination?.airport : destination?.airport || destination?.airportSv;
@@ -7416,13 +7465,10 @@ function render(items, meta) {
     const codeshareLabel = codeshares.length ? codeshares.join(", ") : "No codeshare";
     const displayCodeshare = codeshares.length ? codeshares[codeshareIndex % codeshares.length] : "—";
     const cells = {
-      airline: `<div class="fids-carrier" title="${escapeHtml(carrierName)}">
-        <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
-          <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
-          ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
-        </span>
-        <span class="fids-carrier-name">${escapeHtml(carrierName)}</span>
-      </div>`,
+      airline: airportFids.carrier({
+        code: activeAirline, name: carrierName, logo: canonicalLogo, fallbackLogo: KNOWN_AIRLINE_LOGOS[activeAirline],
+        color: separateOperatingCarrier ? item.operatingAirlineColor : item.airlineColor
+      }),
       flight: `<div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong></div>`,
       time: `<div class="fids-time"><strong class="fids-time-main">${escapeHtml(timeDisplayValue)}</strong></div>`,
       place: `<div class="fids-destination"><strong>${cleanDestinationLabel}</strong></div>`,
@@ -7475,9 +7521,7 @@ function render(items, meta) {
     });
   }
 
-  rows.querySelectorAll(".fids-tail img").forEach(img => img.addEventListener("error", () => {
-    img.hidden = true; img.parentElement.classList.add("fallback"); img.parentElement.querySelector(".fids-logo-fallback").hidden = false;
-  }, { once: true }));
+  airportFids.bindCarrierImages(rows);
   
   el("boardMeta").textContent = boardMeta || `Displaying ${sorted.length} flights`;
   setStatusLabels(updated ? `Updated ${updated}` : "Updated", `${sorted.length} ${sorted.length === 1 ? "Flight" : "Flights"}`);
