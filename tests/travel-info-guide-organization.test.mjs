@@ -115,6 +115,7 @@ test('airport guide groups terminals, transport and services with the existing a
   };
   const {get,open,receive,messages,errors}=setup(t,{airports:[airport]});
   open('airports','Kennedy Airport');
+  assert.equal(get('[data-ti-swedavia]'),null);
   assert.equal(get('[data-airport-tab="overview"]').textContent,'Terminals & check-in');
   assert.equal(get('[data-airport-panel="overview"] h2').textContent,'Terminals');
   const request=messages.find(m=>m.type==='TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST');
@@ -129,5 +130,80 @@ test('airport guide groups terminals, transport and services with the existing a
   assert.equal(messages.at(-1).type,'TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST');
   assert.equal(messages.at(-1).payload.boardType,'arrivals');
   assert.equal(get('#tiAirportPlaceHeader').textContent,'From');
+  assert.deepEqual(errors,[]);
+});
+
+test('Swedavia panels request only open sections, localize labels and protect wait times',async t=>{
+  const airports=[
+    {id:'ARN',title:'Stockholm Arlanda Airport',iata:'ARN',terminals:[{name:'Terminal 5'}]},
+    {id:'LLA',title:'Luleå Airport',iata:'LLA'}
+  ];
+  const {w,get,open,receive,messages,errors}=setup(t,{airports});
+  const queries=()=>messages.filter(m=>m.type==='TRAVEL_INFO_SWEDAVIA_REQUEST');
+  const settle=()=>new Promise(resolve=>w.setTimeout(resolve,0));
+  async function reveal(scope){
+    const panel=get('[data-ti-swedavia="'+scope+'"]');
+    panel.querySelector('summary').click();
+    await settle();
+    assert.equal(panel.open,true);
+    assert.equal(queries().at(-1)?.payload.scope,scope);
+    return panel;
+  }
+  function reply(payload){
+    receive('TRAVEL_INFO_SWEDAVIA_RESULT',{...queries().at(-1).payload,status:'ready',...payload});
+  }
+  open('airports','Stockholm Arlanda Airport');
+  assert.equal(queries().length,0);
+  const security=await reveal('security');
+  const measuredAt=new Date().toISOString();
+  reply({requestId:'old-request',items:[{name:'Wrong airport or request'}]});
+  assert.doesNotMatch(security.textContent,/Wrong airport/);
+  reply({items:[
+    {name:'Security T5',terminal:'T5',fastTrack:false,minutes:0,measuredAt,validUntil:Date.now()+300_000},
+    {name:'Fast track',fastTrack:true,minutes:90,overflow:true,measuredAt,validUntil:Date.now()+300_000},
+    {name:'Stale line',minutes:80,measuredAt,validUntil:Date.now()-1000}
+  ]});
+  assert.match(security.textContent,/0\s+min/);
+  assert.match(security.textContent,/Queue exceeds the monitored area/);
+  assert.match(security.textContent,/Reading out of date/);
+  assert.doesNotMatch(security.textContent,/(90|80)\s+min/);
+  assert.equal(security.querySelectorAll('time').length,1);
+
+  receive('SKANDI_MASTER_CONFIG',{settings:{language:'SV'}});
+  assert.match(security.textContent,/Väntetider i säkerhetskontrollen/);
+  assert.equal(queries().length,1);
+  get('[data-airport-tab="services"]').click();
+  const dining=await reveal('services');
+  assert.equal(queries().at(-1).payload.language,'sv');
+  reply({
+    providerLanguage:'en',
+    groups:{
+      restaurants:{status:'ready',items:[{name:'Terminal café',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>'}]},
+      shops:{status:'unavailable'},
+      services:{status:'ready',items:[]}
+    }
+  });
+  const restaurant=dining.querySelector('[data-ti-swedavia-group="restaurants"]');
+  assert.match(restaurant.textContent,/Terminal café.*Efter säkerhetskontrollen.*Öppettider.*06:00–21:00/s);
+  assert.equal(restaurant.querySelector('h3').getAttribute('lang'),'en');
+  assert.equal(restaurant.querySelector('script'),null);
+  assert.match(dining.querySelector('[data-ti-swedavia-group="shops"]').textContent,/tillfälligt otillgänglig/);
+
+  const routes=await reveal('routes');
+  reply({items:[{iata:'CPH',airlines:['SAS']}]});
+  assert.match(routes.textContent,/CPH.*SAS/s);
+  get('[data-airport-tab="transport"]').click();
+  const parking=await reveal('parking');
+  reply({status:'unavailable'});
+  assert.match(parking.textContent,/tillfälligt otillgänglig/);
+  parking.querySelector('[data-ti-swedavia-refresh]').click();
+  reply({bookingUrl:'https://www.swedavia.se/parkering/',items:[{name:'P1'}]});
+  assert.equal(parking.querySelector('a').href,'https://www.swedavia.se/parkering/');
+  assert.match(parking.textContent,/P1/);
+
+  get('#tiBack').click();
+  open('airports','Luleå Airport');
+  assert.equal(get('[data-ti-swedavia="security"]'),null);
+  assert.ok(get('[data-ti-swedavia="services"]'));
   assert.deepEqual(errors,[]);
 });

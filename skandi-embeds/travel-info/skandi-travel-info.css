@@ -3539,6 +3539,75 @@ body{background:#fff;color:var(--hybrid-text)}
 .ti-guide-detail-help{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 0}
 .ti-guide :focus-visible,.ti-find :focus-visible,.ti-guide-directory :focus-visible{outline:3px solid #1480a2;outline-offset:2px}
 .ti-airport-guide{padding-bottom:0}
+.ti-swedavia{background:#f7fafc}
+.ti-swedavia-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));
+  gap:10px;
+  padding:0;
+  margin:0;
+  list-style:none;
+}
+.ti-swedavia-grid li{
+  display:grid;
+  align-content:start;
+  gap:6px;
+  min-width:0;
+  padding:12px 14px;
+  border:1px solid #dbe6ed;
+  border-radius:8px;
+  background:#fff;
+}
+.ti-swedavia-grid h3,.ti-swedavia-grid p,.ti-swedavia-message{
+  margin:0;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.ti-swedavia-grid h3{font-size:.98rem;color:var(--ti-navy)}
+.ti-swedavia-grid p,.ti-swedavia-grid small,.ti-swedavia-message{
+  font-size:.9rem;
+  color:#465c72;
+  white-space:pre-line;
+}
+.ti-swedavia-grid .ti-swedavia-estimate{
+  font-size:1.45rem;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  color:var(--ti-navy);
+}
+.ti-swedavia-grid .ti-swedavia-unavailable{font-weight:650}
+.ti-swedavia-group{border-top:1px solid #dbe6ed}
+.ti-swedavia-group summary{padding:10px 0;font-size:.94rem}
+.ti-swedavia-group .ti-swedavia-grid,.ti-swedavia-group .ti-swedavia-message{margin-bottom:12px}
+.ti-swedavia-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+  color:#465c72;
+}
+.ti-swedavia-footer button,.ti-swedavia-book{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:44px;
+  padding:6px 12px;
+  border:1px solid #b8cad8;
+  border-radius:7px;
+  background:#fff;
+  color:var(--ti-navy);
+  font:inherit;
+  font-size:.9rem;
+  font-weight:650;
+  text-decoration:none;
+  cursor:pointer;
+}
+.ti-swedavia-footer button:hover,.ti-swedavia-book:hover{background:#edf4f8}
+.ti-swedavia-footer button[aria-disabled="true"]{opacity:.65;cursor:wait}
+.ti-swedavia-book{margin-top:12px}
+.ti-swedavia [hidden]{display:none}
 .ti-airport-guide .ti-airport-flight-panel{min-width:0;grid-template-columns:minmax(0,1fr);gap:12px}
 .ti-airport-guide .ti-airport-flight-heading{align-items:center;gap:8px}
 .ti-airport-guide .airport-board-toggle{display:flex;justify-self:start;gap:4px;padding:4px;border:1px solid #d9e3ea;border-radius:9px;background:#f7f9fb}
