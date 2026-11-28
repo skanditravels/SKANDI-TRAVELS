@@ -814,7 +814,8 @@
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js",
         "src/backend/SKANDI_CORE/customerSupport.web.js",
-        "src/backend/SKANDI_CORE/flightStatus.web.js"
+        "src/backend/SKANDI_CORE/flightStatus.web.js",
+        "src/backend/SKANDI_CORE/swedaviaAirports.web.js"
       ],
       "messages": [
         "ACTIVITY",
@@ -858,6 +859,8 @@
         "TRAVEL_INFO_REQUIREMENTS_RESULT",
         "TRAVEL_INFO_REQUIREMENTS_SEARCH",
         "TRAVEL_INFO_REQUIREMENTS_SEARCHING",
+        "TRAVEL_INFO_SWEDAVIA_REQUEST",
+        "TRAVEL_INFO_SWEDAVIA_RESULT",
         "TRAVEL_INFO_WEATHER",
         "TRAVEL_INFO_WEATHER_REQUEST",
         "TRAVEL_SUPPORT_REQUEST",
@@ -869,8 +872,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
-      "sha256": "5f2ab0febd0dd8012f53c0fb88597016d29d6be97d887dd46965df166c12429a",
-      "bytes": 487706
+      "sha256": "0b23f5960f1315c054e05704c1202ab8d1b46274c499c3620476eaa3e5219097",
+      "bytes": 504181
     },
     {
       "key": "transfers",
