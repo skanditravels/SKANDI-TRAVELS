@@ -9,6 +9,7 @@ import { authentication } from "wix-members-frontend";
 import { isSafeInternalRoute } from "public/siteMap";
 import {
   getCustomerProfileBootstrap,
+  getCustomerClubRewards,
   updateCustomerProfile,
   saveCustomerTraveler,
   removeCustomerTraveler,
@@ -109,15 +110,16 @@ async function withTimeout(promise, timeoutMs, code, message) {
 }
 
 const VALID_PAGES = Object.freeze({
-  club: new Set(["overview", "activity", "program"]),
-  trips: new Set(["upcoming", "past", "drafts"]),
+  home: new Set(["overview"]),
+  club: new Set(["overview", "activity", "rewards", "program"]),
+  trips: new Set(["upcoming", "past", "drafts", "detail"]),
   profile: new Set(["details", "travelers", "wallet", "saved"]),
   account: new Set(["notifications", "settings"]),
   support: new Set(["cases", "new"])
 });
 
 const LEGACY_TABS = Object.freeze({
-  overview: ["club", "overview"],
+  overview: ["home", "overview"],
   club: ["club", "overview"],
   trips: ["trips", "upcoming"],
   orders: ["trips", "drafts"],
@@ -130,18 +132,26 @@ const LEGACY_TABS = Object.freeze({
   support: ["support", "cases"]
 });
 
+function bookingId(value) {
+  const id = String(value || "");
+  return /^[a-zA-Z0-9_-]{1,80}$/.test(id) ? id : "";
+}
+
 function resolvePage() {
   const q = wixLocationFrontend.query || {};
   let section = String(q.section || "").toLowerCase().slice(0, 40);
   let view = String(q.view || "").toLowerCase().slice(0, 40);
   if (!VALID_PAGES[section]?.has(view)) {
     const legacy = String(q.tab || "overview").toLowerCase().slice(0, 40);
-    [section, view] = LEGACY_TABS[legacy] || ["club", "overview"];
+    [section, view] = LEGACY_TABS[legacy] || ["home", "overview"];
   }
-  return { section, view };
+  const tripId = section === "trips" && view === "detail" ? bookingId(q.trip) : "";
+  if (view === "detail" && !tripId) view = "upcoming";
+  return { section, view, tripId };
 }
 
 function legacyTab(section, view) {
+  if (section === "home") return "overview";
   if (section === "support") return "support";
   if (section === "trips" && view === "drafts") return "orders";
   if (section === "trips") return "trips";
@@ -196,7 +206,8 @@ function shapeBootstrap(data, page, tab) {
     ...data,
     requestedTab: tab,
     requestedSection: page.section,
-    requestedView: page.view
+    requestedView: page.view,
+    requestedTripId: page.tripId
   };
 }
 
@@ -256,6 +267,9 @@ async function run(type, payload = {}) {
         break;
       case "MY_PROFILE_SUPPORT_CREATE":
         result = await createCustomerSupportCase({ input: { ...payload.input, source: "member-helpdesk", sourceChannel: "MEMBER_HELPDESK", sourcePage: "/my-profile", memberPriority: true } });
+        break;
+      case "MY_PROFILE_CLUB_REWARDS":
+        result = await getCustomerClubRewards();
         break;
       case "MY_PROFILE_SAVE_PROFILE":
         result = await updateCustomerProfile(payload);
@@ -352,13 +366,15 @@ async function run(type, payload = {}) {
       case "MY_PROFILE_QUERY_UPDATE": {
         const section = String(payload.section || "").toLowerCase().slice(0, 40);
         const view = String(payload.view || "").toLowerCase().slice(0, 40);
-        if (!VALID_PAGES[section]?.has(view)) {
+        const trip = view === "detail" ? bookingId(payload.tripId) : "";
+        if (!VALID_PAGES[section]?.has(view) || (view === "detail" && !trip)) {
           post("MY_PROFILE_URL_SYNC_ERROR", { code: "MY_PROFILE_INVALID_PAGE" });
           return;
         }
         try {
           // Wix Location updates the address bar without navigating or rebuilding this page.
-          wixLocationFrontend.queryParams.add({ section, view });
+          wixLocationFrontend.queryParams.add({ section, view, ...(trip ? { trip } : {}) });
+          if (!trip && wixLocationFrontend.query?.trip) wixLocationFrontend.queryParams.remove(["trip"]);
         } catch (error) {
           console.error("[My Profile] Unable to update the current page query parameters.", error);
           post("MY_PROFILE_URL_SYNC_ERROR", { code: "MY_PROFILE_QUERY_SYNC_FAILED" });

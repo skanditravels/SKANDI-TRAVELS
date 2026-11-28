@@ -52,7 +52,10 @@ function setup(t, { query = {}, handlers = {} } = {}) {
   const data = memberData();
   const location = {
     query, onChange: callback => { onChange = callback; },
-    queryParams: { add: values => { Object.assign(location.query, values); onChange(); } },
+    queryParams: {
+      add: values => { Object.assign(location.query, values); onChange(); },
+      remove: keys => { for (const key of keys) delete location.query[key]; onChange(); }
+    },
     to: path => navigations.push(path)
   };
   const embed = {
@@ -125,9 +128,9 @@ test("the profile opens a legacy trip link, shows one greeting, and keeps the ac
   assert.equal(site.current(), "trips-upcoming");
   assert.equal(site.find("#profileMasthead").hidden, false);
   assert.match(site.find("#greetingLine").textContent, /Ada/);
-  assert.match(site.find("#clubView h2").textContent, /Club Overview/);
+  assert.match(site.find("#clubView h2").textContent, /Club overview/);
   assert.equal(site.window.document.querySelectorAll("#greetingLine").length, 1);
-  assert.equal(site.find("#profileSectionSelect").options.length, 14);
+  assert.equal(site.find("#profileSectionSelect").options.length, 16);
   assert.equal(site.bootstraps(), 1);
   assert.ok(site.sent.every(message => message.type !== "CUSTOMER_DOCUMENT_CENTER_READY"));
 
@@ -136,6 +139,44 @@ test("the profile opens a legacy trip link, shows one greeting, and keeps the ac
   assert.equal(site.find('[data-view="saved"]').getAttribute("aria-current"), "page");
   site.message("MY_PROFILE_DATA", { ...site.data, requestedSection: "club", requestedView: "overview" });
   assert.equal(site.current(), "profile-saved");
+});
+
+test("My SKANDI shows the real next action and opens a deep-linked itinerary with a preparation checklist", async t => {
+  const query = {};
+  const detail = {
+    ok: true, booking: { ...trip, title: "Stockholm" },
+    provider: { air: { id: "ord_test", status: "confirmed", slices: [{ segments: [{
+      id: "seg_test", origin: { iataCode: "EWR", timeZone: "America/New_York" },
+      destination: { iataCode: "ARN", timeZone: "Europe/Stockholm" },
+      departingAt: "2099-04-20T17:30:00", arrivingAt: "2099-04-21T07:40:00"
+    }] }] } }
+  };
+  const site = setup(t, { query, handlers: {
+    bootstrap: data => {
+      data.trips.upcoming[0] = detail.booking;
+      data.documents.push({ id:"required-document", bookingId:trip.id, definition_name:"Complete traveler details",
+        status:"WAITING_FOR_DATA", dueAt:"2099-04-12" });
+      return data;
+    },
+    getCustomerBookingDetail: async () => detail,
+    getCustomerSupportBootstrap: async () => ({ workflows: [] }),
+    listCustomerSupportCases: async () => ({ cases: [] })
+  } });
+  await setImmediate();
+  assert.equal(site.current(), "home-overview");
+  assert.match(site.find("#accountHome h2").textContent, /Stockholm/);
+  assert.match(site.find(".home-trip-action").textContent, /Complete traveler details/);
+  site.find(".home-trip-action button").click();
+  await setImmediate();
+  assert.equal(site.current(), "trips-detail");
+  assert.equal(query.trip, trip.id);
+  assert.match(site.find("#trip-itinerary").textContent, /EWR → ARN/);
+  assert.match(site.find("#trip-preparation").textContent, /Complete traveler details/);
+  assert.ok(site.find('[data-trip-download="calendar"]'));
+  site.find("#backToTrips").click();
+  await setImmediate();
+  assert.equal(site.current(), "trips-upcoming");
+  assert.equal(query.trip, undefined);
 });
 
 test("a missing bootstrap can be retried from the account page", async t => {
@@ -244,12 +285,15 @@ test("support opens the member’s linked trip and presents documents as clickab
   assert.equal(site.find("#supportDuffel").hidden, false);
   site.find("#supportDuffel").click();
   await setImmediate();
-  assert.equal(site.current(), "trips-upcoming");
+  assert.equal(site.current(), "trips-detail");
   assert.equal(site.navigations.length, 0);
   site.find("[data-open-doc]").click();
   await setImmediate();
   assert.equal(site.find("#bookingDocumentStatus a").href, "https://files.example.test/trip.pdf");
   assert.equal(site.find("#bookingDocumentStatus a").target, "_blank");
+  site.find("[data-trip-help=general]").click();
+  assert.equal(site.current(), "support-new");
+  assert.equal(site.find("#supportNewForm").elements.bookingRef.value, "SK1234");
 });
 
 test("saving a partial traveler record preserves stored details and rejects unconfirmed writes", async () => {
@@ -260,7 +304,7 @@ test("saving a partial traveler record preserves stored details and rejects unco
   const patches = [];
   const raw = await readFile(new URL("../src/backend/SKANDI_CORE/customerProfile.js", import.meta.url), "utf8");
   const module = raw.replace(/^import\s+[\s\S]*?\s+from\s+"[^"]+";\r?\n/gm, "").replace(/^export /gm, "");
-  const core = vm.runInNewContext(module + "\n({saveCustomerTravelerCore,updateCustomerProfileCore})", {
+  const core = vm.runInNewContext(module + "\n({saveCustomerTravelerCore,updateCustomerProfileCore,getCustomerCheckoutTravelersCore})", {
     restRequest: async ({ table, method, query, body }) => {
       if (method === "PATCH") {
         patches.push({ table, query, body });
@@ -270,6 +314,9 @@ test("saving a partial traveler record preserves stored details and rejects unco
     }
   });
   const context = { memberId: member.member_id };
+  const checkout = await core.getCustomerCheckoutTravelersCore(context);
+  assert.equal(checkout.travelers[0].firstName, "Grace");
+  assert.deepEqual(Object.keys(checkout.travelers[0]).sort(), ["birthDate", "firstName", "gender", "id", "lastName", "middleName"]);
   const response = await core.saveCustomerTravelerCore(context, { traveler: { id: travelerId, phone: "555-0100" } });
   assert.equal(response.traveler.middleName, "Ann");
   assert.equal(response.traveler.passportCountryId, "old-country");

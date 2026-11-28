@@ -794,8 +794,16 @@ export async function createDuffelOrderCancellationCore({ orderId } = {}) {
   return { cancellation: normalizeCancellation(response.data || {}) };
 }
 
-export async function confirmDuffelOrderCancellationCore({ cancellationId } = {}) {
+export async function confirmDuffelOrderCancellationCore({ cancellationId, expectedOrderId } = {}) {
   const id = genericId(cancellationId, "cancellation");
+  if (expectedOrderId) {
+    const { data } = await duffelRequest(`/air/order_cancellations/${encodeURIComponent(id)}`, { retrySafe: true });
+    if (data?.order_id !== expectedOrderId) throw error("CANCELLATION_UNAVAILABLE", "This cancellation quote is unavailable for your booking.");
+    if (data.confirmed_at) return { cancellation: normalizeCancellation(data), customerRefundRequired: Number(data.refund_amount) > 0 };
+    if (data.refund_amount == null || Number(data.refund_amount) !== 0 || !data.expires_at || Date.parse(data.expires_at) <= Date.now()) {
+      throw error("CANCELLATION_QUOTE_REVIEW_REQUIRED", "Ask SKANDI to review this quote and any refund before cancellation.");
+    }
+  }
   const response = await duffelRequest(`/air/order_cancellations/${encodeURIComponent(id)}/actions/confirm`, { method: "POST", retrySafe: false });
   if (response.status === 202 || !response.data) {
     return { cancellation: response.data ? normalizeCancellation(response.data) : null, order: null, reconciliationRequired: true, requestId: response.requestId || null, correlationId: response.correlationId || null };

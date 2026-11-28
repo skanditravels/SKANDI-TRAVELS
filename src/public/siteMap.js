@@ -125,7 +125,7 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
       field("expired-reset-link-back", "Go back button")
     ])
   ], { presentationRuntime:true }),
-  page("myProfile", "My Profile", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
+  page("myProfile", "My SKANDI", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
   page("bookingFlow", "Booking", APP_ROUTES.bookingFlow, "CUSTOMER_BOOKING"),
   page("myTrips", "My Trips", APP_ROUTES.myTrips, "CUSTOMER_PROFILE"),
   page("club", "SKANDI Club", SITE_MAP.club, "PUBLIC_PRESENTATION", [
