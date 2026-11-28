@@ -27,7 +27,7 @@ export const SITE_MAP = Object.freeze({
   helpDesk: "/riaintra/success-factors/helpdesk",
   financeControl: "/riaintra/success-factors/finance-control",
   documentControl: "/riaintra/success-factors/document-control",
-  transportCompliance: "/riaintra/success-factors/document-control-1",
+  transportCompliance: "/riaintra/success-factors/altea/transport-compliance",
   internalPolicies: "/riaintra/success-factors/legal-internal/policies-internal",
   infoControl: "/riaintra/success-factors/altea/info-control",
   payroll: "/riaintra/success-factors/payroll"
