@@ -6,7 +6,7 @@ import { currentMember } from "wix-members-backend";
 import { members } from "@wix/members";
 import { emailSubscriptions } from "@wix/email-subscriptions";
 import { auth } from "@wix/essentials";
-import { accounts, programs, tiers } from "wix-loyalty.v2";
+import { accounts, programs, rewards, tiers } from "wix-loyalty.v2";
 import { elevate } from "wix-auth";
 import { email, text } from "backend/SKANDI_CORE/platformValidation";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
@@ -207,6 +207,37 @@ export async function getCustomerWixLoyaltyCore() {
       percent: Math.min(100, Math.max(0, (tierPoints - tier.minPoints) / (nextTier.minPoints - tier.minPoints) * 100))
     } : null
   };
+}
+
+export async function getCustomerWixClubRewardsCore() {
+  const club = await getCustomerWixLoyaltyCore();
+  if (club.status === "UNAVAILABLE" || club.programStatus === "UNAVAILABLE") {
+    throw new SkandiError("CLUB_REWARDS_UNAVAILABLE", "Club rewards are temporarily unavailable.");
+  }
+  if (!club.enrolled || club.programStatus !== "ACTIVE") return { ok: true, rewards: [] };
+
+  const response = await readLoyalty(() => elevate(rewards.listRewards)({ cursorPaging: { limit: 100 } }));
+  if (!Array.isArray(response?.rewards)) {
+    throw new SkandiError("CLUB_REWARDS_UNAVAILABLE", "Club rewards are temporarily unavailable.");
+  }
+  const entries = [];
+  for (const reward of response.rewards) {
+    if (reward?.active !== true || !reward.name) continue;
+    const coupon = reward.couponReward || {};
+    const configs = Object.values(coupon).flatMap(value => value?.configsByTier || []);
+    const eligible = configs.find(config => (config.tierId || "") === (club.tier?.id || ""));
+    const rawCost = configs.length ? eligible?.costInPoints : reward.requiredPoints;
+    if (rawCost == null || !Number.isFinite(Number(rawCost)) || Number(rawCost) < 0) continue;
+    const points = Number(rawCost);
+    entries.push({
+      id: reward._id || reward.id,
+      name: text(reward.name, 160),
+      points,
+      pointsToGo: Math.max(0, points - club.pointsBalance),
+      canRedeem: points <= club.pointsBalance
+    });
+  }
+  return { ok: true, rewards: entries.sort((a, b) => a.points - b.points || a.name.localeCompare(b.name)) };
 }
 
 export async function getCustomerHeaderSessionCore() {

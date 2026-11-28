@@ -2,6 +2,8 @@
 // SKANDI V12 — single HTML booking journey using the existing canonical booking API.
 // The complete offer-to-confirmation journey is mounted inside the Home embed.
 import { session } from 'wix-storage';
+import { authentication } from 'wix-members-frontend';
+import { getCustomerCheckoutTravelers } from 'backend/SKANDI_CORE/customerProfile.web';
 import { readBookingSearch } from 'public/bookingSearch';
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from 'public/siteMap';
 import {
@@ -116,8 +118,11 @@ async function initialize(){
   else if(step==='hotels'||step==='upsell')send('BOOKING_STEP_ACTIVE',{step,cart:c});
   else if(step==='transfer')send('SIGNATURE_TRANSFER_OPTIONS',{...(await bounded(loadSignatureTransfers(access()))),cart:c});
   else if(step==='apis'){
-    const [view,rules]=await bounded(Promise.all([loadBookingCart({...access(),view:'apis'}),loadBookingRequirements(access())]));
-    send('APIS_CART_RULES_LOADED',{cart:view,rules});
+    const saved = authentication.loggedIn()
+      ? bounded(getCustomerCheckoutTravelers(), 4500).catch(() => ({ travelers: [], unavailable: true }))
+      : Promise.resolve({ travelers: [] });
+    const [view,rules,profiles]=await bounded(Promise.all([loadBookingCart({...access(),view:'apis'}),loadBookingRequirements(access()),saved]));
+    send('APIS_CART_RULES_LOADED',{cart:view,rules,savedTravelers:profiles.travelers,savedTravelersUnavailable:profiles.unavailable===true});
   }
   else if(step==='seats')send('SEATMAP_LOADED',await bounded(loadSeatMaps(access())));
   else if(step==='payment'){

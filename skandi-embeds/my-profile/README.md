@@ -2,6 +2,16 @@
 
 > Current document: `skandi-embeds/my-profile/README.md`. Original reference: `HTML_REF/skandi/SKANDI Club My Profile.md`.
 
+## My SKANDI account and trip view
+
+- /my-profile opens on the next booked trip or an account without trips. Overview, Trips, SKANDI Club, Account, and Support form the visible navigation. Existing tab and section links still resolve.
+- A booking opens as a page under /my-profile with section=trips, view=detail, and its booking ID in the trip parameter. The controller passes that ID to the existing member-only booking service. Signed files continue to open through the document authorization check.
+- The itinerary combines the member’s ALTEA booking components with authorized Duffel air, stay, and car details. Travel Day uses scheduled local times and the public airline website. Transfer meeting points and customer contact appear only when explicitly recorded on a booked component. Calendar export uses the published trip dates, and itinerary download contains the available schedule.
+- Supplier-supported airline changes and cancellation quotes remain available. Baggage, ground cancellation, and customer refund requests open the existing Support Desk with the booking reference. Changes and refunds are reported from provider confirmation or the support case.
+- Wix owns the available balance and reward catalog. The existing SKANDI ledger shows trip activity separately. Missing-points requests enter the existing support workflow with a completed trip. The existing master page supplies the member card logo.
+- The booking traveler step can fill name, date of birth, and gender from the signed-in member’s saved travelers. Travelers review the form before continuing. It does not copy passport or payment details, and guest checkout is unchanged.
+- Runtime source is the adjacent HTML, CSS and JS triplet, the existing page and master controllers, the canonical booking host, and the existing SKANDI_CORE services. The standard builder publishes the embed. The current receiver and component ID are retained.
+
 ## 2026-11-27 · Account navigation and profile actions
 
 - Wix Members owns sign-in identity, first and last name, phone and the private Display Name and Email fields. The profile displays the login email from Wix. The travel contact email uses the existing private Email field.

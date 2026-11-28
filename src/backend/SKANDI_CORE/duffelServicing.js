@@ -65,6 +65,14 @@ export async function searchDuffelOrderChangesCore(input = {}) {
 
 export async function createDuffelPendingOrderChangeCore(input = {}) {
   const offerId = id(input.orderChangeOfferId, "oco_", "order change offer");
+  if (input.expectedOrderId) {
+    const requestId = id(input.orderChangeRequestId, "ocr_", "order change request");
+    const { data } = await duffelRequest(`/air/order_change_requests/${encodeURIComponent(requestId)}`, { retrySafe: true });
+    assertOrderReference(data, input.expectedOrderId);
+    if (!arr(data.order_change_offers).some(offer => offer.id === offerId)) {
+      throw fail("ORDER_CHANGE_OFFER_UNAVAILABLE", "The change offer is no longer available. Search again.", 409);
+    }
+  }
   const response = await duffelRequest("/air/order_changes", { method: "POST", body: { data: { selected_order_change_offer: offerId } }, retrySafe: false });
   if (response.status === 202 || !response.data?.id) return { change: response.data?.id ? normalizeOrderChange(response.data) : null, reconciliationRequired: true, providerStatus: response.status, requestId: response.requestId || null, correlationId: response.correlationId || null };
   return { change: normalizeOrderChange(response.data) };
@@ -80,6 +88,7 @@ export async function prepareDuffelOrderChangePaymentCore(input = {}) {
   const changeId = genericId(input.orderChangeId, "order change");
   const raw = (await duffelRequest(`/air/order_changes/${encodeURIComponent(changeId)}`, { retrySafe: true })).data;
   assertPendingChange(raw);
+  assertOrderReference(raw, input.expectedOrderId);
   const changeAmount = Number(raw.change_total_amount || 0);
   if (!(changeAmount > 0)) return { change: normalizeOrderChange(raw), paymentRequired: false, payment: null };
   const code = currency(raw.change_total_currency), minor = amountToMinor(raw.change_total_amount, code);
@@ -100,7 +109,11 @@ export async function confirmDuffelOrderChangeCore(input = {}) {
   const changeId = genericId(input.orderChangeId, "order change");
   const raw = (await duffelRequest(`/air/order_changes/${encodeURIComponent(changeId)}`, { retrySafe: true })).data;
   assertPendingChange(raw);
+  assertOrderReference(raw, input.expectedOrderId);
   const changeAmount = Number(raw.change_total_amount || 0);
+  if (input.expectedOrderId && (!clean(raw.change_total_amount, 40) || !Number.isFinite(changeAmount) || changeAmount < 0)) {
+    throw fail("ORDER_CHANGE_REVIEW_REQUIRED", "Ask SKANDI to review this change and any refund.", 409);
+  }
   const code = raw.change_total_currency ? currency(raw.change_total_currency) : null;
   const data = {};
   let paymentIntentId = null;
@@ -150,4 +163,58 @@ export async function confirmDuffelOrderChangeCore(input = {}) {
     customerRefundAmount: changeAmount < 0 ? Math.abs(changeAmount).toFixed(2) : "0.00",
     customerRefundCurrency: code
   };
+}
+
+function assertOrderReference(value, expectedOrderId) {
+  if (expectedOrderId && value?.order_id !== expectedOrderId) {
+    throw fail("ORDER_RESOURCE_UNAVAILABLE", "This option is unavailable for your booking.", 404);
+  }
+}
+
+export async function listDuffelPostBookingServicesCore({ orderId } = {}) {
+  const order = id(orderId, "ord_", "order");
+  const { data } = await duffelRequest(`/air/orders/${encodeURIComponent(order)}/available_services`, { retrySafe: true });
+  return { services: arr(data).filter(service => service?.type === "baggage" && service.id).map(service => ({
+    id: service.id,
+    type: service.type,
+    label: clean(service.metadata?.type, 60) || "Additional baggage",
+    totalAmount: service.total_amount ?? null,
+    totalCurrency: service.total_currency || null,
+    maximumQuantity: service.maximum_quantity,
+    passengerIds: arr(service.passenger_ids),
+    segmentIds: arr(service.segment_ids)
+  })) };
+}
+
+function normalizeAirlineInitiatedChange(change) {
+  return {
+    id: change.id,
+    actionTaken: change.action_taken || null,
+    availableActions: arr(change.available_actions),
+    createdAt: change.created_at || null,
+    updatedAt: change.updated_at || null,
+    slices: { add: arr(change.added).map(normalizeSlice), remove: arr(change.removed).map(normalizeSlice) }
+  };
+}
+
+export async function listDuffelAirlineInitiatedChangesCore({ orderId } = {}) {
+  const order = id(orderId, "ord_", "order");
+  const { data } = await duffelRequest(`/air/airline_initiated_changes?order_id=${encodeURIComponent(order)}`, { retrySafe: true });
+  return { changes: arr(data).filter(change => change?.order_id === order && change.id).map(normalizeAirlineInitiatedChange) };
+}
+
+export async function acceptDuffelAirlineInitiatedChangeCore({ orderId, changeId } = {}) {
+  const order = id(orderId, "ord_", "order");
+  const change = id(changeId, "aic_", "airline change");
+  const path = `/air/airline_initiated_changes/${encodeURIComponent(change)}`;
+  const { data } = await duffelRequest(path, { retrySafe: true });
+  assertOrderReference(data, order);
+  if (data.action_taken === "accepted") return { change: normalizeAirlineInitiatedChange(data), accepted: true };
+  if (!arr(data.available_actions).includes("accept")) {
+    throw fail("AIRLINE_CHANGE_UNAVAILABLE", "This airline change can no longer be accepted online.", 409);
+  }
+  const response = await duffelRequest(`${path}/actions/accept`, { method: "POST", retrySafe: false });
+  const confirmed = response.data?.id ? response.data : (await duffelRequest(path, { retrySafe: true })).data;
+  assertOrderReference(confirmed, order);
+  return { change: normalizeAirlineInitiatedChange(confirmed), accepted: confirmed.action_taken === "accepted" };
 }

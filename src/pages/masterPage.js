@@ -1065,6 +1065,12 @@ async function handleMasterMessage(embed, message = {}) {
     }
     return true;
   }
+  if (embed?.id === "htmlMyProfile" && source === "SKANDI_MY_PROFILE" && type === "MY_PROFILE_OPEN_ALEXANDRA") {
+    if (currentPathString() === APP_ROUTES.myProfile) {
+      await alexandraGlobal?.openFromMobile(String(message.requestId || ""));
+    }
+    return true;
+  }
   if (source === 'SKANDI_SUPPORT_CHAT' && await alexandraGlobal?.handlePageChatMessage(embed, message)) return true;
 
   if (isGlobalMobileNavMessage(embed, message)) {
