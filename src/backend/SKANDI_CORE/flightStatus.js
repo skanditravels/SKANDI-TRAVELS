@@ -9,7 +9,7 @@ import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import { text, upper, lower, record, safeNumber } from "backend/SKANDI_CORE/platformValidation";
 import { getPublishedAirlineBrandsCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
-import { getSwedaviaFlightBoardCore, swedaviaAirportIata, swedaviaLocalDate } from "backend/SKANDI_CORE/swedaviaAirports";
+import { getSwedaviaFlightBoardCore, swedaviaAirportIata, swedaviaFlightDateWindow, swedaviaLocalDate } from "backend/SKANDI_CORE/swedaviaAirports";
 import { inventoryCardImage, referenceInventoryBrand } from "public/inventoryMedia";
 
 const FLIGHT_STATUS_CORE_VERSION = "V12-AIRLABS";
@@ -269,7 +269,14 @@ function validateSearch(payload = {}) {
     const swedaviaIata = swedaviaAirportIata(out.airport);
     if (swedaviaIata) {
       out.airport = swedaviaIata;
-      out.date = swedaviaLocalDate();
+      const { today, latest } = swedaviaFlightDateWindow();
+      out.date = !payload.date || out.date < today ? today : out.date;
+      const date = new Date(`${out.date}T00:00:00Z`);
+      if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== out.date || out.date > latest) {
+        throw new SkandiError("FLIGHT_STATUS_DATE_INVALID", "Flight status date is outside the Swedavia window.", {
+          publicMessage: "Choose a date within the Swedavia schedule window."
+        });
+      }
     }
   }
   return out;
@@ -342,12 +349,17 @@ async function loadFlightSearch(p) {
       meta: {
         mode: p.mode, date:p.date, boardType:p.boardType, airport:p.airport,
         provider: "swedavia", providerApi: "v2", timezone: "Europe/Stockholm",
-        searchedAt: new Date().toISOString(), providerUpdatedAt: board.updatedAt, refreshAfterMs: FLIGHT_TTL_MS,
+        searchedAt: new Date().toISOString(), providerUpdatedAt: board.updatedAt,
         partial: board.partial,
         note: board.partial ? "Some overnight flights may be missing from the Swedavia board." : "",
         message: "Source: Swedavia. Times are local to the airport."
       }
     };
+    if (p.date > swedaviaLocalDate()) {
+      throw new SkandiError("SWEDAVIA_FUTURE_BOARD_UNAVAILABLE", "The scheduled Swedavia board is unavailable.", {
+        publicMessage: "Swedavia could not load the schedule for this date. Try again or choose a different date."
+      });
+    }
   }
   const filters = p.mode === "flight" ? flightIdentifierParams(p.flightNumber)
     : p.mode === "route" ? { ...airportFilter("dep", p.from), ...airportFilter("arr", p.to) }
@@ -385,7 +397,7 @@ async function loadFlightSearch(p) {
       provider: "airlabs", providerApi: "v9",
       endpoint: p.mode === "flight" ? "flights + flight" : "flights + schedules",
       providerScope: p.mode === "flight" ? "closest-live-scheduled-or-landed-flight" : "live-tracking-and-current-schedule-window",
-      searchedAt: new Date().toISOString(), refreshAfterMs: FLIGHT_TTL_MS,
+      searchedAt: new Date().toISOString(),
       partial: warnings.length > 0, note: warnings.join(" "),
       message: "Airport-local times when supplied; UTC otherwise. Schedule coverage is up to 10 hours ahead.",
       boardingRules: BOARDING_RULES
@@ -394,6 +406,23 @@ async function loadFlightSearch(p) {
 }
 export async function searchFlightStatusCore(payload = {}) {
   const p = validateSearch(payload);
+  if (payload.includeBoth !== true || p.mode !== "airport" || !swedaviaAirportIata(p.airport)) {
+    return cachedFlightSearch(p);
+  }
+  const opposite = p.boardType === "departures" ? "arrivals" : "departures";
+  const results = await Promise.allSettled([
+    cachedFlightSearch(p),
+    cachedFlightSearch({ ...p, boardType: opposite })
+  ]);
+  const makeBoard = (result, boardType) => result.status === "fulfilled" ? result.value : {
+    items: [],
+    meta: { boardType, airport: p.airport, date: p.date },
+    error: result.reason?.publicMessage || "Flight information for this board is temporarily unavailable."
+  };
+  return { ...makeBoard(results[0], p.boardType), alternate: makeBoard(results[1], opposite) };
+}
+
+function cachedFlightSearch(p) {
   const airportLocalDate = p.mode === "airport" && swedaviaAirportIata(p.airport) ? p.date : "";
   const key = JSON.stringify({ ...p, date: airportLocalDate });
   const cached = flightCache.get(key);

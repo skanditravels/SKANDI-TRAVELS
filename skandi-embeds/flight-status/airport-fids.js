@@ -18,6 +18,8 @@ const airportFids = (() => {
   };
   const lightFallbacks = new Set(["AS", "DL", "F9", "B6", "DY", "D8", "SK", "LX", "UA"]);
   const fallbackColors = { DY: "#d81939", D8: "#d81939", SK: "#1d4ed8" };
+  const logoMattes = new Map();
+  const serviceDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit" });
   const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[char]);
@@ -34,11 +36,49 @@ const airportFids = (() => {
     </span><span class="fids-carrier-name">${escape(name)}</span></div>`;
   }
 
+  function nativeMatte(src) {
+    if (!logoMattes.has(src)) {
+      const probe = new Image();
+      probe.crossOrigin = "anonymous";
+      probe.src = src;
+      logoMattes.set(src, probe.decode().then(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 48;
+        canvas.height = 32;
+        const context = canvas.getContext("2d");
+        context.drawImage(probe, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        // Ignore subpixel borders on the supplied solid-background SVGs.
+        for (let y = 1; y < canvas.height - 1; y++) {
+          for (let x = 1; x < canvas.width - 1; x++) {
+            if (pixels[(y * canvas.width + x) * 4 + 3] < 250) return "";
+          }
+        }
+        const topLeft = canvas.width + 1;
+        const bottomLeft = canvas.width * (canvas.height - 2) + 1;
+        const corners = [topLeft, topLeft + canvas.width - 3, bottomLeft, bottomLeft + canvas.width - 3];
+        const rgb = pixels.slice(topLeft * 4, topLeft * 4 + 3);
+        if (corners.some(index => rgb.some((value, offset) => Math.abs(pixels[index * 4 + offset] - value) > 16))) return "";
+        return `rgb(${rgb.join(", ")})`;
+      }).catch(() => ""));
+    }
+    return logoMattes.get(src);
+  }
+
   function bindCarrierImages(root) {
     root.querySelectorAll(".fids-carrier-mark img").forEach(image => {
+      const tile = image.parentElement;
+      const loaded = () => {
+        tile.style.removeProperty("--fids-native-matte");
+        if (tile.classList.contains("is-light-mark")) return;
+        const src = image.currentSrc || image.src;
+        nativeMatte(src).then(matte => {
+          if (matte && image.isConnected && image.src === src) tile.style.setProperty("--fids-native-matte", matte);
+        });
+      };
       const failed = () => {
-        const tile = image.parentElement;
         const backup = image.dataset.fidsLogoBackup;
+        tile.style.removeProperty("--fids-native-matte");
         if (backup) {
           delete image.dataset.fidsLogoBackup;
           tile.classList.toggle("is-light-mark", image.dataset.fidsBackupLight === "true");
@@ -49,9 +89,21 @@ const airportFids = (() => {
         tile.classList.add("fallback");
         tile.querySelector(".fids-logo-fallback").hidden = false;
       };
+      image.addEventListener("load", loaded);
       image.addEventListener("error", failed);
-      if (image.complete && image.naturalWidth === 0) failed();
+      if (image.complete) {
+        if (image.naturalWidth) loaded();
+        else failed();
+      }
     });
+  }
+
+  function dateInSweden() {
+    return serviceDate.format(new Date());
+  }
+
+  function daysFrom(date, days) {
+    return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
   }
 
   function locale(value) {
@@ -99,5 +151,5 @@ const airportFids = (() => {
     return { message, tone };
   }
 
-  return { columns, iata, labels, locale, officialStatus, carrier, bindCarrierImages };
+  return { columns, iata, labels, locale, officialStatus, carrier, bindCarrierImages, dateInSweden, daysFrom };
 })();

@@ -26,6 +26,8 @@ STATICALLY VERIFIED: JavaScript syntax, core public export names, embed message 
 
 ## Historical INFO / LOG (preserved)
 
+- 2026-11-28 — Swedavia status loads a snapshot of both directions for the airport and selected date. Date selection covers the provider's 90-day schedule window. The shared FIDS stylesheet keeps airline artwork uncropped and unfiltered in compact rows. This replaces the colored treatment and automatic board refresh.
+
 - 2026-11-28 — Flight Status and Travel Info use full-width carrier branding. Published Inventory Control AIRLINE records resolve by IATA code, including Wix media references. Existing logo artwork and the flight's carrier code provide ordered fallbacks.
 
 - 2026-11-28 — Applied the supplied Arlanda screen design to Swedavia airport boards on Flight Status and Travel Info. The active sources share the board styles and display labels. Provider responses still come through the installed Wix controller and the existing compiled receiver.

@@ -482,12 +482,31 @@ function tiAirportRequestContext(x){
 function tiAirportRequestFlights(x,boardType="departures",force=false){
   const iata=tiAirportIata(x);if(!iata)return;const type=boardType==="arrivals"?"arrivals":"departures";const key=tiAirportCacheKey(iata,type);
   const cached=STATE.airportFlights.get(key);
-  if(!force&&cached&&Date.now()-cached.checkedAt<60_000)return tiRenderAirportFlights();
-  if(STATE.airportFlightPending.has(key))return;
+  const includeBoth=Boolean(airportFids.iata(iata));
+  if(!force&&cached)return tiRenderAirportFlights();
+  if(STATE.airportFlightPending.has(key)||(includeBoth&&STATE.airportFlightRequest?.iata===iata))return;
   if(STATE.airportFlightRequest)STATE.airportFlightPending.delete(STATE.airportFlightRequest.key);
   STATE.airportFlightPending.add(key);const requestId=`airport-flights-${++STATE.airportFlightRequestSerial}-${Date.now()}`;STATE.airportFlightRequest={requestId,iata,boardType:type,key};
+  if(force)STATE.airportFlights.delete(key);
   const host=$("tiAirportFlightRows");if(host&&(!cached||cached.error))host.innerHTML=`<div class="board-message"><span class="board-message-title">LOADING FLIGHTS</span><span class="board-message-note">Retrieving ${esc(type)} for ${esc(iata)}</span></div>`;
-  post("TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST",{iata,boardType:type,requestId});
+  post("TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST",{iata,boardType:type,includeBoth,requestId});
+}
+function tiReceiveAirportFlights(data,error=""){
+  const request=STATE.airportFlightRequest;
+  if(!request||request.requestId!==data.requestId)return;
+  STATE.airportFlightRequest=null;
+  STATE.airportFlightPending.delete(request.key);
+  const save=(key,board)=>STATE.airportFlights.set(key,{items:arr(board.items),meta:obj(board.meta),error:text(board.error)});
+  save(request.key,error?{error}:data);
+  if(data.alternate){
+    const direction=request.boardType==="arrivals"?"departures":"arrivals";
+    save(tiAirportCacheKey(request.iata,direction),data.alternate);
+  }
+  const airport=STATE.activeDetail;
+  if(tiAirportIata(airport)!==request.iata||STATE.activeAirportTab!=="flight-info")return;
+  const direction=STATE.activeAirportBoardType;
+  if(direction!==request.boardType&&!data.alternate)tiAirportRequestFlights(airport,direction);
+  else tiRenderAirportFlights();
 }
 function tiAirportList(value){
   const parsed=parseStructuredValue(value);
@@ -575,6 +594,7 @@ let swedaviaExpiryTimer=0;
 const AIRPORT_DIRECTORY_PAGE_SIZE=12;
 const SWEDAVIA_CATEGORIES=[["restaurants","restaurants"],["shops","shops"],["services","passengerServices"]];
 const SWEDAVIA_TAB_LABELS={overview:"terminalsTab","flight-info":"flightsTab",services:"servicesTab",transport:"transportTab",routes:"routesTab"};
+const FUTURE_FLIGHTS_COPY={en:"Future flights",sv:"Kommande flygdagar",no:"Fremtidige flyreiser",da:"Kommende flyafgange",fi:"Tulevat lentopäivät"};
 const AIRPORT_TAB_ICONS={overview:"passport","flight-info":"aircraft",services:"dining",transport:"transfer",routes:"tour"};
 const ROUTE_LETTERS=[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
 const ROUTE_COPY={
@@ -884,6 +904,8 @@ function tiSetSwedaviaLanguage(value){
   if(STATE.activeDetail?._library==="airports"&&airportFids.iata(tiAirportIata(STATE.activeDetail))){
     const mount=$("tiDetailMount"),copy=SWEDAVIA_COPY[language];
     mount.querySelectorAll("[data-airport-tab]").forEach(button=>{button.querySelector("[data-ti-tab-label]").textContent=copy[SWEDAVIA_TAB_LABELS[button.dataset.airportTab]]});
+    const future=mount.querySelector("[data-ti-future-flights]");
+    if(future)future.textContent=FUTURE_FLIGHTS_COPY[language];
     tiUpdateSwedaviaPanels(mount);
     if(STATE.activeAirportTab==="flight-info")tiRenderAirportFlights();
   }
@@ -1211,7 +1233,7 @@ function tiRenderAirportFlights(){
   if(heading)heading.textContent=labels.title;
   tiUpdateAirportClock(x);
   if(!entry){
-    const pending=STATE.airportFlightPending.has(key);
+    const pending=STATE.airportFlightPending.has(key)||(screen&&STATE.airportFlightRequest?.iata===iata);
     host.innerHTML=`<div class="board-message"><span class="board-message-title">${pending?"LOADING FLIGHTS":"FLIGHT INFORMATION"}</span><span class="board-message-note">${pending?"Retrieving":"Open this tab to load"} ${esc(type)} for ${esc(iata)}.</span></div>`;
     return
   }
@@ -1309,7 +1331,10 @@ function tiAirportFlightPanelHtml(x){
       </div>
       <div class="board-footer">
         <span id="tiAirportBoardMeta">Time shows the schedule. Completion times appear in Remarks.</span>
-        <button type="button" class="fids-earlier-control" id="tiAirportEarlierFlights" data-ti-earlier-flights hidden>See earlier flights</button>
+        <div class="ti-board-footer-controls">
+          ${screen?`<button type="button" class="fids-earlier-control" data-ti-future-flights>${esc(FUTURE_FLIGHTS_COPY[STATE.swedaviaLanguage])}</button>`:""}
+          <button type="button" class="fids-earlier-control" id="tiAirportEarlierFlights" data-ti-earlier-flights hidden>See earlier flights</button>
+        </div>
       </div>
     </div></div>
   </section>`;
@@ -1346,6 +1371,9 @@ function tiBindAirportDetail(x){
     });
   });
   root.querySelector("[data-ti-earlier-flights]")?.addEventListener("click",()=>{STATE.airportShowEarlier=!STATE.airportShowEarlier;tiRenderAirportFlights()});
+  root.querySelector("[data-ti-future-flights]")?.addEventListener("click",()=>{
+    post("TRAVEL_INFO_AIRPORT_SCHEDULE",{iata:tiAirportIata(x),boardType:STATE.activeAirportBoardType});
+  });
   root.querySelectorAll("[data-ti-swedavia]").forEach(panel=>{
     if(panel.matches("details"))panel.addEventListener("toggle",()=>{
       if(panel.open){tiRenderSwedaviaPanel(panel);tiRequestSwedaviaPanel(panel)}
@@ -1788,12 +1816,8 @@ window.addEventListener("message",event=>{
     case "TRAVEL_INFO_AIRPORT_CONTEXT_ERROR":{
       const req=STATE.airportContextRequest;if(req&&(!p.requestId||p.requestId===req.requestId)){STATE.airportContextPending.delete(req.iata);STATE.airportContexts.set(req.iata,{airport:{iata:req.iata},commerce:{},error:p.message||"Airport information is temporarily unavailable."})}break
     }
-    case "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT":{
-      const req=STATE.airportFlightRequest;if(req&&p.requestId&&p.requestId!==req.requestId)break;if(req){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:arr(p.items),meta:obj(p.meta),checkedAt:Date.now()});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
-    }
-    case "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR":{
-      const req=STATE.airportFlightRequest;if(req&&(!p.requestId||p.requestId===req.requestId)){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:[],meta:{},error:p.message||"Flight information is temporarily unavailable.",checkedAt:Date.now()});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
-    }
+    case "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT":tiReceiveAirportFlights(p);break;
+    case "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR":tiReceiveAirportFlights(p,p.message||"Flight information is temporarily unavailable.");break;
     case "TRAVEL_INFO_SWEDAVIA_RESULT":tiFinishSwedaviaRequest(p);break;
     case "TRAVEL_INFO_REQUIREMENTS_SEARCHING":{const h=$("tiRequirementResult");if(h)h.textContent=p.message||"Checking current travel requirements…";break}
     case "TRAVEL_INFO_REQUIREMENTS_RESULT":STATE.requirementsPending=false;if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;renderRequirementResult(p);break;
@@ -1850,13 +1874,6 @@ setInterval(()=>{
   if(!x||x._library!=="airports"||STATE.activeAirportTab!=="flight-info")return;
   tiAdvanceCodeshareTicker()
 },3500);
-
-setInterval(()=>{
-  const x=STATE.activeDetail;
-  if(document.hidden||!x||x._library!=="airports"||STATE.activeAirportTab!=="flight-info")return;
-  tiRenderAirportFlights();
-  tiAirportRequestFlights(x,STATE.activeAirportBoardType||"departures",true)
-},60000);
 
 window.SKANDITravelInfo={
   refresh:retryData,

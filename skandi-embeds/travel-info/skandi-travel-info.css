@@ -2733,7 +2733,6 @@ body{background:#fff;color:var(--hybrid-text)}
   border-color:#304552;
 }
 .ti-airport-flight-panel .fids-row::before{display:none}
-.ti-airport-flight-panel .fids-row.is-earlier{opacity:.72}
 .ti-airport-flight-panel .fids-cell{
   min-height:68px;
   padding:9px 12px;

@@ -131,13 +131,21 @@ async function callBackend(action, payload = {}) {
 
 $w.onReady(function () {
   const embed = $w(EMBED_ID);
+  const query = object(wixLocationFrontend.query);
+  const announceReady = () => send(embed, "FLIGHT_STATUS_HOST_READY", {
+    version: VERSION,
+    airport: clean(query.airport, 4),
+    date: clean(query.date, 10),
+    upcoming: query.upcoming === "1",
+    boardType: query.boardType === "arrivals" ? "arrivals" : "departures"
+  });
 
   embed.onMessage(async event => {
     const message = object(event?.data);
     if (!message || message.source !== HTML_SOURCE) return;
 
     if (message.type === "FLIGHT_STATUS_READY") {
-      send(embed, "FLIGHT_STATUS_HOST_READY", { version: VERSION });
+      announceReady();
       return;
     }
 
@@ -221,6 +229,8 @@ $w.onReady(function () {
       send(embed, "FLIGHT_STATUS_RESULTS", {
         items: Array.isArray(result.items) ? result.items : [],
         meta: object(result.meta),
+        ...(result.error ? { error: clean(result.error, 500) } : {}),
+        ...(result.alternate ? { alternate: object(result.alternate) } : {}),
         requestId: clean(message.payload?.requestId, 100)
       });
     } catch (error) {
@@ -236,7 +246,5 @@ $w.onReady(function () {
     }
   });
 
-  send(embed, "FLIGHT_STATUS_HOST_READY", {
-    version: VERSION
-  });
+  announceReady();
 });
