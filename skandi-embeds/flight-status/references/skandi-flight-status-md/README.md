@@ -26,6 +26,8 @@ STATICALLY VERIFIED: JavaScript syntax, core public export names, embed message 
 
 ## Historical INFO / LOG (preserved)
 
+- 2026-11-28 — Applied the supplied Arlanda screen design to Swedavia airport boards on Flight Status and Travel Info. The active sources share the board styles and display labels. Provider responses still come through the installed Wix controller and the existing compiled receiver.
+
 - 2026-11-28 — The active Flight Status airport board and Travel Info board use Swedavia FlightInfo v2 for its airports, with a labeled AirLabs fallback. The historical source below predates this provider integration. See the [active page notes](../../README.md).
 
 - 2026-11-27 — The active source displays the carrier logo returned by the existing flight-status controller, including operating-carrier logos when the board switches codeshares. See the [active page notes](../../README.md).
