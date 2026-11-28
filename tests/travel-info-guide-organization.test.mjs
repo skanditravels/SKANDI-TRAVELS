@@ -272,6 +272,7 @@ test('the Travel Info board shows official remarks, codeshares and local update 
   open('airports','Arlanda');
   get('[data-airport-tab="flight-info"]').click();
   const request=messages.at(-1);
+  assert.equal(request.payload.includeBoth,true);
   const board={
     requestId:request.payload.requestId,
     meta:{provider:'swedavia',providerUpdatedAt:'2026-11-28T12:30:00Z'},
@@ -280,7 +281,12 @@ test('the Travel Info board shows official remarks, codeshares and local update 
       airlineLogoUrl:'https://inventory.example/sk.svg',airlineColor:'#00205b',
       status:'scheduled',fidsRemarks:{en:'Go to gate',sv:'Gå till gate'},checkInDesks:'14–20',
       departure:{scheduledLocal:'14:53',terminal:'T5',gate:'F62'},arrival:{airport:'Newark',airportSv:'New York Newark',iata:'EWR'}
-    }]
+    }],
+    alternate:{
+      meta:{provider:'swedavia',boardType:'arrivals'},
+      items:[{id:'SK604',flightIata:'SK604',airlineIata:'SK',status:'scheduled',
+        arrival:{scheduledLocal:'15:40',baggage:'9'},departure:{airport:'Oslo',iata:'OSL'}}]
+    }
   };
   receive('TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT',board);
   const casing=get('.flight-board-shell.airport-fids-screen');
@@ -306,5 +312,15 @@ test('the Travel Info board shows official remarks, codeshares and local update 
   receive('SKANDI_MASTER_CONFIG',{settings:{language:'SV'}});
   assert.match(get('#tiAirportFlightRows').textContent,/Gå till gate/);
   assert.equal(get('#tiAirportPlaceHeader').textContent,'Till / To');
+  const boardRequests=()=>messages.filter(x=>x.type==='TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST').length;
+  get('[data-ti-board-type="arrivals"]').click();
+  assert.match(get('#tiAirportFlightRows').textContent,/15:40.*SK 604.*9/s);
+  assert.equal(boardRequests(),1);
+  get('[data-ti-future-flights]').click();
+  assert.equal(messages.at(-1).type,'TRAVEL_INFO_AIRPORT_SCHEDULE');
+  assert.equal(messages.at(-1).payload.boardType,'arrivals');
+  get('[data-airport-tab="overview"]').click();
+  get('[data-airport-tab="flight-info"]').click();
+  assert.equal(boardRequests(),1);
   assert.deepEqual(errors,[]);
 });

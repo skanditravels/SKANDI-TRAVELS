@@ -178,14 +178,25 @@ $w.onReady(() => {
           const requestId = clean(payload.requestId, 160);
           try {
             const result = await withTimeout(callFlightStatus("SEARCH", {
-              mode: "airport", airport: clean(payload.iata || payload.airport, 8), boardType: clean(payload.boardType || "departures", 20)
+              mode: "airport", airport: clean(payload.iata || payload.airport, 8), boardType: clean(payload.boardType || "departures", 20),
+              includeBoth: payload.includeBoth === true
             }), BOOTSTRAP_TIMEOUT_MS, "Flight information is taking longer than expected. Please try again.");
             if (requestNumber !== latestAirportFlights) return;
-            post(html, "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT", { items: Array.isArray(result.items) ? result.items : [], meta: object(result.meta), requestId });
+            post(html, "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT", {
+              items: Array.isArray(result.items) ? result.items : [], meta: object(result.meta), requestId,
+              ...(result.error ? { error: clean(result.error, 500) } : {}),
+              ...(result.alternate ? { alternate: object(result.alternate) } : {})
+            });
           } catch (error) {
             if (requestNumber !== latestAirportFlights) return;
             post(html, "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR", { requestId, message: clean(error?.publicMessage || error?.message || "Flight information is temporarily unavailable.", 500) });
           }
+          return;
+        }
+        case "TRAVEL_INFO_AIRPORT_SCHEDULE": {
+          const airport = clean(payload.iata, 3).toUpperCase();
+          const boardType = payload.boardType === "arrivals" ? "arrivals" : "departures";
+          if (/^[A-Z]{3}$/.test(airport)) wixLocationFrontend.to(routeWithQuery(APP_ROUTES.flightStatus, { airport, boardType, upcoming: "1" }));
           return;
         }
         case "TRAVEL_INFO_SWEDAVIA_REQUEST": {

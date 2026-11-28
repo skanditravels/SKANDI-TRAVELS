@@ -14,6 +14,14 @@ const withoutImports = source => source.replace(/^import [^;]+;\n/gm, '');
 const comparable = result => JSON.parse(JSON.stringify(result));
 const START = Date.parse('2026-11-28T12:00:00Z');
 
+class SkandiError extends Error {
+  constructor(code, message, options) {
+    super(message);
+    this.code = code;
+    this.publicMessage = options?.publicMessage;
+  }
+}
+
 function harness(serve, secret = name => ({ value: name + '-test-only' }), restRequest = async () => []) {
   const requests = [], secretsRead = [];
   let now = START;
@@ -147,12 +155,13 @@ test('FlightInfo uses the Sweden-local service day and maps the documented arriv
   const source = harness(url => {
     const arrival = url.pathname.includes('/arrivals/');
     const adjacent = url.pathname.endsWith('2026-11-27');
+    const providerDate = url.pathname.split('/').pop();
     const time = arrival ? 'ArrivalTime' : 'DepartureTime';
     const location = { Terminal: 'T5', Gate: 'F62', FlightLegStatus: arrival ? 'LAN' : 'SCH', FlightLegStatusEnglish: arrival ? 'Landed' : 'Scheduled' };
     const flight = {
       flightId: adjacent ? 'SK42' : 'SK903', ArrivalAirportEnglish: 'New York/Newark', DepartureAirportEnglish: 'Copenhagen',
       DepartureAirportSwedish: 'Köpenhamn', AirlineOperator: { IATA: 'SK', ICAO: 'SAS', Name: 'SAS' },
-      [time]: { ScheduledUtc: adjacent ? '2026-11-27T23:25:00' : '2026-11-28T15:00:00Z', ActualUtc: arrival ? '2026-11-28T15:08:00Z' : null },
+      [time]: { ScheduledUtc: adjacent ? '2026-11-27T23:25:00' : providerDate + 'T15:00:00Z', ActualUtc: arrival ? '2026-11-28T15:08:00Z' : null },
       LocationAndStatus: location, Baggage: { BaggageClaimUnit: '8' }, CheckIn: { CheckInDeskFrom: 10, CheckInDeskTo: 19 },
       FlightLegIdentifier: { DepartureAirportIata: arrival ? 'CPH' : 'ARN', ArrivalAirportIata: arrival ? 'ARN' : 'EWR', AircraftRegistration: '<private field>' },
       CodeShareData: ['DL 7805', 'DL7805', 'SK903'], RemarksEnglish: [{ Text: arrival ? 'Landed' : 'Go to gate F62' }],
@@ -186,8 +195,12 @@ test('FlightInfo uses the Sweden-local service day and maps the documented arriv
   assert.equal(arrival.departure.airportSv, 'Köpenhamn');
   assert.equal(arrival.arrival.actualLocal, '16:08');
   assert.equal(arrival.status, 'landed');
-  assert.equal((await source.board({ ...p, date: '2027-02-01' })).status, 'unavailable');
   assert.equal(source.requests.length, 4);
+  const future = await source.board({ ...p, date: '2027-02-26' });
+  assert.deepEqual(comparable(future.items.map(row=>row.departure.scheduled)), ['2027-02-26T15:00:00.000Z']);
+  assert.equal((await source.board({ ...p, date: '2027-02-27' })).status, 'unavailable');
+  assert.equal((await source.board({ ...p, date: '2026-11-31' })).status, 'unavailable');
+  assert.equal(source.requests.length, 6);
 });
 
 test('the canonical Flight Status board selects Swedavia for Swedish IATA and ICAO and labels the fallback', async () => {
@@ -196,10 +209,11 @@ test('the canonical Flight Status board selects Swedavia for Swedish IATA and IC
     withoutImports(flightStatusSource).replace(/^export (?=(?:async )?function)/gm, '').replace(/^export \{ FLIGHT_STATUS_CORE_VERSION \};$/m, '') +
       '\n({execute:searchFlightStatusCore,geography:getAirlabsAirportGeographyCore});',
     {
-      URLSearchParams, lower, record, safeNumber, text, upper, SkandiError: Error,
+      URLSearchParams, lower, record, safeNumber, text, upper, SkandiError,
       elevate: method => method, secrets: { getSecretValue: async () => ({ value: 'airlabs-test-only' }) },
       getPublishedAirlineBrandsCore: async () => new Map(),
       swedaviaLocalDate: () => '2026-11-28',
+      swedaviaFlightDateWindow: () => ({ today:'2026-11-28', latest:'2027-02-26' }),
       swedaviaAirportIata: airport => ({ ARN: 'ARN', ESSA: 'ARN', GOT: 'GOT' })[airport] || '',
       getSwedaviaFlightBoardCore: async input => {
         officialCalls.push(input);
@@ -237,6 +251,15 @@ test('the canonical Flight Status board selects Swedavia for Swedish IATA and IC
   await execute({ mode: 'flight', flightNumber: 'SK903' });
   assert.equal(officialCalls.length, 2);
   assert.ok(airlabsCalls.some(url => url.endsWith('/flight')));
+  const upcoming = await execute({ mode:'airport', airport:'ARN', date:'2026-12-14', includeBoth:true });
+  assert.equal(upcoming.meta.date,'2026-12-14');
+  assert.equal(upcoming.meta.boardType,'departures');
+  assert.equal(upcoming.alternate.meta.boardType,'arrivals');
+  assert.deepEqual(comparable(officialCalls.slice(-2).map(call=>call.date)),['2026-12-14','2026-12-14']);
+  const priorAirlabs = airlabsCalls.length;
+  const unavailableFuture = await execute({ mode:'airport', airport:'GOT', date:'2026-12-14', includeBoth:true });
+  assert.match(unavailableFuture.error,/could not load the schedule for this date/);
+  assert.equal(airlabsCalls.length,priorAirlabs);
   const [first, second] = await Promise.all([geography(), geography()]);
   assert.equal(second, first);
   assert.deepEqual(comparable([...first]), [['GOT',{ name:'Landvetter',city:'Gothenburg',countryCode:'SE' }]]);

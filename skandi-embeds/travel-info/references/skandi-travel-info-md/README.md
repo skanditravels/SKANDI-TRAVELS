@@ -27,6 +27,8 @@
 
 ## CHANGE LOG
 
+- 2026-11-28 — The airport's Flight Info tab holds both Swedavia directions from the initial board response and links to future dates on Flight Status. The shared FIDS presentation exposes the full artwork with compact rows. The receiver and Wix embed ID remain in use.
+
 - 2026-11-28 — The airport guide has a refreshed header and visual restaurant cards. Direct flights groups by country with a country selector and clickable A–Z index. Airport details prefer the public Inventory Control projection, with cached AirLabs geography for additional destinations. Dining images come from approved Media Control logos and published Swedavia imagery. The historical embed snapshot below is retained.
 
 - 2026-11-28 — The Direct flights tab replaces the duplicate Destinations served listing. Swedavia Flight Info uses the provided Arlanda display design and the existing official feed. The active page notes identify the shared presentation assets and release path.

@@ -34,6 +34,7 @@ const TTL = {
 const MAX_WAIT_AGE_MS = 5 * 60 * 1000;
 const SWEDAVIA_ZONE = "Europe/Stockholm";
 const DAY_MS = 86_400_000;
+const FLIGHT_LOOKAHEAD_DAYS = 90;
 const localDate = new Intl.DateTimeFormat("en-CA", { timeZone: SWEDAVIA_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
 const localClock = new Intl.DateTimeFormat("en-GB", { timeZone: SWEDAVIA_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const FLIGHT_STATES = {
@@ -331,6 +332,15 @@ export function swedaviaLocalDate(now = Date.now()) {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
+function addFlightDays(date, count) {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + count * DAY_MS).toISOString().slice(0, 10);
+}
+
+export function swedaviaFlightDateWindow() {
+  const today = swedaviaLocalDate();
+  return { today, latest: addFlightDays(today, FLIGHT_LOOKAHEAD_DAYS) };
+}
+
 function flightTimestamp(value) {
   const time = utcMeasurement(value);
   return Number.isFinite(time) ? new Date(time).toISOString() : "";
@@ -413,26 +423,30 @@ function normalizeBoard(payload, headers, airport, arrivals) {
 
 export async function getSwedaviaFlightBoardCore({ iata, boardType, date } = {}) {
   const airport = swedaviaAirportIata(iata);
-  const localDay = swedaviaLocalDate();
-  // The public boards show today. The provider partitions its rows by UTC day.
-  if (!airport || date !== localDay || !["arrivals", "departures"].includes(boardType)) return unavailable();
-  const previousDay = new Date(Date.parse(`${localDay}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+  const { today, latest } = swedaviaFlightDateWindow();
+  if (!airport || !["arrivals", "departures"].includes(boardType) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || date > latest ||
+      !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) || addFlightDays(date, 0) !== date) return unavailable();
+  // Swedavia partitions the feed by UTC day. Include the part of the previous
+  // UTC day which falls after midnight in Sweden.
+  const previousDay = addFlightDays(date, -1);
   const arrivals = boardType === "arrivals";
   const side = arrivals ? "arrival" : "departure";
   const normalize = (payload, headers) => normalizeBoard(payload, headers, airport, arrivals);
-  const overnight = Number(localClock.format(new Date()).slice(0, 2)) < 6;
+  const overnight = date === today && Number(localClock.format(new Date()).slice(0, 2)) < 6;
+  const ttl = date === today ? TTL.flights : TTL.routes;
   const [main, previous] = await Promise.all([
-    readSection(FLIGHT_INFO, `${airport}/${boardType}/${localDay}`, TTL.flights, normalize),
+    readSection(FLIGHT_INFO, `${airport}/${boardType}/${date}`, ttl, normalize),
     readSection(FLIGHT_INFO, `${airport}/${boardType}/${previousDay}`, overnight ? TTL.flights : TTL.routes, normalize)
   ]);
   if (main.status !== "ready" || (overnight && previous.status !== "ready")) return unavailable();
-  const fromToday = (item, keepUntimed) => {
+  const fromSelectedDate = (item, keepUntimed) => {
     const time = item[side].scheduled || item[side].estimated || item[side].actual;
-    return time ? swedaviaLocalDate(Date.parse(time)) === localDay : keepUntimed;
+    return time ? swedaviaLocalDate(Date.parse(time)) === date : keepUntimed;
   };
   const items = new Map([
-    ...(previous.items || []).filter(item => fromToday(item, false)),
-    ...main.items.filter(item => fromToday(item, true))
+    ...(previous.items || []).filter(item => fromSelectedDate(item, false)),
+    ...main.items.filter(item => fromSelectedDate(item, true))
   ].map(item => [item.id, item]));
   return { status: "ready", items: [...items.values()], updatedAt: main.updatedAt, partial: previous.status !== "ready" };
 }
