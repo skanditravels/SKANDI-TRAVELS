@@ -211,7 +211,7 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Travel Insurance", path:APP_ROUTES.travelInsurance },
             { label:"Special Assistance", path:APP_ROUTES.specialAssistance },
             { label:"Flight Status", path:APP_ROUTES.flightStatus },
-            { label:"Help Center", path:SITE_MAP.support }
+            { label:"Help Center", path:SITE_MAP.help }
           ])
         }),
         Object.freeze({
@@ -988,7 +988,7 @@ async function handleMasterMessage(embed, message = {}) {
       const height=Number(payload.height);
       if (Number.isFinite(height) && height > 0 && "height" in embed) embed.height=Math.min(20000,Math.max(680,Math.round(height)));
     } else if (type === "CRUISES_PLAN") {
-      navigate(SITE_MAP.support);
+      navigate(SITE_MAP.help);
     }
     return true;
   }
