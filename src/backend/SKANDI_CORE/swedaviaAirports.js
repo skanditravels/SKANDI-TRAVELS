@@ -1,18 +1,24 @@
-// Swedavia AirportInfo v2 and WaitTime v2. Read-only provider data for Travel Info.
+// Swedavia AirportInfo, WaitTime and FlightInfo v2 public data.
 import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
 import { TtlCache } from "backend/SKANDI_CORE/platformCache";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { lower, record, text, upper } from "backend/SKANDI_CORE/platformValidation";
 
 const BASE = "https://api.swedavia.se";
 const AIRPORT_INFO = "airportinfo/v2";
 const WAIT_TIME = "waittimepublic/v2";
+const FLIGHT_INFO = "flightinfo/v2";
 const SECRET_NAMES = {
   [AIRPORT_INFO]: "SWEDAVIA_AIRPORT_INFO_SUBSCRIPTION_KEY",
-  [WAIT_TIME]: "SWEDAVIA_WAIT_TIME_SUBSCRIPTION_KEY"
+  [WAIT_TIME]: "SWEDAVIA_WAIT_TIME_SUBSCRIPTION_KEY",
+  [FLIGHT_INFO]: "SWEDAVIA_FLIGHT_INFO_SUBSCRIPTION_KEY"
 };
-const AIRPORTS = new Set(["ARN", "BMA", "GOT", "MMX", "LLA", "UME", "OSD", "VBY", "RNB", "KRN"]);
+const AIRPORTS = {
+  ARN: "ESSA", BMA: "ESSB", GOT: "ESGG", MMX: "ESMS", LLA: "ESPA",
+  UME: "ESNU", OSD: "ESNZ", VBY: "ESSV", RNB: "ESDF", KRN: "ESNQ"
+};
 const SECURITY_AIRPORTS = new Set(["ARN", "BMA", "GOT"]);
 const LANGUAGES = new Set(["en", "sv", "no", "da", "fi"]);
 const FACILITIES = ["restaurants", "shops", "services"];
@@ -21,10 +27,19 @@ const TTL = {
   facilities: 30 * 60 * 1000,
   parking: 10 * 60 * 1000,
   routes: 60 * 60 * 1000,
+  flights: 60 * 1000,
   security: 60 * 1000,
   unavailable: 30 * 1000
 };
 const MAX_WAIT_AGE_MS = 5 * 60 * 1000;
+const SWEDAVIA_ZONE = "Europe/Stockholm";
+const DAY_MS = 86_400_000;
+const localDate = new Intl.DateTimeFormat("en-CA", { timeZone: SWEDAVIA_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+const localClock = new Intl.DateTimeFormat("en-GB", { timeZone: SWEDAVIA_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const FLIGHT_STATES = {
+  SCH: "scheduled", FPL: "scheduled", FLS: "suspended", SEQ: "sequenced", ACT: "en-route",
+  CAN: "cancelled", LAN: "landed", RER: "rerouted", DIV: "diverted"
+};
 const getSecretValue = elevate(secrets.getSecretValue);
 const cache = new TtlCache({ maxEntries: 250 });
 const inFlight = new Map();
@@ -41,10 +56,10 @@ function list(value, field) {
   return rows;
 }
 
-function deadline(promise) {
+function deadline(promise, timeoutMs = 4000) {
   let timer;
   const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error("Swedavia request timed out")), 4000);
+    timer = setTimeout(() => reject(new Error("Swedavia request timed out")), timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
@@ -86,7 +101,7 @@ async function fetchProduct(product, path, key, normalize) {
     console.warn("[Travel Info] Swedavia API request failed", { product, status: response.status });
     return unavailable();
   }
-  const snapshot = normalize(response.status === 204 ? [] : await response.json());
+  const snapshot = await normalize(response.status === 204 ? [] : await response.json(), response.headers);
   return { ...snapshot, status: "ready" };
 }
 
@@ -195,13 +210,158 @@ function parkingLots(value, iata) {
 }
 
 function destinations(value) {
-  const items = list(value, "citydestinations").map(fields).flatMap(row => {
+  const routes = new Map();
+  for (const row of list(value, "citydestinations").map(fields)) {
     const iata = upper(row.iata);
-    if (!/^[A-Z]{3}$/.test(iata)) return [];
+    if (!/^[A-Z]{3}$/.test(iata)) continue;
     const operators = Array.isArray(row.operators) ? row.operators.map(fields) : [];
-    return [{ iata, airlines: [...new Set(operators.map(item => plainText(item.name, 160)).filter(Boolean))] }];
+    const airlines = routes.get(iata) || new Set();
+    for (const operator of operators) {
+      const name = plainText(operator.name, 160);
+      if (name) airlines.add(name);
+    }
+    routes.set(iata, airlines);
+  }
+  return { items: [...routes].map(([iata, airlines]) => ({ iata, airlines: [...airlines] })) };
+}
+
+async function routeAirportNames(items) {
+  if (!items.length) return items;
+  const codes = items.map(item => item.iata);
+  // The view exposes the approved airport directory. Bound the IN list per call.
+  const lookups = [];
+  for (let index = 0; index < codes.length; index += 100) {
+    const batch = codes.slice(index, index + 100);
+    lookups.push(restRequest({
+      table: "inventory_public_entities_v",
+      query: { select: "code,name,city:details->>city", entity_type: "eq.AIRPORT", code: `in.(${batch.join(",")})`, limit: "100" }
+    }));
+  }
+  const rows = (await Promise.allSettled(lookups)).flatMap(outcome =>
+    outcome.status === "fulfilled" && Array.isArray(outcome.value) ? outcome.value : []
+  );
+  const names = new Map(rows.map(row => [upper(row.code), row]));
+  return items.map(item => {
+    const airport = names.get(item.iata);
+    return airport ? { ...item, name: plainText(airport.name, 180), city: plainText(airport.city, 140) } : item;
   });
-  return { items };
+}
+
+export function swedaviaAirportIata(airport) {
+  const code = upper(airport, 8);
+  if (Object.hasOwn(AIRPORTS, code)) return code;
+  return Object.keys(AIRPORTS).find(iata => AIRPORTS[iata] === code) || "";
+}
+
+export function swedaviaLocalDate(now = Date.now()) {
+  const parts = Object.fromEntries(localDate.formatToParts(new Date(now)).map(({ type, value }) => [type, value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function flightTimestamp(value) {
+  const time = utcMeasurement(value);
+  return Number.isFinite(time) ? new Date(time).toISOString() : "";
+}
+
+function flightLocalClock(timestamp) {
+  return timestamp ? localClock.format(new Date(timestamp)) : "";
+}
+
+function flightCode(value) {
+  return upper(value, 24).replace(/\s+/g, "");
+}
+
+function flightRemarks(values) {
+  return Array.isArray(values) ? [...new Set(values.map(fields).map(row => plainText(row.text, 160)).filter(Boolean))].join(" · ") : "";
+}
+
+function normalizeBoardFlight(raw, airport, headers, arrivals) {
+  const flight = fields(raw), id = fields(flight.flightlegidentifier), airline = fields(flight.airlineoperator);
+  const location = fields(flight.locationandstatus);
+  const statusCode = upper(location.flightlegstatus, 10);
+  const number = flightCode(flight.flightid || id.flightid);
+  if (!/^[A-Z0-9]{2,3}\d{1,5}[A-Z]?$/.test(number)) return null;
+  const time = fields(arrivals ? flight.arrivaltime : flight.departuretime);
+  const scheduled = flightTimestamp(time.scheduledutc), estimated = flightTimestamp(time.estimatedutc), actual = flightTimestamp(time.actualutc);
+  const checkIn = fields(flight.checkin), baggage = fields(flight.baggage);
+  const firstDesk = Number.isInteger(checkIn.checkindeskfrom) && checkIn.checkindeskfrom > 0 ? String(checkIn.checkindeskfrom) : "";
+  const lastDesk = Number.isInteger(checkIn.checkindeskto) && checkIn.checkindeskto > 0 ? String(checkIn.checkindeskto) : "";
+  const here = arrivals ? "arrival" : "departure", other = arrivals ? "departure" : "arrival";
+  const iata = upper(id[other + "airportiata"], 3);
+  const codeShares = Array.isArray(flight.codesharedata) ? flight.codesharedata.map(flightCode) : [];
+  let status = FLIGHT_STATES[statusCode] || "unknown";
+  if (actual && !["cancelled", "diverted"].includes(status)) status = arrivals ? "landed" : "departed";
+  return {
+    id: [number, airport, iata, scheduled || estimated || actual].join("|"),
+    flightIata: number,
+    airlineIata: upper(airline.iata, 3),
+    airlineIcao: upper(airline.icao, 4),
+    airlineName: plainText(airline.name, 160),
+    codeshareFlightIatas: [...new Set(codeShares.filter(code => code !== number && /^[A-Z0-9]{2,3}\d{1,5}[A-Z]?$/.test(code)))],
+    status,
+    fidsRemarks: { en: flightRemarks(flight.remarksenglish), sv: flightRemarks(flight.remarksswedish) },
+    statusLabels: {
+      en: plainText(location.flightlegstatusenglish, 160),
+      sv: plainText(location.flightlegstatusswedish, 160)
+    },
+    checkInDesks: arrivals ? "" : [...new Set([firstDesk, lastDesk].filter(Boolean))].join("–"),
+    [here]: {
+      iata: airport,
+      icao: upper(id[here + "airporticao"] || headers[here + "airporticao"] || AIRPORTS[airport], 4),
+      airport: plainText(headers[here + "airportenglish"], 180),
+      airportSv: plainText(headers[here + "airportswedish"], 180),
+      terminal: plainText(location.terminal, 40),
+      gate: plainText(location.gate, 40),
+      baggage: arrivals ? plainText(baggage.baggageclaimunit, 40) : "",
+      scheduled, estimated, actual,
+      scheduledLocal: flightLocalClock(scheduled), estimatedLocal: flightLocalClock(estimated), actualLocal: flightLocalClock(actual),
+      timezone: SWEDAVIA_ZONE
+    },
+    [other]: {
+      iata, icao: upper(id[other + "airporticao"], 4),
+      airport: plainText(flight[other + "airportenglish"], 180),
+      airportSv: plainText(flight[other + "airportswedish"], 180)
+    }
+  };
+}
+
+function normalizeBoard(payload, headers, airport, arrivals) {
+  const response = fields(payload);
+  const station = fields(arrivals ? response.to : response.from);
+  const stationIata = upper(station[arrivals ? "arrivalairportiata" : "departureairportiata"]);
+  if (stationIata && stationIata !== airport) throw new Error("Unexpected Swedavia board airport");
+  const rows = response.numberofflights === 0 && !response.flights ? [] : list(payload, "flights");
+  const published = rows.filter(row => upper(fields(fields(row).locationandstatus).flightlegstatus, 10) !== "DEL");
+  const items = published.map(row => normalizeBoardFlight(row, airport, station, arrivals)).filter(Boolean);
+  if (published.length && !items.length) throw new Error("Unexpected Swedavia flight records");
+  const lastModified = Date.parse(headers?.get?.("Last-Modified") || "");
+  return { items, updatedAt: Number.isFinite(lastModified) ? new Date(lastModified).toISOString() : "" };
+}
+
+export async function getSwedaviaFlightBoardCore({ iata, boardType, date } = {}) {
+  const airport = swedaviaAirportIata(iata);
+  const localDay = swedaviaLocalDate();
+  // The public boards show today. The provider partitions its rows by UTC day.
+  if (!airport || date !== localDay || !["arrivals", "departures"].includes(boardType)) return unavailable();
+  const previousDay = new Date(Date.parse(`${localDay}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+  const arrivals = boardType === "arrivals";
+  const side = arrivals ? "arrival" : "departure";
+  const normalize = (payload, headers) => normalizeBoard(payload, headers, airport, arrivals);
+  const overnight = Number(localClock.format(new Date()).slice(0, 2)) < 6;
+  const [main, previous] = await Promise.all([
+    readSection(FLIGHT_INFO, `${airport}/${boardType}/${localDay}`, TTL.flights, normalize),
+    readSection(FLIGHT_INFO, `${airport}/${boardType}/${previousDay}`, overnight ? TTL.flights : TTL.routes, normalize)
+  ]);
+  if (main.status !== "ready" || (overnight && previous.status !== "ready")) return unavailable();
+  const fromToday = (item, keepUntimed) => {
+    const time = item[side].scheduled || item[side].estimated || item[side].actual;
+    return time ? swedaviaLocalDate(Date.parse(time)) === localDay : keepUntimed;
+  };
+  const items = new Map([
+    ...(previous.items || []).filter(item => fromToday(item, false)),
+    ...main.items.filter(item => fromToday(item, true))
+  ].map(item => [item.id, item]));
+  return { status: "ready", items: [...items.values()], updatedAt: main.updatedAt, partial: previous.status !== "ready" };
 }
 
 export async function getSwedaviaAirportInfoCore(input = {}) {
@@ -211,7 +371,7 @@ export async function getSwedaviaAirportInfoCore(input = {}) {
   const preferredLanguage = lower(rawLanguage);
   const language = LANGUAGES.has(preferredLanguage) ? preferredLanguage : "en";
   const context = { iata, scope, language };
-  if (!AIRPORTS.has(iata)) return { ...context, status: "unsupported" };
+  if (!Object.hasOwn(AIRPORTS, iata)) return { ...context, status: "unsupported" };
   switch (scope) {
     case "security": {
       if (!SECURITY_AIRPORTS.has(iata)) return { ...context, status: "unsupported" };
@@ -224,8 +384,14 @@ export async function getSwedaviaAirportInfoCore(input = {}) {
       return { ...context, ...await airportFacilities(iata, language) };
     case "parking":
       return { ...context, ...await readSection(AIRPORT_INFO, `${iata}/parkinglots/`, TTL.parking, value => parkingLots(value, iata)) };
-    case "routes":
-      return { ...context, ...await readSection(AIRPORT_INFO, `${iata}/destinations?startMonth=0&endMonth=2&minimumDepartures=1`, TTL.routes, destinations) };
+    case "routes": {
+      const result = await readSection(AIRPORT_INFO, `${iata}/destinations?startMonth=0&endMonth=2&minimumDepartures=1`, TTL.routes, async value => {
+        const data = destinations(value);
+        const items = await deadline(routeAirportNames(data.items), 800).catch(() => data.items);
+        return { items };
+      });
+      return { ...context, ...result };
+    }
     default:
       return { ...context, status: "unsupported" };
   }

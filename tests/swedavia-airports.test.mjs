@@ -3,24 +3,29 @@ import fs from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
 import { TtlCache } from '../src/backend/SKANDI_CORE/platformCache.js';
-import { lower, record, text, upper } from '../src/backend/SKANDI_CORE/platformValidation.js';
+import { lower, record, safeNumber, text, upper } from '../src/backend/SKANDI_CORE/platformValidation.js';
 
-const [coreSource, pageSource] = await Promise.all([
+const [coreSource, pageSource, flightStatusSource] = await Promise.all([
   fs.readFile(new URL('../src/backend/SKANDI_CORE/swedaviaAirports.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../src/pages/Travel Info.m43d6.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../src/pages/Travel Info.m43d6.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../src/backend/SKANDI_CORE/flightStatus.js', import.meta.url), 'utf8')
 ]);
 const withoutImports = source => source.replace(/^import [^;]+;\n/gm, '');
 const comparable = result => JSON.parse(JSON.stringify(result));
 const START = Date.parse('2026-11-28T12:00:00Z');
 
-function harness(serve, secret = name => ({ value: name + '-test-only' })) {
+function harness(serve, secret = name => ({ value: name + '-test-only' }), restRequest = async () => []) {
   const requests = [], secretsRead = [];
   let now = START;
-  class Clock extends Date { static now() { return now; } }
-  const execute = vm.runInNewContext(
-    withoutImports(coreSource).replace(/^export (?=async function)/m, '') + '\ngetSwedaviaAirportInfoCore;',
+  class Clock extends Date {
+    constructor(...args) { super(...(args.length ? args : [now])); }
+    static now() { return now; }
+  }
+  const { execute, board, airportIata, localDate } = vm.runInNewContext(
+    withoutImports(coreSource).replace(/^export (?=(?:async )?function)/gm, '') +
+      '\n({ execute: getSwedaviaAirportInfoCore, board: getSwedaviaFlightBoardCore, airportIata: swedaviaAirportIata, localDate: swedaviaLocalDate });',
     {
-      Date: Clock, URL, TtlCache, lower, record, text, upper, setTimeout, clearTimeout, console: { warn() {} },
+      Date: Clock, URL, TtlCache, lower, record, text, upper, restRequest, setTimeout, clearTimeout, console: { warn() {} },
       elevate: method => method,
       secrets: { getSecretValue: async name => { secretsRead.push(name); return secret(name); } },
       fetch: async (url, options) => {
@@ -34,7 +39,7 @@ function harness(serve, secret = name => ({ value: name + '-test-only' })) {
       }
     }
   );
-  return { execute, requests, secretsRead, advance: ms => { now += ms; } };
+  return { execute, board, airportIata, localDate, requests, secretsRead, advance: ms => { now += ms; } };
 }
 
 test('WaitTime v2 keeps a measured zero and hides overflow, aged, malformed and missing estimates', async () => {
@@ -98,7 +103,16 @@ test('parking and destination lookups use their documented routes and return pas
       CarParks: [{ IATA: 'GOT', CarParkName: 'P1', CategoryName: 'Indoor', ProductLabel: 'Next to terminal', IsSoldOut: false }],
       BookingInformationLink: url.pathname.includes('/GOT/') ? 'https://www.swedavia.se/parkering/' : 'javascript:alert(1)'
     };
-    return { CityDestinations: [{ IATA: 'CPH', Operators: [{ Name: 'SAS' }, { Name: 'SAS' }] }] };
+    return { CityDestinations: [
+      { IATA: 'CPH', Operators: [{ Name: 'SAS' }, { Name: 'SAS' }] },
+      { IATA: 'CPH', Operators: [{ Name: 'Norwegian' }] },
+      { IATA: 'XXX' }
+    ] };
+  }, undefined, async ({ table, query }) => {
+    assert.equal(table, 'inventory_public_entities_v');
+    assert.equal(query.entity_type, 'eq.AIRPORT');
+    assert.equal(query.code, 'in.(CPH,XXX)');
+    return [{ code: 'CPH', city: 'Copenhagen', name: 'Copenhagen Kastrup Airport' }];
   });
   const parking = await source.execute({ iata: 'GOT', scope: 'parking' });
   assert.equal(parking.items[0].name, 'P1');
@@ -107,8 +121,99 @@ test('parking and destination lookups use their documented routes and return pas
   assert.equal('isSoldOut' in parking.items[0], false);
   assert.equal((await source.execute({ iata: 'KRN', scope: 'parking' })).bookingUrl, '');
   const routes = await source.execute({ iata: 'GOT', scope: 'routes' });
-  assert.deepEqual(comparable(routes.items), [{ iata: 'CPH', airlines: ['SAS'] }]);
+  assert.deepEqual(comparable(routes.items), [
+    { iata: 'CPH', airlines: ['SAS', 'Norwegian'], city: 'Copenhagen', name: 'Copenhagen Kastrup Airport' },
+    { iata: 'XXX', airlines: [] }
+  ]);
   assert.equal(source.requests.at(-1).target.search, '?startMonth=0&endMonth=2&minimumDepartures=1');
+});
+
+test('FlightInfo uses the Sweden-local service day and maps the documented arrivals and departures', async () => {
+  const source = harness(url => {
+    const arrival = url.pathname.includes('/arrivals/');
+    const adjacent = url.pathname.endsWith('2026-11-27');
+    const time = arrival ? 'ArrivalTime' : 'DepartureTime';
+    const location = { Terminal: 'T5', Gate: 'F62', FlightLegStatus: arrival ? 'LAN' : 'SCH', FlightLegStatusEnglish: arrival ? 'Landed' : 'Scheduled' };
+    const flight = {
+      flightId: adjacent ? 'SK42' : 'SK903', ArrivalAirportEnglish: 'New York/Newark', DepartureAirportEnglish: 'Copenhagen',
+      DepartureAirportSwedish: 'Köpenhamn', AirlineOperator: { IATA: 'SK', ICAO: 'SAS', Name: 'SAS' },
+      [time]: { ScheduledUtc: adjacent ? '2026-11-27T23:25:00' : '2026-11-28T15:00:00Z', ActualUtc: arrival ? '2026-11-28T15:08:00Z' : null },
+      LocationAndStatus: location, Baggage: { BaggageClaimUnit: '8' }, CheckIn: { CheckInDeskFrom: 10, CheckInDeskTo: 19 },
+      FlightLegIdentifier: { DepartureAirportIata: arrival ? 'CPH' : 'ARN', ArrivalAirportIata: arrival ? 'ARN' : 'EWR', AircraftRegistration: '<private field>' },
+      CodeShareData: ['DL 7805', 'DL7805', 'SK903'], RemarksEnglish: [{ Text: arrival ? 'Landed' : 'Go to gate F62' }],
+      RemarksSwedish: [{ Text: arrival ? 'Landat' : 'Gå till gate F62' }]
+    };
+    const rows = adjacent && arrival ? [] : [flight];
+    if (!adjacent && !arrival) rows.push({ ...flight, flightId: 'SK904', LocationAndStatus: { FlightLegStatus: 'DEL' } });
+    return Response.json({ [arrival ? 'To' : 'From']: { [arrival ? 'ArrivalAirportIata' : 'DepartureAirportIata']: 'ARN' }, Flights: rows }, {
+      headers: { 'Last-Modified': 'Sat, 28 Nov 2026 12:01:00 GMT' }
+    });
+  });
+  assert.equal(source.airportIata('ESSA'), 'ARN');
+  assert.equal(source.localDate(Date.parse('2026-06-30T22:05:00Z')), '2026-07-01');
+  const p = { date: '2026-11-28', iata: 'ARN', boardType: 'departures' };
+  const [first, repeated] = await Promise.all([source.board(p), source.board(p)]);
+  assert.equal(source.requests.length, 2);
+  assert.equal(first.updatedAt, '2026-11-28T12:01:00.000Z');
+  assert.deepEqual(comparable(first.items.map(row => row.departure.scheduledLocal)), ['00:25', '16:00']);
+  assert.equal(first.items[1].departure.gate, 'F62');
+  assert.equal(first.items[1].checkInDesks, '10–19');
+  assert.equal(first.items[1].fidsRemarks.sv, 'Gå till gate F62');
+  assert.deepEqual(comparable(first.items[1].codeshareFlightIatas), ['DL7805']);
+  assert.deepEqual(comparable(first), comparable(repeated));
+  assert.doesNotMatch(JSON.stringify(first), /test-only|private field/);
+  assert.ok(source.requests.every(({ target, options }) =>
+    /^\/flightinfo\/v2\/ARN\/departures\/2026-11-(27|28)$/.test(target.pathname) &&
+    options.headers['Ocp-Apim-Subscription-Key'] === 'SWEDAVIA_FLIGHT_INFO_SUBSCRIPTION_KEY-test-only'
+  ));
+  const arrival = (await source.board({ ...p, boardType: 'arrivals' })).items[0];
+  assert.equal(arrival.arrival.baggage, '8');
+  assert.equal(arrival.departure.airportSv, 'Köpenhamn');
+  assert.equal(arrival.arrival.actualLocal, '16:08');
+  assert.equal(arrival.status, 'landed');
+  assert.equal((await source.board({ ...p, date: '2027-02-01' })).status, 'unavailable');
+  assert.equal(source.requests.length, 4);
+});
+
+test('the canonical Flight Status board selects Swedavia for Swedish IATA and ICAO and labels the fallback', async () => {
+  const officialCalls = [], airlabsCalls = [];
+  const execute = vm.runInNewContext(
+    withoutImports(flightStatusSource).replace(/^export (?=(?:async )?function)/gm, '').replace(/^export \{ FLIGHT_STATUS_CORE_VERSION \};$/m, '') +
+      '\nsearchFlightStatusCore;',
+    {
+      URLSearchParams, lower, record, safeNumber, text, upper, SkandiError: Error,
+      elevate: method => method, secrets: { getSecretValue: async () => ({ value: 'airlabs-test-only' }) },
+      getPublishedAirlineBrandsCore: async () => new Map(),
+      swedaviaLocalDate: () => '2026-11-28',
+      swedaviaAirportIata: airport => ({ ARN: 'ARN', ESSA: 'ARN', GOT: 'GOT' })[airport] || '',
+      getSwedaviaFlightBoardCore: async input => {
+        officialCalls.push(input);
+        if (input.iata === 'GOT') return { status: 'unavailable' };
+        return { status: 'ready', items: [], partial: false, updatedAt: '2026-11-28T12:00:00Z' };
+      },
+      fetch: async url => {
+        airlabsCalls.push(new URL(url).pathname);
+        return Response.json({ response: [] });
+      }
+    }
+  );
+  const official = await execute({ mode: 'airport', airport: 'ESSA', date: '2026-11-27', boardType: 'arrivals' });
+  assert.equal(official.meta.provider, 'swedavia');
+  assert.equal(official.meta.providerUpdatedAt, '2026-11-28T12:00:00Z');
+  assert.deepEqual(comparable(officialCalls), [{ iata: 'ARN', boardType: 'arrivals', date: '2026-11-28' }]);
+  await execute({ mode: 'airport', airport: 'ARN', boardType: 'arrivals' });
+  assert.equal(officialCalls.length, 1);
+  assert.equal(airlabsCalls.length, 0);
+
+  const fallback = await execute({ mode: 'airport', airport: 'GOT' });
+  assert.equal(fallback.meta.provider, 'airlabs');
+  assert.match(fallback.meta.note,/Swedavia FlightInfo is unavailable/);
+  const abroad = await execute({ mode: 'airport', airport: 'JFK' });
+  assert.equal(abroad.meta.provider, 'airlabs');
+  assert.doesNotMatch(abroad.meta.note,/Swedavia/);
+  await execute({ mode: 'flight', flightNumber: 'SK903' });
+  assert.equal(officialCalls.length, 2);
+  assert.ok(airlabsCalls.some(url => url.endsWith('/flight')));
 });
 
 test('unsupported parameters make no provider calls and missing credentials affect only their product', async () => {
