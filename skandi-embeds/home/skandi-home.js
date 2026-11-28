@@ -3112,6 +3112,8 @@ function applyDates(restoreFocus=true){
 function openDatePicker(button, month=""){
   if(button===dateTrigger){ closeDatePicker(true); return; }
   closeDatePicker();
+  const travelers = button.closest(".tab-panel")?.querySelector(".home-travelers[open]");
+  if (travelers) travelers.open = false;
   const mode=button.dataset.dateRange;
   state.activeDateRange=mode;
   dateDraft={...state.dateRanges[mode]};

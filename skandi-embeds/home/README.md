@@ -31,6 +31,6 @@ The active receivers remain #htmlHome and #bookingFlowEmbed. The existing builde
 
 ## INFO / LOG — Homepage design refresh
 
-Home uses a full-width landscape and a single desktop row for the route, dates, travelers and search action. The calendar expands within the search form. On narrow screens the form flows into smaller rows and the traveler controls open inline. The editorial trip grid uses the same published inventory, with a full-card action for each trip. Continue planning, Explore Anywhere and the Velo message contracts keep their existing behavior.
+Home uses a full-width landscape and a single desktop row for the route, dates, travelers and search action. The calendar expands within the search form and closes an open traveler panel. On narrow screens the form flows into smaller rows and the traveler controls open inline. The editorial trip grid uses the same published inventory, with a full-card action for each trip. Continue planning, Explore Anywhere and the Velo message contracts keep their existing behavior.
 
 The default hero is skandi-embeds/home/assets/skandi-home-aegean.webp, an original generated editorial landscape inspired by the Aegean coast. The image is illustrative. The published home-hero slot in Media Control takes precedence. The existing builder compiles the bundled WebP with the active Home source.

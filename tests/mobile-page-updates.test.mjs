@@ -44,7 +44,8 @@ test('Home traveler summary follows the existing traveler counters',async()=>{
 });
 
 test('Home commits only applied date ranges and keeps the picker open after selecting a day',async t=>{
- const markup=await read('skandi-embeds/home/skandi-home.html');
+ const home=await read('skandi-embeds/home/skandi-home.html');
+ const markup='<div id="skandi-app-root"><div id="skandi-home-content">'+home+'</div></div>';
  const js=await read('skandi-embeds/home/skandi-home.js');
  const dom=new JSDOM(markup,{runScripts:'outside-only',url:'https://example.test',virtualConsole:new VirtualConsole()});
  const w=dom.window;
@@ -65,7 +66,10 @@ test('Home commits only applied date ranges and keeps the picker open after sele
  w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:"SKANDI_WIX_PARENT",type:"HOME_BOOTSTRAP_RESULT",requestId:readyRequest,payload:{content:{airports:[{iata:"JFK",name:"JFK"}],searchDestinations:[],destinations:[{...card,id:"area"}],offers:[{...card,id:"offer"}]}}}}));
  assert.equal(get('mixed-section').hidden,false);
  assert.equal(get('mixed-feed').querySelectorAll('h3').length,1);
+ const travelers=get('panel-holidays').querySelector('.home-travelers');
+ travelers.open=true;
  button.click();
+ assert.equal(travelers.open,false,'Opening travel dates dismisses the traveler panel');
  const days=[...picker.querySelectorAll('.day-btn:not(:disabled)')].slice(0,2).map(day=>day.dataset.date);
  const choose=day=>picker.querySelector('[data-date="'+day+'"]').click();
  choose(days[0]);
