@@ -46,6 +46,13 @@ const inFlight = new Map();
 const productCooldown = new Map();
 const unavailable = () => ({ status: "unavailable" });
 
+function reportUnavailable(product, reason) {
+  const key = `diagnostic:${product}:${reason}`;
+  if (cache.get(key)) return;
+  cache.set(key, true, TTL.security);
+  console.warn(`[Travel Info] Swedavia ${product}: ${reason}`);
+}
+
 function fields(value) {
   return Object.fromEntries(Object.entries(record(value)).map(([key, entry]) => [key.toLowerCase(), entry]));
 }
@@ -85,7 +92,10 @@ function throttleUntil(response) {
 async function readProduct(product, path, normalize) {
   if ((productCooldown.get(product) || 0) > Date.now()) return unavailable();
   const key = await subscriptionKey(product);
-  if (!key) return unavailable();
+  if (!key) {
+    reportUnavailable(product, "Wix subscription key not available");
+    return unavailable();
+  }
   return deadline(fetchProduct(product, path, key, normalize));
 }
 
@@ -98,11 +108,16 @@ async function fetchProduct(product, path, key, normalize) {
   if (!response.ok) {
     if (response.status === 429) productCooldown.set(product, throttleUntil(response));
     if (response.status === 401 || response.status === 403) productCooldown.set(product, Date.now() + TTL.security);
-    console.warn("[Travel Info] Swedavia API request failed", { product, status: response.status });
+    reportUnavailable(product, `HTTP ${Number(response.status) || 0}`);
     return unavailable();
   }
-  const snapshot = await normalize(response.status === 204 ? [] : await response.json(), response.headers);
-  return { ...snapshot, status: "ready" };
+  try {
+    const snapshot = await normalize(response.status === 204 ? [] : await response.json(), response.headers);
+    return { ...snapshot, status: "ready" };
+  } catch (_) {
+    reportUnavailable(product, "Response could not be decoded");
+    return unavailable();
+  }
 }
 
 function readSection(product, path, ttl, normalize) {
@@ -111,7 +126,10 @@ function readSection(product, path, ttl, normalize) {
   if (cached) return Promise.resolve(cached);
   if (inFlight.has(key)) return inFlight.get(key);
   const pending = readProduct(product, path, normalize)
-    .catch(() => unavailable())
+    .catch(() => {
+      reportUnavailable(product, "Request failed or timed out");
+      return unavailable();
+    })
     .then(result => cache.set(key, result, result.status === "ready" ? ttl : TTL.unavailable))
     .finally(() => inFlight.delete(key));
   inFlight.set(key, pending);
