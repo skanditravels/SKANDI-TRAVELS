@@ -3146,7 +3146,7 @@ function setupDatePicker(){
   });
   document.addEventListener("click",event=>{
     // Selecting a day redraws its button before this event reaches the document.
-    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search]"))closeDatePicker();
+    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search], [data-explore-destination]"))closeDatePicker();
   });
   document.addEventListener("keydown",event=>{
     if(event.key==="Escape"&&dateDraft){event.preventDefault();closeDatePicker(true);}
@@ -3454,6 +3454,7 @@ function findExploreIdeas(event) {
     const button = document.createElement("button");
     button.type="button"; button.className="home-text-button";
     button.textContent = label+" →";
+    button.dataset.exploreDestination = code;
     button.onclick = ()=>{
       state.exploreDraft = {nights};
       $("hol-from-search").value = $("explore-origin").value;
