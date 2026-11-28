@@ -4774,9 +4774,70 @@ html.ti-lock #skandi-app-root,html.ti-lock body #skandi-app-root{overflow:hidden
   color:var(--ti-navy);
 }
 #skandi-app-root .ti-swedavia-grid .ti-swedavia-unavailable{font-weight:650}
-#skandi-app-root .ti-swedavia-group{border-top:1px solid #dbe6ed}
-#skandi-app-root .ti-swedavia-group summary{padding:10px 0;font-size:max(13px, .94rem)}
-#skandi-app-root .ti-swedavia-group .ti-swedavia-grid,#skandi-app-root .ti-swedavia-group .ti-swedavia-message{margin-bottom:12px}
+#skandi-app-root .ti-swedavia-directory h2{font-size:max(13px, clamp(1.16rem,2vw,1.5rem))}
+#skandi-app-root .ti-swedavia-directory .ti-swedavia-message{margin-block:12px 8px}
+#skandi-app-root .ti-swedavia-period{margin:0 0 12px;color:#465c72;font-size:max(13px, .9rem);line-height:1.5}
+#skandi-app-root .ti-swedavia-categories{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:14px 0;
+  padding:4px;
+  border:1px solid #dbe6ed;
+  border-radius:9px;
+  background:#fff;
+}
+#skandi-app-root .ti-swedavia-categories button{
+  flex:1 1 auto;
+  min-height:44px;
+  padding:7px 10px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:var(--ti-navy);
+  font:inherit;
+  font-size:max(13px, .92rem);
+  font-weight:660;
+  cursor:pointer;
+}
+#skandi-app-root .ti-swedavia-categories button:hover{background:#edf4f8}
+#skandi-app-root .ti-swedavia-categories button[aria-pressed="true"]{background:var(--ti-navy);color:#fff}
+#skandi-app-root .ti-swedavia-filters{
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+#skandi-app-root [data-ti-swedavia="routes"] .ti-swedavia-filters{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}
+#skandi-app-root .ti-swedavia-filters>div{display:grid;gap:5px;min-width:0}
+#skandi-app-root .ti-swedavia-filters label{
+  min-width:0;
+  font-size:max(13px, .9rem);
+  font-weight:650;
+  color:var(--ti-navy);
+}
+#skandi-app-root .ti-swedavia-filters input,#skandi-app-root .ti-swedavia-filters select{
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:7px 9px;
+  border:1px solid #b8cad8;
+  border-radius:6px;
+  background:#fff;
+  color:#183550;
+  font:inherit;
+  font-weight:400;
+}
+#skandi-app-root .ti-swedavia-venue-details{border-top:1px solid #e3ebf1;padding-top:4px}
+#skandi-app-root .ti-swedavia-venue-details summary{min-height:32px;cursor:pointer;color:var(--ti-navy);font-size:max(13px, .9rem);font-weight:620}
+#skandi-app-root .ti-swedavia-venue-details p{padding-top:3px}
+#skandi-app-root [data-ti-swedavia="routes"] .ti-swedavia-grid h3 span{color:#465c72;font-weight:560;padding-inline-start:5px}
+#skandi-app-root .ti-swedavia-more{margin-top:12px}
+#skandi-app-root .ti-airport-guide .ti-fids-check-in{display:block;margin-top:5px;color:#b6c6d0;font-size:max(13px, .83rem);line-height:1.3}
+@media(max-width:660px){
+  #skandi-app-root .ti-swedavia-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #skandi-app-root [data-ti-swedavia="routes"] .ti-swedavia-filters{grid-template-columns:minmax(0,1fr)}
+  #skandi-app-root .ti-swedavia-filters>div:first-child{grid-column:1/-1}
+}
 #skandi-app-root .ti-swedavia-footer{
   display:flex;
   align-items:center;
@@ -4785,7 +4846,7 @@ html.ti-lock #skandi-app-root,html.ti-lock body #skandi-app-root{overflow:hidden
   margin-top:12px;
   color:#465c72;
 }
-#skandi-app-root .ti-swedavia-footer button,#skandi-app-root .ti-swedavia-book{
+#skandi-app-root .ti-swedavia-footer button,#skandi-app-root .ti-swedavia-book,#skandi-app-root .ti-swedavia-more{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -4802,7 +4863,7 @@ html.ti-lock #skandi-app-root,html.ti-lock body #skandi-app-root{overflow:hidden
   text-decoration:none;
   cursor:pointer;
 }
-#skandi-app-root .ti-swedavia-footer button:hover,#skandi-app-root .ti-swedavia-book:hover{background:#edf4f8}
+#skandi-app-root .ti-swedavia-footer button:hover,#skandi-app-root .ti-swedavia-book:hover,#skandi-app-root .ti-swedavia-more:hover{background:#edf4f8}
 #skandi-app-root .ti-swedavia-footer button[aria-disabled="true"]{opacity:.65;cursor:wait}
 #skandi-app-root .ti-swedavia-book{margin-top:12px}
 #skandi-app-root .ti-swedavia [hidden]{display:none}
@@ -6947,7 +7008,7 @@ const STATE={
   swedaviaLanguage:"en",
   swedaviaSections:new Map(),
   swedaviaRequestSerial:0,
-  swedaviaOpenGroups:new Set(),
+  swedaviaFilters:{},
   searchIndex:[],
   searchOpen:false,
   searchQuery:"",
@@ -7216,7 +7277,7 @@ function openDetail(x,trigger=document.activeElement){
   STATE.activeDetail=x;
   STATE.activeAirlineTab=x._library==="airlines"?"before":"";
   STATE.activeAirportTab=x._library==="airports"?"overview":"";
-  STATE.swedaviaOpenGroups.clear();
+  STATE.swedaviaFilters={};
   STATE.activeAirportBoardType="departures";
   STATE.airportShowEarlier=false;
   $("tiHome").style.display="none";
@@ -7391,11 +7452,12 @@ function tiAirportRequestContext(x){
 }
 function tiAirportRequestFlights(x,boardType="departures",force=false){
   const iata=tiAirportIata(x);if(!iata)return;const type=boardType==="arrivals"?"arrivals":"departures";const key=tiAirportCacheKey(iata,type);
-  if(!force&&STATE.airportFlights.has(key))return tiRenderAirportFlights();
+  const cached=STATE.airportFlights.get(key);
+  if(!force&&cached&&Date.now()-cached.checkedAt<60_000)return tiRenderAirportFlights();
   if(STATE.airportFlightPending.has(key))return;
   if(STATE.airportFlightRequest)STATE.airportFlightPending.delete(STATE.airportFlightRequest.key);
   STATE.airportFlightPending.add(key);const requestId=`airport-flights-${++STATE.airportFlightRequestSerial}-${Date.now()}`;STATE.airportFlightRequest={requestId,iata,boardType:type,key};
-  const host=$("tiAirportFlightRows");if(host)host.innerHTML=`<div class="board-message"><span class="board-message-title">LOADING FLIGHTS</span><span class="board-message-note">Retrieving ${esc(type)} for ${esc(iata)}</span></div>`;
+  const host=$("tiAirportFlightRows");if(host&&(!cached||cached.error))host.innerHTML=`<div class="board-message"><span class="board-message-title">LOADING FLIGHTS</span><span class="board-message-note">Retrieving ${esc(type)} for ${esc(iata)}</span></div>`;
   post("TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST",{iata,boardType:type,requestId});
 }
 function tiAirportList(value){
@@ -7421,7 +7483,12 @@ const SWEDAVIA_COPY={
     beforeSecurity:"Before security",afterSecurity:"After security",standard:"Standard security",fastTrack:"Fast Track",
     overflow:"Queue exceeds the monitored area",expired:"Reading out of date",noEstimate:"Estimate unavailable",measured:"Measured at",
     loading:"Checking with Swedavia…",unavailable:"Swedavia information is temporarily unavailable.",empty:"Swedavia has no information listed here.",
-    refresh:"Refresh",retry:"Try again",book:"Check availability and book"
+    refresh:"Refresh",retry:"Try again",book:"Check availability and book",
+    terminalsTab:"Terminals & security",flightsTab:"Flight Info",servicesTab:"Eat, shop & services",transportTab:"Getting there",routesTab:"Direct flights",
+    facilitySearch:"Search names or locations",routeSearch:"Search cities, airports or airlines",terminal:"Terminal",allTerminals:"All terminals",
+    area:"Security area",allAreas:"All areas",airline:"Airline",allAirlines:"All airlines",details:"Details",
+    more:"Show more",noMatch:"No results match your filters.",count:"Showing {shown} of {total}",routePeriod:"Scheduled departures this month and the next two months.",
+    officialBoard:"Source: Swedavia",backupBoard:"Swedavia is unavailable. Source: AirLabs.",updated:"Feed updated",checkInDesks:"Check-in desks",unknownStatus:"Status unavailable"
   },
   sv:{
     security:"Väntetider i säkerhetskontrollen",services:"Mat, butiker och service",parking:"Swedavias parkeringar",routes:"Planerade direktdestinationer",
@@ -7429,7 +7496,12 @@ const SWEDAVIA_COPY={
     beforeSecurity:"Före säkerhetskontrollen",afterSecurity:"Efter säkerhetskontrollen",standard:"Ordinarie säkerhetskontroll",fastTrack:"Fast Track",
     overflow:"Kön sträcker sig utanför mätområdet",expired:"Mätningen är inaktuell",noEstimate:"Ingen uppskattning tillgänglig",measured:"Mätt kl.",
     loading:"Hämtar information från Swedavia…",unavailable:"Information från Swedavia är tillfälligt otillgänglig.",empty:"Swedavia har ingen information här.",
-    refresh:"Uppdatera",retry:"Försök igen",book:"Kontrollera tillgänglighet och boka"
+    refresh:"Uppdatera",retry:"Försök igen",book:"Kontrollera tillgänglighet och boka",
+    terminalsTab:"Terminaler och säkerhet",flightsTab:"Flyginformation",servicesTab:"Mat, butiker och service",transportTab:"Ta dig hit",routesTab:"Direktflyg",
+    facilitySearch:"Sök namn eller plats",routeSearch:"Sök stad, flygplats eller flygbolag",terminal:"Terminal",allTerminals:"Alla terminaler",
+    area:"Säkerhetsområde",allAreas:"Alla områden",airline:"Flygbolag",allAirlines:"Alla flygbolag",details:"Mer information",
+    more:"Visa fler",noMatch:"Inga resultat matchar dina filter.",count:"Visar {shown} av {total}",routePeriod:"Planerade avgångar den här månaden och de kommande två månaderna.",
+    officialBoard:"Källa: Swedavia",backupBoard:"Swedavia är otillgängligt. Källa: AirLabs.",updated:"Flödet uppdaterades",checkInDesks:"Incheckningsdiskar",unknownStatus:"Status saknas"
   },
   no:{
     security:"Ventetider i sikkerhetskontrollen",services:"Mat, butikker og tjenester",parking:"Swedavias parkeringsplasser",routes:"Planlagte direkteruter",
@@ -7437,7 +7509,12 @@ const SWEDAVIA_COPY={
     beforeSecurity:"Før sikkerhetskontrollen",afterSecurity:"Etter sikkerhetskontrollen",standard:"Ordinær sikkerhetskontroll",fastTrack:"Fast Track",
     overflow:"Køen strekker seg utenfor måleområdet",expired:"Målingen er utdatert",noEstimate:"Estimat utilgjengelig",measured:"Målt kl.",
     loading:"Henter informasjon fra Swedavia…",unavailable:"Informasjon fra Swedavia er midlertidig utilgjengelig.",empty:"Swedavia har ingen informasjon her.",
-    refresh:"Oppdater",retry:"Prøv igjen",book:"Sjekk tilgjengelighet og bestill"
+    refresh:"Oppdater",retry:"Prøv igjen",book:"Sjekk tilgjengelighet og bestill",
+    terminalsTab:"Terminaler og sikkerhet",flightsTab:"Flyinformasjon",servicesTab:"Mat, butikker og tjenester",transportTab:"Reise til flyplassen",routesTab:"Direktefly",
+    facilitySearch:"Søk etter navn eller sted",routeSearch:"Søk etter by, flyplass eller flyselskap",terminal:"Terminal",allTerminals:"Alle terminaler",
+    area:"Sikkerhetsområde",allAreas:"Alle områder",airline:"Flyselskap",allAirlines:"Alle flyselskaper",details:"Mer informasjon",
+    more:"Vis flere",noMatch:"Ingen resultater samsvarer med filtrene.",count:"Viser {shown} av {total}",routePeriod:"Planlagte avganger denne måneden og de neste to månedene.",
+    officialBoard:"Kilde: Swedavia",backupBoard:"Swedavia er utilgjengelig. Kilde: AirLabs.",updated:"Oppdatert",checkInDesks:"Innsjekkingsskranker",unknownStatus:"Status utilgjengelig"
   },
   da:{
     security:"Ventetider i sikkerhedskontrollen",services:"Mad, butikker og service",parking:"Swedavias parkeringspladser",routes:"Planlagte direkte ruter",
@@ -7445,7 +7522,12 @@ const SWEDAVIA_COPY={
     beforeSecurity:"Før sikkerhedskontrollen",afterSecurity:"Efter sikkerhedskontrollen",standard:"Almindelig sikkerhedskontrol",fastTrack:"Fast Track",
     overflow:"Køen rækker ud over måleområdet",expired:"Målingen er forældet",noEstimate:"Intet estimat tilgængeligt",measured:"Målt kl.",
     loading:"Henter information fra Swedavia…",unavailable:"Information fra Swedavia er midlertidigt utilgængelig.",empty:"Swedavia har ingen information her.",
-    refresh:"Opdater",retry:"Prøv igen",book:"Se tilgængelighed og book"
+    refresh:"Opdater",retry:"Prøv igen",book:"Se tilgængelighed og book",
+    terminalsTab:"Terminaler og sikkerhed",flightsTab:"Flyinformation",servicesTab:"Mad, butikker og service",transportTab:"Transport til lufthavnen",routesTab:"Direkte fly",
+    facilitySearch:"Søg efter navn eller sted",routeSearch:"Søg efter by, lufthavn eller flyselskab",terminal:"Terminal",allTerminals:"Alle terminaler",
+    area:"Sikkerhedsområde",allAreas:"Alle områder",airline:"Flyselskab",allAirlines:"Alle flyselskaber",details:"Mere information",
+    more:"Vis flere",noMatch:"Ingen resultater matcher dine filtre.",count:"Viser {shown} af {total}",routePeriod:"Planlagte afgange denne måned og de næste to måneder.",
+    officialBoard:"Kilde: Swedavia",backupBoard:"Swedavia er utilgængelig. Kilde: AirLabs.",updated:"Opdateret",checkInDesks:"Check-in-skranker",unknownStatus:"Status utilgængelig"
   },
   fi:{
     security:"Turvatarkastuksen jonotusajat",services:"Ravintolat, kaupat ja palvelut",parking:"Swedavian pysäköintialueet",routes:"Suunnitellut suorat lentokohteet",
@@ -7453,10 +7535,23 @@ const SWEDAVIA_COPY={
     beforeSecurity:"Ennen turvatarkastusta",afterSecurity:"Turvatarkastuksen jälkeen",standard:"Tavallinen turvatarkastus",fastTrack:"Fast Track",
     overflow:"Jono ulottuu mittausalueen ulkopuolelle",expired:"Mittaustieto on vanhentunut",noEstimate:"Arviota ei ole saatavilla",measured:"Mitattu klo",
     loading:"Haetaan tietoja Swedavialta…",unavailable:"Swedavian tiedot eivät ole juuri nyt saatavilla.",empty:"Swedavialla ei ole tästä tietoja.",
-    refresh:"Päivitä",retry:"Yritä uudelleen",book:"Tarkista saatavuus ja varaa"
+    refresh:"Päivitä",retry:"Yritä uudelleen",book:"Tarkista saatavuus ja varaa",
+    terminalsTab:"Terminaalit ja turvatarkastus",flightsTab:"Lentotiedot",servicesTab:"Ravintolat, kaupat ja palvelut",transportTab:"Kulkuyhteydet",routesTab:"Suorat lennot",
+    facilitySearch:"Hae nimellä tai sijainnilla",routeSearch:"Hae kaupungin, lentoaseman tai lentoyhtiön mukaan",terminal:"Terminaali",allTerminals:"Kaikki terminaalit",
+    area:"Turvatarkastusalue",allAreas:"Kaikki alueet",airline:"Lentoyhtiö",allAirlines:"Kaikki lentoyhtiöt",details:"Lisätiedot",
+    more:"Näytä lisää",noMatch:"Hakuehtoja vastaavia tuloksia ei löytynyt.",count:"Näytetään {shown}/{total}",routePeriod:"Suunnitellut lähdöt tässä kuussa ja kahden seuraavan kuukauden aikana.",
+    officialBoard:"Lähde: Swedavia",backupBoard:"Swedavian tiedot eivät ole saatavilla. Lähde: AirLabs.",updated:"Päivitetty",checkInDesks:"Lähtöselvitystiskit",unknownStatus:"Tilatieto puuttuu"
   }
 };
 let swedaviaExpiryTimer=0;
+const AIRPORT_DIRECTORY_PAGE_SIZE=12;
+const SWEDAVIA_CATEGORIES=[["restaurants","restaurants"],["shops","shops"],["services","passengerServices"]];
+const SWEDAVIA_TAB_LABELS={overview:"terminalsTab","flight-info":"flightsTab",services:"servicesTab",transport:"transportTab",routes:"routesTab"};
+
+function tiSwedaviaFilters(scope){
+  STATE.swedaviaFilters[scope]??={category:"restaurants",query:"",terminal:"",area:"",airline:"",limit:AIRPORT_DIRECTORY_PAGE_SIZE};
+  return STATE.swedaviaFilters[scope];
+}
 
 function tiSwedaviaKey(iata,scope,language){
   return [iata,scope,scope==="services"?language:""].join("|");
@@ -7465,14 +7560,33 @@ function tiSwedaviaKey(iata,scope,language){
 function tiSwedaviaMarkup(airport,scope){
   const iata=tiAirportIata(airport);
   if(!(scope==="security"?SWEDAVIA_SECURITY:SWEDAVIA_AIRPORTS).has(iata))return "";
-  return `<details class="ti-guide-fold ti-swedavia" data-ti-swedavia="${scope}">
-    <summary>${esc(SWEDAVIA_COPY[STATE.swedaviaLanguage][scope])}</summary>
-    <div class="ti-guide-fold-body">
-      <p class="ti-swedavia-message" data-ti-swedavia-status role="status" hidden></p>
-      <div data-ti-swedavia-body></div>
-      <div class="ti-swedavia-footer"><small>Swedavia</small><button type="button" data-ti-swedavia-refresh hidden></button></div>
+  const copy=SWEDAVIA_COPY[STATE.swedaviaLanguage];
+  const title=esc(copy[scope]);
+  const directory=scope==="services"||scope==="routes";
+  const body=`<p class="ti-swedavia-message" data-ti-swedavia-status role="status" hidden></p>
+    <div data-ti-swedavia-body></div>
+    <button type="button" class="ti-swedavia-more" data-ti-swedavia-more hidden></button>
+    <div class="ti-swedavia-footer"><small>Swedavia</small><button type="button" data-ti-swedavia-refresh hidden></button></div>`;
+  if(!directory)return `<details class="ti-guide-fold ti-swedavia" data-ti-swedavia="${scope}">
+    <summary data-ti-swedavia-heading>${title}</summary><div class="ti-guide-fold-body">${body}</div></details>`;
+  const services=scope==="services";
+  const filter=(key)=>{
+    const id=`ti-swedavia-${scope}-${key}`;
+    const control=key==="query"?`<input id="${id}" type="search" autocomplete="off" data-ti-swedavia-filter="query">`
+      :`<select id="${id}" data-ti-swedavia-filter="${key}"></select>`;
+    return `<div><label for="${id}" data-ti-swedavia-label="${key}"></label>${control}</div>`;
+  };
+  const categories=services?`<div class="ti-swedavia-categories" role="group" aria-label="${title}" data-ti-swedavia-categories>
+    ${SWEDAVIA_CATEGORIES.map(([key,label])=>`<button type="button" data-ti-swedavia-category="${key}">${esc(copy[label])}</button>`).join("")}</div>`:"";
+  return `<section class="ti-guide-card ti-swedavia ti-swedavia-directory" data-ti-swedavia="${scope}">
+    <h2 data-ti-swedavia-heading>${title}</h2>
+    ${services?"":`<p class="ti-swedavia-period" data-ti-swedavia-period>${esc(copy.routePeriod)}</p>`}
+    ${categories}
+    <div class="ti-swedavia-filters">
+      ${filter("query")}
+      ${services?filter("terminal")+filter("area"):filter("airline")}
     </div>
-  </details>`;
+    ${body}</section>`;
 }
 
 function tiSwedaviaCards(items,render){
@@ -7507,25 +7621,16 @@ function tiSwedaviaSecurityHtml(panel,items,copy){
   });
 }
 
-function tiSwedaviaFacilitiesHtml(data,copy,expanded){
-  const classes=[["restaurants",copy.restaurants],["shops",copy.shops],["services",copy.passengerServices]];
+function tiSwedaviaFacilitiesHtml(data,items,copy){
   const contentLanguage=/^[a-z]{2}$/.test(data.providerLanguage)?` lang="${data.providerLanguage}"`:"";
-  return classes.map(([key,title])=>{
-    const group=obj(data.groups?.[key]),items=arr(group.items);
-    if(group.status==="ready"&&!items.length)return "";
-    const cards=tiSwedaviaCards(items,item=>{
-      const access=item.beforeSecurity===true?copy.beforeSecurity:item.beforeSecurity===false?copy.afterSecurity:"";
-      const location=uniq([item.terminal,item.place]).join(" · ");
-      return `<h3${contentLanguage}>${esc(item.name)}</h3>
-        ${location?`<p${contentLanguage}>${esc(location)}</p>`:""}${access?`<p>${esc(access)}</p>`:""}
-        ${item.openingHours?`<p><strong>${esc(copy.hours)}</strong><br><span${contentLanguage}>${esc(item.openingHours)}</span></p>`:""}
-        ${item.description?`<p${contentLanguage}>${esc(item.description)}</p>`:""}`;
-    });
-    return `<details class="ti-swedavia-group" data-ti-swedavia-group="${key}"${expanded.has(key)?" open":""}>
-      <summary>${esc(title)}${items.length?` (${items.length})`:""}</summary>
-      ${cards||`<p class="ti-swedavia-message">${esc(copy.unavailable)}</p>`}
-    </details>`;
-  }).join("");
+  return tiSwedaviaCards(items,item=>{
+    const access=item.beforeSecurity===true?copy.beforeSecurity:item.beforeSecurity===false?copy.afterSecurity:"";
+    const location=uniq([item.terminal,item.place]).join(" · ");
+    return `<h3${contentLanguage}>${esc(item.name)}</h3>
+      ${location?`<p${contentLanguage}>${esc(location)}</p>`:""}${access?`<p>${esc(access)}</p>`:""}
+      ${item.openingHours?`<p><strong>${esc(copy.hours)}</strong><br><span${contentLanguage}>${esc(item.openingHours)}</span></p>`:""}
+      ${item.description?`<details class="ti-swedavia-venue-details"><summary>${esc(copy.details)}</summary><p${contentLanguage}>${esc(item.description)}</p></details>`:""}`;
+  });
 }
 
 function tiSwedaviaParkingHtml(data,copy){
@@ -7538,18 +7643,76 @@ function tiSwedaviaParkingHtml(data,copy){
 }
 
 function tiSwedaviaRoutesHtml(items){
-  const airportNames=new Map(arr(DATA.airports).map(airport=>[tiAirportIata(airport),text(airport.city||itemTitle(airport))]));
-  return tiSwedaviaCards(items.slice().sort((a,b)=>text(a.iata).localeCompare(text(b.iata))),item=>{
-    const name=airportNames.get(item.iata);
+  return tiSwedaviaCards(items,item=>{
     const airlines=arr(item.airlines).map(esc).join(" · ");
-    const title=name?`${name} (${item.iata})`:item.iata;
-    return `<h3>${esc(title)}</h3>${airlines?`<p>${airlines}</p>`:""}`;
+    const title=item.city||item.name||item.iata;
+    const displayCode=item.iata!==title?`<span>${esc(item.iata)}</span>`:"";
+    return `<h3>${esc(title)} ${displayCode}</h3>
+      ${item.name&&title!==item.name?`<p>${esc(item.name)}</p>`:""}${airlines?`<p>${airlines}</p>`:""}`;
   });
 }
 
-function tiRememberSwedaviaGroups(root){
-  const groups=[...root.querySelectorAll("[data-ti-swedavia-group]")];
-  if(groups.length)STATE.swedaviaOpenGroups=new Set(groups.filter(group=>group.open).map(group=>group.dataset.tiSwedaviaGroup));
+function tiSwedaviaOptions(panel,key,label,options,value){
+  panel.querySelector(`[data-ti-swedavia-label="${key}"]`).textContent=label;
+  const select=panel.querySelector(`[data-ti-swedavia-filter="${key}"]`);
+  const markup=options.map(([id,title])=>`<option value="${esc(id)}">${esc(title)}</option>`).join("");
+  if(select.innerHTML!==markup)select.innerHTML=markup;
+  select.value=value;
+}
+
+function tiSwedaviaDirectory(panel,scope,data,copy){
+  const services=scope==="services",language=STATE.swedaviaLanguage,filters=tiSwedaviaFilters(scope);
+  const compare=(a,b)=>text(a).localeCompare(text(b),language,{numeric:true,sensitivity:"base"});
+  const search=panel.querySelector('[data-ti-swedavia-filter="query"]');
+  panel.querySelector('[data-ti-swedavia-label="query"]').textContent=services?copy.facilitySearch:copy.routeSearch;
+  if(search.value!==filters.query)search.value=filters.query;
+  const category=services?obj(data?.groups?.[filters.category]):obj(data);
+  let items=arr(category.items);
+  if(services){
+    const tabs=panel.querySelector("[data-ti-swedavia-categories]");
+    tabs.setAttribute("aria-label",copy.services);
+    for(const button of tabs.querySelectorAll("[data-ti-swedavia-category]")){
+      const key=button.dataset.tiSwedaviaCategory;
+      const label=SWEDAVIA_CATEGORIES.find(([value])=>value===key)[1];
+      const count=data?.groups?.[key]?.items?.length;
+      button.textContent=copy[label]+(Number.isInteger(count)?` (${count})`:"");
+      button.setAttribute("aria-pressed",String(filters.category===key));
+    }
+    const terminals=uniq(items.map(item=>item.terminal)).sort(compare);
+    const filterTerminal=terminals.includes(filters.terminal)?filters.terminal:"";
+    tiSwedaviaOptions(panel,"terminal",copy.terminal,[["",copy.allTerminals],...terminals.map(name=>[name,name])],filterTerminal);
+    tiSwedaviaOptions(panel,"area",copy.area,[["",copy.allAreas],["before",copy.beforeSecurity],["after",copy.afterSecurity]],filters.area);
+    items=items.filter(item=>(!filterTerminal||item.terminal===filterTerminal)&&(!filters.area||item.beforeSecurity===(filters.area==="before")));
+  }else{
+    panel.querySelector("[data-ti-swedavia-period]").textContent=copy.routePeriod;
+    const airportNames=new Map(arr(DATA.airports).map(airport=>[tiAirportIata(airport),airport]));
+    items=items.map(item=>{
+      const airport=airportNames.get(item.iata);
+      return {...item,city:item.city||airport?.city,name:item.name||(airport?itemTitle(airport):"")};
+    });
+    const airlines=uniq(items.flatMap(item=>arr(item.airlines))).sort(compare);
+    const filterAirline=airlines.includes(filters.airline)?filters.airline:"";
+    tiSwedaviaOptions(panel,"airline",copy.airline,[["",copy.allAirlines],...airlines.map(name=>[name,name])],filterAirline);
+    items=items.filter(item=>!filterAirline||arr(item.airlines).includes(filterAirline));
+  }
+  const terms=searchKey(filters.query).split(" ").filter(Boolean);
+  const filtered=items.filter(item=>{
+    const match=searchKey([item.name,item.city,item.iata,item.place,item.terminal,...arr(item.airlines)].filter(Boolean).join(" "));
+    return terms.every(term=>match.includes(term));
+  }).sort((a,b)=>compare(a.city||a.name||a.iata,b.city||b.name||b.iata)||compare(a.iata||a.terminal,b.iata||b.terminal));
+  const slice=filtered.slice(0,filters.limit);
+  const more=panel.querySelector("[data-ti-swedavia-more]");
+  more.textContent=copy.more;
+  more.hidden=filtered.length<=slice.length;
+  if(data?.status==="loading")return {message:copy.loading};
+  if(category.status==="unavailable"||data?.status==="unavailable")return {message:copy.unavailable};
+  if(!data)return {};
+  if(!arr(category.items).length)return {message:copy.empty};
+  if(!slice.length)return {message:copy.noMatch};
+  return {
+    message:copy.count.replace("{shown}",slice.length).replace("{total}",filtered.length),
+    content:services?tiSwedaviaFacilitiesHtml(data,slice,copy):tiSwedaviaRoutesHtml(slice)
+  };
 }
 
 function tiRenderSwedaviaPanel(panel){
@@ -7561,15 +7724,14 @@ function tiRenderSwedaviaPanel(panel){
   const status=panel.querySelector("[data-ti-swedavia-status]");
   const refresh=panel.querySelector("[data-ti-swedavia-refresh]");
   panel.lang=STATE.swedaviaLanguage;
-  panel.querySelector("summary").textContent=copy[scope];
-  if(scope==="services")tiRememberSwedaviaGroups(body);
+  panel.querySelector("[data-ti-swedavia-heading]").textContent=copy[scope];
   let content="",message="";
-  if(data?.status==="ready"){
+  if(scope==="services"||scope==="routes"){
+    ({content="",message=""}=tiSwedaviaDirectory(panel,scope,data,copy));
+  }else if(data?.status==="ready"){
     switch(scope){
       case "security": content=tiSwedaviaSecurityHtml(panel,arr(data.items),copy);break;
-      case "services": content=tiSwedaviaFacilitiesHtml(data,copy,STATE.swedaviaOpenGroups);break;
       case "parking": content=tiSwedaviaParkingHtml(data,copy);break;
-      case "routes": content=tiSwedaviaRoutesHtml(arr(data.items));break;
     }
     if(!content)message=copy.empty;
   }else if(data?.status==="loading")message=copy.loading;
@@ -7592,11 +7754,11 @@ function tiFinishSwedaviaRequest(result){
   if(STATE.activeDetail?._library!=="airports"||tiAirportIata(STATE.activeDetail)!==iata)return;
   if(scope==="services"&&language!==STATE.swedaviaLanguage)return;
   const panel=$("tiDetailMount").querySelector(`[data-ti-swedavia="${CSS.escape(scope)}"]`);
-  if(panel?.open)tiRenderSwedaviaPanel(panel);
+  if(panel)tiRenderSwedaviaPanel(panel);
 }
 
 function tiRequestSwedaviaPanel(panel,refresh=false){
-  if(!panel.isConnected||!panel.open||panel.closest("[data-airport-panel]")?.hidden)return;
+  if(!panel.isConnected||panel.matches("details:not([open])")||panel.closest("[data-airport-panel]")?.hidden)return;
   const scope=panel.dataset.tiSwedavia;
   const iata=tiAirportIata(STATE.activeDetail),language=STATE.swedaviaLanguage;
   const key=tiSwedaviaKey(iata,scope,language),cached=STATE.swedaviaSections.get(key);
@@ -7621,7 +7783,12 @@ function tiSetSwedaviaLanguage(value){
   const language=lower(value).split("-")[0];
   if(!Object.hasOwn(SWEDAVIA_COPY,language)||language===STATE.swedaviaLanguage)return;
   STATE.swedaviaLanguage=language;
-  if(STATE.activeDetail?._library==="airports")tiUpdateSwedaviaPanels($("tiDetailMount"));
+  if(STATE.activeDetail?._library==="airports"&&SWEDAVIA_AIRPORTS.has(tiAirportIata(STATE.activeDetail))){
+    const mount=$("tiDetailMount"),copy=SWEDAVIA_COPY[language];
+    mount.querySelectorAll("[data-airport-tab]").forEach(button=>{button.textContent=copy[SWEDAVIA_TAB_LABELS[button.dataset.airportTab]]});
+    tiUpdateSwedaviaPanels(mount);
+    if(STATE.activeAirportTab==="flight-info")tiRenderAirportFlights();
+  }
 }
 
 function airportRelatedHtml(x,a){
@@ -7646,6 +7813,8 @@ function airportRelatedHtml(x,a){
 }
 function airportGuideTabs(x,a){
   const s=obj(a.sections);
+  const swedavia=SWEDAVIA_AIRPORTS.has(tiAirportIata(x));
+  const copy=SWEDAVIA_COPY[STATE.swedaviaLanguage];
   const section=(id,title,value,fallback,open=false)=>guideSectionHtml(toGuideSection(id,title,value,fallback),open);
   const overview=[
     section("terminals","Terminals",a.terminals,undefined,true),
@@ -7667,20 +7836,22 @@ function airportGuideTabs(x,a){
   const services=[
     tiSwedaviaMarkup(x,"services"),
     section("lounges","Lounges",a.lounges),
-    section("food","Food & drink",a.foodDrinks),
+    section("food",swedavia?"SKANDI dining guide":"Food & drink",a.foodDrinks),
     section("hotels","Airport hotels",a.airportHotels,a.airportHotel),
     section("wifi","Wi-Fi",s.wifi,a.wifi),
     section("lost","Lost & found",a.lostFound),
-    section("destinations","Destinations served",a.destinationsServing),
-    tiSwedaviaMarkup(x,"routes")
+    swedavia?"":section("destinations","Destinations served",a.destinationsServing)
   ].join("");
   const fallback=guideBodyHtml(a.information||a.body||a.summary);
-  return [
-    {id:"overview",label:"Terminals & check-in",content:(overview?overview+guideDisclosure("About this airport",fallback):guideCard("Airport overview",fallback))||'<p class="ti-guide-empty">Terminal and check-in details are currently unavailable.</p>'},
-    {id:"transport",label:"Getting there",content:transportation},
-    {id:"services",label:"Airport services",content:services},
-    {id:"flight-info",label:"Flight Info",content:tiAirportFlightPanelHtml(x)}
-  ].filter(tab=>tab.content);
+  const tabs={
+    overview:{label:"Terminals & check-in",content:(overview?overview+guideDisclosure("About this airport",fallback):guideCard("Airport overview",fallback))||'<p class="ti-guide-empty">Terminal and check-in details are currently unavailable.</p>'},
+    transport:{label:"Getting there",content:transportation},
+    services:{label:"Airport services",content:services},
+    "flight-info":{label:"Flight Info",content:tiAirportFlightPanelHtml(x)},
+    routes:{content:tiSwedaviaMarkup(x,"routes")+section("destinations","Destinations served",a.destinationsServing)}
+  };
+  const order=swedavia?["overview","flight-info","services","transport","routes"]:["overview","transport","services","flight-info"];
+  return order.filter(id=>tabs[id].content).map(id=>({id,...tabs[id],label:swedavia?copy[SWEDAVIA_TAB_LABELS[id]]:tabs[id].label}));
 }
 
 const TI_AIRLINE_LOGOS=Object.freeze({AS:"https://static.wixstatic.com/shapes/394052_6535b791dd404055903a12f5350d61c3.svg",AA:"https://static.wixstatic.com/shapes/394052_47809f4547c04f6eb7e098c5602ff57c.svg",PG:"https://static.wixstatic.com/shapes/394052_3627db92f99544d8bc42c98e684ce5d4.svg",BA:"https://static.wixstatic.com/shapes/394052_85c56f21c63c42d2b5fba0273ee3b0a6.svg",DL:"https://static.wixstatic.com/shapes/394052_4f692ba92b43482292d87d1c6b7df036.svg",AY:"https://static.wixstatic.com/shapes/394052_97cf9b3a9a884781b3186ededecd7b45.svg",F9:"https://static.wixstatic.com/shapes/394052_cca48f82a42043d79743561a784e92c8.svg",IB:"https://static.wixstatic.com/shapes/394052_3726a2f12dcd44ab8dea7085713902b9.svg",FI:"https://static.wixstatic.com/shapes/394052_e09b3c2f6dfd4ca3a87497e34f538c53.svg",B6:"https://static.wixstatic.com/shapes/394052_d0e052d862be40cba0231eae50b4b5dd.svg",KL:"https://static.wixstatic.com/shapes/394052_0c2eaf7331a147648b444fdb12329073.svg",LH:"https://static.wixstatic.com/shapes/394052_76a1dce4673a429d86b4d816faf88b6d.svg",DY:"https://static.wixstatic.com/shapes/394052_05f76b5094374d11951f14a93fa1ea88.svg",D8:"https://static.wixstatic.com/shapes/394052_05f76b5094374d11951f14a93fa1ea88.svg",SK:"https://static.wixstatic.com/shapes/394052_bfbc7fc4f8b74360bf5398ac8d12a280.svg",LX:"https://static.wixstatic.com/shapes/394052_69b2702a5c434d03a9aa0182c430979e.svg",TG:"https://static.wixstatic.com/shapes/394052_c370132e76c64a29befdfd67496234fe.svg",UA:"https://static.wixstatic.com/shapes/394052_6002f849a3574cd4827d4ba1c3d339ef.svg"});
@@ -7705,7 +7876,7 @@ function tiActualFlightTime(side){
   return tiProviderClock(side?.actualLocal,side?.actual)
 }
 function tiAirportLocalClock(x){
-  const zone=text(tiAirportResolved(x)?.timezone)||"UTC";
+  const zone=SWEDAVIA_AIRPORTS.has(tiAirportIata(x))?"Europe/Stockholm":text(tiAirportResolved(x)?.timezone)||"UTC";
   try{
     return {
       time:new Intl.DateTimeFormat("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:zone}).format(new Date()),
@@ -7727,8 +7898,9 @@ function tiAirportDirectoryLabel(side){
   const code=text(side?.iata||side?.icao).toUpperCase();
   const directory=arr(DATA.airports);
   const d=directory.find(a=>text(a.iataCode||a.iata).toUpperCase()===code||text(a.icaoCode||a.icao).toUpperCase()===code);
-  const city=text(side?.city||d?.city).replace(/\s+/g," ").trim();
-  const name=text(side?.airport||d?.title||d?.name)
+  const swedaviaName=STATE.swedaviaLanguage==="sv"?side?.airportSv||side?.airport:side?.airport||side?.airportSv;
+  const city=text(side?.city||(side?.airportSv?"":d?.city)).replace(/\s+/g," ").trim();
+  const name=text(swedaviaName||d?.title||d?.name)
     .replace(/\s*\([A-Z0-9]{3,4}\)\s*$/i,"")
     .replace(/\bInternational\b|\bAirport\b/gi,"")
     .replace(/\s+/g," ")
@@ -7762,6 +7934,7 @@ function tiFidsServiceDate(item){
   return ""
 }
 function tiFidsGroupKey(item){
+  if(item?.fidsRemarks&&item.id)return item.id;
   const physical=tiFlightToken(item?.operatingFlightIata||item?.flightIata||item?.flightIcao);
   const dep=text(item?.departure?.iata||item?.departure?.airport).toUpperCase();
   const arrv=text(item?.arrival?.iata||item?.arrival?.airport).toUpperCase();
@@ -7803,10 +7976,7 @@ function tiFidsGroupFlights(items){
       (text(representative?.airlineIata).toUpperCase()===operatingAirlineIata?representative?.airlineName:"")||
       operatingAirlineIata
     );
-    const codeshareFlightIatas=[...new Set(rows.map(row=>{
-      const marketing=tiFlightToken(row?.flightIata);
-      return marketing&&marketing!==physical?marketing:""
-    }).filter(Boolean))];
+    const codeshareFlightIatas=[...new Set(rows.flatMap(row=>[row?.flightIata,...arr(row?.codeshareFlightIatas)]).map(tiFlightToken).filter(code=>code&&code!==physical))];
     return {
       ...representative,
       displayFlightIata:physical||tiFlightToken(representative?.flightIata||representative?.flightIcao),
@@ -7842,6 +8012,21 @@ function tiAirportFlightIsEarlier(item,arrivals){
 }
 function tiAirportStatus(item,arrivals,meta){
   const raw=lower(item?.status),side=arrivals?obj(item?.arrival):obj(item?.departure),now=Date.now();
+  if(meta?.provider==="swedavia"){
+    const lang=STATE.swedaviaLanguage==="sv"?"sv":"en";
+    const remarks=obj(item.fidsRemarks),labels=obj(item.statusLabels);
+    const official=text(remarks[lang]||remarks.en||remarks.sv||labels[lang]||labels.en||labels.sv);
+    const time=side.actualLocal;
+    const completed=tiAirportCompleted(item,arrivals);
+    let label=official;
+    if(!label&&completed)label=arrivals?(lang==="sv"?"Landat":"Landed"):(lang==="sv"?"Avgått":"Departed");
+    if(!label&&raw==="cancelled")label=lang==="sv"?"Inställt":"Cancelled";
+    if(!label&&raw==="diverted")label=lang==="sv"?"Omdirigerat":"Diverted";
+    if(completed&&time&&!label.includes(time))label+=` · ${time}`;
+    const cancelled=["cancelled","diverted","suspended"].includes(raw);
+    const attention=/delay|försen|final call|sista utrop/i.test(official);
+    return [label||SWEDAVIA_COPY[STATE.swedaviaLanguage].unknownStatus,cancelled?"flap-bad":attention?"flap-warn":"flap-ok"];
+  }
   if(raw.includes("cancel"))return["CANCELLED","flap-bad"];
   if(raw.includes("divert"))return["DIVERTED","flap-bad"];
   if(arrivals&&tiAirportCompleted(item,true)){
@@ -7908,7 +8093,7 @@ function tiFidsRowHtml(item,index,arrivals,entry,extraClass=""){
     <div class="fids-cell cell-place" data-label="${arrivals?"From":"To"}" role="cell"><div class="fids-destination"><strong>${esc(dest.place)}</strong></div></div>
     <div class="fids-cell cell-terminal" data-label="Terminal" role="cell"><span class="fids-terminal">${esc(tiTerminal(side.terminal))}</span></div>
     <div class="fids-cell cell-gate" data-label="${arrivals?"Belt":"Gate"}" role="cell"><span class="fids-gate ${arrivals?"is-belt":""}">${esc(facility)}</span></div>
-    <div class="fids-cell cell-remarks" data-label="Remarks" role="cell"><span class="fids-status ${status[1]}">${esc(status[0])}</span></div>
+    <div class="fids-cell cell-remarks" data-label="Remarks" role="cell"><span class="fids-status ${status[1]}">${esc(status[0])}</span>${!arrivals&&item.checkInDesks?`<small class="ti-fids-check-in">${esc(SWEDAVIA_COPY[STATE.swedaviaLanguage].checkInDesks)} ${esc(item.checkInDesks)}</small>`:""}</div>
   </div>`
 }
 function tiAdvanceCodeshareTicker(){
@@ -7985,7 +8170,17 @@ function tiRenderAirportFlights(){
   const meta=$("tiAirportBoardMeta");
   if(meta){
     const count=current.length;
-    meta.textContent=entry.meta?.note||`${count} current ${type}${earlier.length?` · ${earlier.length} earlier`:""}. Time shows the scheduled ${arrivals?"arrival":"departure"}; completion time appears in Remarks.`
+    const copy=SWEDAVIA_COPY[STATE.swedaviaLanguage];
+    const board=entry.meta;
+    if(board.provider==="swedavia"){
+      const updatedAt=Date.parse(board.providerUpdatedAt);
+      const updated=Number.isFinite(updatedAt)
+        ?`${copy.updated} ${new Intl.DateTimeFormat(STATE.swedaviaLanguage,{timeZone:"Europe/Stockholm",dateStyle:"medium",timeStyle:"short",hourCycle:"h23"}).format(updatedAt)}`:"";
+      meta.textContent=[copy.officialBoard,updated,board.note].filter(Boolean).join(" · ");
+    }else{
+      meta.textContent=board.note||(SWEDAVIA_AIRPORTS.has(iata)&&board.provider==="airlabs"?copy.backupBoard:
+        `${count} current ${type}${earlier.length?` · ${earlier.length} earlier`:""}. Time shows the scheduled ${arrivals?"arrival":"departure"}; completion time appears in Remarks.`);
+    }
   }
 }
 function tiAirportFlightPanelHtml(x){
@@ -8058,11 +8253,32 @@ function tiBindAirportDetail(x){
   });
   root.querySelector("[data-ti-earlier-flights]")?.addEventListener("click",()=>{STATE.airportShowEarlier=!STATE.airportShowEarlier;tiRenderAirportFlights()});
   root.querySelectorAll("[data-ti-swedavia]").forEach(panel=>{
-    panel.addEventListener("toggle",()=>{
+    if(panel.matches("details"))panel.addEventListener("toggle",()=>{
       if(panel.open){tiRenderSwedaviaPanel(panel);tiRequestSwedaviaPanel(panel)}
       else if(panel.isConnected&&panel.dataset.tiSwedavia==="security")clearTimeout(swedaviaExpiryTimer);
     });
     panel.querySelector("[data-ti-swedavia-refresh]").addEventListener("click",()=>tiRequestSwedaviaPanel(panel,true));
+    if(!panel.matches(".ti-swedavia-directory"))return;
+    const filters=tiSwedaviaFilters(panel.dataset.tiSwedavia);
+    const update=(key,value)=>{
+      filters[key]=value;
+      filters.limit=AIRPORT_DIRECTORY_PAGE_SIZE;
+      tiRenderSwedaviaPanel(panel);
+    };
+    panel.querySelectorAll("[data-ti-swedavia-filter]").forEach(field=>{
+      field.addEventListener(field.tagName==="INPUT"?"input":"change",()=>update(field.dataset.tiSwedaviaFilter,field.value));
+    });
+    panel.querySelectorAll("[data-ti-swedavia-category]").forEach(button=>button.addEventListener("click",()=>update("category",button.dataset.tiSwedaviaCategory)));
+    panel.querySelector("[data-ti-swedavia-more]").addEventListener("click",()=>{
+      const priorCount=filters.limit;
+      filters.limit+=AIRPORT_DIRECTORY_PAGE_SIZE;
+      tiRenderSwedaviaPanel(panel);
+      const entry=panel.querySelectorAll(".ti-swedavia-grid > li")[priorCount];
+      if(entry){
+        entry.tabIndex=-1;
+        entry.focus();
+      }
+    });
   });
   root.querySelectorAll("[data-ti-airport-kind]").forEach(btn=>btn.addEventListener("click",()=>{const kind=btn.dataset.tiAirportKind,id=btn.dataset.tiAirportId,ctx=tiAirportContext(x),all=[...arr(ctx?.commerce?.transferOffers),...arr(ctx?.commerce?.hotels),...arr(ctx?.commerce?.tours),...arr(ctx?.commerce?.destinations),...tiAirportList(tiAirportResolved(x).destinationAds)];const item=all.find(i=>text(i?.publicId||i?.id||i?.slug||i?.title||i?.name)===id)||{};post("TRAVEL_INFO_AIRPORT_ACTION",{kind,item,airportIata:tiAirportIata(x)})}));
 }
@@ -8070,9 +8286,12 @@ function renderAirportDetail(x){
   tiAirportRequestContext(x);
   const mount=$("tiDetailMount"),iata=tiAirportIata(x);
   const sameAirport=mount.firstElementChild?.dataset.airportCode===iata;
-  const focusedTab=sameAirport?document.activeElement?.dataset.airportTab:"";
-  const openSections=new Set(sameAirport?[...mount.querySelectorAll(".ti-guide-fold[open] summary")].map(summary=>summary.textContent):[]);
-  if(sameAirport)tiRememberSwedaviaGroups(mount);
+  const focused=sameAirport?document.activeElement:null;
+  const focusedTab=focused?.dataset.airportTab;
+  const focusedScope=focused?.closest("[data-ti-swedavia]")?.dataset.tiSwedavia;
+  const focusedFilter=focused?.dataset.tiSwedaviaFilter;
+  const focusedCategory=focused?.dataset.tiSwedaviaCategory;
+  const openSections=new Set(sameAirport?[...mount.querySelectorAll(".ti-guide-fold[open] > summary")].map(summary=>summary.textContent):[]);
   const a=tiAirportResolved(x),tabs=airportGuideTabs(x,a);
   const active=tabs.some(tab=>tab.id===STATE.activeAirportTab)?STATE.activeAirportTab:"overview";
   STATE.activeAirportTab=active;
@@ -8092,6 +8311,10 @@ function renderAirportDetail(x){
   });
   tiUpdateSwedaviaPanels(mount);
   if(focusedTab)$("tiAirportTab-"+focusedTab)?.focus({preventScroll:true});
+  if(focusedScope&&(focusedFilter||focusedCategory)){
+    const attr=focusedFilter?"filter":"category";
+    mount.querySelector(`[data-ti-swedavia="${CSS.escape(focusedScope)}"] [data-ti-swedavia-${attr}="${CSS.escape(focusedFilter||focusedCategory)}"]`)?.focus({preventScroll:true});
+  }
   if(active==="flight-info"){
     tiAirportRequestFlights(x,STATE.activeAirportBoardType||"departures");
     requestAnimationFrame(tiRenderAirportFlights);
@@ -8464,10 +8687,10 @@ window.addEventListener("message",event=>{
       const req=STATE.airportContextRequest;if(req&&(!p.requestId||p.requestId===req.requestId)){STATE.airportContextPending.delete(req.iata);STATE.airportContexts.set(req.iata,{airport:{iata:req.iata},commerce:{},error:p.message||"Airport information is temporarily unavailable."})}break
     }
     case "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT":{
-      const req=STATE.airportFlightRequest;if(req&&p.requestId&&p.requestId!==req.requestId)break;if(req){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:arr(p.items),meta:obj(p.meta)});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
+      const req=STATE.airportFlightRequest;if(req&&p.requestId&&p.requestId!==req.requestId)break;if(req){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:arr(p.items),meta:obj(p.meta),checkedAt:Date.now()});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
     }
     case "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR":{
-      const req=STATE.airportFlightRequest;if(req&&(!p.requestId||p.requestId===req.requestId)){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:[],meta:{},error:p.message||"Flight information is temporarily unavailable."});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
+      const req=STATE.airportFlightRequest;if(req&&(!p.requestId||p.requestId===req.requestId)){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:[],meta:{},error:p.message||"Flight information is temporarily unavailable.",checkedAt:Date.now()});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
     }
     case "TRAVEL_INFO_SWEDAVIA_RESULT":tiFinishSwedaviaRequest(p);break;
     case "TRAVEL_INFO_REQUIREMENTS_SEARCHING":{const h=$("tiRequirementResult");if(h)h.textContent=p.message||"Checking current travel requirements…";break}
@@ -8528,7 +8751,7 @@ setInterval(()=>{
 
 setInterval(()=>{
   const x=STATE.activeDetail;
-  if(!x||x._library!=="airports"||STATE.activeAirportTab!=="flight-info")return;
+  if(document.hidden||!x||x._library!=="airports"||STATE.activeAirportTab!=="flight-info")return;
   tiRenderAirportFlights();
   tiAirportRequestFlights(x,STATE.activeAirportBoardType||"departures",true)
 },60000);

@@ -4083,6 +4083,8 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
                 font-size: 13px
             }
         }
+
+#skandi-app-root .fids-swedavia-codeshares{display:block;margin-top:4px;color:#bfced6;line-height:1.25;overflow-wrap:anywhere}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -6888,6 +6890,17 @@ let showHistoricalFlights = false;
 function render(items, meta) {
   lastFlightItems = Array.isArray(items) ? items : [];
   lastFlightMeta = meta && typeof meta === "object" ? meta : {};
+  const swedavia = meta?.provider === "swedavia";
+  const zone = meta?.timezone || airportTimezone || "UTC";
+  if (swedavia) {
+    airportTimezone = zone;
+    if (el("screenDate") && meta.date) el("screenDate").textContent = meta.date;
+  }
+  const updatedAt = Date.parse(swedavia ? meta.providerUpdatedAt : meta?.searchedAt);
+  const updated = Number.isFinite(updatedAt)
+    ? new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(updatedAt)
+    : "";
+  const boardMeta = [meta?.message, swedavia && updated ? `Feed updated ${updated}` : ""].filter(Boolean).join(" · ");
   const rows = el("rows");
   setBoardBusy(false);
   el("hardwareCasing")?.classList.remove("is-searching");
@@ -6897,7 +6910,7 @@ function render(items, meta) {
 
   if (!items || !items.length) {
     setBoardMessage("NO FLIGHTS FOUND", currentMode === "airport" ? "No flights were returned for this airport board." : currentMode === "flight" ? "No matching flight was returned for this date." : "No flights were returned for this route and date.", "flap-warn");
-    el("boardMeta").textContent = meta?.message || "No flights matched the selected airport board.";
+    el("boardMeta").textContent = boardMeta || "No flights matched the selected airport board.";
     setStatusLabels(meta?.partial ? "Partial update" : "Updated", "0 Flights");
     setNotice(meta?.note || "", false);
     return;
@@ -6921,8 +6934,11 @@ function render(items, meta) {
     const side = arrivals ? item.arrival : item.departure;
     const flightTime = new Date(side?.scheduled || side?.estimated);
     
-    // If the scheduled takeoff/landing was more than 15 minutes ago, classify as historical record
-    if (flightTime && (nowTime - flightTime) > (15 * 60 * 1000)) {
+    const isPast = swedavia
+      ? Boolean(side?.actual) || ["departed", "landed"].includes(item.status) ||
+        (["cancelled", "diverted"].includes(item.status) && flightTime < nowTime)
+      : (nowTime - flightTime) > (15 * 60 * 1000);
+    if (isPast) {
       previousFlights.push(item);
     } else {
       upcomingFlights.push(item);
@@ -6947,9 +6963,12 @@ function render(items, meta) {
     const logoUrl = canonicalLogo || KNOWN_AIRLINE_LOGOS[activeAirline] || "";
 
     // Safely fetch city tracking values out of the schema models without duplication loops
-    const targetCity = destination?.city || "";
+    const targetCity = destination?.city || (swedavia ? destination?.airport || destination?.airportSv : "") || "";
     const targetIata = destination?.iata || "";
-    const cleanDestinationLabel = targetCity ? `${targetCity.toUpperCase()} <span>(${targetIata.toUpperCase()})</span>` : targetIata.toUpperCase();
+    const visibleAirportCode = escapeHtml(targetIata.toUpperCase());
+    const cleanDestinationLabel = targetCity
+      ? `${escapeHtml(targetCity.toUpperCase())}${visibleAirportCode ? ` <span>(${visibleAirportCode})</span>` : ""}`
+      : visibleAirportCode;
 
     // Fallback parser logic path to prevent —:— display errors on live telemetry streams
     const timeDisplayValue = side?.scheduledLocal || fmtTime(side?.scheduled) || "—:—";
@@ -6962,7 +6981,13 @@ function render(items, meta) {
     const flightTime = new Date(side?.scheduled || side?.estimated);
     const isPastFlight = flightTime && (nowTime - flightTime) > (15 * 60 * 1000);
 
-    if (isPastFlight) {
+    if (swedavia) {
+      statusText = item.fidsRemarks?.en || item.fidsRemarks?.sv || item.statusLabels?.en || item.statusLabels?.sv ||
+        ({ cancelled: "Cancelled", diverted: "Diverted", landed: "Landed", departed: "Departed" })[statusStr] || "Status unavailable";
+      if (side?.actualLocal && !statusText.includes(side.actualLocal)) statusText += ` · ${side.actualLocal}`;
+      if (["cancelled", "diverted", "suspended"].includes(statusStr)) statusClass = "flap-bad";
+      else if (/delay|final call/i.test(statusText)) statusClass = "flap-warn";
+    } else if (isPastFlight) {
       if (statusStr === "cancelled") {
         statusText = "CANCELLED";
         statusClass = "flap-bad";
@@ -6994,7 +7019,9 @@ function render(items, meta) {
           </div>
         </div>
         <div class="fids-cell cell-flight" role="cell">
-          <div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong></div>
+          <div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong>
+            ${swedavia && item.codeshareFlightIatas?.length ? `<small class="fids-swedavia-codeshares">${escapeHtml(item.codeshareFlightIatas.join(" · "))}</small>` : ""}
+          </div>
         </div>
         <div class="fids-cell cell-time" role="cell">
           <div class="fids-time">
@@ -7057,9 +7084,8 @@ function render(items, meta) {
     img.hidden = true; img.parentElement.classList.add("fallback"); img.parentElement.querySelector(".fids-logo-fallback").hidden = false;
   }, { once: true }));
   
-  el("boardMeta").textContent = meta?.message || `Displaying ${sorted.length} flights`;
-  const now = new Intl.DateTimeFormat("en-GB", { timeZone: airportTimezone || "UTC", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(meta?.searchedAt || Date.now()));
-  setStatusLabels(`Updated ${now}`, `${sorted.length} ${sorted.length === 1 ? "Flight" : "Flights"}`);
+  el("boardMeta").textContent = boardMeta || `Displaying ${sorted.length} flights`;
+  setStatusLabels(updated ? `Updated ${updated}` : "Updated", `${sorted.length} ${sorted.length === 1 ? "Flight" : "Flights"}`);
   if (el("boardStatusEcho")) el("boardStatusEcho").textContent = meta?.partial ? "PARTIAL" : "UPDATED";
   setNotice(meta?.note || "", false);
 }
