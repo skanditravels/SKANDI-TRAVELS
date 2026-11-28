@@ -111,6 +111,9 @@ export async function confirmDuffelOrderChangeCore(input = {}) {
   assertPendingChange(raw);
   assertOrderReference(raw, input.expectedOrderId);
   const changeAmount = Number(raw.change_total_amount || 0);
+  if (input.expectedOrderId && (!clean(raw.change_total_amount, 40) || !Number.isFinite(changeAmount) || changeAmount < 0)) {
+    throw fail("ORDER_CHANGE_REVIEW_REQUIRED", "Ask SKANDI to review this change and any refund.", 409);
+  }
   const code = raw.change_total_currency ? currency(raw.change_total_currency) : null;
   const data = {};
   let paymentIntentId = null;

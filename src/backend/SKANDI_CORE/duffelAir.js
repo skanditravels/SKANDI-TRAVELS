@@ -800,7 +800,8 @@ export async function confirmDuffelOrderCancellationCore({ cancellationId, expec
     const { data } = await duffelRequest(`/air/order_cancellations/${encodeURIComponent(id)}`, { retrySafe: true });
     if (data?.order_id !== expectedOrderId) throw error("CANCELLATION_UNAVAILABLE", "This cancellation quote is unavailable for your booking.");
     if (data.confirmed_at) return { cancellation: normalizeCancellation(data), customerRefundRequired: Number(data.refund_amount) > 0 };
-    if (data.refund_amount == null || Number(data.refund_amount) !== 0 || !data.expires_at || Date.parse(data.expires_at) <= Date.now()) {
+    const expires = Date.parse(data.expires_at);
+    if (!clean(data.refund_amount, 40) || Number(data.refund_amount) !== 0 || !Number.isFinite(expires) || expires <= Date.now()) {
       throw error("CANCELLATION_QUOTE_REVIEW_REQUIRED", "Ask SKANDI to review this quote and any refund before cancellation.");
     }
   }
