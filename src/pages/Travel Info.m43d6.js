@@ -11,6 +11,7 @@ import {
 } from "backend/SKANDI_CORE/publicContent.web";
 import { createPublicSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
 import { handleFlightStatusAction } from "backend/SKANDI_CORE/flightStatus.web";
+import { getSwedaviaAirportInfo } from "backend/SKANDI_CORE/swedaviaAirports.web";
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_PUBLIC_TRAVEL_INFO";
@@ -184,6 +185,24 @@ $w.onReady(() => {
           } catch (error) {
             if (requestNumber !== latestAirportFlights) return;
             post(html, "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR", { requestId, message: clean(error?.publicMessage || error?.message || "Flight information is temporarily unavailable.", 500) });
+          }
+          return;
+        }
+        case "TRAVEL_INFO_SWEDAVIA_REQUEST": {
+          const requestId = clean(payload.requestId, 160);
+          const iata = clean(payload.iata, 8).toUpperCase();
+          const scope = clean(payload.scope, 20).toLowerCase();
+          const language = clean(payload.language || "en", 8).toLowerCase();
+          if (!requestId) return;
+          try {
+            const result = await withTimeout(
+              getSwedaviaAirportInfo({ iata, scope, language }),
+              BOOTSTRAP_TIMEOUT_MS,
+              "Swedavia airport information is taking longer than expected."
+            );
+            post(html, "TRAVEL_INFO_SWEDAVIA_RESULT", { ...object(result), requestId, iata, scope, language });
+          } catch (_) {
+            post(html, "TRAVEL_INFO_SWEDAVIA_RESULT", { status: "unavailable", requestId, iata, scope, language });
           }
           return;
         }
