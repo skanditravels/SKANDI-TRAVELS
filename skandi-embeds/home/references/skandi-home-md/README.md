@@ -4,6 +4,8 @@
 
 ## INFO / LOG — 2026-11-09
 
+The [Home design refresh](../../README.md#info--log--homepage-design-refresh) introduces a full-width hero, a compact responsive search and an editorial grid. The current sources retain the same booking handoff and Media Control slots.
+
 The current [homepage and trip planning implementation](../../README.md#info--log--homepage-and-trip-planning) consolidates discovery, requires an explicit date range and restores recent searches through the Booking handoff. The historical installation and embed source below are retained for provenance.
 
 2026-11-27 — The [active Home form](../../README.md) now opens its date range inline, keeps selection drafts separate until applied, and exposes the shared traveler controls in all four search modes. The existing `#htmlHome` receiver and `/booking` handoff remain the runtime integration.
