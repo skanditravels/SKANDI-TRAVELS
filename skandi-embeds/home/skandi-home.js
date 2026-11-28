@@ -117,7 +117,7 @@ const I18N = {
     "welcome.btn": "Continue to Site",
     "home.hero.kicker": "SKANDI TRAVELS",
     "home.hero.title": "Discover Your Next Journey",
-    "home.hero.copy": "Find Flight + Hotel packages, flights, hotels and SKANDI Collection packages",
+    "home.hero.copy": "Find Flight + Hotel packages, flights, hotels and the SKANDI Collection",
     "home.tabs.flights": "Flights",
     "home.tabs.holidays": "Flight + Hotel",
     "home.tabs.hotels": "Hotels",
@@ -2376,14 +2376,12 @@ const SKANDI_LOCALES = {
 };
 
 const HOME_PLANNING_COPY = {
-  "hero": ["Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments."],
-  "intro": ["Flights, stays and Scandinavian-style holidays, planned around you.", "Flyg, hotell och semester på skandinaviskt vis, på dina villkor.", "Fly, hotell og ferie på skandinavisk vis, tilpasset deg.", "Fly, hoteller og ferie på skandinavisk vis, planlagt efter dine ønsker.", "Lennot, hotellit ja skandinaaviset lomat omilla ehdoillasi."],
   "searchType": ["Search by trip type", "Sök efter restyp", "Søk etter reisetype", "Søg efter rejsetype", "Hae matkatyypin mukaan"],
   "signaturePackages": ["Signature packages", "Signature-paket", "Signature-pakker", "Signature-pakker", "Signature-paketit"],
   "searchSignature": ["Search Signature packages", "Sök Signature-paket", "Søk Signature-pakker", "Søg Signature-pakker", "Hae Signature-paketteja"],
   "airportPlaceholder": ["City or airport", "Stad eller flygplats", "By eller flyplass", "By eller lufthavn", "Kaupunki tai lentoasema"],
   "datePlaceholder": ["Select dates", "Välj datum", "Velg datoer", "Vælg datoer", "Valitse päivät"],
-  "search": ["Search", "Sök", "Søk", "Søg", "Hae"],
+  "collectionShort": ["Collection", "Kollektionen", "Kolleksjonen", "Kollektion", "Kokoelma"],
   "swap": ["Swap origin and destination", "Byt plats på avreseort och resmål", "Bytt om avreise og reisemål", "Byt afrejse og rejsemål", "Vaihda lähtöpaikka ja kohde"],
   "destinationPlaceholder": ["City, resort or airport", "Stad, resmål eller flygplats", "By, reisemål eller flyplass", "By, rejsemål eller lufthavn", "Kaupunki, matkakohde tai lentoasema"],
   "travelers": ["Travelers", "Resenärer", "Reisende", "Rejsende", "Matkustajat"],
@@ -2398,7 +2396,6 @@ const HOME_PLANNING_COPY = {
   "trips": ["My Trips", "Mina resor", "Mine reiser", "Mine rejser", "Omat matkat"],
   "tripsCopy": ["Find your bookings and travel documents in My SKANDI.", "Hitta bokningar och resehandlingar i My SKANDI.", "Finn bestillinger og reisedokumenter i My SKANDI.", "Find bookinger og rejsedokumenter i My SKANDI.", "Löydä varaukset ja matkustusasiakirjat My SKANDIsta."],
   "upcomingTrip": ["View your upcoming trip and travel documents in My SKANDI.", "Se din kommande resa och dina resehandlingar i My SKANDI.", "Se din kommende reise og reisedokumentene i My SKANDI.", "Se din kommende rejse og dine rejsedokumenter i My SKANDI.", "Katso tuleva matkasi ja sen asiakirjat My SKANDIsta."],
-  "discovery": ["Trips worth considering", "Resor att upptäcka", "Reiser å oppdage", "Rejser at opdage", "Matkoja harkittavaksi"],
   "map": ["Explore the map", "Utforska kartan", "Utforsk kartet", "Udforsk kortet", "Tutustu karttaan"],
   "filters": ["Filter trip ideas", "Filtrera reseidéer", "Filtrer reiseideer", "Filtrér rejseidéer", "Suodata matkaideoita"],
   "picks": ["Top picks", "Våra tips", "Våre tips", "Vores tips", "Suosikkimme"],

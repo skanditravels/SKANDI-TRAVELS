@@ -1,4 +1,3 @@
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <div id="pageLoader" class="sk-page-loader">
   <div class="sk-page-loader-box">
     <div class="sk-page-loader-spinner"></div>
@@ -7,19 +6,22 @@
 </div>
 <div id="homeConnectionStatus" role="status" aria-live="polite" hidden style="margin:12px 32px"></div>
 <section id="hero-wrap" data-media-slot="home-hero">
-  <header class="home-hero-copy">
-    <div class="home-hero-inner">
-      <h1 id="hero-title" data-content-id="home-hero-title" data-i18n="home.plan.hero">Signature Travels, Unforgettable Moments.</h1>
-      <p id="hero-sub" data-content-id="home-hero-intro" data-i18n="home.plan.intro">Flights, stays and Scandinavian-style holidays, planned around you.</p>
-    </div>
-  </header>
+  <div class="hero-kicker" data-i18n="home.hero.kicker">SKANDI TRAVELS</div>
+  <h1 id="hero-title" data-content-id="home-hero-title" data-i18n="home.hero.title">Discover Your Next Journey</h1>
+  <p id="hero-sub" data-content-id="home-hero-intro" data-i18n="home.hero.copy">Find Flight + Hotel packages, flights, hotels and the SKANDI Collection</p>
 
   <div id="search-tabs">
-    <div id="tab-header" role="tablist" aria-label="Search by trip type" data-i18n-aria-label="home.plan.searchType">
-      <button class="tab-btn active" data-tab="holidays" data-i18n="home.tabs.holidays">Flight + Hotel</button>
-      <button class="tab-btn" data-tab="flights" data-i18n="home.tabs.flights">Flights</button>
-      <button class="tab-btn" data-tab="hotels" data-i18n="home.tabs.hotels">Hotels</button>
-      <button class="tab-btn" data-tab="signature" data-i18n="home.plan.signaturePackages" hidden>Signature packages</button>
+    <div class="home-search-nav">
+      <div id="tab-header" role="tablist" aria-label="Search by trip type" data-i18n-aria-label="home.plan.searchType">
+        <button class="tab-btn active" data-tab="holidays" data-i18n="home.tabs.holidays">Flight + Hotel</button>
+        <button class="tab-btn" data-tab="flights" data-i18n="home.tabs.flights">Flights</button>
+        <button class="tab-btn" data-tab="hotels" data-i18n="home.tabs.hotels">Hotels</button>
+        <button class="tab-btn" data-tab="signature" data-i18n="home.plan.signaturePackages" hidden>Signature packages</button>
+      </div>
+      <button type="button" class="home-collection-tab" data-route-key="skandiCollection" data-i18n-aria-label="home.tabs.signature" aria-label="SKANDI Collection">
+        <span class="collection-full" data-i18n="home.tabs.signature">SKANDI Collection</span>
+        <span class="collection-short" data-i18n="home.plan.collectionShort">Collection</span>
+      </button>
     </div>
 
     <div id="tab-content">
@@ -90,7 +92,7 @@
           <label class="home-direct-option"><input id="flight-direct" type="checkbox"> <span data-i18n="home.plan.direct">Nonstop only</span></label>
         </div>
 
-        <button type="button" class="search-submit" data-search="flights" data-i18n="home.plan.search" data-i18n-aria-label="home.search.flights" aria-label="Search Flights">Search</button>
+        <button type="button" class="search-submit" data-search="flights" data-i18n="home.search.flights">Search Flights</button>
       </div>
 
       <!-- FLIGHT + HOTEL PANEL -->
@@ -138,7 +140,7 @@
           <span id="package-budget-value"></span>
           <button class="home-text-button" type="button" id="package-budget-clear" data-i18n="home.date.clear">Clear</button>
         </div>
-        <button type="button" class="search-submit" data-search="holidays" data-i18n="home.plan.search" data-i18n-aria-label="home.search.holidays" aria-label="Search Flight + Hotel">Search</button>
+        <button type="button" class="search-submit" data-search="holidays" data-i18n="home.search.holidays">Search Flight + Hotel</button>
       </div>
 
       <!-- HOTELS PANEL -->
@@ -176,7 +178,7 @@
         <div class="field-row" data-home-traveler-options>
           <div class="field"><label for="hotel-rooms" data-i18n="home.fields.rooms">Rooms</label><select id="hotel-rooms"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
         </div>
-        <button type="button" class="search-submit" data-search="hotels" data-i18n="home.plan.search" data-i18n-aria-label="home.search.hotels" aria-label="Search Hotels">Search</button>
+        <button type="button" class="search-submit" data-search="hotels" data-i18n="home.search.hotels">Search Hotels</button>
       </div>
 
       <!-- SIGNATURE COLLECTION PANEL -->
@@ -217,7 +219,7 @@
           <div class="field"><label data-i18n="home.fields.infants">Infants</label><div class="counter"><button type="button" data-counter="infants" data-step="-1">−</button><span>0</span><button type="button" data-counter="infants" data-step="1">+</button></div><small data-i18n="home.age.infants">Under 2 years</small></div>
         </div>
         <div id="sigAgeFields" data-home-ages></div>
-        <button type="button" class="search-submit" data-search="signature" data-i18n="home.plan.search" data-i18n-aria-label="home.plan.searchSignature" aria-label="Search Signature packages">Search</button>
+        <button type="button" class="search-submit" data-search="signature" data-i18n="home.plan.searchSignature">Search Signature packages</button>
       </div>
     </div>
   </div>
@@ -266,6 +268,15 @@
   </div>
 </div>
 
+<section id="trust-strip" aria-label="Travel with SKANDI" data-i18n-aria-label="home.sections.why">
+  <div class="trust-grid" id="trustGrid">
+    <div class="trust-box"><strong data-i18n="home.trust.noSurprise">No surprise flow</strong><span data-i18n="home.trust.noSurpriseText">Final availability is confirmed before payment.</span></div>
+    <div class="trust-box"><strong data-i18n="home.trust.packageClarity">Package clarity</strong><span data-i18n="home.trust.packageClarityText">Flight, hotel and local services are shown together.</span></div>
+    <div class="trust-box"><strong data-i18n="home.trust.myProfile">My Profile</strong><span data-i18n="home.trust.myProfileText">Trips and documents remain accessible.</span></div>
+    <div class="trust-box"><strong data-i18n="home.trust.club">SKANDI Club</strong><span data-i18n="home.trust.clubText">Points and member offers are connected.</span></div>
+  </div>
+</section>
+
 <section class="content-section home-planning" id="home-planning" aria-labelledby="planning-title" hidden>
   <div>
     <h2 id="planning-title" data-i18n="home.plan.continue">Continue planning</h2>
@@ -279,7 +290,7 @@
 </section>
 
 <section class="content-section mixed-section home-discovery" id="mixed-section" aria-labelledby="discovery-title" hidden>
-  <h2 class="section-title" id="discovery-title" data-i18n="home.plan.discovery">Trips worth considering</h2>
+  <h2 class="section-title" id="discovery-title" data-i18n="home.sections.discovery.title">Explore SKANDI</h2>
   <div class="home-section-head">
     <div class="home-facets" role="group" aria-label="Filter trip ideas" data-i18n-aria-label="home.plan.filters">
       <button type="button" data-home-facet="all" aria-pressed="true" data-i18n="home.plan.picks">Top picks</button>
