@@ -27,6 +27,15 @@ Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, 
 
 - 2026-10-28 UTC — Updated `skandi-embeds/newsroom/skandi-newsroom.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **SKANDI Newsroom** (`/about/news-room`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
+### 2026-11-27 — Press release presentation
+
+The article opens with its type, publication date, headline and excerpt. Montserrat and a narrower reading column carry through the body. The featured media, cards and article hero fit their images within the available space.
+
+- `skandi-embeds/newsroom/skandi-newsroom.css` sets responsive type, reading width and image fit.
+- `skandi-embeds/newsroom/skandi-newsroom.js` assembles the article header from the existing Media Control fields.
+
+Commit both source files to the repository and run **SKANDI Website Builder** on `main` after review and merge. The installed `#newsroomEmbed` receiver loads the resulting `dist/newsroom/index.html`. Edit release copy and select the editorial photo in **Media Control → Newsroom → Press Releases**.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 > The matching executable source is maintained in this page folder.
