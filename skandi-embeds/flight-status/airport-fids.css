@@ -211,28 +211,40 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
-.flight-board-shell.airport-fids-screen .fids-tail,
-.flight-board-shell.airport-fids-screen .fids-tail.fallback {
-  width: 74px;
+.flight-board-shell .fids-tail.fids-carrier-mark {
+  width: 100%;
   max-width: 100%;
-  height: 25px;
-  padding: 2px 4px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 0;
   border: 0;
   border-radius: 2px;
   box-shadow: none;
+  background: #c6d7f3;
+  background: color-mix(in srgb, var(--fids-brand-color, #6987ac) 22%, #dbe6f9);
 }
-.flight-board-shell.airport-fids-screen .fids-tail img {
-  width: auto;
-  height: auto;
+.flight-board-shell .fids-carrier-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
-.flight-board-shell.airport-fids-screen .fids-tail.fallback {
-  background: #edf2ff;
-  color: var(--board-header);
+.flight-board-shell .fids-carrier-mark.is-light-mark {
+  background: var(--fids-brand-color, #022e64);
+}
+.flight-board-shell .fids-carrier-mark.is-light-mark img { mix-blend-mode: normal; }
+.flight-board-shell .fids-carrier-mark.fallback {
+  background: #284777;
+  color: #f3f7ff;
   font: 750 .82rem var(--board-mono);
 }
+.flight-board-shell .fids-carrier-mark [hidden] { display: none; }
 .flight-board-shell.airport-fids-screen .fids-gate {
   display: inline;
   min-width: 0;

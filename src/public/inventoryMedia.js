@@ -16,6 +16,8 @@ export function inventoryMediaUrl(asset) {
   const value = typeof asset === "string" ? asset :
     asset?.url || asset?.publicUrl || asset?.public_url || asset?.imageUrl || asset?.image_url;
   const url = String(value ?? "").trim();
+  const wix = /^wix:(image|vector):\/\/v1\/([A-Za-z0-9_.~-]+)(?=[/#]|$)/.exec(url);
+  if (wix) return `https://static.wixstatic.com/${wix[1] === "vector" ? "shapes" : "media"}/${wix[2]}`;
   return /^https?:\/\/[^\s]+$/i.test(url) ? url.slice(0, 3000) : "";
 }
 
@@ -62,7 +64,8 @@ export function referenceInventoryMedia(row = {}) {
     }
     // Older records can have a logo in the compatibility column alone.
     // A URL already represented in the record belongs to that asset.
-    if (inventoryMediaUrl(legacy) && ![...rows, ...defaults].some(asset => inventoryMediaUrl(asset) === legacy)) {
+    const legacyUrl = inventoryMediaUrl(legacy);
+    if (legacyUrl && ![...rows, ...defaults].some(asset => inventoryMediaUrl(asset) === legacyUrl)) {
       defaults.push({ role: roles[0], url: legacy, mediaType: "IMAGE", active: true, sourceKind: "LEGACY_PROJECTION_BACKFILL" });
     }
   }

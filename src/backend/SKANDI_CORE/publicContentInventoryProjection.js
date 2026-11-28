@@ -114,10 +114,10 @@ function mediaUrl(row = {}, preferredRoles = []) {
   for (const role of preferredRoles) {
     const wanted = upper(role, 40);
     const hit = media.find(item => upper(item.role, 40) === wanted);
-    if (hit) return clean(hit.url, 3000);
+    if (hit) return inventoryMediaUrl(hit);
   }
   const semantic = media.find(item => item.isHero === true || item.isPrimary === true || item.isCard === true);
-  return clean(semantic?.url || media[0]?.url, 3000);
+  return inventoryMediaUrl(semantic || media[0]);
 }
 
 function publicBaggage(value) {
@@ -481,8 +481,8 @@ export async function getPublishedAirlineBrandsCore() {
     brandLookup = restRequest({
       table: "travel_info_airlines",
       query: {
-        select: "iataCode,logoFile,logoIcon,inventory_details,media_assets",
-        active: ACTIVE, customer_visible: ACTIVE, status: PUBLISHED, limit: "500"
+        select: "iataCode,logoFile,logoIcon,primaryColor,inventory_details,media_assets",
+        active: ACTIVE, customer_visible: ACTIVE, status: PUBLISHED, order: "sort_order.asc,ID.asc", limit: "500"
       },
       prefer: ""
     }).then(rows => {
@@ -491,7 +491,10 @@ export async function getPublishedAirlineBrandsCore() {
       for (const row of rows) {
         const code = upper(row.iataCode, 4);
         const brand = referenceInventoryBrand(row);
-        if (code && brand.logoUrl) brands.set(code, brand);
+        const color = clean(row.inventory_details?.primaryColor || row.primaryColor, 12);
+        if (/^[A-Z0-9]{2}$/.test(code) && brand.logoUrl && !brands.has(code)) {
+          brands.set(code, { ...brand, color: /^#[0-9a-f]{6}$/i.test(color) ? color : "" });
+        }
       }
       publishedAirlineBrands = brands;
       brandLookupExpires = Date.now() + 60_000;

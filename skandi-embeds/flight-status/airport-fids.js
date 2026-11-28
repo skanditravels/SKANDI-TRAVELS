@@ -16,6 +16,43 @@ const airportFids = (() => {
     en: { departed: "Departed", landed: "Landed", cancelled: "Cancelled", diverted: "Diverted" },
     sv: { departed: "Avgått", landed: "Landat", cancelled: "Inställt", diverted: "Omdirigerat" }
   };
+  const lightFallbacks = new Set(["AS", "DL", "F9", "B6", "DY", "D8", "SK", "LX", "UA"]);
+  const fallbackColors = { DY: "#d81939", D8: "#d81939", SK: "#1d4ed8" };
+  const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[char]);
+
+  function carrier({ code, name, logo, fallbackLogo, color }) {
+    const iataCode = String(code || "").toUpperCase();
+    const src = logo || fallbackLogo;
+    const light = Boolean(src && src === fallbackLogo && lightFallbacks.has(iataCode));
+    const backup = src !== fallbackLogo ? fallbackLogo : "";
+    const background = /^#[0-9a-f]{6}$/i.test(color || "") ? color : fallbackColors[iataCode] || "";
+    return `<div class="fids-carrier" title="${escape(name)}"><span class="fids-tail fids-carrier-mark${src ? "" : " fallback"}${light ? " is-light-mark" : ""}"${background ? ` style="--fids-brand-color:${background}"` : ""}>
+      ${src ? `<img src="${escape(src)}" alt="${escape(name)}" decoding="async"${backup ? ` data-fids-logo-backup="${escape(backup)}" data-fids-backup-light="${lightFallbacks.has(iataCode)}"` : ""}>` : ""}
+      <span class="fids-logo-fallback"${src ? " hidden" : ""}>${escape(iataCode || "—")}</span>
+    </span><span class="fids-carrier-name">${escape(name)}</span></div>`;
+  }
+
+  function bindCarrierImages(root) {
+    root.querySelectorAll(".fids-carrier-mark img").forEach(image => {
+      const failed = () => {
+        const tile = image.parentElement;
+        const backup = image.dataset.fidsLogoBackup;
+        if (backup) {
+          delete image.dataset.fidsLogoBackup;
+          tile.classList.toggle("is-light-mark", image.dataset.fidsBackupLight === "true");
+          image.src = backup;
+          return;
+        }
+        image.remove();
+        tile.classList.add("fallback");
+        tile.querySelector(".fids-logo-fallback").hidden = false;
+      };
+      image.addEventListener("error", failed);
+      if (image.complete && image.naturalWidth === 0) failed();
+    });
+  }
 
   function locale(value) {
     const code = String(value || "").trim().toLowerCase().split(/[-_]/)[0];
@@ -62,5 +99,5 @@ const airportFids = (() => {
     return { message, tone };
   }
 
-  return { columns, iata, labels, locale, officialStatus };
+  return { columns, iata, labels, locale, officialStatus, carrier, bindCarrierImages };
 })();
