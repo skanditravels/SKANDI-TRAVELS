@@ -176,7 +176,7 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   const dining=get('[data-ti-swedavia="services"]');
   assert.equal(queries().at(-1).payload.scope,'services');
   assert.equal(queries().at(-1).payload.language,'sv');
-  const venues=[{name:'Terminal café',terminal:'Terminal 5',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>'},
+  const venues=[{name:'Terminal café',terminal:'Terminal 5',place:'After security',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>'},
     ...Array.from({length:13},(_,index)=>({name:'Bistro '+(index+1),terminal:'Terminal 2',beforeSecurity:index%2===0}))];
   reply({
     providerLanguage:'en',
@@ -201,6 +201,7 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   filter('services','query','cafe');
   assert.equal(dining.querySelectorAll('li').length,1);
   assert.match(dining.textContent,/Terminal café.*Efter säkerhetskontrollen.*Öppettider.*06:00–21:00/s);
+  assert.doesNotMatch(dining.querySelector('li').textContent,/After security/);
   assert.equal(dining.querySelector('li h3').getAttribute('lang'),'en');
   assert.equal(dining.querySelector('script'),null);
   filter('services','area','before');
