@@ -171,7 +171,6 @@ const MASTER_CONFIG = Object.freeze({
       primaryNav: Object.freeze([
         { id:"home", label:"Book", path:SITE_MAP.home },
         { id:"destinations", label:"Explore", path:SITE_MAP.destinations },
-        { id:"packages", label:"Packages", path:SITE_MAP.home },
         { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
         { id:"travelInfo", label:"Travel Info", path:SITE_MAP.travelInfo }
       ]),
