@@ -1127,14 +1127,69 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
 
 
-/* Home-specific mobile navigation sizing from the approved Home design. */
-@media (max-width: 760px) {
-  body:has(#skandi-home-content) #skandi-mobile-nav-container { height:auto; min-height:0; padding-bottom:env(safe-area-inset-bottom, 0px); background:#022e64; }
-  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn { height:68px; min-height:68px; padding:3px 5px 2px; border-top:1px solid rgba(255,255,255,.14); }
-  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn-btn { min-height:56px; gap:3px; }
-  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn-btn[aria-current="page"] svg { stroke-width:2.3; }
-  body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
-  @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
+/* Customer navigation and menu share the same SKANDI navy. */
+#skandi-mobile-nav-container .skmn.skandi-public-bar {
+  height: 80px;
+  min-height: 80px;
+  flex: 0 0 100%;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 4px;
+  padding: 5px 7px 12px;
+  border-top: 1px solid rgba(255,255,255,.19);
+  background: #022e64;
+}
+#skandi-mobile-nav-container .skandi-public-bar .skmn-btn { min-height: 55px; gap: 5px; }
+#skandi-mobile-nav-container .skandi-public-bar .skmn-btn[aria-current="page"] {
+  color: #a6e6ed;
+  background: rgba(255,255,255,.1);
+}
+#skandi-mobile-nav-container .skandi-public-bar .skmn-btn[aria-current="page"] svg { stroke-width: 2.2; }
+#skandi-mobile-nav-container #overlay.skandi-public-overlay { background: rgba(0,17,38,.56); backdrop-filter: blur(2px); }
+#skandi-mobile-nav-container #drawer.skandi-public-drawer {
+  width: min(384px, calc(100% - 16px));
+  background: linear-gradient(160deg,#022e64 0%,#08274d 57%,#061c38 100%);
+  border-left: 1px solid rgba(166,210,231,.32);
+  color: #fff;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-head {
+  align-items: start;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 18px 11px;
+  background: transparent;
+  border: 0;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .eyebrow { color: #a6e6ed; font-size: 13px; letter-spacing: .08em; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-head h2 { color: #fff; margin-top: 8px; font-size: 26px; font-weight: 700; }
+#skandi-mobile-nav-container .skandi-public-drawer #skandi-mobile-closeBtn { color: #fff; background: #123e70; border-color: #4c739b; }
+#skandi-mobile-nav-container .skandi-public-drawer #drawer-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 7px;
+  row-gap: 6px;
+  padding: 4px 16px 13px;
+  background: transparent;
+  border: 0;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-cta {
+  min-height: 44px;
+  border-radius: 8px;
+  color: #062846;
+  border-color: #b5edf1;
+  background: #b5edf1;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-cta.secondary { color: #fff; background: transparent; border-color: #5381a6; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-cta:hover, #skandi-mobile-nav-container .skandi-public-drawer .drawer-cta:focus-visible { background: #e1f6fe; color: #022e64; }
+#skandi-mobile-nav-container .skandi-public-drawer #alexandraLink { grid-column: 1 / -1; }
+#skandi-mobile-nav-container .skandi-public-drawer.chat-mode #drawer-actions { display: none; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-scroll { padding: 0 16px max(16px, var(--safe)); }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-group { border: 0; border-top: 1px solid rgba(193,225,243,.23); }
+#skandi-mobile-nav-container .skandi-public-drawer .group-heading { min-height: 48px; padding-inline: 7px; color: #fff; }
+#skandi-mobile-nav-container .skandi-public-drawer .group-heading::after { color: #a6e6ed; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-link { min-height: 44px; padding-inline: 13px 7px; color: #e4f2fc; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-link:hover, #skandi-mobile-nav-container .skandi-public-drawer .drawer-link:focus-visible,
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-link[aria-current="page"] { background: #123e70; border-color: #426d95; }
+@media(max-width: 360px) {
+  #skandi-mobile-nav-container .skandi-public-bar .skmn-btn { font-size: 13px; }
 }
 
 /* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */
@@ -1199,6 +1254,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 #skandi-global-footer-root,
 #riaintra-global-footer-root,
 #altea-global-footer-root { grid-row: 3; min-width: 0; }
+[data-skandi-key="home"] #skf-columns { display: none; }
+[data-skandi-key="home"] .skf-main { grid-template-columns: minmax(0, 1fr); }
 #skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
 #skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
 [data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
@@ -1253,6 +1310,17 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
     z-index: 2100;
   }
+  [data-skandi-family="public"] { --sk-shell-nav: 80px; }
+  [data-skandi-key="home"] #skandi-app-root { background: #f4f7fa; }
+  html[data-skandi-mobile-navigation] [data-skandi-key]:not([data-skandi-key="support"]) #skandi-support-chat-root {
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-skandi-mobile-navigation] body.skandi-home-keyboard #skandi-shell-root[data-skandi-key="home"] {
+    grid-template-rows: minmax(0, 1fr);
+    top: var(--skandi-visible-top, 0px);
+    height: var(--skandi-visible-height, 100dvh) !important;
+  }
+  body.skandi-home-keyboard [data-skandi-key="home"] #skandi-mobile-nav-container { display: none; }
   [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
   [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
 }
@@ -1543,28 +1611,28 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </div>
 </footer>
 </div>
-<div id="skandi-mobile-nav-container"><div id="overlay" aria-hidden="true"></div>
-<aside id="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
-  <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+<div id="skandi-mobile-nav-container"><div id="overlay" class="skandi-public-overlay" aria-hidden="true"></div>
+<aside id="drawer" class="skandi-public-drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+  <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Menu</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+  <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="profileLink">My Trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
   <div class="drawer-scroll" id="drawerLinks"></div>
-  <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
   <div class="drawer-foot" id="staff-drawer-actions" hidden=""><details class="staff-home-guide"><summary>Add RIAINTRA to your Home Screen</summary><p>On iPhone or iPad, open the Share menu in Safari and choose Add to Home Screen. On Android, open the browser menu and choose Add to Home screen or Install, if offered.</p><p>This adds a shortcut to RIAINTRA; an internet connection and a valid staff session are still required.</p></details><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
 </aside>
-<nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
+<nav id="skandi-mobile-nav-root" class="skmn skandi-public-bar" aria-label="SKANDI mobile navigation">
   <button type="button" class="skmn-btn" data-skandi-mobile-route="home" aria-label="Home" aria-current="page">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span>
   </button>
-  <button type="button" class="skmn-btn" data-skandi-mobile-route="destinations" aria-label="Destinations">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="destinations" aria-label="Explore">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m9 15 3-8 3 5-6 3z"></path></svg><span>Explore</span>
   </button>
-  <button type="button" class="skmn-btn skmn-primary" data-skandi-mobile-route="bookingFlow" aria-label="Book a trip">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 16 20-9-3 13-6-6-5 6-1-8-5-1z"></path></svg><span>Book</span>
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="travelInfo" aria-label="Travel Info">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5m0-8h.01"></path></svg><span>Travel Info</span>
   </button>
-  <button type="button" class="skmn-btn" data-skandi-mobile-route="myTrips" aria-label="My Trips">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="staff" data-staff-only="" hidden="">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M9 6V4a3 3 0 0 1 6 0v2M3 13h18"></path></svg><span>Trips</span>
   </button>
-  <button type="button" class="skmn-btn" data-skandi-mobile-route="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="menu" aria-label="Menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Menu</span>
   </button>
 </nav>
@@ -2853,21 +2921,22 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     support:'/about/support',theStore:'/the-store',about:'/about'
   };
   const publicGroups=[
-    {title:'Book & travel',keys:[['Book a trip','home'],['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
+    {title:'Book & travel',keys:[['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
     {title:'Explore',keys:[['Destinations','destinations'],['SKANDI Collection','skandiCollection'],['VOY Magazine','voy']]},
     {title:'Travel help',keys:[['Travel information','travelInfo'],['Flight status','flightStatus'],['Passport & visa','passportVisa'],['Baggage allowance','baggageAllowance'],['Travel insurance','travelInsurance'],['Special assistance','specialAssistance'],['Help Center','support']]},
-    {title:'Your SKANDI',keys:[['My Trips','myTrips'],['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
+    {title:'My SKANDI',keys:[['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
     {title:'About SKANDI',keys:[['About','about'],['Newsroom','newsroom'],['Careers','careers'],['Legal','legal'],['Policies','policies'],['Cookie preferences','cookiePreferences'],['Staff login','riaintra']]}
   ];
   const $=id=>document.getElementById(id);
   const bar=$('skandi-mobile-nav-root');
-  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
-  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const drawer=$('drawer');
   const status=$("skandi-mobile-status");
   const shell=window.__SKANDI_SHELL__?.root;
   const family=shell?.dataset.skandiFamily||'public';
   const isStaff=family==='riaintra'||family==='altea';
+  if(!isStaff)bar.querySelector('[data-staff-only]').remove();
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const brand=family==='altea'?'ALTEA':family==='riaintra'?'RIAINTRA':'SKANDI TRAVELS';
   const staffIcons={
     workspace:'M3 9l9-6 9 6v11H3z M9 20v-7h6v7',
@@ -2877,13 +2946,16 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     reservations:'M3 7h18v10H3z M8 7v10 M13 11h5',
     eos:'M7 3h10v18H7z M10 17h4'
   };
-  const drawerTitle=isStaff?brand+' menu':'Explore SKANDI';
+  const drawerTitle=isStaff?brand+' menu':'Menu';
   const state={routes:{...defaults},currentPath:'/',request:0,drawerOpen:false,drawerPending:'',drawerTimer:null,chatOpen:false,lastFocused:null,staffNavigation:null};
   bar.setAttribute('aria-label',brand+' mobile navigation');
   $('drawer-brand').textContent=brand;
   $('drawer-title').textContent=drawerTitle;
   if(isStaff) {
     drawer.dataset.staffMenu='';
+    drawer.classList.remove('skandi-public-drawer');
+    $('overlay').classList.remove('skandi-public-overlay');
+    bar.classList.remove('skandi-public-bar');
     $('drawer-actions').hidden=true;
   }
   let focusTransitionToken=0;
@@ -2900,11 +2972,13 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   function pathFor(key){return safePath(state.routes[key])||safePath(defaults[key]);}
   function updateActive(){
     const current=safePath(state.currentPath)||'/';
-    const normalized=current.split('?')[0];
+    const normalized=current.split(/[?#]/)[0].replace(/\/+$/,'')||'/';
     for(const button of BUTTONS){
       const key=button.dataset.skandiMobileRoute;
       const path=isStaff?safePath(button.dataset.path):pathFor(key);
-      const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
+      const active=path&&(path.includes('?')?current===path:normalized===path
+        || !isStaff && key==='home' && normalized==='/home'
+        || !isStaff && ['destinations','travelInfo'].includes(key) && normalized.startsWith(path+'/'));
       if(active)button.setAttribute('aria-current','page');
       else button.removeAttribute('aria-current');
     }
@@ -2939,6 +3013,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         const button=document.createElement('button');
         button.type='button';button.className='drawer-link';
         button.dataset.menuKey=link.path;renderedItems.set(link.path,button);
+        if(link.path===state.currentPath)button.setAttribute('aria-current','page');
         const text=document.createElement('span');text.textContent=link.label;
         const chevron=document.createElement('b');chevron.textContent='›';chevron.setAttribute('aria-hidden','true');
         button.append(text,chevron);
@@ -3084,7 +3159,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     closeDrawer();
     post('RIAINTRA_LOGOUT',{},nextId('sign-out'));
   });
-  $('profileLink').addEventListener('click',()=>navigate('myProfile'));
+  $('profileLink').addEventListener('click',()=>navigate('myTrips'));
   $('searchLink').addEventListener('click',()=>{
     closeDrawer();
     post('HOME_APP_FOCUS_SEARCH',{},nextId('focus'));
@@ -3132,6 +3207,14 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         const logo=config.brand?.assets?.toolWordmarks?.[family];
         if(/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo||'')){
           $('drawer-logo').src=logo;
+          $('drawer-logo').hidden=false;
+          $('drawer-brand').hidden=true;
+        }
+      } else {
+        const logo=config.brand?.assets?.logos?.customerFooter;
+        if(/^https:\/\//i.test(logo||'')){
+          $('drawer-logo').src=logo;
+          $('drawer-logo').alt=brand;
           $('drawer-logo').hidden=false;
           $('drawer-brand').hidden=true;
         }

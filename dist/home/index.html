@@ -1121,14 +1121,69 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
 
 
-/* Home-specific mobile navigation sizing from the approved Home design. */
-@media (max-width: 760px) {
-  body:has(#skandi-home-content) #skandi-mobile-nav-container { height:auto; min-height:0; padding-bottom:env(safe-area-inset-bottom, 0px); background:#022e64; }
-  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn { height:68px; min-height:68px; padding:3px 5px 2px; border-top:1px solid rgba(255,255,255,.14); }
-  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn-btn { min-height:56px; gap:3px; }
-  body:has(#skandi-home-content) #skandi-mobile-nav-container .skmn-btn[aria-current="page"] svg { stroke-width:2.3; }
-  body.skandi-home-keyboard:has(#skandi-home-content) #skandi-mobile-nav-container { display:none !important; }
-  @media (display-mode: standalone) { body:has(#skandi-home-content) #skandi-mobile-nav-container { padding-bottom:max(6px, env(safe-area-inset-bottom, 0px)); } }
+/* Customer navigation and menu share the same SKANDI navy. */
+#skandi-mobile-nav-container .skmn.skandi-public-bar {
+  height: 80px;
+  min-height: 80px;
+  flex: 0 0 100%;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 4px;
+  padding: 5px 7px 12px;
+  border-top: 1px solid rgba(255,255,255,.19);
+  background: #022e64;
+}
+#skandi-mobile-nav-container .skandi-public-bar .skmn-btn { min-height: 55px; gap: 5px; }
+#skandi-mobile-nav-container .skandi-public-bar .skmn-btn[aria-current="page"] {
+  color: #a6e6ed;
+  background: rgba(255,255,255,.1);
+}
+#skandi-mobile-nav-container .skandi-public-bar .skmn-btn[aria-current="page"] svg { stroke-width: 2.2; }
+#skandi-mobile-nav-container #overlay.skandi-public-overlay { background: rgba(0,17,38,.56); backdrop-filter: blur(2px); }
+#skandi-mobile-nav-container #drawer.skandi-public-drawer {
+  width: min(384px, calc(100% - 16px));
+  background: linear-gradient(160deg,#022e64 0%,#08274d 57%,#061c38 100%);
+  border-left: 1px solid rgba(166,210,231,.32);
+  color: #fff;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-head {
+  align-items: start;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 18px 11px;
+  background: transparent;
+  border: 0;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .eyebrow { color: #a6e6ed; font-size: 13px; letter-spacing: .08em; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-head h2 { color: #fff; margin-top: 8px; font-size: 26px; font-weight: 700; }
+#skandi-mobile-nav-container .skandi-public-drawer #skandi-mobile-closeBtn { color: #fff; background: #123e70; border-color: #4c739b; }
+#skandi-mobile-nav-container .skandi-public-drawer #drawer-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 7px;
+  row-gap: 6px;
+  padding: 4px 16px 13px;
+  background: transparent;
+  border: 0;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-cta {
+  min-height: 44px;
+  border-radius: 8px;
+  color: #062846;
+  border-color: #b5edf1;
+  background: #b5edf1;
+}
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-cta.secondary { color: #fff; background: transparent; border-color: #5381a6; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-cta:hover, #skandi-mobile-nav-container .skandi-public-drawer .drawer-cta:focus-visible { background: #e1f6fe; color: #022e64; }
+#skandi-mobile-nav-container .skandi-public-drawer #alexandraLink { grid-column: 1 / -1; }
+#skandi-mobile-nav-container .skandi-public-drawer.chat-mode #drawer-actions { display: none; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-scroll { padding: 0 16px max(16px, var(--safe)); }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-group { border: 0; border-top: 1px solid rgba(193,225,243,.23); }
+#skandi-mobile-nav-container .skandi-public-drawer .group-heading { min-height: 48px; padding-inline: 7px; color: #fff; }
+#skandi-mobile-nav-container .skandi-public-drawer .group-heading::after { color: #a6e6ed; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-link { min-height: 44px; padding-inline: 13px 7px; color: #e4f2fc; }
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-link:hover, #skandi-mobile-nav-container .skandi-public-drawer .drawer-link:focus-visible,
+#skandi-mobile-nav-container .skandi-public-drawer .drawer-link[aria-current="page"] { background: #123e70; border-color: #426d95; }
+@media(max-width: 360px) {
+  #skandi-mobile-nav-container .skandi-public-bar .skmn-btn { font-size: 13px; }
 }
 
 /* The Store temporarily hides its shared navigation while a Store overlay or keyboard is open. */
@@ -1417,7 +1472,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-home-content .home-direct-option { display: flex; align-items: center; align-self: end; gap: 6px; min-height: 42px; color: var(--home-ink); font-size: 13px; }
 #skandi-home-content .home-direct-option input { width: 17px; height: 17px; margin: 0; accent-color: var(--home-blue); }
 #skandi-home-content .home-traveler-fields .home-text-button { display: block; margin-left: auto; }
-#skandi-home-content .home-traveler-fields select, #skandi-home-content .home-explore-form :is(input:not([type="hidden"]), select) {
+#skandi-home-content .home-traveler-fields select {
   width: 100%;
   min-width: 0;
   min-height: 43px;
@@ -1511,7 +1566,6 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 }
 #skandi-home-content .airport-option + .airport-option { border-top: 1px solid var(--home-line); }
 #skandi-home-content .airport-option:hover, #skandi-home-content .airport-option[aria-selected="true"] { background: var(--home-blue-soft); }
-#skandi-home-content .airport-option-type { flex: 0 0 auto; color: var(--home-blue-deep); font-size: 13px; font-weight: 650; }
 #skandi-home-content .airport-option-copy { min-width: 0; overflow-wrap: anywhere; }
 #skandi-home-content .airport-option strong, #skandi-home-content .airport-option small { display: block; font-size: 13px; }
 #skandi-home-content .airport-option small { margin-top: 2px; color: var(--home-copy); font-size: 13px; }
@@ -1612,7 +1666,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   margin-inline: auto;
 }
 #skandi-home-content .home-discovery, #skandi-home-content .home-services { padding-block: 40px; }
-#skandi-home-content .home-discovery h2, #skandi-home-content .home-explore h2, #skandi-home-content .home-services h2 {
+#skandi-home-content .home-discovery h2, #skandi-home-content .home-services h2 {
   margin: 0 0 11px;
   color: var(--home-ink);
   font-size: max(13px, clamp(25px, 3.2vw, 34px));
@@ -1623,7 +1677,7 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-home-content .home-section-head, #skandi-home-content .home-planning { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 #skandi-home-content .home-planning { padding-block: 14px; border-bottom: 1px solid var(--home-line); }
 #skandi-home-content .home-planning h2 { margin: 0 0 5px; font-size: 18px; font-weight: 700; letter-spacing: -.025em; }
-#skandi-home-content .home-planning p, #skandi-home-content .home-explore p, #skandi-home-content .home-services p { margin: 0; color: var(--home-copy); font-size: 15px; line-height: 1.6; }
+#skandi-home-content .home-planning p, #skandi-home-content .home-services p { margin: 0; color: var(--home-copy); font-size: 15px; line-height: 1.6; }
 #skandi-home-content .home-planning p { font-size: 13px; }
 #skandi-home-content .home-planning-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; flex-shrink: 0; align-items: center; }
 #skandi-home-content .home-text-button {
@@ -1741,30 +1795,55 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-home-content .home-trip-action:hover > span { background: #fff; color: var(--home-blue-deep); }
 #skandi-home-content .home-trip-card--text .home-trip-action:hover > span { color: #fff; background: var(--home-blue-deep); }
 
-#skandi-home-content .home-explore { padding: clamp(20px, 3vw, 36px); border-radius: 12px; background: #f2f7fb; }
-#skandi-home-content .home-explore-copy { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
-#skandi-home-content .home-explore h2 { margin: 0; font-size: max(13px, clamp(28px, 3vw, 40px)); }
-#skandi-home-content .home-explore p { max-width: 47ch; }
-#skandi-home-content .home-explore-form {
-  display: grid;
-  grid-template-columns: minmax(130px, 1.55fr) minmax(110px, 1.1fr) minmax(65px, .55fr) minmax(118px, 1fr) auto;
-  align-items: end;
-  gap: 9px;
-  margin-top: 18px;
-}
-#skandi-home-content .home-explore-form :is(input:not([type="hidden"]), select) { min-height: 46px; }
-#skandi-home-content .home-explore-form .home-solid-button { min-height: 46px; }
-#skandi-home-content #explore-results:not(:empty) { margin-top: 14px; }
-#skandi-home-content .home-idea-buttons, #skandi-home-content .home-quick-links { display: flex; flex-wrap: wrap; gap: 5px 17px; }
 #skandi-home-content .home-service-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 #skandi-home-content .home-service-grid article { padding: 15px 0; border-top: 1px solid #dbe3ef; }
 #skandi-home-content .home-services h2 { margin-bottom: 20px; }
 #skandi-home-content .home-services h3 { margin: 0 0 7px; font-size: 19px; font-weight: 670; letter-spacing: -.025em; line-height: 1.25; }
-#skandi-home-content .home-editorial-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
-#skandi-home-content .home-editorial-grid article { padding: clamp(17px, 2.6vw, 28px); border: 1px solid var(--home-line); border-radius: 11px; background: var(--home-paper); }
-#skandi-home-content .home-editorial-grid article:last-child { background: #022e64; color: #fff; border-color: #022e64; }
-#skandi-home-content .home-editorial-grid article:last-child :is(p, button) { color: #e5f1fb; }
-#skandi-home-content .home-quick-links { padding: 0 0 30px; }
+#skandi-home-content .home-collection-card {
+  margin-top: 16px;
+  padding: clamp(17px, 2.6vw, 28px);
+  border: 1px solid var(--home-line);
+  border-radius: 11px;
+  background: var(--home-paper);
+}
+#skandi-home-content .home-voy { padding-block: 0 32px; }
+#skandi-home-content .home-voy-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 35%);
+  align-items: center;
+  overflow: hidden;
+  min-height: 235px;
+  border-radius: 16px;
+  background: linear-gradient(115deg, var(--home-blue-deep) 52%, #046387);
+  color: #fff;
+}
+#skandi-home-content .home-voy-copy { padding: clamp(18px, 4.8vw, 52px); }
+#skandi-home-content .home-voy-copy h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: max(13px, clamp(58px, 11vw, 110px));
+  font-weight: 500;
+  line-height: .9;
+  letter-spacing: -.065em;
+}
+#skandi-home-content .home-voy-copy p { margin: 14px 0 17px; font-size: 16px; line-height: 1.45; color: #e1f0fa; }
+#skandi-home-content .home-voy-copy .home-solid-button { background: #fff; border-color: #fff; color: var(--home-blue-deep); }
+#skandi-home-content .home-voy-copy .home-solid-button:hover { background: #e4f4fd; color: var(--home-blue-deep); }
+#skandi-home-content .home-voy-cover {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  padding: clamp(10px, 3vw, 28px);
+  background: radial-gradient(ellipse at 56% 58%, #6cacba 0%, #22708d 31%, transparent 75%);
+}
+#skandi-home-content .home-voy-cover img {
+  display: block;
+  width: min(100%, 210px);
+  max-height: 235px;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  box-shadow: 0 14px 34px rgba(0, 23, 47, .48);
+}
 #skandi-home-content .home-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 #skandi-home-content #flight-selector { display: none; padding: 36px 0; }
@@ -1831,15 +1910,23 @@ body.search-mode #skandi-home-content .content-section:not(#flight-selector), bo
   #skandi-home-content .home-discovery-grid.is-editorial > :first-child:not(.home-trip-card--text) h3 { max-width: 23ch; font-size: max(13px, clamp(29px, 3.1vw, 43px)); }
   #skandi-home-content .home-discovery-grid.is-editorial:has(> :first-child:not(.home-trip-card--text)) > :is(:nth-child(2), :nth-child(3)) { grid-column: span 5; min-height: 215px; aspect-ratio: 2.24; }
 }
+@media (max-width: 1020px) {
+  #skandi-home-content #hero-wrap { padding-top: max(28px, env(safe-area-inset-top, 0px)); }
+  #skandi-home-content #hero-wrap::before {
+    height: min(440px, 100%);
+    opacity: 1;
+    background-color: #022e64;
+    background-image: linear-gradient(180deg, #022e64 0%, rgba(2, 46, 100, .79) 47%, rgba(2, 46, 100, .2) 100%),
+      var(--home-hero-photo, var(--home-original-hero));
+  }
+  #skandi-home-content .hero-kicker { color: #a6e6ed; }
+  #skandi-home-content #hero-title, #skandi-home-content #hero-sub { color: #fff; }
+}
 @media (max-width: 760px) {
   #skandi-home-content { --home-inset: 16px; background: #f4f7fa; }
-  #skandi-home-content #hero-wrap { align-items: stretch; padding-top: max(23px, env(safe-area-inset-top, 0px)); padding-bottom: 10px; text-align: left; }
-  #skandi-home-content #hero-wrap::before {
-    height: 250px;
-    opacity: .26;
-    background-image: var(--home-hero-photo, var(--home-original-hero));
-    background-position: center;
-  }
+  #skandi-home-content #hero-wrap { align-items: stretch; padding-bottom: 10px; text-align: left; }
+  #skandi-home-content #hero-wrap::before { height: min(345px, 100%); }
+  #skandi-home-content .home-voy-card { min-height: 185px; }
   #skandi-home-content .hero-kicker { margin-bottom: 10px; }
   #skandi-home-content #hero-title { max-width: 17ch; font-size: max(13px, clamp(30px, 8vw, 40px)); }
   #skandi-home-content #hero-sub { max-width: 42ch; margin-bottom: 15px; font-size: 14px; }
@@ -1855,7 +1942,7 @@ body.search-mode #skandi-home-content .content-section:not(#flight-selector), bo
   #skandi-home-content .search-route > .field, #skandi-home-content .home-date-input { min-height: 61px; padding: 6px 9px; }
   #skandi-home-content .home-travelers > summary { min-height: 48px; padding-inline: 9px; }
   #skandi-home-content .field label, #skandi-home-content .home-travelers-label { margin-bottom: 2px; }
-  #skandi-home-content .search-route input[type="text"], #skandi-home-content .home-traveler-fields select, #skandi-home-content .home-explore-form :is(input:not([type="hidden"]), select) { font-size: 16px; }
+  #skandi-home-content .search-route input[type="text"], #skandi-home-content .home-traveler-fields select { font-size: 16px; }
   #skandi-home-content .search-route input[type="text"] { min-height: 29px; }
   #skandi-home-content .home-date-input:has(.date-range-button:not(.is-empty)) .date-range-button { font-size: 14px; }
   #skandi-home-content .counter { justify-content: flex-end; gap: 6px; }
@@ -1882,12 +1969,9 @@ body.search-mode #skandi-home-content .content-section:not(#flight-selector), bo
   #skandi-home-content .home-trip-card h3 { font-size: 17px; }
   #skandi-home-content .home-trip-action { padding: 8px; }
   #skandi-home-content .home-trip-action > span { width: 33px; height: 33px; }
-  #skandi-home-content .home-explore-copy, #skandi-home-content .home-planning { align-items: start; flex-direction: column; gap: 7px; }
+  #skandi-home-content .home-planning { align-items: start; flex-direction: column; gap: 7px; }
   #skandi-home-content .home-planning-actions { flex-shrink: 1; justify-content: flex-start; }
-  #skandi-home-content .home-explore-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #skandi-home-content .home-explore-form .airport-field, #skandi-home-content .home-explore-form .home-solid-button { grid-column: 1 / -1; }
   #skandi-home-content .home-service-grid { grid-template-columns: 1fr; gap: 1px; }
-  #skandi-home-content .home-editorial-grid { gap: 8px; }
   #skandi-home-content .flight-meta { grid-template-columns: 1fr; }
   #skandi-home-content .skandi-toast.show { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); left: 16px; right: 16px; max-width: none; }
   html[data-skandi-mobile-navigation] body.skandi-home-keyboard #skandi-home-content {
@@ -1907,7 +1991,6 @@ body.search-mode #skandi-home-content .content-section:not(#flight-selector), bo
   #skandi-home-content .collection-short { display: inline; }
 }
 @media (max-width: 350px) {
-  #skandi-home-content .home-editorial-grid { grid-template-columns: minmax(0, 1fr); }
   #skandi-home-content .home-trip-card { grid-column: 1 / -1; aspect-ratio: 1.55; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1933,6 +2016,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 #skandi-global-footer-root,
 #riaintra-global-footer-root,
 #altea-global-footer-root { grid-row: 3; min-width: 0; }
+[data-skandi-key="home"] #skf-columns { display: none; }
+[data-skandi-key="home"] .skf-main { grid-template-columns: minmax(0, 1fr); }
 #skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
 #skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
 [data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
@@ -1987,6 +2072,17 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
     z-index: 2100;
   }
+  [data-skandi-family="public"] { --sk-shell-nav: 80px; }
+  [data-skandi-key="home"] #skandi-app-root { background: #f4f7fa; }
+  html[data-skandi-mobile-navigation] [data-skandi-key]:not([data-skandi-key="support"]) #skandi-support-chat-root {
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-skandi-mobile-navigation] body.skandi-home-keyboard #skandi-shell-root[data-skandi-key="home"] {
+    grid-template-rows: minmax(0, 1fr);
+    top: var(--skandi-visible-top, 0px);
+    height: var(--skandi-visible-height, 100dvh) !important;
+  }
+  body.skandi-home-keyboard [data-skandi-key="home"] #skandi-mobile-nav-container { display: none; }
   [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
   [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
 }
@@ -2229,14 +2325,14 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
       <div class="tab-panel" id="panel-flights">
         <div class="field-row search-route">
           <div class="field airport-field">
-            <label for="from" data-i18n="home.fields.from">From</label>
+            <label for="from" data-i18n="home.fields.departureAirport">Departure Airport</label>
             <input type="text" id="from" data-i18n-placeholder="home.plan.airportPlaceholder" autocomplete="off" placeholder="City or airport">
             <input type="hidden" id="fromIata">
             <div class="airport-suggestions" id="fromSuggestions"></div>
           </div>
 
           <div class="field airport-field">
-            <label for="to" data-i18n="home.fields.to">To</label>
+            <label for="to" data-i18n="home.plan.arrivalAirport">Arrival Airport</label>
             <input type="text" id="to" data-i18n-placeholder="home.plan.airportPlaceholder" autocomplete="off" placeholder="City or airport">
             <input type="hidden" id="toIata">
             <div class="airport-suggestions" id="toSuggestions"></div>
@@ -2309,7 +2405,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
           </button>
           <div class="field airport-field">
             <label for="hol-destination-search" data-i18n="home.fields.destination">Destination</label>
-            <input type="text" id="hol-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="hol-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City or resort" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="hol-destination">
             <input type="hidden" id="hol-destination-iata">
             <input type="hidden" id="hol-destination-type">
@@ -2348,7 +2444,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <div class="field-row search-route">
           <div class="field airport-field">
             <label for="hotel-destination-search" data-i18n="home.fields.destination">Destination</label>
-            <input type="text" id="hotel-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="hotel-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City or resort" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="hotel-destination">
             <input type="hidden" id="hotel-destination-iata">
             <input type="hidden" id="hotel-destination-type">
@@ -2386,7 +2482,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <div class="field-row search-route">
           <div class="field airport-field">
             <label for="sig-destination-search" data-i18n="home.fields.destination">Destination</label>
-            <input type="text" id="sig-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="sig-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City or resort" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="sig-destination">
             <input type="hidden" id="sig-destination-iata">
             <input type="hidden" id="sig-destination-type">
@@ -2489,48 +2585,15 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </div>
 </section>
 
-<section class="content-section mixed-section home-discovery" id="mixed-section" aria-labelledby="discovery-title" hidden="">
+<section class="content-section home-discovery" id="mixed-section" aria-labelledby="discovery-title" hidden="">
   <h2 class="section-title" id="discovery-title" data-i18n="home.sections.discovery.title">Explore SKANDI</h2>
   <div class="home-section-head">
     <div class="home-facets" role="group" aria-label="Filter trip ideas" data-i18n-aria-label="home.plan.filters">
-      <button type="button" data-home-facet="all" aria-pressed="true" data-i18n="home.plan.picks">Top picks</button>
-    <button type="button" data-home-facet="offer" aria-pressed="false" data-i18n="home.plan.offers">Offers</button>
-    <button type="button" data-home-facet="destination" aria-pressed="false" data-i18n="home.plan.destinations">Destinations</button>
-      <button type="button" data-home-facet="hotel" aria-pressed="false" data-i18n="home.tabs.hotels">Hotels</button>
     </div>
     <button type="button" class="home-text-button home-map-link" data-route-key="destinations" data-i18n="home.plan.map">Explore the map</button>
   </div>
   <div class="home-discovery-grid" id="mixed-feed"></div>
   <p id="home-discovery-status" class="home-visually-hidden" aria-live="polite"></p>
-</section>
-
-<section class="content-section home-explore" id="home-explore" aria-labelledby="explore-title">
-  <div class="home-explore-copy">
-    <h2 id="explore-title" data-i18n="home.plan.explore">Explore anywhere</h2>
-    <p data-i18n="home.plan.exploreCopy">Choose when and how you’d like to travel. Pick an idea, then check prices for your dates and travelers.</p>
-  </div>
-  <form class="home-explore-form" id="explore-form">
-    <div class="field airport-field">
-      <label for="explore-origin" data-i18n="home.fields.departureAirport">Departure airport</label>
-      <input id="explore-origin" autocomplete="off" data-i18n-placeholder="home.plan.airportPlaceholder" placeholder="City or airport" required="">
-      <input type="hidden" id="explore-origin-iata">
-      <div class="airport-suggestions" id="explore-origin-suggestions" role="listbox"></div>
-    </div>
-    <div class="field">
-      <label for="explore-month" data-i18n="home.plan.month">Travel month</label>
-      <select id="explore-month" required=""></select>
-    </div>
-    <div class="field">
-      <label for="explore-length" data-i18n="home.plan.duration">Nights</label>
-      <select id="explore-length"><option>3</option><option>5</option><option selected="">7</option><option>10</option><option>14</option></select>
-    </div>
-    <div class="field">
-      <label for="explore-budget" id="explore-budget-label">Max trip total</label>
-      <input type="number" id="explore-budget" min="1" max="10000000" step="any" inputmode="decimal" data-i18n-placeholder="home.plan.optional" placeholder="Optional">
-    </div>
-    <button class="home-solid-button" type="submit" data-i18n="home.plan.findIdeas">Find ideas</button>
-  </form>
-  <div id="explore-results" aria-live="polite"></div>
 </section>
 
 <section class="content-section home-services" aria-labelledby="services-title">
@@ -2540,26 +2603,23 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <article><h3>SKANDI Signature</h3><p data-content-id="home-signature-copy" data-i18n="home.plan.signatureCopy">On eligible packages, we meet you at the airport, take you to your hotel and provide a destination guide.</p></article>
     <article><h3>SKANDI Excelsior</h3><p data-content-id="home-excelsior-copy" data-i18n="home.plan.excelsiorCopy">Selected five-star stays with a personal coordinator and private arrival transfers. Airport benefits vary by destination.</p></article>
   </div>
-  <div class="home-editorial-grid">
-    <article>
-      <h3>SKANDI Collection</h3>
-      <p data-content-id="home-collection-copy" data-i18n="home.plan.collectionCopy">Handpicked hotels for travelers who choose the stay first.</p>
-      <button type="button" class="home-text-button" id="home-collection-action" data-i18n="home.plan.collectionAction">Explore the Collection</button>
-    </article>
-    <article>
-      <h3>VOY</h3>
-      <p id="home-voy-copy" data-i18n="home.plan.voyCopy">Destination stories from the SKANDI travel magazine.</p>
-      <button type="button" class="home-text-button" id="home-voy-action" data-i18n="home.plan.voyAction">Read VOY</button>
-    </article>
-  </div>
+  <article class="home-collection-card">
+    <h3>SKANDI Collection</h3>
+    <p data-content-id="home-collection-copy" data-i18n="home.plan.collectionCopy">Handpicked hotels for travelers who choose the stay first.</p>
+    <button type="button" class="home-text-button" id="home-collection-action" data-i18n="home.plan.collectionAction">Explore the Collection</button>
+  </article>
 </section>
 
-<nav class="content-section home-quick-links" aria-label="Travel resources" data-i18n-aria-label="home.plan.resources">
-  <button type="button" class="home-text-button" data-route-key="travelInfo" data-i18n="nav.info">Travel Info</button>
-  <button type="button" class="home-text-button" data-route-key="activities" data-i18n="home.plan.tours">Tours &amp; activities</button>
-  <button type="button" class="home-text-button" data-route-key="carRental" data-i18n="home.plan.cars">Car rental</button>
-  <button type="button" class="home-text-button" data-route-key="club">SKANDI Club</button>
-</nav>
+<section class="content-section home-voy" id="home-voy" aria-labelledby="home-voy-title">
+  <div class="home-voy-card">
+    <div class="home-voy-copy">
+      <h2 id="home-voy-title">VOY</h2>
+      <p id="home-voy-copy" data-i18n="home.plan.voyCopy">Destination stories from the SKANDI travel magazine.</p>
+      <button type="button" class="home-solid-button" id="home-voy-action" data-i18n="home.plan.voyAction">Read VOY</button>
+    </div>
+    <div class="home-voy-cover" aria-hidden="true"><img id="home-voy-image" alt="" loading="lazy" decoding="async" hidden=""></div>
+  </div>
+</section>
 
 <div id="skandiToast" class="skandi-toast" role="status" aria-live="polite"></div>
 </div></div>
@@ -2595,28 +2655,28 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </div>
 </footer>
 </div>
-<div id="skandi-mobile-nav-container"><div id="overlay" aria-hidden="true"></div>
-<aside id="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
-  <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+<div id="skandi-mobile-nav-container"><div id="overlay" class="skandi-public-overlay" aria-hidden="true"></div>
+<aside id="drawer" class="skandi-public-drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+  <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Menu</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+  <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="profileLink">My Trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
   <div class="drawer-scroll" id="drawerLinks"></div>
-  <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
   <div class="drawer-foot" id="staff-drawer-actions" hidden=""><details class="staff-home-guide"><summary>Add RIAINTRA to your Home Screen</summary><p>On iPhone or iPad, open the Share menu in Safari and choose Add to Home Screen. On Android, open the browser menu and choose Add to Home screen or Install, if offered.</p><p>This adds a shortcut to RIAINTRA; an internet connection and a valid staff session are still required.</p></details><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
 </aside>
-<nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
+<nav id="skandi-mobile-nav-root" class="skmn skandi-public-bar" aria-label="SKANDI mobile navigation">
   <button type="button" class="skmn-btn" data-skandi-mobile-route="home" aria-label="Home" aria-current="page">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span>
   </button>
-  <button type="button" class="skmn-btn" data-skandi-mobile-route="destinations" aria-label="Destinations">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="destinations" aria-label="Explore">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m9 15 3-8 3 5-6 3z"></path></svg><span>Explore</span>
   </button>
-  <button type="button" class="skmn-btn skmn-primary" data-skandi-mobile-route="bookingFlow" aria-label="Book a trip">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 16 20-9-3 13-6-6-5 6-1-8-5-1z"></path></svg><span>Book</span>
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="travelInfo" aria-label="Travel Info">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5m0-8h.01"></path></svg><span>Travel Info</span>
   </button>
-  <button type="button" class="skmn-btn" data-skandi-mobile-route="myTrips" aria-label="My Trips">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="staff" data-staff-only="" hidden="">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M9 6V4a3 3 0 0 1 6 0v2M3 13h18"></path></svg><span>Trips</span>
   </button>
-  <button type="button" class="skmn-btn" data-skandi-mobile-route="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="menu" aria-label="Menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Menu</span>
   </button>
 </nav>
@@ -3905,21 +3965,22 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     support:'/about/support',theStore:'/the-store',about:'/about'
   };
   const publicGroups=[
-    {title:'Book & travel',keys:[['Book a trip','home'],['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
+    {title:'Book & travel',keys:[['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
     {title:'Explore',keys:[['Destinations','destinations'],['SKANDI Collection','skandiCollection'],['VOY Magazine','voy']]},
     {title:'Travel help',keys:[['Travel information','travelInfo'],['Flight status','flightStatus'],['Passport & visa','passportVisa'],['Baggage allowance','baggageAllowance'],['Travel insurance','travelInsurance'],['Special assistance','specialAssistance'],['Help Center','support']]},
-    {title:'Your SKANDI',keys:[['My Trips','myTrips'],['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
+    {title:'My SKANDI',keys:[['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
     {title:'About SKANDI',keys:[['About','about'],['Newsroom','newsroom'],['Careers','careers'],['Legal','legal'],['Policies','policies'],['Cookie preferences','cookiePreferences'],['Staff login','riaintra']]}
   ];
   const $=id=>document.getElementById(id);
   const bar=$('skandi-mobile-nav-root');
-  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
-  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const drawer=$('drawer');
   const status=$("skandi-mobile-status");
   const shell=window.__SKANDI_SHELL__?.root;
   const family=shell?.dataset.skandiFamily||'public';
   const isStaff=family==='riaintra'||family==='altea';
+  if(!isStaff)bar.querySelector('[data-staff-only]').remove();
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const brand=family==='altea'?'ALTEA':family==='riaintra'?'RIAINTRA':'SKANDI TRAVELS';
   const staffIcons={
     workspace:'M3 9l9-6 9 6v11H3z M9 20v-7h6v7',
@@ -3929,13 +3990,16 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     reservations:'M3 7h18v10H3z M8 7v10 M13 11h5',
     eos:'M7 3h10v18H7z M10 17h4'
   };
-  const drawerTitle=isStaff?brand+' menu':'Explore SKANDI';
+  const drawerTitle=isStaff?brand+' menu':'Menu';
   const state={routes:{...defaults},currentPath:'/',request:0,drawerOpen:false,drawerPending:'',drawerTimer:null,chatOpen:false,lastFocused:null,staffNavigation:null};
   bar.setAttribute('aria-label',brand+' mobile navigation');
   $('drawer-brand').textContent=brand;
   $('drawer-title').textContent=drawerTitle;
   if(isStaff) {
     drawer.dataset.staffMenu='';
+    drawer.classList.remove('skandi-public-drawer');
+    $('overlay').classList.remove('skandi-public-overlay');
+    bar.classList.remove('skandi-public-bar');
     $('drawer-actions').hidden=true;
   }
   let focusTransitionToken=0;
@@ -3952,11 +4016,13 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   function pathFor(key){return safePath(state.routes[key])||safePath(defaults[key]);}
   function updateActive(){
     const current=safePath(state.currentPath)||'/';
-    const normalized=current.split('?')[0];
+    const normalized=current.split(/[?#]/)[0].replace(/\/+$/,'')||'/';
     for(const button of BUTTONS){
       const key=button.dataset.skandiMobileRoute;
       const path=isStaff?safePath(button.dataset.path):pathFor(key);
-      const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
+      const active=path&&(path.includes('?')?current===path:normalized===path
+        || !isStaff && key==='home' && normalized==='/home'
+        || !isStaff && ['destinations','travelInfo'].includes(key) && normalized.startsWith(path+'/'));
       if(active)button.setAttribute('aria-current','page');
       else button.removeAttribute('aria-current');
     }
@@ -3991,6 +4057,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         const button=document.createElement('button');
         button.type='button';button.className='drawer-link';
         button.dataset.menuKey=link.path;renderedItems.set(link.path,button);
+        if(link.path===state.currentPath)button.setAttribute('aria-current','page');
         const text=document.createElement('span');text.textContent=link.label;
         const chevron=document.createElement('b');chevron.textContent='›';chevron.setAttribute('aria-hidden','true');
         button.append(text,chevron);
@@ -4136,7 +4203,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     closeDrawer();
     post('RIAINTRA_LOGOUT',{},nextId('sign-out'));
   });
-  $('profileLink').addEventListener('click',()=>navigate('myProfile'));
+  $('profileLink').addEventListener('click',()=>navigate('myTrips'));
   $('searchLink').addEventListener('click',()=>{
     closeDrawer();
     post('HOME_APP_FOCUS_SEARCH',{},nextId('focus'));
@@ -4184,6 +4251,14 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         const logo=config.brand?.assets?.toolWordmarks?.[family];
         if(/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo||'')){
           $('drawer-logo').src=logo;
+          $('drawer-logo').hidden=false;
+          $('drawer-brand').hidden=true;
+        }
+      } else {
+        const logo=config.brand?.assets?.logos?.customerFooter;
+        if(/^https:\/\//i.test(logo||'')){
+          $('drawer-logo').src=logo;
+          $('drawer-logo').alt=brand;
           $('drawer-logo').hidden=false;
           $('drawer-brand').hidden=true;
         }
@@ -6606,6 +6681,7 @@ const SKANDI_LOCALES = {
 };
 
 const HOME_PLANNING_COPY = {
+  "arrivalAirport": ["Arrival Airport", "Ankomstflygplats", "Ankomstflyplass", "Ankomstlufthavn", "Saapumislentoasema"],
   "searchType": ["Search by trip type", "Sök efter restyp", "Søk etter reisetype", "Søg efter rejsetype", "Hae matkatyypin mukaan"],
   "signaturePackages": ["Signature packages", "Signature-paket", "Signature-pakker", "Signature-pakker", "Signature-paketit"],
   "searchSignature": ["Search Signature packages", "Sök Signature-paket", "Søk Signature-pakker", "Søg Signature-pakker", "Hae Signature-paketteja"],
@@ -6613,7 +6689,7 @@ const HOME_PLANNING_COPY = {
   "datePlaceholder": ["Select dates", "Välj datum", "Velg datoer", "Vælg datoer", "Valitse päivät"],
   "collectionShort": ["Collection", "Kollektionen", "Kolleksjonen", "Kollektion", "Kokoelma"],
   "swap": ["Swap origin and destination", "Byt plats på avreseort och resmål", "Bytt om avreise og reisemål", "Byt afrejse og rejsemål", "Vaihda lähtöpaikka ja kohde"],
-  "destinationPlaceholder": ["City, resort or airport", "Stad, resmål eller flygplats", "By, reisemål eller flyplass", "By, rejsemål eller lufthavn", "Kaupunki, matkakohde tai lentoasema"],
+  "destinationPlaceholder": ["City or resort", "Stad eller resmål", "By eller reisemål", "By eller rejsemål", "Kaupunki tai matkakohde"],
   "travelers": ["Travelers", "Resenärer", "Reisende", "Rejsende", "Matkustajat"],
   "done": ["Done", "Klar", "Ferdig", "Færdig", "Valmis"],
   "direct": ["Nonstop only", "Endast direktflyg", "Kun direktefly", "Kun direkte fly", "Vain suorat lennot"],
@@ -6628,10 +6704,14 @@ const HOME_PLANNING_COPY = {
   "upcomingTrip": ["View your upcoming trip and travel documents in My SKANDI.", "Se din kommande resa och dina resehandlingar i My SKANDI.", "Se din kommende reise og reisedokumentene i My SKANDI.", "Se din kommende rejse og dine rejsedokumenter i My SKANDI.", "Katso tuleva matkasi ja sen asiakirjat My SKANDIsta."],
   "map": ["Explore the map", "Utforska kartan", "Utforsk kartet", "Udforsk kortet", "Tutustu karttaan"],
   "filters": ["Filter trip ideas", "Filtrera reseidéer", "Filtrer reiseideer", "Filtrér rejseidéer", "Suodata matkaideoita"],
-  "picks": ["Top picks", "Våra tips", "Våre tips", "Vores tips", "Suosikkimme"],
-  "offers": ["Offers", "Erbjudanden", "Tilbud", "Tilbud", "Tarjoukset"],
   "destinations": ["Destinations", "Resmål", "Reisemål", "Rejsemål", "Matkakohteet"],
-  "hotel": ["Hotel", "Hotell", "Hotell", "Hotel", "Hotelli"],
+  "resorts": ["Resorts", "Semesterorter", "Feriesteder", "Feriesteder", "Lomakohteet"],
+  "countries": ["Countries", "Länder", "Land", "Lande", "Maat"],
+  "packages": ["Packages", "Paketresor", "Pakkereiser", "Pakkerejser", "Pakettimatkat"],
+  "guidedTours": ["Guided tours", "Guidade turer", "Guidede turer", "Guidede ture", "Opastetut retket"],
+  "activities": ["Activities", "Aktiviteter", "Aktiviteter", "Aktiviteter", "Aktiviteetit"],
+  "transfers": ["Transfers", "Transfer", "Transport", "Transfer", "Kuljetukset"],
+  "swapUnavailable": ["Choose a destination for the new route.", "Välj ett resmål för den nya rutten.", "Velg et reisemål for den nye ruten.", "Vælg et rejsemål til den nye rute.", "Valitse kohde uudelle reitille."],
   "stayTotal": ["Stay total", "Totalt för boendet", "Totalt for oppholdet", "I alt for opholdet", "Majoitus yhteensä"],
   "recentEstimate": ["Recent estimate", "Senaste prisuppskattning", "Nylig prisanslag", "Seneste prisoverslag", "Tuore hinta-arvio"],
   "roomCount": ["Rooms {n}", "Rum {n}", "Rom {n}", "Værelser {n}", "Huoneita {n}"],
@@ -6639,18 +6719,8 @@ const HOME_PLANNING_COPY = {
   "ideaCount": ["Trip ideas shown {n}", "Visade reseidéer {n}", "Reiseideer vist {n}", "Viste rejseidéer {n}", "Näytettyjä matkaideoita {n}"],
   "checkAvailability": ["Check availability", "Kontrollera tillgänglighet", "Sjekk tilgjengelighet", "Se tilgængelighed", "Tarkista saatavuus"],
   "viewDetails": ["View details", "Visa detaljer", "Se detaljer", "Se detaljer", "Katso tiedot"],
-  "explore": ["Explore anywhere", "Upptäck nya resmål", "Oppdag nye reisemål", "Opdag nye rejsemål", "Löydä uusia kohteita"],
-  "exploreCopy": ["Choose when and how you’d like to travel. Pick an idea, then check prices for your dates and travelers.", "Välj när och hur du vill resa. Välj ett resmål och sök pris för dina datum och resenärer.", "Velg når og hvordan du vil reise. Velg et reisemål og sjekk prisene for datoene og de reisende.", "Vælg, hvornår og hvordan du vil rejse. Vælg et rejsemål, og se priser for dine datoer og rejsende.", "Valitse matkan ajankohta ja kesto. Valitse kohde ja tarkista hinnat päivillesi ja seurueellesi."],
-  "month": ["Travel month", "Resmånad", "Reisemåned", "Rejsemåned", "Matkakuukausi"],
-  "pickMonth": ["Choose month", "Välj månad", "Velg måned", "Vælg måned", "Valitse kuukausi"],
-  "duration": ["Nights", "Nätter", "Netter", "Nætter", "Yötä"],
   "budget": ["Max trip total", "Maxpris för resan", "Makspris for reisen", "Makspris for rejsen", "Matkan enimmäishinta"],
-  "optional": ["Optional", "Valfritt", "Valgfritt", "Valgfrit", "Valinnainen"],
-  "findIdeas": ["Find ideas", "Hitta reseidéer", "Finn reiseideer", "Find rejseidéer", "Etsi matkaideoita"],
   "otherAirports": ["Other departure airports", "Andra avreseflygplatser", "Andre avreiseflyplasser", "Andre afrejselufthavne", "Muut lähtölentoasemat"],
-  "chooseOrigin": ["Select a departure airport from the list.", "Välj en avreseflygplats i listan.", "Velg en avreiseflyplass fra listen.", "Vælg en afrejselufthavn fra listen.", "Valitse lähtölentoasema luettelosta."],
-  "noIdeas": ["No featured ideas are available for this departure airport.", "Inga utvalda reseidéer för den här avreseflygplatsen.", "Ingen utvalgte reiseideer for denne avreiseflyplassen.", "Ingen udvalgte rejseidéer for denne afrejselufthavn.", "Tältä lentoasemalta ei ole valittuja matkaideoita."],
-  "ideaPrompt": ["Pick a destination to choose dates for {n} nights in {month}.", "Välj resmål för att välja datum för {n} nätter i {month}.", "Velg et reisemål for å finne datoer for {n} netter i {month}.", "Vælg et rejsemål for at finde datoer for {n} nætter i {month}.", "Valitse kohde ja päivät {n} yön matkalle. Ajankohta {month}."],
   "services": ["The SKANDI way to travel", "Res med SKANDI", "Reis med SKANDI", "Rejs med SKANDI", "Matkusta SKANDIn kanssa"],
   "selectCopy": ["Independent travel with access to additional SKANDI services online.", "Res på egen hand och boka SKANDIs tilläggstjänster online.", "Reis på egen hånd med tilgang til SKANDIs ekstratjenester på nett.", "Rejs på egen hånd med adgang til SKANDIs tilvalg online.", "Omatoimimatka ja SKANDIn lisäpalvelut verkossa."],
   "signatureCopy": ["On eligible packages, we meet you at the airport, take you to your hotel and provide a destination guide.", "I utvalda paket möter vi dig på flygplatsen, kör dig till hotellet och erbjuder en guide på resmålet.", "På utvalgte pakkereiser møter vi deg på flyplassen, kjører deg til hotellet og tilbyr en guide på reisemålet.", "På udvalgte pakkerejser møder vi dig i lufthavnen, kører dig til hotellet og tilbyder en guide på rejsemålet.", "Valituilla pakettimatkoilla tapaamme lentoasemalla, kuljetamme hotellille ja tarjoamme kohdeoppaan."],
@@ -6660,7 +6730,6 @@ const HOME_PLANNING_COPY = {
   "voyCopy": ["Destination stories from the SKANDI travel magazine.", "Resereportage från SKANDIs resemagasin.", "Reisereportasjer fra SKANDIs reisemagasin.", "Rejsefortællinger fra SKANDIs rejsemagasin.", "Matkajuttuja SKANDIn matkalehdestä."],
   "voyAction": ["Read VOY", "Läs VOY", "Les VOY", "Læs VOY", "Lue VOY"],
   "readStory": ["Read the story", "Läs reportaget", "Les reportasjen", "Læs artiklen", "Lue juttu"],
-  "resources": ["Travel resources", "Reseinformation", "Reiseinformasjon", "Rejseinformation", "Matkustustietoa"],
   "tours": ["Tours & activities", "Utflykter och aktiviteter", "Turer og aktiviteter", "Udflugter og aktiviteter", "Retket ja aktiviteetit"],
   "cars": ["Car rental", "Hyrbil", "Leiebil", "Biludlejning", "Autonvuokraus"]
 };
@@ -6741,10 +6810,9 @@ function applyTranslations() {
     applyDateLabelsOnly();
     if (dateDraft) renderCalendar();
     renderPax();
-    renderMixedFeed();
+    renderDiscovery();
     renderPlanning();
-    renderExploreOptions();
-    renderEditorial();
+    renderVoyCard();
     renderAlternativeAirports();
     applyHomePresentation(state.presentation);
 
@@ -6853,9 +6921,8 @@ const state = {
   searchDestinations: [],
   hotels: [],
   offers: [],
-  facet: "all",
+  facet: "",
   planning: {},
-  exploreDraft: null,
   editingSearch: false,
   packageBudget: null,
   voyStory: null,
@@ -6957,7 +7024,6 @@ function escAttr(v=""){ return esc(v).replaceAll("`","&#096;"); }
 function normalize(v=""){ return String(v || "").trim().toLowerCase(); }
 function isoDate(date){ const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,"0"); const d=String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
 function todayPlus(days){ const d=new Date(); d.setDate(d.getDate()+days); return isoDate(d); }
-function addDaysIso(dateString,days){ const d=new Date(dateString+"T00:00:00"); d.setDate(d.getDate()+Number(days||0)); return isoDate(d); }
 function addMonths(date,amount){ return new Date(date.getFullYear(), date.getMonth()+amount, 1); }
 function formatDate(dateString){
   if(!dateString)return "";
@@ -7034,41 +7100,58 @@ function applyDateLabelsOnly(){
 function normalizeSearchText(v=""){
   return String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
 }
-function buildLocationOptions(kind="destination"){
-  const isDestinationField=kind==="destination";
-  const airports=(state.airports||[]).map(a=>({
-    type:"AIRPORT",value:String(a.iata||"").toUpperCase(),canonicalValue:String(a.iata||"").toUpperCase(),
-    iata:String(a.iata||"").toUpperCase(),icao:String(a.icao||"").toUpperCase(),
-    title:a.city||a.name||a.iata||"",city:a.city||"",airportName:a.name||"",country:a.country||"",
-    label:`${a.name||a.city||a.iata}${a.iata?` (${a.iata})`:""}`,
-    subtitle:[a.country,/^(sweden|norway|denmark|se|no|dk)$/i.test(String(a.country||""))?"Scandinavia":"",a.city,a.name,a.icao,a.iata,a.cityCode].filter(Boolean).filter((value,index,all)=>all.indexOf(value)===index).join(" · "),
-    terms:[a.city,a.name,a.iata,a.icao,a.cityCode,a.country,/^(sweden|norway|denmark|se|no|dk)$/i.test(String(a.country||""))?"Scandinavia":""].filter(Boolean)
-  })).filter(x=>x.value);
-
-  // The same canonical catalogue powers every location field. For flight/departure
-  // fields a destination/city alias resolves to its airport IATA; package destination
-  // fields retain the canonical destination code and separately store the IATA.
-  const destinations=(state.searchDestinations?.length?state.searchDestinations:state.destinations||[]).map(d=>{
-    const destinationCode=String(d.destinationCode||d.code||d.slug||d.id||"");
-    const iata=String(d.iata||"").toUpperCase();
-    const title=localizedRecordValue(d,"title",d.name||destinationCode||"");
-    const country=localizedRecordValue(d,"country",d.country||"");
-    const canonicalValue=isDestinationField ? destinationCode : (iata||destinationCode);
+function locationCountry(value) {
+  const country = String(value || "").trim();
+  if (!/^[A-Za-z]{2}$/.test(country)) return country;
+  try { return new Intl.DisplayNames([skandiLocale()], {type:"region"}).of(country.toUpperCase()) || country; }
+  catch (_) { return country; }
+}
+function locationTitle(value) {
+  return String(value || "").trim().toLocaleUpperCase(skandiLocale());
+}
+function airportOptions(remote = []) {
+  const airports = new Map();
+  for (const item of remote) {
+    if (item.type === "AIRPORT" && !airports.has(item.iata)) airports.set(item.iata,item);
+  }
+  for (const item of state.airports) {
+    const existing = airports.get(item.iata) || {};
+    airports.set(item.iata, {
+      ...existing, iata:item.iata, airportName:item.name || item.title || existing.airportName,
+      city:item.city || existing.city, region:item.region || existing.region,
+      countryCode:item.country || existing.countryCode, icao:item.icao || existing.icao,
+      cityCode:item.cityCode || existing.cityCode
+    });
+  }
+  return [...airports.values()].filter(item=>/^[A-Z]{3}$/.test(item.iata)).map(item=>{
+    const {iata,icao,cityCode} = item;
+    const title = String(item.airportName || iata).trim().replace(/\s*\([A-Z]{3}\)$/i,"");
+    const city = item.city || "";
+    const region = item.region || "";
+    const country = locationCountry(item.countryCode || item.country);
+    const geography = [region,country].filter(Boolean).join(", ");
     return {
-      type:String(d.entityType||d.type||"DESTINATION").toUpperCase()==="AREA"?"AREA":"DESTINATION",
-      value:canonicalValue,canonicalValue:destinationCode,iata,icao:String(d.icao||"").toUpperCase(),
-      title,city:d.airportCity||title||"",airportName:d.airportName||"",country,
-      label:`${title}${country?` — ${country}`:""}`,
-      subtitle:[destinationCode?`Code ${destinationCode}`:"",iata?`Airport ${iata}`:"",d.airportName||""].filter(Boolean).join(" • "),
-      terms:[title,d.name,destinationCode,iata,d.icao,d.airportName,d.airportCity,country,...(Array.isArray(d.searchTerms)?d.searchTerms:[])].filter(Boolean)
+      type:"AIRPORT", value:iata, iata, icao, cityCode, title, city, airportName:title, country,
+      label:locationTitle(title)+" ("+iata+")",
+      subtitle:[city,geography].filter(Boolean).join(" • "),
+      terms:[region,cityCode,...(item.terms || [])]
     };
-  }).filter(x=>x.value && (isDestinationField || /^[A-Z]{3}$/.test(x.iata)));
-
-  const seen=new Set();
-  return [...destinations,...airports].filter(item=>{
-    const key=`${item.type}:${item.canonicalValue||item.value}:${item.iata||""}`;
-    if(seen.has(key))return false;
-    seen.add(key);return true;
+  });
+}
+function destinationOptions(requireAirport = false) {
+  return state.searchDestinations.flatMap(item=>{
+    const type = String(item.type || item.entityType || "").toUpperCase();
+    const value = String(item.destinationCode || item.code || item.slug || "");
+    const iata = String(item.iata || "").toUpperCase();
+    const title = item.title || item.name || "";
+    if (!["DESTINATION","AREA"].includes(type) || !value || !title || (requireAirport && !/^[A-Z]{3}$/.test(iata))) return [];
+    const country = locationCountry(item.country);
+    return [{
+      type, value, iata, title, country,
+      label:[locationTitle(title),item.region].filter(Boolean).join(" • "),
+      subtitle:country,
+      terms:[item.name,item.region,item.slug,iata, ...(Array.isArray(item.searchTerms) ? item.searchTerms : [])]
+    }];
   });
 }
 function scoreLocationOption(item,query){
@@ -7089,11 +7172,7 @@ function scoreLocationOption(item,query){
   if(best>=0&&(item.type==="DESTINATION"||item.type==="AREA"))best+=25;
   return best;
 }
-function matchingLocationOptions(kind,query){
-  return buildLocationOptions(kind).map(item=>({...item,_score:scoreLocationOption(item,query)}))
-    .filter(item=>item._score>=0).sort((a,b)=>b._score-a._score||String(a.title||"").localeCompare(String(b.title||""))).slice(0,10);
-}
-function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId="",typeId="",valueMode="canonical"}){
+function setupLocationSearch({inputId,valueId,boxId,kind,iataId="",typeId=""}){
   const input=$(inputId),hidden=$(valueId),box=$(boxId),iata=iataId?$(iataId):null,type=typeId?$(typeId):null;
   if(!input||!hidden||!box)return;
   input.setAttribute("role","combobox");
@@ -7103,14 +7182,9 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
   box.setAttribute("role","listbox");
   let matches=[],activeIndex=-1,remote=[],requestId="",placeTimer=null,remoteUnavailable=false;
   let dismissed=false;
-  const useProvider=kind==="flight";
-  const placeKey=item=>item
-    ?`${item.type}:${item.type==="AIRPORT"?item.iata||item.value:item.canonicalValue||item.value}`
-    :"";
-  const available=()=>{
-    const combined=useProvider?[...remote,...buildLocationOptions(kind)]:buildLocationOptions(kind),seen=new Set();
-    return combined.filter(item=>{const key=placeKey(item);if(seen.has(key))return false;seen.add(key);return true;});
-  };
+  const useProvider=kind==="airport";
+  const placeKey=item=>item ? item.type+":"+item.value : "";
+  const available=()=>useProvider ? airportOptions(remote) : destinationOptions(kind==="package");
   const close=()=>{
     box.classList.remove("active");
     input.setAttribute("aria-expanded","false");
@@ -7130,10 +7204,9 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
     const highlighted=placeKey(matches[activeIndex]);
     matches=available().map(item=>({...item,_score:scoreLocationOption(item,input.value)})).filter(item=>item._score>=0).sort((a,b)=>b._score-a._score||String(a.title||"").localeCompare(String(b.title||""))).slice(0,10);
     activeIndex=matches.findIndex(item=>placeKey(item)===highlighted);
-    const catalogueReady=(state.airports||[]).length>0||(state.searchDestinations||[]).length>0;
+    const catalogueReady=state.locationsLoaded;
     box.innerHTML=matches.length?matches.map((item,index)=>`<button type="button" class="airport-option" id="${boxId}-${index}" role="option" tabindex="-1" data-index="${index}">
-      <span class="airport-option-type">${esc(item.type==="AREA"?"RESORT":item.type)}</span>
-      <span class="airport-option-copy"><strong>${esc(item.label||item.title||item.value)}</strong><small>${esc(item.subtitle||"")}</small></span>
+      <span class="airport-option-copy"><strong>${esc(item.label)}</strong>${item.subtitle?"<small>"+esc(item.subtitle)+"</small>":""}</span>
     </button>`).join(""):`<div style="padding:13px 14px;color:#667482;font-size:12px">${remoteUnavailable?"Airport search is unavailable. Try another search.":catalogueReady?"No matching locations":"Loading destinations and airports…"}</div>`;
     if(remoteUnavailable&&matches.length)box.insertAdjacentHTML("beforeend",'<div style="padding:10px 14px;color:#667482;font-size:12px">Some locations could not be loaded. Saved locations are shown.</div>');
     box.classList.add("active");input.setAttribute("aria-expanded","true");
@@ -7142,17 +7215,20 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
   const choose=item=>{
     if(!item)return;
     clearTimeout(placeTimer);requestId="";
-    if(useProvider)input.dataset.placeType=item.type==="CITY"?"CITY":"AIRPORT";
-    input.value=item.label||item.title||item.value||"";hidden.value=valueMode==="iata"?(item.iata||item.value||""):(item.canonicalValue||item.value||"");
+    if(useProvider)input.dataset.placeType="AIRPORT";
+    input.value=item.label;
+    hidden.value=item.value;
     if(iata)iata.value=item.iata||"";if(type)type.value=item.type||"";close();
   };
   const resolveExact=()=>{
     if(hidden.value)return true;
     const q=normalizeSearchText(input.value);if(!q)return false;
     const locations=available();
-    const exact=locations.find(item=>item.type==="AIRPORT"&&[item.iata,item.icao].map(normalizeSearchText).includes(q))||
-      locations.find(item=>[item.value,item.canonicalValue,item.iata,item.icao,item.title,item.label].map(normalizeSearchText).includes(q));
-    if(exact){choose(exact);return true;}return false;
+    const exact = locations.filter(item=>[item.value,item.title,item.label,item.icao].map(normalizeSearchText).includes(q));
+    const matchesCode = exact.length ? exact : locations.filter(item=>normalizeSearchText(item.iata)===q);
+    if (matchesCode.length !== 1) return false;
+    choose(matchesCode[0]);
+    return true;
   };
   input.addEventListener("focus",()=>{
     dismissed=false;
@@ -7372,17 +7448,14 @@ function setupDatePicker(){
     const button=event.target.closest("[data-date]");
     if(!button||button.disabled||!dateDraft)return;
     const day=button.dataset.date;
-    if (!dateDraft.from && state.activeDateRange==="holidays" && state.exploreDraft) {
-      dateDraft={from:day,to:addDaysIso(day,state.exploreDraft.nights)};
-      state.exploreDraft=null;
-    } else if(!dateDraft.from||dateDraft.to||day<=dateDraft.from)dateDraft={from:day,to:""};
+    if(!dateDraft.from||dateDraft.to||day<=dateDraft.from)dateDraft={from:day,to:""};
     else dateDraft.to=day;
     renderCalendar();
     picker.querySelector('[data-date="'+day+'"]')?.focus({preventScroll:true});
   });
   document.addEventListener("click",event=>{
     // Selecting a day redraws its button before this event reaches the document.
-    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search], [data-explore-destination]"))closeDatePicker();
+    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search]"))closeDatePicker();
   });
   document.addEventListener("keydown",event=>{
     if(event.key==="Escape"&&dateDraft){event.preventDefault();closeDatePicker(true);}
@@ -7421,12 +7494,33 @@ function renderBootstrap(payload={}){
   state.sync = content.sync || payload.sync || null;
   state.lastBootstrapAt = Date.now();
   if (state.sync?.errors?.length) console.warn("[SKANDI Home] Content sync diagnostics:", state.sync.errors);
-  renderMixedFeed();
+  renderDiscovery();
 }
 
-function setDiscoveryFacet(facet) {
-  state.facet = facet;
-  renderMixedFeed();
+const DISCOVERY_CATEGORIES = Object.freeze({
+  DESTINATION:"home.plan.destinations",
+  AREA:"home.plan.resorts",
+  COUNTRY:"home.plan.countries",
+  HOTEL:"home.tabs.hotels",
+  PACKAGE:"home.plan.packages",
+  GUIDED_TOUR:"home.plan.guidedTours",
+  ACTIVITY:"home.plan.activities",
+  TRANSFER:"home.plan.transfers",
+  CAR_RENTAL:"home.plan.cars"
+});
+
+function imageIdentity(photo) {
+  return photo?.pathname.replace(/\/v1\/(?:fill|fit|crop)\/.*$/, "").replace("/render/image/public/","/object/public/") || "";
+}
+
+function tripRelevance(item, recent) {
+  if (!recent) return 0;
+  const hotel = recent.accommodationId;
+  if (hotel && [item.id,item.duffelAccommodationId].includes(hotel)) return 4;
+  const key = normalize(recent.destinationCode || recent.destinationSlug);
+  if (key && [item.code,item.slug,item.priceLookup?.destination].some(value=>normalize(value)===key)) return 3;
+  const airport = recent.destinationIata || recent.destination;
+  return airport && airport === (item.priceLookup?.iata || item.iata) ? 1 : 0;
 }
 
 function homeImage(value) {
@@ -7453,72 +7547,86 @@ function discoveryPrice(item, kind) {
     : [skandiTranslate("home.plan.recentEstimate")];
   quoteBasis.push(skandiInterpolate("home.plan.guestCount",{n:guests}));
   const basis = [formatDate(from)+" – "+formatDate(to), quoteBasis.join(" · ")];
-  if (kind === "destination" && isStay && item.liveAccommodationName) basis.push(item.liveAccommodationName);
+  if (["DESTINATION","AREA","COUNTRY"].includes(kind) && isStay && item.liveAccommodationName) basis.push(item.liveAccommodationName);
   if (!isStay && period.origin && period.destination) basis.push(period.origin+" → "+period.destination);
   return `<p class="home-price"><strong>${esc(skandiTranslate("home.card.from"))} ${esc(formatCurrencyAmount(price,item.currency))}</strong><span>${esc(basis.join(" · "))}</span></p>`;
 }
 
-function renderMixedFeed() {
+function renderDiscovery() {
   const grid = $("mixed-feed"), section = $("mixed-section");
-  const groups = {offer:state.offers, destination:state.destinations, hotel:state.hotels};
-  const counts = Object.values(groups).map(items=>items.length);
-  section.hidden = !counts.some(Boolean);
-  if (section.hidden) return;
-  if (state.facet !== "all" && !groups[state.facet]?.length) state.facet = "all";
-  const pool = [];
-  if (state.facet === "all") {
-    // Alternate published categories so a longer catalogue doesn't displace nearby choices.
-    for (let index=0; index<Math.max(...counts); index++) {
-      for (const [kind,items] of Object.entries(groups)) if (items[index]) pool.push({kind,item:items[index]});
-    }
-  } else {
-    for (const item of groups[state.facet]) pool.push({kind:state.facet,item});
-  }
-  document.querySelectorAll("[data-home-facet]").forEach(button=>{
-    const key = button.dataset.homeFacet;
-    button.hidden = key!=="all" && !groups[key]?.length;
-    button.setAttribute("aria-pressed", String(key===state.facet));
-  });
-  const names = new Set(), images = new Set();
-  const cards = [];
-  for (const {kind,item} of pool) {
+  const group = section.querySelector(".home-facets");
+  const active = document.activeElement;
+  const focusedFacet = active?.dataset?.homeFacet, focusedCard = active?.dataset?.homeCard;
+  const groups = new Map(Object.keys(DISCOVERY_CATEGORIES).map(category=>[category,[]]));
+  const recent = state.planning.recent;
+  const voyImage = imageIdentity(homeImage(state.voyStory?.image));
+  for (const item of [...state.destinations,...state.hotels,...state.offers]) {
+    const category = String(item.entityType || item.type || "").toUpperCase();
+    if (!groups.has(category)) continue;
     const title = localizedRecordValue(item,"title",item.name);
-    const identity = normalizeSearchText(item.name || title) || normalize(item.name || title);
-    const photo = homeImage(item.imageUrl || item.image);
-    const imageKey = photo?.pathname.replace(/\/v1\/(?:fill|fit|crop)\/.*$/, "");
     const path = safeRouteValue(item.href || item.path);
-    const canSearch = kind === "offer" && item.search?.destination && item.search?.departureDate;
-    if (!title || (!path && !canSearch) || names.has(identity) || (imageKey && images.has(imageKey))) continue;
+    const canSearch = Boolean(item.search?.destination && (item.search?.departureDate || item.search?.checkInDate));
+    if (!title || (!path && !canSearch)) continue;
+    const photo = homeImage(item.imageUrl || item.image);
+    groups.get(category).push({
+      id:String(item.id || path || title), item, title, path, canSearch,
+      photo:imageIdentity(photo) === voyImage ? null : photo,
+      relevance:tripRelevance(item,recent)
+    });
+  }
+  const categories = [...groups.keys()].filter(key=>groups.get(key).length);
+  section.hidden = !categories.length;
+  if (section.hidden) return;
+
+  for (const category of categories) groups.get(category).sort((a,b)=>b.relevance-a.relevance);
+  const preferred = recent?.tripType === "hotelOnly" && groups.get("HOTEL")[0]?.relevance ? "HOTEL"
+    : categories.reduce((best,key)=>groups.get(key)[0].relevance > groups.get(best)[0].relevance ? key : best);
+  const category = categories.includes(state.facet) ? state.facet : preferred;
+  group.replaceChildren(...categories.map(key=>{
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.homeFacet = key;
+    button.textContent = skandiTranslate(DISCOVERY_CATEGORIES[key]);
+    button.setAttribute("aria-pressed", String(key===category));
+    button.onclick = ()=>{
+      state.facet = key;
+      renderDiscovery();
+    };
+    return button;
+  }));
+
+  const names = new Set(), images = new Set(), cards = [];
+  for (const card of groups.get(category)) {
+    const identity = normalizeSearchText(card.item.name || card.title) || normalize(card.item.name || card.title);
+    const imageKey = imageIdentity(card.photo);
+    if (names.has(identity) || (imageKey && images.has(imageKey))) continue;
     names.add(identity);
     if (imageKey) images.add(imageKey);
-    cards.push({kind,item,title,photo,path,canSearch});
+    cards.push(card);
     if (cards.length === 6) break;
   }
-  grid.classList.toggle("is-editorial", state.facet === "all" && cards.length >= 3 && Boolean(cards[0].photo));
-  grid.innerHTML = cards.map(({kind,item,title,photo,canSearch},index)=>{
-    const type = skandiTranslate({offer:"home.card.offer",destination:"home.card.destination",hotel:"home.plan.hotel"}[kind]);
+  grid.classList.toggle("is-editorial", cards.length >= 3 && Boolean(cards[0].photo));
+  grid.dataset.category = category;
+  grid.innerHTML = cards.map(({id,item,title,photo,canSearch})=>{
     const cta = skandiTranslate(canSearch ? "home.plan.checkAvailability" : "home.plan.viewDetails");
     return `<article class="home-trip-card${photo?"":" home-trip-card--text"}">${photo?`<img src="${escAttr(photo.href)}" loading="lazy" decoding="async" alt="">`:""}
-      <div class="home-trip-card-body"><small>${esc(type)}</small><h3>${esc(title)}</h3>${discoveryPrice(item,kind)}</div>
-      <button type="button" class="home-trip-action" data-home-card="${index}" aria-label="${escAttr(cta+" · "+title)}"><span aria-hidden="true"></span></button></article>`;
+      <div class="home-trip-card-body"><h3>${esc(title)}</h3>${discoveryPrice(item,category)}</div>
+      <button type="button" class="home-trip-action" data-home-card="${escAttr(id)}" aria-label="${escAttr(cta+" · "+title)}"><span aria-hidden="true"></span></button></article>`;
   }).join("");
   grid.querySelectorAll(".home-trip-card img").forEach(img=>img.addEventListener("error", ()=>{
     img.closest(".home-trip-card").classList.add("home-trip-card--text");
     img.remove();
   }, {once:true}));
-  grid.querySelectorAll("[data-home-card]").forEach(button=>button.onclick=()=>{
-    const card = cards[Number(button.dataset.homeCard)];
-    if (card.canSearch) {
-      const search = {...card.item.search,currency:SKANDI_USER_SETTINGS.currency};
-      if (!validateSearch(search)) return runSearch("offer", search);
-      restoreSearch(search);
-      return;
-    }
-    navigateParent(card.path);
+  grid.querySelectorAll("[data-home-card]").forEach((button,index)=>button.onclick=()=>{
+    const card = cards[index];
+    if (!card.canSearch) return navigateParent(card.path);
+    const search = {...card.item.search,currency:SKANDI_USER_SETTINGS.currency};
+    if (!validateSearch(search)) return runSearch("offer", search);
+    if (!restoreSearch(search) && card.path) navigateParent(card.path);
   });
   $("home-discovery-status").textContent = skandiInterpolate("home.plan.ideaCount",{n:cards.length});
-  // Hydration and locale changes can replace cards while a visitor is using the keyboard.
-  section.hidden = !cards.length;
+  if (focusedFacet) [...group.children].find(button=>button.dataset.homeFacet===focusedFacet)?.focus({preventScroll:true});
+  if (focusedCard) [...grid.querySelectorAll("[data-home-card]")].find(button=>button.dataset.homeCard===focusedCard)?.focus({preventScroll:true});
 }
 
 function supportedHomeMode(search) {
@@ -7632,87 +7740,12 @@ function renderPlanning() {
   }
 }
 
-function renderExploreOptions() {
-  const select = $("explore-month");
-  const active = select.value;
-  const locale = document.documentElement.lang || "en";
-  select.replaceChildren(new Option(skandiTranslate("home.plan.pickMonth"),""));
-  for (let i=0;i<10;i++) {
-    const month=addMonths(new Date(),i);
-    select.add(new Option(month.toLocaleDateString(locale,{month:"long",year:"numeric"}),isoDate(month).slice(0,7)));
-  }
-  select.value = [...select.options].some(option=>option.value===active) ? active : "";
-  $("explore-budget-label").textContent = skandiTranslate("home.plan.budget")+" ("+SKANDI_USER_SETTINGS.currency+")";
-}
 function setPackageBudget(amount, currency) {
   state.packageBudget = Number(amount) > 0 && currency === SKANDI_USER_SETTINGS.currency
     ? {maxTripTotal:Number(amount), budgetCurrency:currency} : null;
   $("package-budget-note").hidden = !state.packageBudget;
   $("package-budget-value").textContent = state.packageBudget ?
     skandiTranslate("home.plan.budget")+" · "+formatCurrencyAmount(amount,currency) : "";
-}
-
-function findExploreIdeas(event) {
-  event.preventDefault();
-  const result = $("explore-results");
-  result.replaceChildren();
-  const origin = $("explore-origin-iata");
-  if (!ensureLocationSelection("explore-origin")) {
-    result.textContent = skandiTranslate("home.plan.chooseOrigin");
-    $("explore-origin").focus();
-    return;
-  }
-  const month = $("explore-month").value;
-  const nights = Number($("explore-length").value);
-  const budget = Number($("explore-budget").value);
-  const currency = SKANDI_USER_SETTINGS.currency;
-  const catalog = [...state.destinations, ...state.searchDestinations];
-  const codes = new Set(), ideas = [];
-  for (const place of catalog) {
-    const iata = place.priceLookup?.iata || place.iata;
-    const code = place.destinationCode || place.code;
-    const type = place.entityType || place.type;
-    if (!["DESTINATION","AREA"].includes(type) || !code || !iata || iata===origin.value || codes.has(iata)) continue;
-    codes.add(iata);
-    ideas.push({place,iata,code,type});
-    if (ideas.length===5) break;
-  }
-  if (!ideas.length) {
-    const text = document.createElement("p");
-    text.textContent = skandiTranslate("home.plan.noIdeas");
-    const button = document.createElement("button");
-    button.type="button"; button.className="home-text-button"; button.textContent=skandiTranslate("home.plan.map");
-    button.onclick=()=>navigateRoute("destinations");
-    result.append(text,button);
-    return;
-  }
-  const text = document.createElement("p");
-  text.textContent = skandiInterpolate("home.plan.ideaPrompt",{n:nights,month:$("explore-month").selectedOptions[0].textContent});
-  const buttons = document.createElement("div");
-  buttons.className = "home-idea-buttons";
-  for (const {place,iata,code,type} of ideas) {
-    const label = localizedRecordValue(place,"title",place.name);
-    const button = document.createElement("button");
-    button.type="button"; button.className="home-text-button";
-    button.textContent = label+" →";
-    button.dataset.exploreDestination = code;
-    button.onclick = ()=>{
-      state.exploreDraft = {nights};
-      $("hol-from-search").value = $("explore-origin").value;
-      $("hol-from-iata").value = origin.value;
-      $("hol-destination-search").value = label;
-      $("hol-destination").value = code;
-      $("hol-destination-iata").value = iata;
-      $("hol-destination-type").value = type;
-      state.dateRanges.holidays = {from:"",to:""};
-      applyDateLabelsOnly();
-      setPackageBudget(budget,currency);
-      focusSearchTab("holidays");
-      openDatePicker($("holDateRangeButton"),month);
-    };
-    buttons.append(button);
-  }
-  result.append(text,buttons);
 }
 
 function applyHomePresentation(payload) {
@@ -7727,12 +7760,19 @@ function applyHomePresentation(payload) {
   const photo = homeImage(slot?.assetUrl);
   if (photo) $("hero-wrap").style.setProperty("--home-hero-photo", `url("${photo.href.replace(/"/g,"%22")}")`);
 }
-function renderEditorial() {
+function renderVoyCard() {
   const story = state.voyStory;
-  const copy = $("home-voy-copy"), action = $("home-voy-action");
+  const copy = $("home-voy-copy"), action = $("home-voy-action"), image = $("home-voy-image");
+  const path = safeRouteValue(story?.path);
+  const photo = homeImage(story?.image);
   copy.textContent = story?.title || skandiTranslate("home.plan.voyCopy");
-  action.textContent = skandiTranslate(story ? "home.plan.readStory" : "home.plan.voyAction");
-  action.onclick = ()=>story?.path ? navigateParent(story.path) : navigateRoute("voy");
+  action.textContent = skandiTranslate(path ? "home.plan.readStory" : "home.plan.voyAction");
+  action.onclick = ()=>path ? navigateParent(path) : navigateRoute("voy");
+  if (photo && image.src !== photo.href) {
+    image.hidden = false;
+    image.src = photo.href;
+  }
+  if (!photo) image.hidden = true;
 }
 
 function mapCabin(value){
@@ -7767,6 +7807,15 @@ function getFlightSearch(){
   };
 }
 
+function stayLocation(destination, iata) {
+  const place = state.searchDestinations.find(item=>(item.destinationCode || item.code || item.slug)===destination);
+  return {
+    destination, iata, locationText:place?.name || destination,
+    ...(Number.isFinite(place?.latitude) && Number.isFinite(place?.longitude)
+      ? {latitude:place.latitude,longitude:place.longitude,label:place.title || place.name} : {})
+  };
+}
+
 function getHolidaySearch(){
   ensureLocationSelection("hol-from-search");
   ensureLocationSelection("hol-destination-search");
@@ -7777,11 +7826,12 @@ function getHolidaySearch(){
   return {
     tripType:"package",
     origin:$("hol-from-iata").value,
-    destination:destinationIata||destinationCode,
+    destination:destinationIata,
     destinationCode,
     destinationRegion:destinationCode,
     destinationIata,
     destinationType:$("hol-destination-type").value,
+    location:stayLocation(destinationCode,destinationIata),
     destinationLabel:$("hol-destination-search").value.trim(),departureLabel:$("hol-from-search").value.trim(),
     departureDate:dep,returnDate:ret,nights,
     adults:state.adults,children:state.children,infants:state.infants,
@@ -7803,6 +7853,7 @@ function getHotelSearch(){
     destinationRegion:destinationCode,
     destinationIata,
     destinationType:$("hotel-destination-type").value,
+    location:stayLocation(destinationCode,destinationIata),
     destinationLabel:$("hotel-destination-search").value.trim(),
     departureDate:$("hotel-in").value,
     returnDate:$("hotel-out").value,
@@ -7827,11 +7878,12 @@ function getSignatureSearch(){
   return {
     tripType:"signaturePackage",
     origin:$("sig-from-iata").value,
-    destination:destinationIata||destinationCode,
+    destination:destinationIata,
     destinationCode,
     destinationRegion:destinationCode,
     destinationIata,
     destinationType:$("sig-destination-type").value,
+    location:stayLocation(destinationCode,destinationIata),
     destinationLabel:$("sig-destination-search").value.trim(),departureLabel:$("sig-from-search").value.trim(),
     departureDate:dep,returnDate:ret,nights,
     adults:state.adults,children:state.children,infants:state.infants,
@@ -7842,7 +7894,7 @@ function getSignatureSearch(){
 }
 function validateSearch(search){
   if(search.tripType==="flightOnly" && (!search.origin || !search.destination)) return skandiTranslate("home.status.selectRoute");
-  if((search.tripType==="package"||search.tripType==="signaturePackage") && (!search.origin || !search.destination)) return skandiTranslate("home.status.selectPackageRoute");
+  if((search.tripType==="package"||search.tripType==="signaturePackage") && (!search.origin || !/^[A-Z]{3}$/.test(search.destination || ""))) return skandiTranslate("home.status.selectPackageRoute");
   if(search.tripType==="hotelOnly" && !search.destination) return skandiTranslate("home.status.enterHotelDestination");
   if(!search.departureDate) return skandiTranslate("home.status.selectDepartureDate");
   if(!search.returnDate) return skandiTranslate("home.status.selectReturnDate","Select a To date.");
@@ -7984,20 +8036,16 @@ function boot(){
   window.__SKANDI_HOME_BOOTED__ = true;
   initializeSkandiSettings();
   setupTabs();
-  setupLocationSearch({inputId:"from",valueId:"fromIata",boxId:"fromSuggestions",kind:"flight",valueMode:"iata"});
-  setupLocationSearch({inputId:"to",valueId:"toIata",boxId:"toSuggestions",kind:"flight",valueMode:"iata"});
-  setupLocationSearch({inputId:"hol-from-search",valueId:"hol-from-iata",boxId:"hol-from-suggestions",kind:"departure",valueMode:"iata"});
-  setupLocationSearch({inputId:"hol-destination-search",valueId:"hol-destination",boxId:"hol-destination-suggestions",kind:"destination",iataId:"hol-destination-iata",typeId:"hol-destination-type"});
+  setupLocationSearch({inputId:"from",valueId:"fromIata",boxId:"fromSuggestions",kind:"airport"});
+  setupLocationSearch({inputId:"to",valueId:"toIata",boxId:"toSuggestions",kind:"airport"});
+  setupLocationSearch({inputId:"hol-from-search",valueId:"hol-from-iata",boxId:"hol-from-suggestions",kind:"airport"});
+  setupLocationSearch({inputId:"hol-destination-search",valueId:"hol-destination",boxId:"hol-destination-suggestions",kind:"package",iataId:"hol-destination-iata",typeId:"hol-destination-type"});
   setupLocationSearch({inputId:"hotel-destination-search",valueId:"hotel-destination",boxId:"hotel-destination-suggestions",kind:"destination",iataId:"hotel-destination-iata",typeId:"hotel-destination-type"});
-  setupLocationSearch({inputId:"sig-from-search",valueId:"sig-from-iata",boxId:"sig-from-suggestions",kind:"departure",valueMode:"iata"});
-  setupLocationSearch({inputId:"sig-destination-search",valueId:"sig-destination",boxId:"sig-destination-suggestions",kind:"destination",iataId:"sig-destination-iata",typeId:"sig-destination-type"});
-  setupLocationSearch({inputId:"explore-origin",valueId:"explore-origin-iata",boxId:"explore-origin-suggestions",kind:"departure",valueMode:"iata"});
+  setupLocationSearch({inputId:"sig-from-search",valueId:"sig-from-iata",boxId:"sig-from-suggestions",kind:"airport"});
+  setupLocationSearch({inputId:"sig-destination-search",valueId:"sig-destination",boxId:"sig-destination-suggestions",kind:"package",iataId:"sig-destination-iata",typeId:"sig-destination-type"});
   setupDatePicker();
   applyDateLabelsOnly();
   renderPax();
-  document.querySelectorAll("[data-home-facet]").forEach(button=>button.onclick=()=>setDiscoveryFacet(button.dataset.homeFacet));
-  $("explore-form").onsubmit=findExploreIdeas;
-  $("explore-form").addEventListener("input",()=>$("explore-results").replaceChildren());
   for (const id of ["from","hol-from-search","sig-from-search"]) $(id).addEventListener("input",renderAlternativeAirports);
   $("tab-content").addEventListener("keydown",event=>{
     if (event.key==="Enter" && !event.defaultPrevented && event.target.matches(".airport-field input[type=text]")) {
@@ -8007,6 +8055,7 @@ function boot(){
   });
   $("package-budget-clear").onclick=()=>setPackageBudget();
   $("home-collection-action").onclick=()=>navigateRoute("skandiCollection");
+  $("home-voy-image").addEventListener("error",event=>{event.currentTarget.hidden=true;});
   window.addEventListener("pageshow",event=>{
     if (!event.persisted) return;
     resetSearchLoading();
@@ -8017,10 +8066,18 @@ function boot(){
     ensureLocationSelection("hol-from-search");ensureLocationSelection("hol-destination-search");
     const origin=$("hol-from-iata").value,destination=$("hol-destination-iata").value;
     if(!origin||!destination)return showInlineStatus(skandiTranslate("home.status.selectPackageRoute"),true);
-    const oldOriginLabel=$("hol-from-search").value,oldDestinationLabel=$("hol-destination-search").value;
-    $("hol-from-iata").value=destination;$("hol-from-search").value=oldDestinationLabel;
-    $("hol-destination").value=origin;$("hol-destination-iata").value=origin;
-    $("hol-destination-type").value="AIRPORT";$("hol-destination-search").value=oldOriginLabel;
+    const places = destinationOptions(true).filter(place=>place.iata===origin && place.type==="DESTINATION");
+    if (places.length !== 1) {
+      $("hol-destination-search").focus();
+      return showInlineStatus(skandiTranslate("home.plan.swapUnavailable"), true);
+    }
+    const airport = airportOptions().find(place=>place.iata===destination);
+    $("hol-from-iata").value=destination;
+    $("hol-from-search").value=airport?.label || destination;
+    $("hol-destination").value=places[0].value;
+    $("hol-destination-iata").value=origin;
+    $("hol-destination-type").value=places[0].type;
+    $("hol-destination-search").value=places[0].label;
   });
   document.querySelectorAll("[data-counter]").forEach(btn=>btn.onclick=()=>clampPax(btn.dataset.counter, state[btn.dataset.counter]+Number(btn.dataset.step||0)));
   document.querySelectorAll("[data-search]").forEach(btn=>btn.onclick=()=>runSearch(btn.dataset.search));
@@ -8060,7 +8117,7 @@ window.addEventListener("message",event=>{
       customer:payload.customer||MASTER_CONTEXT.customer||{}
     };
     if(payload.settings)saveSkandiSettings(payload.settings.language,payload.settings.currency,false);
-    renderEditorial();
+    renderVoyCard();
   }
   if(msg.type==="CUSTOMER_SETTINGS_STATE")saveSkandiSettings(msg.payload?.language,msg.payload?.currency,false);
   if(msg.type==="HOME_HOST_READY"){
@@ -8075,13 +8132,15 @@ window.addEventListener("message",event=>{
   if (msg.type==="HOME_PLANNING_STATE") {
     state.planning = msg.payload || {};
     renderPlanning();
+    renderDiscovery();
     if (state.planning.edit && !state.didRestoreSearch) {
       state.didRestoreSearch = restoreSearch(state.planning.edit);
     }
   }
   if (msg.type==="HOME_VOY_STORY") {
     state.voyStory = msg.payload || null;
-    renderEditorial();
+    renderVoyCard();
+    renderDiscovery();
   }
   if(msg.type==="HOME_LOCATION_DATA"&&releaseRequest("locations",msg.requestId))renderLocationData(msg.payload||{});
   if(msg.type==="HOME_FLIGHT_PLACES_RESULT")$(msg.payload?.inputId)?.__acceptFlightPlaces?.(msg);

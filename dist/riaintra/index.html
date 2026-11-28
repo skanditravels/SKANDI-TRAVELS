@@ -516,6 +516,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 #skandi-global-footer-root,
 #riaintra-global-footer-root,
 #altea-global-footer-root { grid-row: 3; min-width: 0; }
+[data-skandi-key="home"] #skf-columns { display: none; }
+[data-skandi-key="home"] .skf-main { grid-template-columns: minmax(0, 1fr); }
 #skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
 #skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
 [data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
@@ -570,6 +572,17 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
     z-index: 2100;
   }
+  [data-skandi-family="public"] { --sk-shell-nav: 80px; }
+  [data-skandi-key="home"] #skandi-app-root { background: #f4f7fa; }
+  html[data-skandi-mobile-navigation] [data-skandi-key]:not([data-skandi-key="support"]) #skandi-support-chat-root {
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-skandi-mobile-navigation] body.skandi-home-keyboard #skandi-shell-root[data-skandi-key="home"] {
+    grid-template-rows: minmax(0, 1fr);
+    top: var(--skandi-visible-top, 0px);
+    height: var(--skandi-visible-height, 100dvh) !important;
+  }
+  body.skandi-home-keyboard [data-skandi-key="home"] #skandi-mobile-nav-container { display: none; }
   [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
   [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
 }
