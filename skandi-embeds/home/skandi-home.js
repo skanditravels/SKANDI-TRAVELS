@@ -38,12 +38,6 @@ function routeByKey(key) {
   if (key === "destinations") return destinationsRoute();
   return masterRoute(key);
 }
-function defaultContentPath(kind) {
-  if (kind === "offer") return bookingRoute();
-  if (kind === "hotel") return masterRoute("hotels");
-  if (kind === "inspiration") return masterRoute("voy");
-  return destinationsRoute();
-}
 function safeRouteValue(path, fallback="") {
   const value = String(path || "").trim();
   if (!/^\/(?!\/)/.test(value) || /[\\\u0000-\u0020]/.test(value) || /%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(value)) return fallback;
@@ -78,19 +72,23 @@ function navigateParent(path) {
 }
 function focusSearchTab(tab) {
   document.body.classList.remove("search-mode");
-  document.querySelector('.tab-btn[data-tab="'+tab+'"]')?.click();
+  const button = document.querySelector('.tab-btn[data-tab="'+tab+'"]');
+  if (button) { button.hidden = false; button.click(); }
   $("hero-wrap")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function navigateRoute(key) {
-  const tabs = {flights:"flights",packages:"holidays",hotels:"hotels",transfers:"signature"};
+  const tabs = {flights:"flights",packages:"holidays",hotels:"hotels",transfers:"holidays"};
   if (tabs[key]) {
     focusSearchTab(tabs[key]);
     if (key==="transfers") showInlineStatus("Choose a package first. Available transfers are selected during checkout.");
     return;
   }
   if (key==="offers") {
-    const section=$("offers-section");
-    if(section&&!section.hidden)section.scrollIntoView({behavior:"smooth",block:"start"});
+    const section=$("mixed-section");
+    if (state.offers.length && section && !section.hidden) {
+      setDiscoveryFacet("offer");
+      section.scrollIntoView({behavior:"smooth",block:"start"});
+    }
     else showBridgeStatus("There are no featured offers available right now.");
     return;
   }
@@ -2377,6 +2375,68 @@ const SKANDI_LOCALES = {
   FI:"fi-FI", "FR-FR":"fr-FR", "FR-CA":"fr-CA", DE:"de-DE", TH:"th-TH"
 };
 
+const HOME_PLANNING_COPY = {
+  "hero": ["Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments.", "Signature Travels, Unforgettable Moments."],
+  "intro": ["Flights, stays and Scandinavian-style holidays, planned around you.", "Flyg, hotell och semester på skandinaviskt vis, på dina villkor.", "Fly, hotell og ferie på skandinavisk vis, tilpasset deg.", "Fly, hoteller og ferie på skandinavisk vis, planlagt efter dine ønsker.", "Lennot, hotellit ja skandinaaviset lomat omilla ehdoillasi."],
+  "searchType": ["Search by trip type", "Sök efter restyp", "Søk etter reisetype", "Søg efter rejsetype", "Hae matkatyypin mukaan"],
+  "signaturePackages": ["Signature packages", "Signature-paket", "Signature-pakker", "Signature-pakker", "Signature-paketit"],
+  "searchSignature": ["Search Signature packages", "Sök Signature-paket", "Søk Signature-pakker", "Søg Signature-pakker", "Hae Signature-paketteja"],
+  "destinationPlaceholder": ["City, resort or airport", "Stad, resmål eller flygplats", "By, reisemål eller flyplass", "By, rejsemål eller lufthavn", "Kaupunki, matkakohde tai lentoasema"],
+  "travelers": ["Travelers", "Resenärer", "Reisende", "Rejsende", "Matkustajat"],
+  "done": ["Done", "Klar", "Ferdig", "Færdig", "Valmis"],
+  "direct": ["Nonstop only", "Endast direktflyg", "Kun direktefly", "Kun direkte fly", "Vain suorat lennot"],
+  "continue": ["Continue planning", "Fortsätt planera", "Fortsett planleggingen", "Fortsæt planlægningen", "Jatka suunnittelua"],
+  "draftCopy": ["Your booking is ready to continue in this browser.", "Fortsätt din påbörjade bokning i den här webbläsaren.", "Fortsett bestillingen du startet i denne nettleseren.", "Fortsæt din påbegyndte booking i denne browser.", "Jatka varausta tässä selaimessa."],
+  "resume": ["Resume booking", "Fortsätt boka", "Fortsett bestillingen", "Fortsæt booking", "Jatka varausta"],
+  "repeat": ["Repeat last search", "Sök igen", "Søk på nytt", "Søg igen", "Hae uudelleen"],
+  "updateDates": ["Choose new dates", "Välj nya datum", "Velg nye datoer", "Vælg nye datoer", "Valitse uudet päivät"],
+  "pickNewDates": ["Your previous dates have passed. Choose new dates to search again.", "Dina tidigare datum har passerat. Välj nya datum för att söka igen.", "De tidligere datoene har passert. Velg nye datoer for å søke på nytt.", "Dine tidligere datoer er passeret. Vælg nye datoer for at søge igen.", "Aiemmat päivämäärät ovat menneet. Hae uudelleen uusilla päivillä."],
+  "trips": ["My Trips", "Mina resor", "Mine reiser", "Mine rejser", "Omat matkat"],
+  "tripsCopy": ["Find your bookings and travel documents in My SKANDI.", "Hitta bokningar och resehandlingar i My SKANDI.", "Finn bestillinger og reisedokumenter i My SKANDI.", "Find bookinger og rejsedokumenter i My SKANDI.", "Löydä varaukset ja matkustusasiakirjat My SKANDIsta."],
+  "upcomingTrip": ["View your upcoming trip and travel documents in My SKANDI.", "Se din kommande resa och dina resehandlingar i My SKANDI.", "Se din kommende reise og reisedokumentene i My SKANDI.", "Se din kommende rejse og dine rejsedokumenter i My SKANDI.", "Katso tuleva matkasi ja sen asiakirjat My SKANDIsta."],
+  "discovery": ["Trips worth considering", "Resor att upptäcka", "Reiser å oppdage", "Rejser at opdage", "Matkoja harkittavaksi"],
+  "map": ["Explore the map", "Utforska kartan", "Utforsk kartet", "Udforsk kortet", "Tutustu karttaan"],
+  "filters": ["Filter trip ideas", "Filtrera reseidéer", "Filtrer reiseideer", "Filtrér rejseidéer", "Suodata matkaideoita"],
+  "picks": ["Top picks", "Våra tips", "Våre tips", "Vores tips", "Suosikkimme"],
+  "offers": ["Offers", "Erbjudanden", "Tilbud", "Tilbud", "Tarjoukset"],
+  "destinations": ["Destinations", "Resmål", "Reisemål", "Rejsemål", "Matkakohteet"],
+  "hotel": ["Hotel", "Hotell", "Hotell", "Hotel", "Hotelli"],
+  "stayTotal": ["Stay total", "Totalt för boendet", "Totalt for oppholdet", "I alt for opholdet", "Majoitus yhteensä"],
+  "recentEstimate": ["Recent estimate", "Senaste prisuppskattning", "Nylig prisanslag", "Seneste prisoverslag", "Tuore hinta-arvio"],
+  "roomCount": ["Rooms {n}", "Rum {n}", "Rom {n}", "Værelser {n}", "Huoneita {n}"],
+  "guestCount": ["Travelers {n}", "Resenärer {n}", "Reisende {n}", "Rejsende {n}", "Matkustajia {n}"],
+  "ideaCount": ["Trip ideas shown {n}", "Visade reseidéer {n}", "Reiseideer vist {n}", "Viste rejseidéer {n}", "Näytettyjä matkaideoita {n}"],
+  "checkAvailability": ["Check availability", "Kontrollera tillgänglighet", "Sjekk tilgjengelighet", "Se tilgængelighed", "Tarkista saatavuus"],
+  "viewDetails": ["View details", "Visa detaljer", "Se detaljer", "Se detaljer", "Katso tiedot"],
+  "explore": ["Explore anywhere", "Upptäck nya resmål", "Oppdag nye reisemål", "Opdag nye rejsemål", "Löydä uusia kohteita"],
+  "exploreCopy": ["Choose when and how you’d like to travel. Pick an idea, then check prices for your dates and travelers.", "Välj när och hur du vill resa. Välj ett resmål och sök pris för dina datum och resenärer.", "Velg når og hvordan du vil reise. Velg et reisemål og sjekk prisene for datoene og de reisende.", "Vælg, hvornår og hvordan du vil rejse. Vælg et rejsemål, og se priser for dine datoer og rejsende.", "Valitse matkan ajankohta ja kesto. Valitse kohde ja tarkista hinnat päivillesi ja seurueellesi."],
+  "month": ["Travel month", "Resmånad", "Reisemåned", "Rejsemåned", "Matkakuukausi"],
+  "pickMonth": ["Choose month", "Välj månad", "Velg måned", "Vælg måned", "Valitse kuukausi"],
+  "duration": ["Nights", "Nätter", "Netter", "Nætter", "Yötä"],
+  "budget": ["Max trip total", "Maxpris för resan", "Makspris for reisen", "Makspris for rejsen", "Matkan enimmäishinta"],
+  "optional": ["Optional", "Valfritt", "Valgfritt", "Valgfrit", "Valinnainen"],
+  "findIdeas": ["Find ideas", "Hitta reseidéer", "Finn reiseideer", "Find rejseidéer", "Etsi matkaideoita"],
+  "otherAirports": ["Other departure airports", "Andra avreseflygplatser", "Andre avreiseflyplasser", "Andre afrejselufthavne", "Muut lähtölentoasemat"],
+  "chooseOrigin": ["Select a departure airport from the list.", "Välj en avreseflygplats i listan.", "Velg en avreiseflyplass fra listen.", "Vælg en afrejselufthavn fra listen.", "Valitse lähtölentoasema luettelosta."],
+  "noIdeas": ["No featured ideas are available for this departure airport.", "Inga utvalda reseidéer för den här avreseflygplatsen.", "Ingen utvalgte reiseideer for denne avreiseflyplassen.", "Ingen udvalgte rejseidéer for denne afrejselufthavn.", "Tältä lentoasemalta ei ole valittuja matkaideoita."],
+  "ideaPrompt": ["Pick a destination to choose dates for {n} nights in {month}.", "Välj resmål för att välja datum för {n} nätter i {month}.", "Velg et reisemål for å finne datoer for {n} netter i {month}.", "Vælg et rejsemål for at finde datoer for {n} nætter i {month}.", "Valitse kohde ja päivät {n} yön matkalle. Ajankohta {month}."],
+  "services": ["The SKANDI way to travel", "Res med SKANDI", "Reis med SKANDI", "Rejs med SKANDI", "Matkusta SKANDIn kanssa"],
+  "selectCopy": ["Independent travel with access to additional SKANDI services online.", "Res på egen hand och boka SKANDIs tilläggstjänster online.", "Reis på egen hånd med tilgang til SKANDIs ekstratjenester på nett.", "Rejs på egen hånd med adgang til SKANDIs tilvalg online.", "Omatoimimatka ja SKANDIn lisäpalvelut verkossa."],
+  "signatureCopy": ["On eligible packages, we meet you at the airport, take you to your hotel and provide a destination guide.", "I utvalda paket möter vi dig på flygplatsen, kör dig till hotellet och erbjuder en guide på resmålet.", "På utvalgte pakkereiser møter vi deg på flyplassen, kjører deg til hotellet og tilbyr en guide på reisemålet.", "På udvalgte pakkerejser møder vi dig i lufthavnen, kører dig til hotellet og tilbyder en guide på rejsemålet.", "Valituilla pakettimatkoilla tapaamme lentoasemalla, kuljetamme hotellille ja tarjoamme kohdeoppaan."],
+  "excelsiorCopy": ["Selected five-star stays with a personal coordinator and private arrival transfers. Airport benefits vary by destination.", "Utvalda femstjärniga hotell med personlig samordnare och privat transfer vid ankomst. Flygplatsförmåner varierar.", "Utvalgte femstjerners opphold med personlig koordinator og privat transport ved ankomst. Flyplassfordeler varierer.", "Udvalgte femstjernede ophold med personlig koordinator og privat transfer ved ankomst. Lufthavnsfordele varierer.", "Valikoituja viiden tähden hotelleja, henkilökohtainen yhteyshenkilö ja yksityinen tulokuljetus. Lentoasemaedut vaihtelevat."],
+  "collectionCopy": ["Handpicked hotels for travelers who choose the stay first.", "Handplockade hotell för dig som väljer boendet först.", "Håndplukkede hoteller for deg som velger oppholdet først.", "Håndplukkede hoteller til dig, der vælger opholdet først.", "Huolella valittuja hotelleja, kun majoitus ratkaisee."],
+  "collectionAction": ["Explore the Collection", "Utforska kollektionen", "Utforsk kolleksjonen", "Udforsk kollektionen", "Tutustu kokoelmaan"],
+  "voyCopy": ["Destination stories from the SKANDI travel magazine.", "Resereportage från SKANDIs resemagasin.", "Reisereportasjer fra SKANDIs reisemagasin.", "Rejsefortællinger fra SKANDIs rejsemagasin.", "Matkajuttuja SKANDIn matkalehdestä."],
+  "voyAction": ["Read VOY", "Läs VOY", "Les VOY", "Læs VOY", "Lue VOY"],
+  "readStory": ["Read the story", "Läs reportaget", "Les reportasjen", "Læs artiklen", "Lue juttu"],
+  "resources": ["Travel resources", "Reseinformation", "Reiseinformasjon", "Rejseinformation", "Matkustustietoa"],
+  "tours": ["Tours & activities", "Utflykter och aktiviteter", "Turer og aktiviteter", "Udflugter og aktiviteter", "Retket ja aktiviteetit"],
+  "cars": ["Car rental", "Hyrbil", "Leiebil", "Biludlejning", "Autonvuokraus"]
+};
+["EN","SV","NO","DA","FI"].forEach((language,index)=>{
+  for (const [key, values] of Object.entries(HOME_PLANNING_COPY)) I18N[language]["home.plan."+key]=values[index];
+});
+
 function skandiTranslate(key, fallback="") {
   const language = SKANDI_USER_SETTINGS?.language || "EN";
   return I18N[language]?.[key] || I18N.EN?.[key] || fallback || key;
@@ -2447,23 +2507,15 @@ function applyTranslations() {
   applyControlTranslations();
 
   if (window.__SKANDI_HOME_BOOTED__) {
-    if (state.usingFallback?.tripTypes) state.tripTypes = fallbackTripTypes();
-    if (state.usingFallback?.why) state.why = fallbackWhy();
-    if (state.usingFallback?.trust) state.trust = fallbackTrust();
-
     applyDateLabelsOnly();
     if (dateDraft) renderCalendar();
     renderPax();
-    renderSelectOptions();
-    renderTrust();
     renderMixedFeed();
-    renderDestinations();
-    renderHotels();
-    renderOffers();
-    renderInspiration();
-    renderTripTypes();
-    renderWhy();
-    renderLongHomeModules();
+    renderPlanning();
+    renderExploreOptions();
+    renderEditorial();
+    renderAlternativeAirports();
+    applyHomePresentation(state.presentation);
 
     if (state.lastResults?.length) {
       renderResults(state.lastResults);
@@ -2570,14 +2622,15 @@ const state = {
   searchDestinations: [],
   hotels: [],
   offers: [],
-  inspiration: [],
-  mixedUsed: new Set(),
-  priceSearch: null,
+  facet: "all",
+  planning: {},
+  exploreDraft: null,
+  editingSearch: false,
+  packageBudget: null,
+  voyStory: null,
+  presentation: null,
   sync: null,
   lastBootstrapAt: 0,
-  tripTypes: [],
-  why: [],
-  trust: [],
   activeTab: "holidays",
   adults: 2,
   children: 0,
@@ -2596,8 +2649,7 @@ const state = {
   lastResults: [],
   locationsLoaded: false,
   bootstrapId: "",
-  hasBootstrapped: false,
-  usingFallback: { destinations:true, offers:true, tripTypes:true, why:true, trust:true }
+  hasBootstrapped: false
 };
 
 function $(id){ return document.getElementById(id); }
@@ -2717,25 +2769,6 @@ function localizedRecordList(record, field) {
   const value = localizedRecordValue(record, field, []);
   return Array.isArray(value) ? value : [];
 }
-function recordPrice(record) {
-  if(record?.livePriceFound===false || (record?.priceExpiresAt&&Date.parse(record.priceExpiresAt)<=Date.now()))return "";
-  const currency = SKANDI_USER_SETTINGS.currency;
-  const prices = record?.prices || record?.priceByCurrency || record?.fromPrices || {};
-  const amount = prices?.[currency] ?? (
-    String(record?.currency || "").toUpperCase() === currency
-      ? record?.fromPrice
-      : null
-  );
-  if (amount !== null && amount !== undefined && amount !== "") {
-    return formatCurrencyAmount(amount, currency);
-  }
-  if (record?.fromPrice) {
-    return formatCurrencyAmount(record.fromPrice, record.currency || currency);
-  }
-  return "";
-}
-function imageStyle(url){ return url ? `background-image:url('${String(url).replaceAll("'","\\'")}')` : ""; }
-
 const DATE_RANGE_CONFIG = {
   flights:{button:"dateRangeButton",fromInput:"depart",toInput:"return",fromLabel:"dateFromLabel",toLabel:"dateToLabel"},
   holidays:{button:"holDateRangeButton",fromInput:"hol-departure-date",toInput:"hol-return-date",fromLabel:"holDateFromLabel",toLabel:"holDateToLabel"},
@@ -2749,11 +2782,6 @@ function nightsBetween(from,to){
 }
 let dateDraft = null;
 let dateTrigger = null;
-function setInitialDates(){
-  const dep=todayPlus(60), ret=todayPlus(67);
-  Object.keys(state.dateRanges).forEach(key=>{ state.dateRanges[key]={from:dep,to:ret}; });
-  applyDateLabelsOnly();
-}
 function applyDateLabelsOnly(){
   Object.entries(DATE_RANGE_CONFIG).forEach(([key,cfg])=>{
     const range=state.dateRanges[key]||{from:"",to:""};
@@ -2769,50 +2797,6 @@ function applyDateLabelsOnly(){
   });
 }
 
-function findAirportMatches(query){
-  const q=normalizeSearchText(query);
-  if(!q)return state.airports.slice(0,9);
-  return state.airports
-    .map(a=>{
-      const codes=[a.iata,a.icao].map(v=>normalizeSearchText(v));
-      const fields=[a.city,a.name,a.iata,a.icao,a.country].map(v=>normalizeSearchText(v));
-      let score=-1;
-      if(codes.includes(q))score=1200;
-      else for(const value of fields){
-        if(value===q)score=Math.max(score,1100);
-        else if(value.startsWith(q))score=Math.max(score,900);
-        else if(value.includes(q))score=Math.max(score,620);
-      }
-      return {...a,_score:score};
-    })
-    .filter(a=>a._score>=0)
-    .sort((a,b)=>b._score-a._score || String(a.city||"").localeCompare(String(b.city||"")))
-    .slice(0,9);
-}
-function setupAirportField(inputId, hiddenId, boxId){
-  const input=$(inputId), hidden=$(hiddenId), box=$(boxId);
-  if(!input||!hidden||!box)return;
-  const render=()=>{
-    const matches=findAirportMatches(input.value);
-    if(!matches.length){box.classList.remove("active");box.innerHTML="";input.setAttribute("aria-expanded","false");return;}
-    box.innerHTML=matches.map(a=>`
-      <button type="button" class="airport-option" data-iata="${escAttr(a.iata)}" data-label="${escAttr(`${a.city} (${a.iata})`)}">
-        <span class="airport-option-type">AIRPORT</span>
-        <span class="airport-option-copy"><strong>${esc(a.city)} (${esc(a.iata)})</strong>
-        <small>${esc(a.name)}${a.icao?` • ${esc(a.icao)}`:""}${a.country?` • ${esc(a.country)}`:""}</small></span>
-      </button>`).join("");
-    box.classList.add("active");input.setAttribute("aria-expanded","true");
-  };
-  input.addEventListener("focus",render);
-  input.addEventListener("input",()=>{hidden.value="";render();});
-  box.addEventListener("mousedown",e=>e.preventDefault());
-  box.addEventListener("click",e=>{
-    const opt=e.target.closest(".airport-option"); if(!opt)return;
-    input.value=opt.dataset.label||""; hidden.value=opt.dataset.iata||"";
-    box.classList.remove("active"); input.setAttribute("aria-expanded","false");
-  });
-  input.addEventListener("blur",()=>setTimeout(()=>{box.classList.remove("active");input.setAttribute("aria-expanded","false");},120));
-}
 function normalizeSearchText(v=""){
   return String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
 }
@@ -2995,8 +2979,11 @@ function setupTabs(){
       document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
       btn.classList.add("active");
+      const signature = document.querySelector('.tab-btn[data-tab="signature"]');
+      signature.hidden = btn !== signature;
       state.activeTab=btn.dataset.tab;
       $("panel-"+state.activeTab).classList.add("active");
+      renderAlternativeAirports();
     });
   });
 }
@@ -3023,6 +3010,9 @@ function renderPax(){
     const count=counter.querySelector("span"), type=counter.querySelector("[data-counter]").dataset.counter;
     count.textContent=state[type];
   });
+  const rooms = $("hotel-rooms");
+  for (const option of rooms.options) option.disabled = Number(option.value) > state.adults;
+  if (Number(rooms.value) > state.adults) rooms.value = String(state.adults);
   state.childAges=state.childAges.slice(0,state.children);
   state.infantAges=state.infantAges.slice(0,state.infants);
   while(state.childAges.length<state.children)state.childAges.push(2);
@@ -3046,8 +3036,13 @@ function renderAgeFields(box){
     html+=`</div>`;
   }
   box.innerHTML=html;
-  box.querySelectorAll("[data-child-age]").forEach(sel=>sel.onchange=()=>{state.childAges[Number(sel.dataset.childAge)]=Number(sel.value); renderPax();});
-  box.querySelectorAll("[data-infant-age]").forEach(sel=>sel.onchange=()=>{state.infantAges[Number(sel.dataset.infantAge)]=Number(sel.value); renderPax();});
+  box.querySelectorAll("[data-child-age], [data-infant-age]").forEach(select=>{
+    const isChild = select.hasAttribute("data-child-age");
+    const ages = isChild ? state.childAges : state.infantAges;
+    const index = Number(isChild ? select.dataset.childAge : select.dataset.infantAge);
+    select.setAttribute("aria-label", skandiInterpolate(isChild?"home.age.childLabel":"home.age.infantLabel",{n:index+1}));
+    select.onchange=()=>{ ages[index]=Number(select.value); };
+  });
 }
 
 function renderCalendar(){
@@ -3107,14 +3102,15 @@ function applyDates(restoreFocus=true){
   closeDatePicker(restoreFocus);
   return true;
 }
-function openDatePicker(button){
+function openDatePicker(button, month=""){
   if(button===dateTrigger){ closeDatePicker(true); return; }
   closeDatePicker();
   const mode=button.dataset.dateRange;
   state.activeDateRange=mode;
   dateDraft={...state.dateRanges[mode]};
   dateTrigger=button;
-  const firstDate=new Date((dateDraft.from>=todayPlus(0)?dateDraft.from:todayPlus(0))+"T00:00:00");
+  const start = month ? month+"-01" : dateDraft.from;
+  const firstDate=new Date((start>=todayPlus(0)?start:todayPlus(0))+"T00:00:00");
   state.calendarMonth=addMonths(firstDate,0);
   const picker=$("datePickerOverlay");
   button.closest(".date-field").appendChild(picker);
@@ -3140,13 +3136,17 @@ function setupDatePicker(){
     const button=event.target.closest("[data-date]");
     if(!button||button.disabled||!dateDraft)return;
     const day=button.dataset.date;
-    if(!dateDraft.from||dateDraft.to||day<=dateDraft.from)dateDraft={from:day,to:""};
+    if (!dateDraft.from && state.activeDateRange==="holidays" && state.exploreDraft) {
+      dateDraft={from:day,to:addDaysIso(day,state.exploreDraft.nights)};
+      state.exploreDraft=null;
+    } else if(!dateDraft.from||dateDraft.to||day<=dateDraft.from)dateDraft={from:day,to:""};
     else dateDraft.to=day;
     renderCalendar();
+    picker.querySelector('[data-date="'+day+'"]')?.focus({preventScroll:true});
   });
   document.addEventListener("click",event=>{
     // Selecting a day redraws its button before this event reaches the document.
-    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search]"))closeDatePicker();
+    if(dateDraft&&!event.composedPath().includes(picker)&&!event.target.closest("[data-date-range], [data-search], [data-explore-destination]"))closeDatePicker();
   });
   document.addEventListener("keydown",event=>{
     if(event.key==="Escape"&&dateDraft){event.preventDefault();closeDatePicker(true);}
@@ -3167,506 +3167,331 @@ function renderLocationData(payload={}){
   state.locationsLoaded=true;
   state.locationSync=payload.sync||null;
   if(state.locationSync?.errors?.length) console.warn("[SKANDI Home] Location sync diagnostics:",state.locationSync.errors);
-  renderSelectOptions();
   // Re-render an open suggestion list immediately after async data arrives.
   ["from","to","hol-destination-search","hotel-destination-search","sig-destination-search","hol-from-search","sig-from-search"].forEach(id=>{
     const input=$(id); if(input===document.activeElement) input.__refreshLocationSuggestions?.();
   });
+  renderAlternativeAirports();
 }
 
 function renderBootstrap(payload={}){
-  const content=payload.content||{};
-
-  // The backend owns publication filtering, localization and live prices.
-  if(Array.isArray(content.airports)&&Array.isArray(content.searchDestinations)){
+  const content = payload.content || {};
+  if (Array.isArray(content.airports) && Array.isArray(content.searchDestinations)) {
     renderLocationData({airports:content.airports,searchDestinations:content.searchDestinations,sync:content.sync});
   }
-  state.destinations=Array.isArray(content.destinations)?content.destinations:state.destinations;
-  state.hotels = Array.isArray(content.hotels) ? content.hotels : [];
-  state.offers = Array.isArray(content.offers) ? content.offers : [];
-  state.inspiration = Array.isArray(content.inspiration) ? content.inspiration : [];
-  state.priceSearch = content.priceSearch || null;
+  for (const key of ["destinations","hotels","offers"]) {
+    if (Array.isArray(content[key])) state[key] = content[key];
+  }
   state.sync = content.sync || payload.sync || null;
   state.lastBootstrapAt = Date.now();
-  if(state.sync?.errors?.length) console.warn("[SKANDI Home] Content sync diagnostics:", state.sync.errors);
-
-  state.usingFallback = {
-    destinations: false,
-    offers: false,
-    tripTypes: !content.tripTypes?.length,
-    why: !content.why?.length,
-    trust: !content.trust?.length
-  };
-
-  state.tripTypes = state.usingFallback.tripTypes ? fallbackTripTypes() : content.tripTypes;
-  state.why = state.usingFallback.why ? fallbackWhy() : content.why;
-  state.trust = state.usingFallback.trust ? fallbackTrust() : content.trust;
-
-  const destinationsSection = $("destinations-section");
-  const hotelsSection = $("hotels-section");
-  const offersSection = $("offers-section");
-  const inspirationSection = $("inspiration-section");
-  const mixedSection = $("mixed-section");
-  if (destinationsSection) destinationsSection.hidden = state.destinations.length === 0;
-  if (hotelsSection) hotelsSection.hidden = state.hotels.length === 0;
-  if (offersSection) offersSection.hidden = state.offers.length === 0;
-  if (inspirationSection) inspirationSection.hidden = state.inspiration.length === 0;
-  if (mixedSection) mixedSection.hidden = false;
-
-  renderSelectOptions();
-  renderTrust();
+  if (state.sync?.errors?.length) console.warn("[SKANDI Home] Content sync diagnostics:", state.sync.errors);
   renderMixedFeed();
-  renderDestinations();
-  renderHotels();
-  renderOffers();
-  renderInspiration();
-  renderTripTypes();
-  renderWhy();
-  renderLongHomeModules();
-
-  const preferredCurrency =
-    SKANDI_USER_SETTINGS?.currency ||
-    payload.booking?.defaultCurrency ||
-    "USD";
-
-  applyCurrencyPreference(preferredCurrency);
 }
-function renderSelectOptions(){
-  const airportValues=new Set(state.airports.map(a=>String(a.iata||"").toUpperCase()).filter(Boolean));
-  ["hol","sig"].forEach(prefix=>{
-    const hidden=$(prefix+"-from-iata"),input=$(prefix+"-from-search");
-    if(hidden?.value&&!airportValues.has(String(hidden.value).toUpperCase())){hidden.value="";if(input)input.value="";}
-  });
-  const destinationValues=new Set(buildLocationOptions("destination").map(x=>String(x.value||"")).filter(Boolean));
-  ["hol","hotel","sig"].forEach(prefix=>{
-    const hidden=$(prefix+"-destination"),input=$(prefix+"-destination-search");
-    if(hidden?.value&&!destinationValues.has(String(hidden.value))){
-      hidden.value="";if(input)input.value="";
-      const iata=$(prefix+"-destination-iata");if(iata)iata.value="";
-      const type=$(prefix+"-destination-type");if(type)type.value="";
+
+function setDiscoveryFacet(facet) {
+  state.facet = facet;
+  renderMixedFeed();
+}
+
+function homeImage(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url : null;
+  } catch (_) { return null; }
+}
+
+function discoveryPrice(item, kind) {
+  if (item.livePriceFound !== true || item.currency !== SKANDI_USER_SETTINGS.currency) return "";
+  const period = item.pricePeriod || {};
+  const checkedAt = Date.parse(item.priceCheckedAt);
+  const expiresAt = item.priceExpiresAt ? Date.parse(item.priceExpiresAt) : checkedAt + 15 * 60 * 1000;
+  if (!(expiresAt > Date.now())) return "";
+  const from = period.checkInDate || period.departureDate;
+  const to = period.checkOutDate || period.returnDate;
+  const price = Number(item.fromPrice);
+  if (!(price > 0 && from >= todayPlus(0) && to > from && Number(period.adults) > 0)) return "";
+  const isStay = ["DUFFEL_EXACT_HOTEL", "DUFFEL_DESTINATION_STAY"].includes(item.livePriceType);
+  const guests = Number(period.adults) + Number(period.children || period.childAges?.length || 0) + Number(period.infants || 0);
+  const quoteBasis = isStay
+    ? [skandiTranslate("home.plan.stayTotal"), skandiInterpolate("home.plan.roomCount",{n:period.rooms || 1})]
+    : [skandiTranslate("home.plan.recentEstimate")];
+  quoteBasis.push(skandiInterpolate("home.plan.guestCount",{n:guests}));
+  const basis = [formatDate(from)+" – "+formatDate(to), quoteBasis.join(" · ")];
+  if (kind === "destination" && isStay && item.liveAccommodationName) basis.push(item.liveAccommodationName);
+  if (!isStay && period.origin && period.destination) basis.push(period.origin+" → "+period.destination);
+  return `<p class="home-price"><strong>${esc(skandiTranslate("home.card.from"))} ${esc(formatCurrencyAmount(price,item.currency))}</strong><span>${esc(basis.join(" · "))}</span></p>`;
+}
+
+function renderMixedFeed() {
+  const grid = $("mixed-feed"), section = $("mixed-section");
+  const groups = {offer:state.offers, destination:state.destinations, hotel:state.hotels};
+  const counts = Object.values(groups).map(items=>items.length);
+  section.hidden = !counts.some(Boolean);
+  if (section.hidden) return;
+  if (state.facet !== "all" && !groups[state.facet]?.length) state.facet = "all";
+  const pool = [];
+  if (state.facet === "all") {
+    // Alternate published categories so a longer catalogue doesn't displace nearby choices.
+    for (let index=0; index<Math.max(...counts); index++) {
+      for (const [kind,items] of Object.entries(groups)) if (items[index]) pool.push({kind,item:items[index]});
     }
+  } else {
+    for (const item of groups[state.facet]) pool.push({kind:state.facet,item});
+  }
+  document.querySelectorAll("[data-home-facet]").forEach(button=>{
+    const key = button.dataset.homeFacet;
+    button.hidden = key!=="all" && !groups[key]?.length;
+    button.setAttribute("aria-pressed", String(key===state.facet));
   });
+  const names = new Set(), images = new Set();
+  const cards = [];
+  for (const {kind,item} of pool) {
+    const title = localizedRecordValue(item,"title",item.name);
+    const identity = normalizeSearchText(item.name || title) || normalize(item.name || title);
+    const photo = homeImage(item.imageUrl || item.image);
+    const imageKey = photo?.pathname.replace(/\/v1\/(?:fill|fit|crop)\/.*$/, "");
+    const path = safeRouteValue(item.href || item.path);
+    const canSearch = kind === "offer" && item.search?.destination && item.search?.departureDate;
+    if (!title || (!path && !canSearch) || names.has(identity) || (imageKey && images.has(imageKey))) continue;
+    names.add(identity);
+    if (imageKey) images.add(imageKey);
+    cards.push({kind,item,title,photo,path,canSearch});
+    if (cards.length === 6) break;
+  }
+  grid.innerHTML = cards.map(({kind,item,title,photo,canSearch},index)=>{
+    const type = skandiTranslate({offer:"home.card.offer",destination:"home.card.destination",hotel:"home.plan.hotel"}[kind]);
+    const cta = skandiTranslate(canSearch ? "home.plan.checkAvailability" : "home.plan.viewDetails");
+    return `<article class="home-trip-card">${photo?`<img src="${escAttr(photo.href)}" loading="lazy" decoding="async" alt="">`:""}
+      <div class="home-trip-card-body"><small>${esc(type)}</small><h3>${esc(title)}</h3>${discoveryPrice(item,kind)}
+      <button type="button" class="home-text-button" data-home-card="${index}" aria-label="${escAttr(cta+" · "+title)}">${esc(cta)} →</button></div></article>`;
+  }).join("");
+  grid.querySelectorAll("[data-home-card]").forEach(button=>button.onclick=()=>{
+    const card = cards[Number(button.dataset.homeCard)];
+    if (card.canSearch) {
+      const search = {...card.item.search,currency:SKANDI_USER_SETTINGS.currency};
+      if (!validateSearch(search)) return runSearch("offer", search);
+      restoreSearch(search);
+      return;
+    }
+    navigateParent(card.path);
+  });
+  $("home-discovery-status").textContent = skandiInterpolate("home.plan.ideaCount",{n:cards.length});
+  // Hydration and locale changes can replace cards while a visitor is using the keyboard.
+  section.hidden = !cards.length;
 }
-function mixedItemLabel(kind){
-  if(kind==="offer") return skandiTranslate("home.card.offer","Offer");
-  if(kind==="hotel") return skandiTranslate("home.sections.hotels.title","Hotel");
-  if(kind==="inspiration") return skandiTranslate("home.sections.inspiration.title","Travel inspiration");
-  if(kind==="club") return "SKANDI CLUB";
-  return skandiTranslate("home.card.destination","Destination");
+
+function supportedHomeMode(search) {
+  if (search?.oneWay || ["OW","ONE_WAY"].includes(String(search?.flightType||"").toUpperCase())) return "";
+  return {flightOnly:"flights",package:"holidays",hotelOnly:"hotels",signaturePackage:"signature"}[search?.tripType] || "";
 }
-function mixedItemPrice(item,kind) {
-  if(!["destination","hotel","offer"].includes(kind))return "";
-  const price=recordPrice(item)||money(item.price||{});
-  return price?skandiTranslate("home.card.from","From")+" "+price:"";
+
+function restoreSearch(search, reveal = true) {
+  const mode = supportedHomeMode(search);
+  if (!mode) return false;
+  const number = (value, min, max, fallback) => Number.isInteger(value) ? Math.max(min,Math.min(max,value)) : fallback;
+  state.adults = number(search.adults,1,9,2);
+  state.children = number(search.children,0,9-state.adults,0);
+  state.infants = number(search.infants,0,Math.min(state.adults,9-state.adults-state.children),0);
+  state.childAges = (search.childAges || []).slice(0,state.children).map(age=>number(age,2,11,2));
+  state.infantAges = (search.infantAges || []).slice(0,state.infants).map(age=>number(age,0,1,0));
+  const set = (id,value) => { const field=$(id); if(field) field.value=value??""; };
+  if (mode === "flights") {
+    set("fromIata", search.origin); set("from", search.originLabel || search.departureLabel || search.origin);
+    set("toIata", search.destination); set("to", search.destinationLabel || search.destination);
+    $("from").dataset.placeType = search.originType || "AIRPORT";
+    $("to").dataset.placeType = search.destinationType || "AIRPORT";
+    set("travelClass", mapCabin(search.travelClass || search.cabinClass));
+    $("flight-direct").checked = Boolean(search.nonStop || search.directOnly || search.maxStops === 0);
+  } else {
+    const prefix = {holidays:"hol",hotels:"hotel",signature:"sig"}[mode];
+    set(prefix+"-from-iata", search.originIata || search.origin);
+    set(prefix+"-from-search", search.departureLabel || search.originLabel || search.origin);
+    set(prefix+"-destination", search.destinationCode || search.destination);
+    set(prefix+"-destination-search", search.destinationLabel || search.destination);
+    set(prefix+"-destination-iata", search.destinationIata || (/^[A-Z]{3}$/.test(search.destination||"") ? search.destination : ""));
+    set(prefix+"-destination-type", search.destinationType);
+    if (mode === "hotels") set("hotel-rooms",number(search.rooms,1,Math.min(4,state.adults),1));
+  }
+  const from = search.departureDate || search.checkInDate || "";
+  const to = search.returnDate || search.checkOutDate || "";
+  state.dateRanges[mode] = from>=todayPlus(0) && to>from ? {from,to} : {from:"",to:""};
+  if (mode === "holidays") setPackageBudget(search.maxTripTotal,search.budgetCurrency);
+  applyDateLabelsOnly();
+  renderPax();
+  if (reveal) {
+    state.editingSearch = true;
+    focusSearchTab(mode);
+    $(DATE_RANGE_CONFIG[mode].button)?.focus({preventScroll:true});
+    if (from && !state.dateRanges[mode].from) showInlineStatus(skandiTranslate("home.plan.pickNewDates"));
+  }
+  return true;
 }
-function renderMixedFeed(){
-  const grid=$("mixed-feed");
-  const section=$("mixed-section");
-  if(!grid || !section) return;
 
-  const pool=[];
-  const add=(kind,item)=>{ if(item && item.id) pool.push({kind,item}); };
-  add("offer",state.offers[0]);
-  add("destination",state.destinations[0]);
-  add("hotel",state.hotels[0]);
-  add("inspiration",state.inspiration[0]);
-  add("destination",state.destinations[1]);
-  add("offer",state.offers[1]);
-  add("inspiration",state.inspiration[1]);
+function renderAlternativeAirports() {
+  document.querySelectorAll(".home-alternate-airports").forEach(element=>element.remove());
+  if (!state.editingSearch) return;
+  const ids = {flights:["from","fromIata"],holidays:["hol-from-search","hol-from-iata"],signature:["sig-from-search","sig-from-iata"]}[state.activeTab];
+  if (!ids) return;
+  const [field,code] = ids.map($);
+  const airport = state.airports.find(place=>place.iata===code.value);
+  if (!airport?.cityCode) return;
+  const alternatives = state.airports.filter(place=>place.cityCode===airport.cityCode && place.iata!==airport.iata).slice(0,3);
+  if (!alternatives.length) return;
+  const group = document.createElement("div");
+  group.className = "home-alternate-airports";
+  const label = document.createElement("span");
+  label.textContent = skandiTranslate("home.plan.otherAirports");
+  group.append(label);
+  for (const place of alternatives) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "home-text-button";
+    button.textContent = place.name+" ("+place.iata+")";
+    button.onclick = ()=>{
+      field.value = button.textContent;
+      field.dataset.placeType = "AIRPORT";
+      code.value = place.iata;
+      field.focus({preventScroll:true});
+      renderAlternativeAirports();
+    };
+    group.append(button);
+  }
+  field.closest(".field-row").insertAdjacentElement("afterend",group);
+}
 
-  const seen=new Set();
-  const items=pool.filter(entry=>{
-    const key=`${entry.kind}:${entry.item.id}`;
-    if(seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0,5);
+function renderPlanning() {
+  const {recent,draft,hasTrip,member} = state.planning;
+  const search = supportedHomeMode(recent) ? recent : null;
+  const action = $("planning-action");
+  $("home-planning").hidden = !(draft || search || member);
+  $("planning-edit").hidden = !search || Boolean(draft);
+  $("planning-trips").hidden = !member || (!search && !draft);
+  if (draft) {
+    $("planning-summary").textContent = skandiTranslate("home.plan.draftCopy");
+    action.textContent = skandiTranslate("home.plan.resume");
+    action.onclick = ()=>navigateParent(draft.path);
+  } else if (search) {
+    const from = search.departureDate || search.checkInDate;
+    const to = search.returnDate || search.checkOutDate;
+    const canRepeat = from>=todayPlus(0) && to>from &&
+      !validateSearch({...search,departureDate:from,returnDate:to});
+    const places = [search.departureLabel||search.originLabel||search.origin,search.destinationLabel||search.destination].filter(Boolean);
+    $("planning-summary").textContent = [places.join(" → "), canRepeat?formatDate(from)+" – "+formatDate(to):"", skandiInterpolate("home.plan.guestCount",{n:Number(search.adults||0)+Number(search.children||0)+Number(search.infants||0)})].filter(Boolean).join(" · ");
+    action.textContent = skandiTranslate(canRepeat ? "home.plan.repeat" : "home.plan.updateDates");
+    action.onclick = ()=>{
+      if (!restoreSearch(search, !canRepeat) || !canRepeat) return;
+      runSearch(supportedHomeMode(search), {...search,...getSearchForMode(supportedHomeMode(search))});
+    };
+    $("planning-edit").hidden = !canRepeat;
+    $("planning-edit").onclick = ()=>restoreSearch(search);
+  } else if (member) {
+    $("planning-summary").textContent = skandiTranslate(hasTrip ? "home.plan.upcomingTrip" : "home.plan.tripsCopy");
+    action.textContent = skandiTranslate("home.plan.trips");
+    action.onclick = ()=>navigateRoute("myTrips");
+  }
+}
 
-  state.mixedUsed = new Set(items.map(entry=>`${entry.kind}:${entry.item.id}`));
+function renderExploreOptions() {
+  const select = $("explore-month");
+  const active = select.value;
+  const locale = document.documentElement.lang || "en";
+  select.replaceChildren(new Option(skandiTranslate("home.plan.pickMonth"),""));
+  for (let i=0;i<10;i++) {
+    const month=addMonths(new Date(),i);
+    select.add(new Option(month.toLocaleDateString(locale,{month:"long",year:"numeric"}),isoDate(month).slice(0,7)));
+  }
+  select.value = [...select.options].some(option=>option.value===active) ? active : "";
+  $("explore-budget-label").textContent = skandiTranslate("home.plan.budget")+" ("+SKANDI_USER_SETTINGS.currency+")";
+}
+function setPackageBudget(amount, currency) {
+  state.packageBudget = Number(amount) > 0 && currency === SKANDI_USER_SETTINGS.currency
+    ? {maxTripTotal:Number(amount), budgetCurrency:currency} : null;
+  $("package-budget-note").hidden = !state.packageBudget;
+  $("package-budget-value").textContent = state.packageBudget ?
+    skandiTranslate("home.plan.budget")+" · "+formatCurrencyAmount(amount,currency) : "";
+}
 
-  if(!items.length){
-    section.hidden=true;
-    grid.innerHTML="";
+function findExploreIdeas(event) {
+  event.preventDefault();
+  const result = $("explore-results");
+  result.replaceChildren();
+  const origin = $("explore-origin-iata");
+  if (!ensureLocationSelection("explore-origin")) {
+    result.textContent = skandiTranslate("home.plan.chooseOrigin");
+    $("explore-origin").focus();
     return;
   }
-  section.hidden=false;
-  const layouts=["lead","side","side","third","wide"];
-  grid.innerHTML=items.map((entry,index)=>{
-    const {kind,item}=entry;
-    const title=localizedRecordValue(item,"title",item.name||mixedItemLabel(kind));
-    const copy=localizedRecordValue(item,"description",localizedRecordValue(item,"summary",""));
-    const kicker=item.kicker||item.badge||item.category||mixedItemLabel(kind);
-    const price=mixedItemPrice(item,kind);
-    const path=safeRouteValue(item.href||item.path, defaultContentPath(kind));
-    const search=kind==="offer" ? JSON.stringify(item.search||{}) : "{}";
-    return `<article class="mixed-card ${layouts[index]||"third"} ${escAttr(kind)}" data-kind="${escAttr(kind)}" data-path="${escAttr(path)}" data-search='${escAttr(search)}' style="${escAttr(imageStyle(item.imageUrl||item.image))}">
-      <div class="mixed-card-copy">
-        <div class="mixed-card-kicker">${esc(kicker)}</div>
-        <h3>${esc(title)}</h3>
-        ${copy?`<p>${esc(copy)}</p>`:""}
-        <div class="mixed-card-meta">
-          ${price?`<span class="mixed-card-price">${esc(price)}</span>`:""}
-          <span class="mixed-card-cta">${esc(kind==="inspiration"?skandiTranslate("home.card.readMore","Read more"):"Explore")} →</span>
-        </div>
-      </div>
-    </article>`;
-  }).join("");
-
-  grid.querySelectorAll(".mixed-card").forEach(card=>card.onclick=()=>{
-    if(card.dataset.kind==="offer"){
-      if(card.dataset.path) return send("HOME_NAVIGATE",{path:card.dataset.path});
-      try{const search=JSON.parse(card.dataset.search||"{}"); if(Object.keys(search).length) return runSearch("offer",search);}catch(_){}
-    }
-    send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,defaultContentPath(card.dataset.kind))});
-  });
-}
-
-function renderTrust(){
-  $("trustGrid").innerHTML=state.trust.map(t=>`<div class="trust-box"><strong>${esc(localizedRecordValue(t,"title",""))}</strong><span>${esc(localizedRecordValue(t,"text",""))}</span></div>`).join("");
-}
-function livePriceMarkup(item) {
-  const expired=item.priceExpiresAt&&Date.parse(item.priceExpiresAt)<=Date.now();
-  const price=item.livePriceFound===true&&!expired?recordPrice(item):"";
-  const period=item.pricePeriod||{};
-  const dates=period.checkInDate&&period.checkOutDate?formatDate(period.checkInDate)+" – "+formatDate(period.checkOutDate):"";
-  const nights=nightsBetween(period.checkInDate,period.checkOutDate);
-  const caption=dates?dates+" · "+nights+" "+skandiTranslate("home.summary.nights","nights"):"";
-  if(!price)return '<div class="live-price-row"><div><strong>'+esc(item.livePriceStatus==="PENDING"?skandiTranslate("home.status.searchingShort","Searching…"):skandiTranslate("home.card.checkLive","Check live price"))+'</strong></div></div>';
-  return '<div class="live-price-row"><div><small>'+esc(caption)+'</small><strong>'+esc(skandiTranslate("home.card.from")+" "+price)+'</strong></div><span class="duffel-chip">'+esc(skandiTranslate("home.card.liveStay","Live Duffel price"))+'</span></div>';
-}
-function renderDestinations(){
-  const grid=$("destinations-grid"); if(!grid)return;
-  const rows=state.destinations.filter(d=>!state.mixedUsed?.has(`destination:${d.id}`)).slice(0,8);
-  const section=$("destinations-section");
-  if(section) section.hidden=rows.length===0;
-  grid.innerHTML=rows.map(d=>{
-    const tags=(d.tags||d.badges||[]).slice(0,4);
-    return `
-    <article class="dest-card" data-path="${escAttr(safeRouteValue(d.href||d.path||d.url,destinationsRoute()))}">
-      <div class="card-img" style="${escAttr(imageStyle(d.imageUrl||d.image))}"><div class="card-code">${esc(d.destinationCode||d.iata||d.badge||"SKANDI")}</div></div>
-      <div class="card-body">
-        <h3>${esc(localizedRecordValue(d,"title",d.name||skandiTranslate("home.card.destination")))}</h3>
-        <p>${esc(localizedRecordValue(d,"description",localizedRecordValue(d,"summary",skandiTranslate("home.card.explore"))))}</p>
-        <div class="dest-meta">${tags.map(t=>`<span class="dest-pill">${esc(t)}</span>`).join("")}</div>
-        ${livePriceMarkup(d)}
-      </div>
-    </article>`;
-  }).join("");
-  grid.querySelectorAll(".dest-card").forEach(card=>card.onclick=()=>send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,destinationsRoute())}));
-}
-function renderHotels(){
-  const grid=$("hotel-grid"); if(!grid)return;
-  const rows=state.hotels.filter(h=>!state.mixedUsed?.has(`hotel:${h.id}`)).slice(0,6);
-  const section=$("hotels-section");
-  if(section) section.hidden=rows.length===0;
-  grid.innerHTML=rows.map(h=>{
-    const stars=h.rating?`${"★".repeat(Math.max(1,Math.min(5,Math.round(Number(h.rating)))))} · `:"";
-    const tags=(h.tags||[]).slice(0,3);
-    return `<article class="hotel-card" data-path="${escAttr(safeRouteValue(h.href||h.path,masterRoute("hotels")))}">
-      <div class="hotel-img" style="${escAttr(imageStyle(h.imageUrl||h.image))}"><div class="hotel-badge">${esc(stars+String(h.city||h.country||"SKANDI HOTEL"))}</div></div>
-      <div class="hotel-body">
-        <div class="hotel-location">${esc([h.city,h.country].filter(Boolean).join(" · "))}</div>
-        <h3>${esc(localizedRecordValue(h,"title",h.name||"Hotel"))}</h3>
-        <p>${esc(localizedRecordValue(h,"description",localizedRecordValue(h,"summary","")))}</p>
-        ${tags.length?`<div class="dest-meta">${tags.map(t=>`<span class="dest-pill">${esc(t)}</span>`).join("")}</div>`:""}
-        ${livePriceMarkup(h)}
-      </div>
-    </article>`;
-  }).join("");
-  grid.querySelectorAll(".hotel-card").forEach(card=>card.onclick=()=>send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,masterRoute("hotels"))}));
-}
-function renderOffers(){
-  const grid=$("offer-grid"); if(!grid)return;
-  const rows=state.offers.filter(o=>!state.mixedUsed?.has(`offer:${o.id}`)).slice(0,8);
-  const section=$("offers-section");
-  if(section) section.hidden=rows.length===0;
-  grid.innerHTML=rows.map(o=>{
-    const price=recordPrice(o)||money(o.price||{});
-    const tags=(o.tags||[]).slice(0,3);
-    return `
-    <article class="offer-card" data-search='${escAttr(JSON.stringify(o.search||{}))}' data-path="${escAttr(safeRouteValue(o.href||o.path,bookingRoute()))}">
-      <div class="offer-img" style="${escAttr(imageStyle(o.imageUrl||o.image))}"><div class="card-code">${esc(o.badge||o.destinationCode||skandiTranslate("home.card.offer"))}</div></div>
-      <div class="offer-body">
-        <h4>${esc(localizedRecordValue(o,"title","SKANDI Offer"))}</h4>
-        <p>${esc(localizedRecordValue(o,"description",localizedRecordValue(o,"summary",skandiTranslate("home.card.limited"))))}</p>
-        <div class="dest-meta">${tags.map(t=>`<span class="dest-pill">${esc(t)}</span>`).join("")}</div>
-        ${price?`<div class="offer-price">${esc(skandiTranslate("home.card.from"))} ${esc(price)}</div>`:""}
-      </div>
-    </article>`;
-  }).join("");
-  grid.querySelectorAll(".offer-card").forEach(card=>card.onclick=()=>{
-    send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,bookingRoute())});
-  });
-}
-function renderInspiration(){
-  const grid=$("inspiration-grid"); if(!grid)return;
-  const rows=state.inspiration.filter(i=>!state.mixedUsed?.has(`inspiration:${i.id}`)).slice(0,8);
-  const section=$("inspiration-section");
-  if(section) section.hidden=rows.length===0;
-  grid.innerHTML=rows.map((item,index)=>`
-    <article class="inspo-card ${index===0?"featured":""}" data-path="${escAttr(safeRouteValue(item.href||item.path,masterRoute("voy")))}" style="${escAttr(imageStyle(item.imageUrl||item.image))}">
-      <div class="inspo-copy">
-        <div class="inspo-kicker">${esc(item.kicker||item.category||skandiTranslate("home.sections.inspiration.title","Travel inspiration"))}</div>
-        <h3>${esc(localizedRecordValue(item,"title","Travel inspiration"))}</h3>
-        <p>${esc(localizedRecordValue(item,"description",localizedRecordValue(item,"summary","")))}</p>
-        <span class="inspo-read">${esc(skandiTranslate("home.card.readMore","Read more"))} →</span>
-      </div>
-    </article>`).join("");
-  grid.querySelectorAll(".inspo-card").forEach(card=>card.onclick=()=>send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,masterRoute("voy"))}));
-}
-function renderTripTypes(){
-  $("trip-type-grid").innerHTML = state.tripTypes.map(t => `
-    <article class="type-card" data-action="${escAttr(t.action||"")}" data-path="${escAttr(t.path||"")}" data-route-key="${escAttr(t.routeKey||"")}">
-      <div class="type-icon">${t.icon && t.icon.startsWith("<svg") ? t.icon : esc(t.icon||"✈")}</div>
-      <div class="type-body">
-        <h3>${esc(localizedRecordValue(t,"title",""))}</h3>
-        <p>${esc(localizedRecordValue(t,"text",""))}</p>
-      </div>
-    </article>
-  `).join("");
-  
-  document.querySelectorAll(".type-card").forEach(card => card.onclick = () => {
-    if(card.dataset.action){
-      const tab = card.dataset.action;
-      const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-      if(btn){focusSearchTab(tab);return;}
-    }
-    if(card.dataset.routeKey)return navigateRoute(card.dataset.routeKey);
-    if(card.dataset.path)return navigateParent(card.dataset.path);
-  });
-}
-function renderWhy(){
-  $("why-grid").innerHTML=state.why.map(w=>`<article class="why-card"><h3>${esc(localizedRecordValue(w,"title",""))}</h3><p>${esc(localizedRecordValue(w,"text",""))}</p></article>`).join("");
-}
-
-
-
-/* ===== LONG-FORM HOME MODULES ===== */
-function longCopy(key){
-  const l=SKANDI_USER_SETTINGS?.language||"EN";
-  const copy={
-    EN:{
-      value:"Value escape",smart:"Smart spend",comfort:"Comfort first",premium:"Premium trip",
-      valueText:"Start with the best-priced published trips and flexible dates.",smartText:"Balance hotel quality, dates and total trip value.",comfortText:"Put the hotel and room experience first.",premiumText:"Start with Signature and higher-end stays.",browse:"Browse ideas",
-      winter:"Winter sun",city:"City weekends",family:"Family time",shoulder:"Shoulder season",
-      winterText:"Trade colder days for warmer destinations.",cityText:"Shorter breaks with more city time.",familyText:"Hotels and destinations that work for everyone.",shoulderText:"Travel between peak seasons and discover a different pace.",
-      transfers:"Airport transfers",tours:"Tours & activities",cars:"Car rental",info:"Travel information",booking:"My Booking",
-      transfersText:"Book SKANDI arrival and departure transport.",toursText:"Add local experiences before or during the trip.",carsText:"Keep the destination flexible with a rental car.",infoText:"Airports, airlines, baggage and destination guidance.",bookingText:"Keep confirmations, trip details and documents together.",
-      guides:"Destination guides",airports:"Airport information",before:"Before you travel",guidesText:"Explore what to stay, do and know before choosing.",airportsText:"Plan terminals, lounges, transfers and airport time.",beforeText:"Passport, baggage, check-in and practical trip preparation.",open:"Open"
-    },
-    SV:{
-      value:"Prisvärd resa",smart:"Smart budget",comfort:"Komfort först",premium:"Premiumresa",
-      valueText:"Börja med de mest prisvärda publicerade resorna och flexibla datum.",smartText:"Balansera hotell, datum och resans totalvärde.",comfortText:"Låt hotellet och rumsupplevelsen styra valet.",premiumText:"Börja med Signature och mer exklusiva hotell.",browse:"Utforska",
-      winter:"Vintersol",city:"Storstadsweekend",family:"Familjetid",shoulder:"Mellansäsong",
-      winterText:"Byt kalla dagar mot varmare resmål.",cityText:"Kortare resor med mer tid i staden.",familyText:"Hotell och resmål som fungerar för hela familjen.",shoulderText:"Res mellan högsäsongerna och upplev ett lugnare tempo.",
-      transfers:"Flygplatstransfer",tours:"Utflykter & aktiviteter",cars:"Hyrbil",info:"Reseinformation",booking:"Min bokning",
-      transfersText:"Boka SKANDI-transfer vid ankomst och avresa.",toursText:"Lägg till lokala upplevelser före eller under resan.",carsText:"Upptäck resmålet friare med hyrbil.",infoText:"Flygplatser, flygbolag, bagage och resmålsinformation.",bookingText:"Samla bekräftelser, resedetaljer och dokument.",
-      guides:"Resmålsguider",airports:"Flygplatsinformation",before:"Före resan",guidesText:"Se vad du kan bo, göra och veta innan du väljer.",airportsText:"Planera terminal, lounge, transfer och tid på flygplatsen.",beforeText:"Pass, bagage, incheckning och praktiska förberedelser.",open:"Öppna"
-    },
-    NO:{
-      value:"Prisvennlig reise",smart:"Smart budsjett",comfort:"Komfort først",premium:"Premiumreise",
-      valueText:"Start med de best prisede publiserte reisene og fleksible datoer.",smartText:"Balanser hotellkvalitet, datoer og totalverdi.",comfortText:"La hotell- og romopplevelsen styre valget.",premiumText:"Start med Signature og mer eksklusive opphold.",browse:"Utforsk",
-      winter:"Vintersol",city:"Storbyhelger",family:"Familietid",shoulder:"Mellomsesong",
-      winterText:"Bytt kalde dager mot varmere reisemål.",cityText:"Kortere turer med mer tid i byen.",familyText:"Hoteller og reisemål som fungerer for hele familien.",shoulderText:"Reis mellom høysesongene og opplev et roligere tempo.",
-      transfers:"Flyplasstransfer",tours:"Turer og aktiviteter",cars:"Leiebil",info:"Reiseinformasjon",booking:"Min booking",
-      transfersText:"Bestill SKANDI-transport ved ankomst og avreise.",toursText:"Legg til lokale opplevelser før eller under reisen.",carsText:"Utforsk reisemålet friere med leiebil.",infoText:"Flyplasser, flyselskaper, bagasje og reisemålsinfo.",bookingText:"Samle bekreftelser, reisedetaljer og dokumenter.",
-      guides:"Reiseguider",airports:"Flyplassinformasjon",before:"Før du reiser",guidesText:"Se hva du kan bo, gjøre og vite før du velger.",airportsText:"Planlegg terminaler, lounger, transfer og flyplasstid.",beforeText:"Pass, bagasje, innsjekk og praktiske forberedelser.",open:"Åpne"
-    },
-    DA:{
-      value:"Prisvenlig rejse",smart:"Smart budget",comfort:"Komfort først",premium:"Premiumrejse",
-      valueText:"Start med de bedst prissatte publicerede rejser og fleksible datoer.",smartText:"Balancér hotel, datoer og rejsens samlede værdi.",comfortText:"Lad hotel- og værelsesoplevelsen styre valget.",premiumText:"Start med Signature og mere eksklusive ophold.",browse:"Udforsk",
-      winter:"Vintersol",city:"Storbyweekender",family:"Familietid",shoulder:"Mellemsæson",
-      winterText:"Byt kolde dage ud med varmere rejsemål.",cityText:"Kortere rejser med mere tid i byen.",familyText:"Hoteller og rejsemål der fungerer for hele familien.",shoulderText:"Rejs mellem højsæsonerne og oplev et roligere tempo.",
-      transfers:"Lufthavnstransfer",tours:"Ture & aktiviteter",cars:"Billeje",info:"Rejseinformation",booking:"Min booking",
-      transfersText:"Book SKANDI-transport ved ankomst og afrejse.",toursText:"Tilføj lokale oplevelser før eller under rejsen.",carsText:"Oplev rejsemålet mere frit med lejebil.",infoText:"Lufthavne, flyselskaber, bagage og rejsemålsinfo.",bookingText:"Saml bekræftelser, rejsedetaljer og dokumenter.",
-      guides:"Rejseguider",airports:"Lufthavnsinformation",before:"Før du rejser",guidesText:"Se hvad du kan bo, gøre og vide før du vælger.",airportsText:"Planlæg terminaler, lounges, transfer og lufthavnstid.",beforeText:"Pas, bagage, check-in og praktiske forberedelser.",open:"Åbn"
-    }
-  };
-  return (copy[l]||copy.EN)[key]||copy.EN[key]||key;
-}
-function editorialImages(){
-  return [...state.destinations,...state.hotels,...state.inspiration,...state.offers]
-    .map(x=>x.imageUrl||x.image).filter(Boolean);
-}
-function renderBudgetStrip(){
-  const el=$("budget-strip"); if(!el)return;
-  const cards=[
-    ["value","valueText","offers"],
-    ["smart","smartText","destinations"],
-    ["comfort","comfortText","hotels"],
-    ["premium","premiumText","skandiCollection"]
-  ];
-  el.innerHTML=cards.map(([title,text,key])=>`<article class="budget-card" data-route-key="${escAttr(key)}"><div><div class="budget-eyebrow">${esc(longCopy('browse'))}</div><strong>${esc(longCopy(title))}</strong><p>${esc(longCopy(text))}</p></div><span>${esc(longCopy('browse'))} →</span></article>`).join("");
-  el.querySelectorAll('.budget-card').forEach(card=>card.onclick=()=>{
-    const key=card.dataset.routeKey||"destinations";
-    navigateRoute(key);
-  });
-}
-function renderSignaturePush(){
-  const visual=$("signature-visual"); if(visual){const imgs=editorialImages();visual.setAttribute('style',imageStyle(imgs[1]||imgs[0]||''));}
-  document.querySelectorAll('#signature-push [data-route-key="skandiCollection"]').forEach(btn=>btn.onclick=()=>send('HOME_NAVIGATE',{path:routeByKey('skandiCollection')}));
-}
-function routeIdeaDescriptor(item,index){
-  const tags=(item.tags||[]).join(' ').toLowerCase();
-  if(tags.includes('beach')||tags.includes('island')) return [longCopy('winter'),longCopy('winterText')];
-  if(tags.includes('family')) return [longCopy('family'),longCopy('familyText')];
-  if(index===0) return [longCopy('city'),longCopy('cityText')];
-  return [longCopy('shoulder'),longCopy('shoulderText')];
-}
-function renderRouteIdeas(){
-  const section=$("route-ideas-section"),grid=$("route-ideas-grid"); if(!section||!grid)return;
-  const rows=state.destinations.slice(0,3); section.hidden=rows.length===0;
-  if(!rows.length){grid.innerHTML='';return;}
-  const card=(d,index,cls)=>{const [kicker,text]=routeIdeaDescriptor(d,index);const path=safeRouteValue(d.href||d.path,destinationsRoute());return `<article class="${cls}" data-path="${escAttr(path)}" style="${escAttr(imageStyle(d.imageUrl||d.image))}"><div class="route-copy"><small>${esc(kicker)}</small><h3>${esc(localizedRecordValue(d,'title',d.name||'Destination'))}</h3><p>${esc(localizedRecordValue(d,'summary',localizedRecordValue(d,'description',text)))}</p>${recordPrice(d)?`<span class="route-price">${esc(skandiTranslate('home.card.from'))} ${esc(recordPrice(d))}</span>`:''}</div></article>`};
-  const first=card(rows[0],0,'route-feature');
-  const side=rows.slice(1).map((d,i)=>card(d,i+1,'route-stack-card')).join('');
-  grid.innerHTML=`${first}<div class="route-side">${side||card(rows[0],1,'route-stack-card')+card(rows[0],2,'route-stack-card')}</div>`;
-  grid.querySelectorAll('[data-path]').forEach(c=>c.onclick=()=>send('HOME_NAVIGATE',{path:safeRouteValue(c.dataset.path,destinationsRoute())}));
-}
-function findRecentHotels(){
-  const keys=['skandi_recent_hotels','skandi_recently_viewed_hotels','recentHotels'];
-  for(const key of keys){
-    try{
-      const raw=JSON.parse(localStorage.getItem(key)||'null');
-      if(!Array.isArray(raw)||!raw.length)continue;
-      const out=[];
-      raw.forEach(x=>{
-        if(typeof x==='string'){
-          const match=state.hotels.find(h=>h.id===x||h.href===x||h.path===x||h.slug===x||h.name===x); if(match)out.push(match);
-        }else if(x&&typeof x==='object')out.push(x);
-      });
-      if(out.length)return out.slice(0,8);
-    }catch(_){ }
+  const month = $("explore-month").value;
+  const nights = Number($("explore-length").value);
+  const budget = Number($("explore-budget").value);
+  const currency = SKANDI_USER_SETTINGS.currency;
+  const catalog = [...state.destinations, ...state.searchDestinations];
+  const codes = new Set(), ideas = [];
+  for (const place of catalog) {
+    const iata = place.priceLookup?.iata || place.iata;
+    const code = place.destinationCode || place.code;
+    const type = place.entityType || place.type;
+    if (!["DESTINATION","AREA"].includes(type) || !code || !iata || iata===origin.value || codes.has(iata)) continue;
+    codes.add(iata);
+    ideas.push({place,iata,code,type});
+    if (ideas.length===5) break;
   }
-  return [];
-}
-function renderRecentlyViewed(){
-  const section=$("recently-section"),rail=$("recently-rail"); if(!section||!rail)return;
-  const rows=findRecentHotels(); section.hidden=rows.length===0;
-  rail.innerHTML=rows.map(h=>`<article class="recent-card" data-path="${escAttr(safeRouteValue(h.href||h.path,masterRoute('hotels')))}"><div class="recent-img" style="${escAttr(imageStyle(h.imageUrl||h.image))}"></div><div class="recent-body"><small>${esc([h.city,h.country].filter(Boolean).join(' · ')||'SKANDI HOTEL')}</small><h3>${esc(localizedRecordValue(h,'title',h.name||'Hotel'))}</h3><p>${esc(recordPrice(h)?`${skandiTranslate('home.card.from')} ${recordPrice(h)}`:skandiTranslate('home.card.checkLive','Check live price'))}</p></div></article>`).join('');
-  rail.querySelectorAll('.recent-card').forEach(c=>c.onclick=()=>send('HOME_NAVIGATE',{path:safeRouteValue(c.dataset.path,masterRoute('hotels'))}));
-}
-function renderServiceShop(){
-  const el=$("service-shop-grid"); if(!el)return;
-  const cards=[
-    // 1. Airport Transfers (Clean Van/Shuttle)
-    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 14v2c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>','transfers','transfersText','transfers'],
-    
-    // 2. Tours & Activities (Map with Folds)
-    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>','tours','toursText','tours'],
-    
-    // 3. Car Rental (Clean Sedan)
-    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H9a2 2 0 0 0-2 2v2.4L3 12.5a2 2 0 0 0-1.2 1.8V17h3m10-1a2 2 0 1 0 4 0 2 2 0 0 0-4 0zm-12 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/></svg>','cars','carsText','carRental'],
-    
-    // 4. Travel Information (Info Circle)
-    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>','info','infoText','travelInfo'],
-    
-    // 5. My Booking (Luggage/Suitcase)
-    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>','booking','bookingText','myTrips']
-  ];
-  
-  el.innerHTML=cards.map(([icon,title,text,key],i)=>`
-    <article class="service-push" data-route-key="${escAttr(key)}">
-      <div class="service-icon">${icon}</div>
-      <small>SKANDI ${i===0?'SERVICE':'TRAVEL'}</small>
-      <h3>${esc(longCopy(title))}</h3>
-      <p>${esc(longCopy(text))}</p>
-      <div class="service-link">${esc(longCopy('open'))} →</div>
-    </article>
-  `).join('');
-  
-  el.querySelectorAll('.service-push').forEach(c=>c.onclick=()=>navigateRoute(c.dataset.routeKey));
-}
-function renderSeasonalRail(){
-  const el=$("seasonal-rail");if(!el)return; const imgs=editorialImages();
-  const cards=[['winter','winterText','destinations'],['city','cityText','destinations'],['family','familyText','destinations'],['shoulder','shoulderText','offers']];
-  el.innerHTML=cards.map(([title,text,key],i)=>`<article class="season-card" data-route-key="${escAttr(key)}" style="${escAttr(imageStyle(imgs[i%Math.max(1,imgs.length)]||''))}"><div class="season-copy"><small>SKANDI TRAVEL IDEA</small><h3>${esc(longCopy(title))}</h3><p>${esc(longCopy(text))}</p></div></article>`).join('');
-  el.querySelectorAll('.season-card').forEach(c=>c.onclick=()=>navigateRoute(c.dataset.routeKey));
-}
-function renderGuidePush(){
-  const el=$("guide-grid");if(!el)return;
-  const rows=[['01','guides','guidesText','destinations'],['02','airports','airportsText','travelInfo'],['03','before','beforeText','travelInfo']];
-  el.innerHTML=rows.map(([n,title,text,key])=>`<article class="guide-card" data-route-key="${escAttr(key)}"><div class="guide-num">${esc(n)} / SKANDI GUIDE</div><h3>${esc(longCopy(title))}</h3><p>${esc(longCopy(text))}</p><span>${esc(longCopy('open'))} →</span></article>`).join('');
-  el.querySelectorAll('.guide-card').forEach(c=>c.onclick=()=>navigateRoute(c.dataset.routeKey));
-}
-function renderLongHomeModules(){
-  renderBudgetStrip();
-  renderSignaturePush();
-  renderRouteIdeas();
-  renderRecentlyViewed();
-  renderServiceShop();
-  renderSeasonalRail();
-  renderGuidePush();
+  if (!ideas.length) {
+    const text = document.createElement("p");
+    text.textContent = skandiTranslate("home.plan.noIdeas");
+    const button = document.createElement("button");
+    button.type="button"; button.className="home-text-button"; button.textContent=skandiTranslate("home.plan.map");
+    button.onclick=()=>navigateRoute("destinations");
+    result.append(text,button);
+    return;
+  }
+  const text = document.createElement("p");
+  text.textContent = skandiInterpolate("home.plan.ideaPrompt",{n:nights,month:$("explore-month").selectedOptions[0].textContent});
+  const buttons = document.createElement("div");
+  buttons.className = "home-idea-buttons";
+  for (const {place,iata,code,type} of ideas) {
+    const label = localizedRecordValue(place,"title",place.name);
+    const button = document.createElement("button");
+    button.type="button"; button.className="home-text-button";
+    button.textContent = label+" →";
+    button.dataset.exploreDestination = code;
+    button.onclick = ()=>{
+      state.exploreDraft = {nights};
+      $("hol-from-search").value = $("explore-origin").value;
+      $("hol-from-iata").value = origin.value;
+      $("hol-destination-search").value = label;
+      $("hol-destination").value = code;
+      $("hol-destination-iata").value = iata;
+      $("hol-destination-type").value = type;
+      state.dateRanges.holidays = {from:"",to:""};
+      applyDateLabelsOnly();
+      setPackageBudget(budget,currency);
+      focusSearchTab("holidays");
+      openDatePicker($("holDateRangeButton"),month);
+    };
+    buttons.append(button);
+  }
+  result.append(text,buttons);
 }
 
-function fallbackTripTypes(){
-  return [
-    {
-      title: skandiTranslate("home.card.lastMinute"), 
-      text: skandiTranslate("home.card.lastMinuteText"), 
-      icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, 
-      routeKey:"offers"
-    },
-    {
-      title: skandiTranslate("home.card.flightHotel"), 
-      text: skandiTranslate("home.card.flightHotelText"), 
-      // Combines exact same plane path as 'onlyFlights' with a hotel building
-      icon: `<svg viewBox="0 0 24 24">
-               <path d="M4 21h16M6 21v-7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v7M10 17h4v4h-4z"/>
-               <g transform="scale(0.42) translate(10, -5)">
-                 <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-               </g>
-             </svg>`, 
-      routeKey:"packages",
-      action: "holidays"
-    },
-    {
-      title: skandiTranslate("home.card.onlyFlights"), 
-      text: skandiTranslate("home.card.onlyFlightsText"), 
-      icon: `<svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`, 
-      routeKey:"flights", 
-      action: "flights"
-    },
-    {
-      title: skandiTranslate("home.card.onlyHotels"), 
-      text: skandiTranslate("home.card.onlyHotelsText"), 
-      // Remade Hotel Icon with clean architectural lines and windows
-      icon: `<svg viewBox="0 0 24 24">
-               <path d="M3 21h18M3 7h18M5 21V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"/>
-               <path d="M9 11h2v2H9zm4 0h2v2h-2zm-4 4h2v2H9zm4 0h2v2h-2z"/>
-             </svg>`, 
-      routeKey:"hotels", 
-      action: "hotels"
-    },
-    {
-      title: skandiTranslate("home.card.signatureCollection"), 
-      text: skandiTranslate("home.card.signatureCollectionText"), 
-      icon: `<svg viewBox="0 0 24 24"><polygon points="12 2 15 8 21 9 16.5 14 18 20 12 17 6 20 7.5 14 3 9 9 8 12 2"/></svg>`, 
-      routeKey:"skandiCollection"
-    },
-    {
-      title: skandiTranslate("home.card.travelGuides"), 
-      text: skandiTranslate("home.card.travelGuidesText"), 
-      icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`, 
-      routeKey:"destinations"
-    }
-  ];
+function applyHomePresentation(payload) {
+  if (!payload || (payload.path && payload.path!=="/")) return;
+  const blocks = Array.isArray(payload.contentBlocks) ? payload.contentBlocks : [];
+  document.querySelectorAll("[data-content-id]").forEach(element=>{
+    const block = blocks.find(item=>item.contentId===element.dataset.contentId);
+    if (typeof block?.value === "string" && block.value.trim()) element.textContent=block.value;
+  });
+  const slots = Array.isArray(payload.mediaSlots) ? payload.mediaSlots : [];
+  const slot = slots.find(item=>item.slotId==="home-hero" && String(item.ownership||"").toUpperCase()!=="INVENTORY");
+  const photo = homeImage(slot?.assetUrl);
+  if (photo) $("hero-wrap").style.setProperty("--home-hero-photo", `url("${photo.href.replace(/"/g,"%22")}")`);
 }
-function fallbackWhy(){
-  return [
-    {title:skandiTranslate("home.why.curated"), text:skandiTranslate("home.why.curatedText")},
-    {title:skandiTranslate("home.why.secure"), text:skandiTranslate("home.why.secureText")},
-    {title:skandiTranslate("home.why.documents"), text:skandiTranslate("home.why.documentsText")},
-    {title:skandiTranslate("home.why.support"), text:skandiTranslate("home.why.supportText")}
-  ];
-}
-function fallbackTrust(){
-  return [
-    {title:skandiTranslate("home.trust.noSurprise"), text:skandiTranslate("home.trust.noSurpriseText")},
-    {title:skandiTranslate("home.trust.packageClarity"), text:skandiTranslate("home.trust.packageClarityText")},
-    {title:skandiTranslate("home.trust.myProfile"), text:skandiTranslate("home.trust.myProfileText")},
-    {title:skandiTranslate("home.trust.club"), text:skandiTranslate("home.trust.clubText")}
-  ];
+function renderEditorial() {
+  const story = state.voyStory;
+  const copy = $("home-voy-copy"), action = $("home-voy-action");
+  copy.textContent = story?.title || skandiTranslate("home.plan.voyCopy");
+  action.textContent = skandiTranslate(story ? "home.plan.readStory" : "home.plan.voyAction");
+  action.onclick = ()=>story?.path ? navigateParent(story.path) : navigateRoute("voy");
 }
 
 function mapCabin(value){
@@ -3696,7 +3521,7 @@ function getFlightSearch(){
     infantAges:[...state.infantAges],
     travelClass:mapCabin($("travelClass").value),
     cabinClass:mapCabin($("travelClass").value).toLowerCase(),
-    nonStop:false,
+    nonStop:$("flight-direct").checked,
     currency: SKANDI_USER_SETTINGS.currency || "USD"
   };
 }
@@ -3721,6 +3546,7 @@ function getHolidaySearch(){
     adults:state.adults,children:state.children,infants:state.infants,
     childAges:[...state.childAges],infantAges:[...state.infantAges],
     guests:stayGuestsForHome(),
+    ...(state.packageBudget || {maxTripTotal:undefined,budgetCurrency:undefined}),
     currency: SKANDI_USER_SETTINGS.currency || "USD"
   };
 }
@@ -3785,16 +3611,33 @@ function validateSearch(search){
   if(search.tripType==="hotelOnly"&&Number(search.rooms)>Number(search.adults))return "Each room needs at least one adult.";
   return "";
 }
+function getSearchForMode(mode) {
+  const getters = {flights:getFlightSearch,holidays:getHolidaySearch,hotels:getHotelSearch,signature:getSignatureSearch};
+  return (getters[mode] || getHolidaySearch)();
+}
+function resetSearchLoading() {
+  showPageLoader(false);
+  document.querySelectorAll(".search-submit").forEach(button=>button.classList.remove("loading"));
+  setLoading(false);
+  document.body.classList.remove("search-mode");
+}
+
 function runSearch(mode, overrideSearch=null){
   if(pending.search||pending.selection)return;
-  if(dateDraft&&mode===state.activeDateRange&&!overrideSearch&&!applyDates(false)){
+  if (dateDraft && mode===state.activeDateRange && !overrideSearch) {
     $("datePickerOverlay").scrollIntoView({block:"nearest"});
-    $("dateRangeHeading").focus({preventScroll:true});
+    (isCompleteDateDraft() ? $("applyDates") : $("dateRangeHeading")).focus({preventScroll:true});
     return;
   }
-  const search = overrideSearch || (mode==="flights"?getFlightSearch():mode==="holidays"?getHolidaySearch():mode==="hotels"?getHotelSearch():mode==="signature"?getSignatureSearch():getHolidaySearch());
+  const search = overrideSearch || getSearchForMode(mode);
   const warning=validateSearch(search);
-  if(warning){ showInlineStatus(warning,true); return; }
+  if(warning){
+    showInlineStatus(warning,true);
+    if (!search.departureDate && (search.origin || mode==="hotels") && search.destination && DATE_RANGE_CONFIG[mode]) {
+      openDatePicker($(DATE_RANGE_CONFIG[mode].button));
+    }
+    return;
+  }
   showInlineStatus("");
   
   state.lastSearch=search;
@@ -3893,11 +3736,8 @@ function renderResults(items=[]){
   });
 }
 function handleError(message){
-  showPageLoader(false);
-  document.querySelectorAll(".search-submit").forEach(b => b.classList.remove("loading"));
-  setLoading(false);
-  document.querySelectorAll("#flight-results-list .select-flight-btn").forEach(btn=>btn.disabled=Boolean(pending.selection));
-  showStatus(message||skandiTranslate("home.status.searchFailed"),true);
+  resetSearchLoading();
+  showInlineStatus(message||skandiTranslate("home.status.searchFailed"),true);
 }
 function boot(){
   window.__SKANDI_HOME_BOOTED__ = true;
@@ -3910,9 +3750,27 @@ function boot(){
   setupLocationSearch({inputId:"hotel-destination-search",valueId:"hotel-destination",boxId:"hotel-destination-suggestions",kind:"destination",iataId:"hotel-destination-iata",typeId:"hotel-destination-type"});
   setupLocationSearch({inputId:"sig-from-search",valueId:"sig-from-iata",boxId:"sig-from-suggestions",kind:"departure",valueMode:"iata"});
   setupLocationSearch({inputId:"sig-destination-search",valueId:"sig-destination",boxId:"sig-destination-suggestions",kind:"destination",iataId:"sig-destination-iata",typeId:"sig-destination-type"});
+  setupLocationSearch({inputId:"explore-origin",valueId:"explore-origin-iata",boxId:"explore-origin-suggestions",kind:"departure",valueMode:"iata"});
   setupDatePicker();
-  setInitialDates();
+  applyDateLabelsOnly();
   renderPax();
+  document.querySelectorAll("[data-home-facet]").forEach(button=>button.onclick=()=>setDiscoveryFacet(button.dataset.homeFacet));
+  $("explore-form").onsubmit=findExploreIdeas;
+  $("explore-form").addEventListener("input",()=>$("explore-results").replaceChildren());
+  for (const id of ["from","hol-from-search","sig-from-search"]) $(id).addEventListener("input",renderAlternativeAirports);
+  $("tab-content").addEventListener("keydown",event=>{
+    if (event.key==="Enter" && !event.defaultPrevented && event.target.matches(".airport-field input[type=text]")) {
+      event.preventDefault();
+      runSearch(state.activeTab);
+    }
+  });
+  $("package-budget-clear").onclick=()=>setPackageBudget();
+  $("home-collection-action").onclick=()=>navigateRoute("skandiCollection");
+  window.addEventListener("pageshow",event=>{
+    if (!event.persisted) return;
+    resetSearchLoading();
+    send("HOME_PLANNING_REQUEST");
+  });
   // The swap control belongs to Flight + Hotel.
   $("swapAirports")?.addEventListener("click",()=>{
     ensureLocationSelection("hol-from-search");ensureLocationSelection("hol-destination-search");
@@ -3936,7 +3794,11 @@ function boot(){
   applyTranslations();
   send("MASTER_CONFIG_REQUEST",{context:"home"});
   send("MASTER_NAVIGATION_REQUEST",{context:"home"});
-  window.addEventListener("skandi:settings-changed",()=>requestBootstrap(true));
+  send("SKANDI_PRESENTATION_READY");
+  window.addEventListener("skandi:settings-changed",()=>{
+    if (state.packageBudget?.budgetCurrency !== SKANDI_USER_SETTINGS.currency) setPackageBudget();
+    requestBootstrap(true);
+  });
   requestBootstrap();
   readyTimer=setInterval(()=>{if(pending.bootstrap?.message.type==="HOME_READY")postToParent(pending.bootstrap.message);},1500);
   document.addEventListener("visibilitychange",()=>{
@@ -3957,15 +3819,28 @@ window.addEventListener("message",event=>{
       customer:payload.customer||MASTER_CONTEXT.customer||{}
     };
     if(payload.settings)saveSkandiSettings(payload.settings.language,payload.settings.currency,false);
-    // Re-render CTAs after the canonical route contract arrives.
-    renderLongHomeModules();
-    renderTripTypes();
+    renderEditorial();
   }
   if(msg.type==="CUSTOMER_SETTINGS_STATE")saveSkandiSettings(msg.payload?.language,msg.payload?.currency,false);
   if(msg.type==="HOME_HOST_READY"){
     state.hostReady=msg.payload||{};
     MASTER_CONTEXT.routes={...MASTER_CONTEXT.routes,...(msg.payload?.routes||{})};
     if(!state.hasBootstrapped)requestBootstrap();
+  }
+  if (msg.type==="SKANDI_PRESENTATION_DATA") {
+    state.presentation = msg.payload || null;
+    applyHomePresentation(state.presentation);
+  }
+  if (msg.type==="HOME_PLANNING_STATE") {
+    state.planning = msg.payload || {};
+    renderPlanning();
+    if (state.planning.edit && !state.didRestoreSearch) {
+      state.didRestoreSearch = restoreSearch(state.planning.edit);
+    }
+  }
+  if (msg.type==="HOME_VOY_STORY") {
+    state.voyStory = msg.payload || null;
+    renderEditorial();
   }
   if(msg.type==="HOME_LOCATION_DATA"&&releaseRequest("locations",msg.requestId))renderLocationData(msg.payload||{});
   if(msg.type==="HOME_FLIGHT_PLACES_RESULT")$(msg.payload?.inputId)?.__acceptFlightPlaces?.(msg);
@@ -3981,8 +3856,10 @@ window.addEventListener("message",event=>{
       ? "Some travel results are unavailable. The available results are shown below."
       : "The travel provider could not complete this search. Please try again.",true);
   }
-  if(msg.type==="HOME_NAVIGATE_TO_OFFER"&&(pending.selection?.requestId===msg.requestId||pending.search?.requestId===msg.requestId)){
+  if (msg.type==="HOME_NAVIGATE_TO_OFFER" && (releaseRequest("selection",msg.requestId) || releaseRequest("search",msg.requestId))) {
     showStatus("Opening your travel results…",false,true);
+    // A same-tab Back navigation can restore this document from cache.
+    window.setTimeout(resetSearchLoading,3000);
   }
   if(msg.type==="HOME_FOCUS_SEARCH"){
     document.body.classList.remove("search-mode");
@@ -4019,38 +3896,6 @@ window.addEventListener("message",event=>{
     } else handleError(msg.payload?.message||"This request could not be completed.");
   }
 });
-/* Typewriter Effect for Destination Inputs */
-const destinations = ["Palma de Mallorca...", "Phuket, Thailand...", "New York (JFK)...", "a sunny beach...", "a city weekend..."];
-let destIndex = 0;
-let charIndex = 0;
-let isDeleting = false;
-const destInput = document.getElementById("hol-destination-search");
-
-function typeWriter() {
-  if (!destInput) return;
-  if(SKANDI_USER_SETTINGS.language!=="EN"||destInput===document.activeElement){setTimeout(typeWriter,1000);return;}
-  const currentWord = destinations[destIndex];
-  
-  if (isDeleting) {
-    destInput.setAttribute("placeholder", "Search " + currentWord.substring(0, charIndex - 1));
-    charIndex--;
-  } else {
-    destInput.setAttribute("placeholder", "Search " + currentWord.substring(0, charIndex + 1));
-    charIndex++;
-  }
-
-  let typeSpeed = isDeleting ? 40 : 80;
-
-  if (!isDeleting && charIndex === currentWord.length) {
-    typeSpeed = 2000; // Pause at the end of the word
-    isDeleting = true;
-  } else if (isDeleting && charIndex === 0) {
-    isDeleting = false;
-    destIndex = (destIndex + 1) % destinations.length;
-    typeSpeed = 300; // Pause before typing next word
-  }
-  setTimeout(typeWriter, typeSpeed);
-}
 // Report meaningful height changes; avoid a resize feedback loop.
 let lastReportedHeight=0;
 if(typeof ResizeObserver==="function"){
@@ -4060,8 +3905,6 @@ if(typeof ResizeObserver==="function"){
   });
   resizeObserver.observe(document.body);
 }
-// Start it
-setTimeout(typeWriter, 1000);
 boot();
 initializeBridge();
 
@@ -4082,7 +3925,6 @@ initializeBridge();
     if (!row || !ages || row.parentNode !== ages.parentNode) return;
     const details = document.createElement('details');
     details.className = 'home-travelers';
-    details.open = !mobile.matches;
     const summary = document.createElement('summary');
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('viewBox', '0 0 24 24');
@@ -4093,9 +3935,22 @@ initializeBridge();
     icon.appendChild(path);
     const text = document.createElement('span');
     text.className = 'home-travelers-summary';
-    summary.append(icon, text);
+    const label = document.createElement('span');
+    label.className = 'home-travelers-label';
+    label.dataset.i18n = 'home.plan.travelers';
+    label.textContent = typeof skandiTranslate === 'function' ? skandiTranslate(label.dataset.i18n) : 'Travelers';
+    summary.append(icon, label, text);
     row.parentNode.insertBefore(details, row);
     details.append(summary, row, ages);
+    const extra = panel.querySelector('[data-home-traveler-options]');
+    if (extra) details.append(extra);
+    const done = document.createElement('button');
+    done.type = 'button';
+    done.className = 'home-text-button';
+    done.dataset.i18n = 'home.plan.done';
+    done.textContent = typeof skandiTranslate === 'function' ? skandiTranslate(done.dataset.i18n) : 'Done';
+    done.onclick = () => { details.open = false; summary.focus(); };
+    details.append(done);
     function update() {
       const parts = [];
       row.querySelectorAll('.field').forEach(field => {
@@ -4116,13 +3971,9 @@ initializeBridge();
     update();
     return details;
   }
-  const travelerPanels = Array.from(root.querySelectorAll('.tab-panel'), setupTravelers).filter(Boolean);
-  function updateLayout() {
-    travelerPanels.forEach(details => { details.open = !mobile.matches; });
-    updateKeyboard();
-  }
-  if (mobile.addEventListener) mobile.addEventListener('change', updateLayout);
-  else if (mobile.addListener) mobile.addListener(updateLayout);
+  root.querySelectorAll('.tab-panel').forEach(setupTravelers);
+  if (mobile.addEventListener) mobile.addEventListener('change', updateKeyboard);
+  else if (mobile.addListener) mobile.addListener(updateKeyboard);
 
   // Preserve the existing tab click handlers and provide standard tab semantics.
   const tabList = document.getElementById('tab-header');
@@ -4145,14 +3996,15 @@ initializeBridge();
       if (event.target.closest('.tab-btn')) syncTabs();
     });
     tabList.addEventListener('keydown', event => {
-      const index = tabs.indexOf(event.target);
+      const visible = tabs.filter(tab => !tab.hidden);
+      const index = visible.indexOf(event.target);
       if (index < 0 || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
       event.preventDefault();
-      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
-        (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-      tabs[next].click();
-      tabs[next].focus({preventScroll:true});
-      tabs[next].scrollIntoView({block:'nearest', inline:'nearest'});
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? visible.length - 1 :
+        (index + (event.key === 'ArrowRight' ? 1 : -1) + visible.length) % visible.length;
+      visible[next].click();
+      visible[next].focus({preventScroll:true});
+      visible[next].scrollIntoView({block:'nearest', inline:'nearest'});
     });
     syncTabs();
   }

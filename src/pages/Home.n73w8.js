@@ -3,7 +3,10 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import wixWindowFrontend from "wix-window-frontend";
-import { startBookingSearch } from "public/bookingSearch";
+import { authentication } from "wix-members-frontend";
+import { startBookingSearch, readBookingSearch, readRecentTravelSearch, readResumableBooking } from "public/bookingSearch";
+import { hasUpcomingCustomerTrip } from "backend/SKANDI_CORE/customerProfile.web";
+import { getVoyFeaturedStory } from "backend/SKANDI_CORE/voyMagazine.web";
 import { getHomeContent, getHomeSearchLocations, getHomeLivePrices } from "backend/SKANDI_CORE/homeContent.web";
 import { searchDuffelPlaces } from "backend/SKANDI_CORE/travelReference.web";
 import { formatFlightPlaces } from "public/flightPlaces";
@@ -30,6 +33,35 @@ let selectionJob = null;
 let mobileAppNav = null;
 let mobileRefreshId = "";
 let mobileDrawerExpanded = false;
+
+let tripRequest = null;
+let storyRequest = null;
+
+function postPlanning(html) {
+  const member = authentication.loggedIn();
+  const query = wixLocationFrontend.query || {};
+  const recent = readRecentTravelSearch();
+  const edit = query.editSearch === "1" ? readBookingSearch(query.searchId)?.search || recent : null;
+  const planning = { member, recent, edit, draft:readResumableBooking() };
+  postToHtml(html, "HOME_PLANNING_STATE", planning);
+  if (!member) {
+    tripRequest = null;
+    return;
+  }
+  if (!tripRequest) tripRequest = boundedRead(hasUpcomingCustomerTrip(),4000).catch(()=>null);
+  void tripRequest.then(trips=>{
+    if (trips?.hasTrip && authentication.loggedIn()) postToHtml(html, "HOME_PLANNING_STATE", {...planning,hasTrip:true});
+  });
+}
+
+function postVoyStory(html) {
+  if (!storyRequest) storyRequest = boundedRead(getVoyFeaturedStory(),5000).catch(()=>null);
+  void storyRequest.then(story=>{
+    if (!story?.title || !story.issue || !story.index) return;
+    const params = new URLSearchParams({issue:story.issue,page:String(story.index)});
+    postToHtml(html, "HOME_VOY_STORY", {title:story.title, path:SITE_MAP.voy+"?"+params.toString()});
+  });
+}
 
 function clean(value, max = 1000) { return String(value ?? "").trim().slice(0, max); }
 function arr(value) { return Array.isArray(value) ? value : []; }
@@ -215,9 +247,14 @@ async function handleHomeMessage(html, message) {
   switch (message.type) {
     case "HOME_READY":
     case "HOME_REFRESH":
+      postPlanning(html);
+      postVoyStory(html);
       currentSettings = normalizeSettings(message.settings || payload.settings || currentSettings);
       homePriceSearch = obj(message.priceSearch || payload.priceSearch || homePriceSearch);
       await sendHomeBootstrap(html, message, message.type === "HOME_REFRESH");
+      return;
+    case "HOME_PLANNING_REQUEST":
+      postPlanning(html);
       return;
     case "HOME_LOCATIONS_REQUEST":
       await sendHomeLocations(html, message);

@@ -5,17 +5,18 @@
   </div>
 </div>
 <div id="homeConnectionStatus" role="status" aria-live="polite" hidden style="margin:12px 32px"></div>
-<section id="hero-wrap">
-  <div class="hero-kicker" data-i18n="home.hero.kicker">SKANDI TRAVELS</div>
-  <div id="hero-title" data-i18n="home.hero.title">Discover Your Next Journey</div>
-  <div id="hero-sub" data-i18n="home.hero.copy">Find Flight + Hotel packages, flights, hotels and SKANDI Collection packages</div>
+<section id="hero-wrap" data-media-slot="home-hero">
+  <header class="home-hero-copy">
+    <h1 id="hero-title" data-content-id="home-hero-title" data-i18n="home.plan.hero">Signature Travels, Unforgettable Moments.</h1>
+    <p id="hero-sub" data-content-id="home-hero-intro" data-i18n="home.plan.intro">Flights, stays and Scandinavian-style holidays, planned around you.</p>
+  </header>
 
   <div id="search-tabs">
-    <div id="tab-header" role="tablist">
+    <div id="tab-header" role="tablist" aria-label="Search by trip type" data-i18n-aria-label="home.plan.searchType">
       <button class="tab-btn active" data-tab="holidays" data-i18n="home.tabs.holidays">Flight + Hotel</button>
       <button class="tab-btn" data-tab="flights" data-i18n="home.tabs.flights">Flights</button>
       <button class="tab-btn" data-tab="hotels" data-i18n="home.tabs.hotels">Hotels</button>
-      <button class="tab-btn" data-tab="signature" data-i18n="home.tabs.signature">SKANDI Collection</button>
+      <button class="tab-btn" data-tab="signature" data-i18n="home.plan.signaturePackages" hidden>Signature packages</button>
     </div>
 
     <div id="tab-content">
@@ -70,7 +71,7 @@
 
         <div id="ageFields" data-home-ages></div>
 
-        <div class="field-row">
+        <div class="field-row flight-options" data-home-traveler-options>
           <div class="field">
             <label for="travelClass" data-i18n="home.fields.class">Class</label>
             <select id="travelClass">
@@ -80,6 +81,7 @@
               <option value="FIRST">First</option>
             </select>
           </div>
+          <label class="home-direct-option"><input id="flight-direct" type="checkbox"> <span data-i18n="home.plan.direct">Nonstop only</span></label>
         </div>
 
         <button class="search-submit" data-search="flights" data-i18n="home.search.flights">Search Flights</button>
@@ -90,7 +92,7 @@
         <div class="field-row">
           <div class="field airport-field">
             <label for="hol-from-search" data-i18n="home.fields.departureAirport">Departure Airport</label>
-            <input type="text" id="hol-from-search" autocomplete="off" placeholder="City, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="hol-from-search" data-i18n-placeholder="home.placeholders.airport" autocomplete="off" placeholder="City, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="hol-from-iata">
             <div class="airport-suggestions" id="hol-from-suggestions" role="listbox"></div>
           </div>
@@ -99,7 +101,7 @@
 </button>
           <div class="field airport-field">
             <label for="hol-destination-search" data-i18n="home.fields.destination">Destination</label>
-            <input type="text" id="hol-destination-search" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="hol-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="hol-destination">
             <input type="hidden" id="hol-destination-iata">
             <input type="hidden" id="hol-destination-type">
@@ -121,6 +123,10 @@
           <div class="field"><label data-i18n="home.fields.infants">Infants</label><div class="counter"><button type="button" data-counter="infants" data-step="-1">−</button><span id="holInfantsCount">0</span><button type="button" data-counter="infants" data-step="1">+</button></div><small data-i18n="home.age.infants">Under 2 years</small></div>
         </div>
         <div id="holAgeFields" data-home-ages></div>
+        <div class="home-budget-note" id="package-budget-note" hidden>
+          <span id="package-budget-value"></span>
+          <button class="home-text-button" type="button" id="package-budget-clear" data-i18n="home.date.clear">Clear</button>
+        </div>
         <button class="search-submit" data-search="holidays" data-i18n="home.search.holidays">Search Flight + Hotel</button>
       </div>
 
@@ -129,13 +135,12 @@
         <div class="field-row">
           <div class="field airport-field">
             <label for="hotel-destination-search" data-i18n="home.fields.destination">Destination</label>
-            <input type="text" id="hotel-destination-search" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="hotel-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="hotel-destination">
             <input type="hidden" id="hotel-destination-iata">
             <input type="hidden" id="hotel-destination-type">
             <div class="airport-suggestions" id="hotel-destination-suggestions" role="listbox"></div>
           </div>
-          <div class="field"><label for="hotel-rooms" data-i18n="home.fields.rooms">Rooms</label><select id="hotel-rooms"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
         </div>
         <div class="field-row">
           <div class="field date-field">
@@ -152,6 +157,9 @@
           <div class="field"><label data-i18n="home.fields.infants">Infants</label><div class="counter"><button type="button" data-counter="infants" data-step="-1">−</button><span>0</span><button type="button" data-counter="infants" data-step="1">+</button></div><small data-i18n="home.age.infants">Under 2 years</small></div>
         </div>
         <div id="hotelAgeFields" data-home-ages></div>
+        <div class="field-row" data-home-traveler-options>
+          <div class="field"><label for="hotel-rooms" data-i18n="home.fields.rooms">Rooms</label><select id="hotel-rooms"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+        </div>
         <button class="search-submit" data-search="hotels" data-i18n="home.search.hotels">Search Hotels</button>
       </div>
 
@@ -159,8 +167,8 @@
       <div class="tab-panel" id="panel-signature">
         <div class="field-row">
           <div class="field airport-field">
-            <label for="sig-destination-search" data-i18n="home.fields.signatureDestination">Signature Destination</label>
-            <input type="text" id="sig-destination-search" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <label for="sig-destination-search" data-i18n="home.fields.destination">Destination</label>
+            <input type="text" id="sig-destination-search" data-i18n-placeholder="home.plan.destinationPlaceholder" autocomplete="off" placeholder="City, destination, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="sig-destination">
             <input type="hidden" id="sig-destination-iata">
             <input type="hidden" id="sig-destination-type">
@@ -168,7 +176,7 @@
           </div>
           <div class="field airport-field">
             <label for="sig-from-search" data-i18n="home.fields.departureAirport">Departure Airport</label>
-            <input type="text" id="sig-from-search" autocomplete="off" placeholder="City, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
+            <input type="text" id="sig-from-search" data-i18n-placeholder="home.placeholders.airport" autocomplete="off" placeholder="City, airport, IATA or ICAO" aria-autocomplete="list" aria-expanded="false">
             <input type="hidden" id="sig-from-iata">
             <div class="airport-suggestions" id="sig-from-suggestions" role="listbox"></div>
           </div>
@@ -188,7 +196,7 @@
           <div class="field"><label data-i18n="home.fields.infants">Infants</label><div class="counter"><button type="button" data-counter="infants" data-step="-1">−</button><span>0</span><button type="button" data-counter="infants" data-step="1">+</button></div><small data-i18n="home.age.infants">Under 2 years</small></div>
         </div>
         <div id="sigAgeFields" data-home-ages></div>
-        <button class="search-submit" data-search="signature" data-i18n="home.search.signature">Search Signature Collection</button>
+        <button class="search-submit" data-search="signature" data-i18n="home.plan.searchSignature">Search Signature packages</button>
       </div>
     </div>
   </div>
@@ -205,10 +213,6 @@
   </div>
   <div id="flight-status" role="status" aria-live="polite"></div>
   <div id="flight-results-list"></div>
-</section>
-
-<section id="trust-strip">
-  <div class="trust-grid" id="trustGrid"></div>
 </section>
 
 <div id="datePickerOverlay" class="date-overlay" role="region" aria-labelledby="dateRangeHeading" hidden>
@@ -241,137 +245,88 @@
   </div>
 </div>
 
-<section class="content-section mixed-section" id="mixed-section" hidden>
-  <div class="mixed-section-head">
-    <div>
-      <div class="section-title" data-i18n="home.sections.discovery.title">Explore SKANDI</div>
-      <div class="section-subtitle" data-i18n="home.sections.discovery.copy">A changing mix of destinations, hotels, current offers and travel stories selected for the homepage.</div>
+<section class="content-section home-planning" id="home-planning" aria-labelledby="planning-title" hidden>
+  <div>
+    <h2 id="planning-title" data-i18n="home.plan.continue">Continue planning</h2>
+    <p id="planning-summary"></p>
+  </div>
+  <div class="home-planning-actions">
+    <button type="button" class="home-solid-button" id="planning-action"></button>
+    <button type="button" class="home-text-button" id="planning-edit" data-i18n="home.results.edit" hidden>Edit search</button>
+    <button type="button" class="home-text-button" data-route-key="myTrips" id="planning-trips" data-i18n="home.plan.trips" hidden>My Trips</button>
+  </div>
+</section>
+
+<section class="content-section mixed-section home-discovery" id="mixed-section" aria-labelledby="discovery-title" hidden>
+  <div class="home-section-head">
+    <h2 class="section-title" id="discovery-title" data-i18n="home.plan.discovery">Trips worth considering</h2>
+    <button type="button" class="home-text-button" data-route-key="destinations" data-i18n="home.plan.map">Explore the map</button>
+  </div>
+  <div class="home-facets" role="group" aria-label="Filter trip ideas" data-i18n-aria-label="home.plan.filters">
+    <button type="button" data-home-facet="all" aria-pressed="true" data-i18n="home.plan.picks">Top picks</button>
+    <button type="button" data-home-facet="offer" aria-pressed="false" data-i18n="home.plan.offers">Offers</button>
+    <button type="button" data-home-facet="destination" aria-pressed="false" data-i18n="home.plan.destinations">Destinations</button>
+    <button type="button" data-home-facet="hotel" aria-pressed="false" data-i18n="home.tabs.hotels">Hotels</button>
+  </div>
+  <div class="home-discovery-grid" id="mixed-feed"></div>
+  <p id="home-discovery-status" class="home-visually-hidden" aria-live="polite"></p>
+</section>
+
+<section class="content-section home-explore" id="home-explore" aria-labelledby="explore-title">
+  <div>
+    <h2 id="explore-title" data-i18n="home.plan.explore">Explore anywhere</h2>
+    <p data-i18n="home.plan.exploreCopy">Choose when and how you’d like to travel. Pick an idea, then check prices for your dates and travelers.</p>
+  </div>
+  <form class="home-explore-form" id="explore-form">
+    <div class="field airport-field">
+      <label for="explore-origin" data-i18n="home.fields.departureAirport">Departure airport</label>
+      <input id="explore-origin" autocomplete="off" data-i18n-placeholder="home.placeholders.airport" placeholder="City, airport, IATA or ICAO" required>
+      <input type="hidden" id="explore-origin-iata">
+      <div class="airport-suggestions" id="explore-origin-suggestions" role="listbox"></div>
     </div>
-  </div>
-  <div id="mixed-feed" class="mixed-feed"></div>
-</section>
-
-<section class="content-section" id="offers-section" hidden>
-  <div class="inner">
-    <div class="section-title" data-i18n="home.sections.offers.title">Top Offers</div>
-    <div class="section-subtitle" data-i18n="home.sections.offers.copy">Only public offer cards marked PUBLISHED are shown here.</div>
-    <div id="offer-grid" class="offer-rail"></div>
-  </div>
-</section>
-
-<section class="content-section trip-types-section" id="trip-types-section">
-  <div class="section-title" data-i18n="home.sections.tripTypes.title">What kind of trip are you looking for?</div>
-  <div class="section-subtitle" data-i18n="home.sections.tripTypes.copy">Fast entry points for last minute, family, city, beach and Signature Collection trips.</div>
-  <div id="trip-type-grid" class="trip-type-grid"></div>
-</section>
-
-<section class="content-section long-band" id="budget-section">
-  <div class="section-title">Find the right trip for your spend</div>
-  <div class="section-subtitle">A quicker way into the catalogue. Start with the kind of value you want, then refine dates, hotel and destination.</div>
-  <div class="budget-strip" id="budget-strip"></div>
-</section>
-
-<section class="content-section club-story-section">
-  <div class="newsletter-cta club-story">
-    <div>
-      <span class="club-story-kicker">SKANDI CLUB</span>
-      <strong data-i18n="home.clubCta.title">Join SKANDI Club for offers and trip inspiration</strong>
-      <p data-i18n="home.clubCta.copy">Get member offers, destination cards and reminders connected to your trips.</p>
+    <div class="field">
+      <label for="explore-month" data-i18n="home.plan.month">Travel month</label>
+      <select id="explore-month" required></select>
     </div>
-    <button type="button" data-route-key="club" data-i18n="home.clubCta.button">Join SKANDI Club</button>
-  </div>
-</section>
-
-<section class="content-section signature-push" id="signature-push">
-  <div class="signature-panel">
-    <div class="signature-visual" id="signature-visual"></div>
-    <div class="signature-copy">
-      <div class="signature-kicker">SKANDI SIGNATURE COLLECTION</div>
-      <h2>More than a hotel stay.</h2>
-      <p>Curated stays, destination support and a more considered way to travel. Use Signature when the hotel, arrival and local experience should feel like one trip.</p>
-      <div class="signature-points">
-        <span>Hand-picked hotels and areas</span>
-        <span>SKANDI transfer and local support options</span>
-        <span>Built for complete flight + stay journeys</span>
-      </div>
-      <button class="signature-btn" type="button" data-route-key="skandiCollection">Explore Signature Collection</button>
+    <div class="field">
+      <label for="explore-length" data-i18n="home.plan.duration">Nights</label>
+      <select id="explore-length"><option>3</option><option>5</option><option selected>7</option><option>10</option><option>14</option></select>
     </div>
-  </div>
-</section>
-
-<section class="content-section" id="destinations-section" hidden>
-  <div class="section-title" id="destination-section-title" data-i18n="home.sections.destinations.title">Popular Destinations</div>
-  <div class="section-subtitle" data-i18n="home.sections.destinations.copy">Destination cards are loaded from SKANDI travel content and can show live starting prices when available.</div>
-  <div id="destinations-grid" class="destination-editorial-grid"></div>
-</section>
-
-<section class="content-section route-ideas" id="route-ideas-section" hidden>
-  <div class="section-title">Ideas to start with</div>
-  <div class="section-subtitle">A few homepage destinations presented as complete trip ideas, not just destination thumbnails.</div>
-  <div class="route-grid" id="route-ideas-grid"></div>
-</section>
-
-<section class="content-section" id="hotels-section" hidden>
-  <div class="section-title" data-i18n="home.sections.hotels.title">Hotels worth checking out</div>
-  <div class="section-subtitle" data-i18n="home.sections.hotels.copy">Exact SKANDI hotels selected for the homepage, priced live through Duffel Stays.</div>
-  <div id="hotel-grid" class="hotel-grid"></div>
-</section>
-
-<section class="content-section recently-section" id="recently-section" hidden>
-  <div class="section-title">Hotels you have looked at</div>
-  <div class="section-subtitle">Pick up where you left off.</div>
-  <div class="recently-rail" id="recently-rail"></div>
-</section>
-
-
-<section class="service-shop" id="service-shop-section">
-  <div class="content-section">
-    <div class="section-title">Build more into the trip</div>
-    <div class="section-subtitle">The holiday is more than the flight and hotel. Add the parts that make arrival and the days in between easier.</div>
-    <div class="service-shop-grid" id="service-shop-grid"></div>
-  </div>
-</section>
-
-<section class="content-section" id="inspiration-section" hidden>
-  <div class="inner">
-    <div class="section-title" data-i18n="home.sections.inspiration.title">Travel inspiration</div>
-    <div class="section-subtitle" data-i18n="home.sections.inspiration.copy">Stories, guides and ideas selected by SKANDI. Only published inspiration appears here.</div>
-    <div id="inspiration-grid" class="inspiration-grid"></div>
-  </div>
-</section>
-
-<section class="content-section seasonal-band" id="seasonal-section">
-  <div class="section-title">Where do you want the year to take you?</div>
-  <div class="section-subtitle">Seasonal prompts that change the pace of the homepage and lead into the same SKANDI destination catalogue.</div>
-  <div class="seasonal-rail" id="seasonal-rail"></div>
-</section>
-
-
-<section class="guide-push" id="guide-push-section">
-  <div class="content-section">
-    <div class="section-title">Travel smarter with SKANDI</div>
-    <div class="section-subtitle">Useful content belongs on Home too: destination guides, airport information and practical travel support.</div>
-    <div class="guide-grid" id="guide-grid"></div>
-  </div>
-</section>
-
-
-<section class="content-section brand-story" id="brand-story-section">
-  <div class="brand-story-panel">
-    <div class="brand-story-copy">
-      <small>VOY / SKANDI STORIES</small>
-      <h2>Travel is also what you discover before you book.</h2>
-      <p>Use Home to push stories, guides, destinations, hotels and SKANDI ideas — not only products with a price tag.</p>
-      <button type="button" data-route-key="voy">Explore travel stories</button>
+    <div class="field">
+      <label for="explore-budget" id="explore-budget-label">Max trip total</label>
+      <input type="number" id="explore-budget" min="1" max="10000000" step="any" inputmode="decimal" data-i18n-placeholder="home.plan.optional" placeholder="Optional">
     </div>
-    <div class="brand-story-visual"></div>
+    <button class="home-solid-button" type="submit" data-i18n="home.plan.findIdeas">Find ideas</button>
+  </form>
+  <div id="explore-results" aria-live="polite"></div>
+</section>
+
+<section class="content-section home-services" aria-labelledby="services-title">
+  <h2 class="section-title" id="services-title" data-i18n="home.plan.services">The SKANDI way to travel</h2>
+  <div class="home-service-grid">
+    <article><h3>SKANDI Select</h3><p data-content-id="home-select-copy" data-i18n="home.plan.selectCopy">Independent travel with access to additional SKANDI services online.</p></article>
+    <article><h3>SKANDI Signature</h3><p data-content-id="home-signature-copy" data-i18n="home.plan.signatureCopy">On eligible packages, we meet you at the airport, take you to your hotel and provide a destination guide.</p></article>
+    <article><h3>SKANDI Excelsior</h3><p data-content-id="home-excelsior-copy" data-i18n="home.plan.excelsiorCopy">Selected five-star stays with a personal coordinator and private arrival transfers. Airport benefits vary by destination.</p></article>
+  </div>
+  <div class="home-editorial-grid">
+    <article>
+      <h3>SKANDI Collection</h3>
+      <p data-content-id="home-collection-copy" data-i18n="home.plan.collectionCopy">Handpicked hotels for travelers who choose the stay first.</p>
+      <button type="button" class="home-text-button" id="home-collection-action" data-i18n="home.plan.collectionAction">Explore the Collection</button>
+    </article>
+    <article>
+      <h3>VOY</h3>
+      <p id="home-voy-copy" data-i18n="home.plan.voyCopy">Destination stories from the SKANDI travel magazine.</p>
+      <button type="button" class="home-text-button" id="home-voy-action" data-i18n="home.plan.voyAction">Read VOY</button>
+    </article>
   </div>
 </section>
 
-<section id="why">
-  <div id="why-title" data-i18n="home.sections.why">Why Travel With SKANDI</div>
-  <div id="why-grid"></div>
-</section>
-
+<nav class="content-section home-quick-links" aria-label="Travel resources" data-i18n-aria-label="home.plan.resources">
+  <button type="button" class="home-text-button" data-route-key="travelInfo" data-i18n="nav.info">Travel Info</button>
+  <button type="button" class="home-text-button" data-route-key="activities" data-i18n="home.plan.tours">Tours &amp; activities</button>
+  <button type="button" class="home-text-button" data-route-key="carRental" data-i18n="home.plan.cars">Car rental</button>
+  <button type="button" class="home-text-button" data-route-key="club">SKANDI Club</button>
+</nav>
 
 <div id="skandiToast" class="skandi-toast" role="status" aria-live="polite"></div>
