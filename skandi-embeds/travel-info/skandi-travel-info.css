@@ -3576,9 +3576,70 @@ body{background:#fff;color:var(--hybrid-text)}
   color:var(--ti-navy);
 }
 .ti-swedavia-grid .ti-swedavia-unavailable{font-weight:650}
-.ti-swedavia-group{border-top:1px solid #dbe6ed}
-.ti-swedavia-group summary{padding:10px 0;font-size:.94rem}
-.ti-swedavia-group .ti-swedavia-grid,.ti-swedavia-group .ti-swedavia-message{margin-bottom:12px}
+.ti-swedavia-directory h2{font-size:clamp(1.16rem,2vw,1.5rem)}
+.ti-swedavia-directory .ti-swedavia-message{margin-block:12px 8px}
+.ti-swedavia-period{margin:0 0 12px;color:#465c72;font-size:.9rem;line-height:1.5}
+.ti-swedavia-categories{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:14px 0;
+  padding:4px;
+  border:1px solid #dbe6ed;
+  border-radius:9px;
+  background:#fff;
+}
+.ti-swedavia-categories button{
+  flex:1 1 auto;
+  min-height:44px;
+  padding:7px 10px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:var(--ti-navy);
+  font:inherit;
+  font-size:.92rem;
+  font-weight:660;
+  cursor:pointer;
+}
+.ti-swedavia-categories button:hover{background:#edf4f8}
+.ti-swedavia-categories button[aria-pressed="true"]{background:var(--ti-navy);color:#fff}
+.ti-swedavia-filters{
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+[data-ti-swedavia="routes"] .ti-swedavia-filters{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}
+.ti-swedavia-filters>div{display:grid;gap:5px;min-width:0}
+.ti-swedavia-filters label{
+  min-width:0;
+  font-size:.9rem;
+  font-weight:650;
+  color:var(--ti-navy);
+}
+.ti-swedavia-filters input,.ti-swedavia-filters select{
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:7px 9px;
+  border:1px solid #b8cad8;
+  border-radius:6px;
+  background:#fff;
+  color:#183550;
+  font:inherit;
+  font-weight:400;
+}
+.ti-swedavia-venue-details{border-top:1px solid #e3ebf1;padding-top:4px}
+.ti-swedavia-venue-details summary{min-height:32px;cursor:pointer;color:var(--ti-navy);font-size:.9rem;font-weight:620}
+.ti-swedavia-venue-details p{padding-top:3px}
+[data-ti-swedavia="routes"] .ti-swedavia-grid h3 span{color:#465c72;font-weight:560;padding-inline-start:5px}
+.ti-swedavia-more{margin-top:12px}
+.ti-airport-guide .ti-fids-check-in{display:block;margin-top:5px;color:#b6c6d0;font-size:.83rem;line-height:1.3}
+@media(max-width:660px){
+  .ti-swedavia-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  [data-ti-swedavia="routes"] .ti-swedavia-filters{grid-template-columns:minmax(0,1fr)}
+  .ti-swedavia-filters>div:first-child{grid-column:1/-1}
+}
 .ti-swedavia-footer{
   display:flex;
   align-items:center;
@@ -3587,7 +3648,7 @@ body{background:#fff;color:var(--hybrid-text)}
   margin-top:12px;
   color:#465c72;
 }
-.ti-swedavia-footer button,.ti-swedavia-book{
+.ti-swedavia-footer button,.ti-swedavia-book,.ti-swedavia-more{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -3604,7 +3665,7 @@ body{background:#fff;color:var(--hybrid-text)}
   text-decoration:none;
   cursor:pointer;
 }
-.ti-swedavia-footer button:hover,.ti-swedavia-book:hover{background:#edf4f8}
+.ti-swedavia-footer button:hover,.ti-swedavia-book:hover,.ti-swedavia-more:hover{background:#edf4f8}
 .ti-swedavia-footer button[aria-disabled="true"]{opacity:.65;cursor:wait}
 .ti-swedavia-book{margin-top:12px}
 .ti-swedavia [hidden]{display:none}

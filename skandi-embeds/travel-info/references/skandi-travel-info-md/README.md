@@ -12,7 +12,7 @@
 - CURRENT STATUS: Directory and passenger guide update in the active Travel Info source. Wix publication and live verification follow release.
 - ACTIVE EMBED SOURCE: `skandi-embeds/travel-info/` triplet and script companions. The HTML snapshot below is historical.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`, `/src/backend/SKANDI_CORE/flightStatus.web.js` for airport context and FIDS, and `/src/backend/SKANDI_CORE/swedaviaAirports.web.js` for Swedavia feeds.
-- CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`, `/src/backend/SKANDI_CORE/flightStatus.js` for AirLabs airport-board data and airport context projection, and `/src/backend/SKANDI_CORE/swedaviaAirports.js` for read-only AirportInfo v2 and WaitTime v2 data.
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`, `/src/backend/SKANDI_CORE/flightStatus.js` for provider selection and airport context, and `/src/backend/SKANDI_CORE/swedaviaAirports.js` for read-only AirportInfo, WaitTime and FlightInfo v2 data.
 - CANONICAL INVENTORY PROJECTION: `/src/backend/SKANDI_CORE/publicContentInventoryProjection.js` — overlays public airline/airport output from canonical `inventory_details` / `media_assets`; no second content store.
 - SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
 - DATA AUTHORITY: Duffel provider facts -> Inventory Control / Supabase canonical record -> downstream page/core consumers. No embed is permitted to maintain an independent editable copy of shared airline, airport, hotel or destination reference facts.
@@ -26,6 +26,8 @@
 - LAST VERIFIED: 2026-10-19 — `skanditravels/SKANDI-TRAVELS` branch `main`, HTML_REF blob `b8e60283d3289e82f5dade68ba08296cfbce761e`, `src/pages/Travel Info.m43d6.js`, `src/backend/SKANDI_CORE/publicContent.web.js`, `src/backend/SKANDI_CORE/publicContent.js`, and canonical aircraft scene/view/hotspot select schema inspected. Direct supplied HTML matches repository HTML checksum; modified React module passed Node v22 syntax check and added CSS parsed without errors. Live Wix, Supabase persistence and actual panorama assets not tested.
 
 ## CHANGE LOG
+
+- 2026-11-28 — Swedavia guides gain searchable venue and direct-flight directories, terminal and security-area filters, and a separate Direct flights tab. The airport boards share Swedavia FlightInfo v2 through the existing Flight Status backend. See the [active page notes](../../README.md) for installation and live validation.
 
 - 2026-11-28 — The active airport guides read Swedavia's directory, parking, scheduled destinations and checkpoint estimates through the existing Wix component. The provider details augment published Inventory Control guides. The HTML snapshot below predates this addition. See the [active page notes](../../README.md) for the message contract, credentials and release checks.
 

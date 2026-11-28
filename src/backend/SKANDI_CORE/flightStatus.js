@@ -1,7 +1,6 @@
 // /src/backend/SKANDI_CORE/flightStatus.js
-// SKANDI Flight Status — V12 AirLabs v9 provider integration.
-// API request parameters are endpoint-specific and limited to AirLabs-documented
-// fields. Public airport context remains on canonical Supabase resources.
+// SKANDI Flight Status — Swedavia airport boards and AirLabs worldwide coverage.
+// Public airport context remains on canonical Supabase resources.
 
 import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
@@ -10,6 +9,7 @@ import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import { text, upper, lower, record, safeNumber } from "backend/SKANDI_CORE/platformValidation";
 import { getPublishedAirlineBrandsCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
+import { getSwedaviaFlightBoardCore, swedaviaAirportIata, swedaviaLocalDate } from "backend/SKANDI_CORE/swedaviaAirports";
 import { inventoryCardImage, referenceInventoryBrand } from "public/inventoryMedia";
 
 const FLIGHT_STATUS_CORE_VERSION = "V12-AIRLABS";
@@ -237,6 +237,13 @@ function validateSearch(payload = {}) {
     if (!/^[A-Z]{3,4}$/.test(value)) throw new SkandiError("FLIGHT_STATUS_AIRPORT_INVALID", "Invalid airport code.", { publicMessage: "Enter a three-letter IATA or four-letter ICAO airport code." });
   }
   if (mode === "flight" && !/^(?:[A-Z0-9]{2}|[A-Z]{3})\d{1,4}[A-Z]?$/.test(out.flightNumber)) throw new SkandiError("FLIGHT_STATUS_FLIGHT_INVALID", "Invalid flight number.", { publicMessage: "Enter an airline code and flight number, for example SK904." });
+  if (mode === "airport") {
+    const swedaviaIata = swedaviaAirportIata(out.airport);
+    if (swedaviaIata) {
+      out.airport = swedaviaIata;
+      out.date = swedaviaLocalDate();
+    }
+  }
   return out;
 }
 function flightIdentifierParams(value) {
@@ -299,6 +306,22 @@ const BOARDING_RULES = Object.freeze({
   DEFAULT: { boarding_window: 40, final_call_window: 15, name: "" }
 });
 async function loadFlightSearch(p) {
+  const swedaviaBoard = p.mode === "airport" && Boolean(swedaviaAirportIata(p.airport));
+  if (swedaviaBoard) {
+    const board = await getSwedaviaFlightBoardCore({ iata:p.airport, boardType:p.boardType, date:p.date });
+    if (board.status === "ready") return {
+      ok: true,
+      items: await applyAirlineBranding(board.items),
+      meta: {
+        mode: p.mode, date:p.date, boardType:p.boardType, airport:p.airport,
+        provider: "swedavia", providerApi: "v2", timezone: "Europe/Stockholm",
+        searchedAt: new Date().toISOString(), providerUpdatedAt: board.updatedAt, refreshAfterMs: FLIGHT_TTL_MS,
+        partial: board.partial,
+        note: board.partial ? "Some overnight flights may be missing from the Swedavia board." : "",
+        message: "Source: Swedavia. Times are local to the airport."
+      }
+    };
+  }
   const filters = p.mode === "flight" ? flightIdentifierParams(p.flightNumber)
     : p.mode === "route" ? { ...airportFilter("dep", p.from), ...airportFilter("arr", p.to) }
       : airportFilter(p.boardType === "arrivals" ? "arr" : "dep", p.airport);
@@ -321,6 +344,7 @@ async function loadFlightSearch(p) {
     } else rows.push(signal);
   }
   const warnings = [];
+  if (swedaviaBoard) warnings.push("Swedavia FlightInfo is unavailable. Showing AirLabs flight information.");
   if (responses[0].status === "rejected") warnings.push("Live tracking is unavailable; showing timetable data.");
   if (responses[1].status === "rejected") warnings.push("Timetable information is unavailable; showing live tracking only. Times and gates may be missing.");
   if (responses[1].status === "fulfilled" && responses[1].value?.hasMore) warnings.push("This board contains the first 1,000 schedule entries. Narrow the route to see more.");
@@ -343,7 +367,8 @@ async function loadFlightSearch(p) {
 }
 export async function searchFlightStatusCore(payload = {}) {
   const p = validateSearch(payload);
-  const key = JSON.stringify({ ...p, date: "" });
+  const airportLocalDate = p.mode === "airport" && swedaviaAirportIata(p.airport) ? p.date : "";
+  const key = JSON.stringify({ ...p, date: airportLocalDate });
   const cached = flightCache.get(key);
   if (cached && cached.expiresAt > Date.now()) return cached.value;
   if (flightRequests.has(key)) return flightRequests.get(key);

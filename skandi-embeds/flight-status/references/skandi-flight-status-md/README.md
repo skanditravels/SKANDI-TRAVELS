@@ -9,8 +9,8 @@
 - Customer/internal route: `/travel-info/flight-status`
 - Installed HTML element: `#flightStatusEmbed`
 - Embed replacement: `/embed/Flight-Status.html` — paste the entire file into the existing `#flightStatusEmbed`. Its complete source is also preserved below.
-- Canonical backend chain: `backend/SKANDI_CORE/flightStatus.web.js → flightStatus.js`.
-- Authority: Public read only; `AIRLABS_API_KEY` stays in Wix Secrets Manager.
+- Canonical backend chain: `backend/SKANDI_CORE/flightStatus.web.js → flightStatus.js` with `swedaviaAirports.js` for the Swedavia board.
+- Authority: Public read only. `AIRLABS_API_KEY` and `SWEDAVIA_FLIGHT_INFO_SUBSCRIPTION_KEY` are server-side Wix Secrets Manager entries.
 - Status: V12 airport-board repair prepared; STATICALLY VERIFIED / REQUIRES LIVE TEST after Wix publication.
 - Last source verification: 2026-10-09 against `skanditravels/SKANDI-TRAVELS`, `main`, commit `ee2b03edf398f1c6270ad1586e56bc24e86f0d73`.
 - Intended source only: this package does not publish Wix, mutate GitHub or change Supabase.
@@ -25,6 +25,8 @@ The user-edited current `flightStatus.js` at repository head was not syntactical
 STATICALLY VERIFIED: JavaScript syntax, core public export names, embed message contracts and HTML structure. REQUIRES LIVE TEST: Wix rebuild/publication, `AIRLABS_API_KEY`, live AirLabs responses and live Supabase airport data.
 
 ## Historical INFO / LOG (preserved)
+
+- 2026-11-28 — The active Flight Status airport board and Travel Info board use Swedavia FlightInfo v2 for its airports, with a labeled AirLabs fallback. The historical source below predates this provider integration. See the [active page notes](../../README.md).
 
 - 2026-11-27 — The active source displays the carrier logo returned by the existing flight-status controller, including operating-carrier logos when the board switches codeshares. See the [active page notes](../../README.md).
 

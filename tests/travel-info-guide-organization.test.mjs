@@ -173,25 +173,54 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   assert.match(security.textContent,/Väntetider i säkerhetskontrollen/);
   assert.equal(queries().length,1);
   get('[data-airport-tab="services"]').click();
-  const dining=await reveal('services');
+  const dining=get('[data-ti-swedavia="services"]');
+  assert.equal(queries().at(-1).payload.scope,'services');
   assert.equal(queries().at(-1).payload.language,'sv');
+  const venues=[{name:'Terminal café',terminal:'Terminal 5',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>'},
+    ...Array.from({length:13},(_,index)=>({name:'Bistro '+(index+1),terminal:'Terminal 2',beforeSecurity:index%2===0}))];
   reply({
     providerLanguage:'en',
     groups:{
-      restaurants:{status:'ready',items:[{name:'Terminal café',beforeSecurity:false,openingHours:'06:00–21:00',description:'<script>unsafe</script>'}]},
+      restaurants:{status:'ready',items:venues},
       shops:{status:'unavailable'},
-      services:{status:'ready',items:[]}
+      services:{status:'ready',items:[{name:'Information desk',terminal:'Terminal 5'}]}
     }
   });
-  const restaurant=dining.querySelector('[data-ti-swedavia-group="restaurants"]');
-  assert.match(restaurant.textContent,/Terminal café.*Efter säkerhetskontrollen.*Öppettider.*06:00–21:00/s);
-  assert.equal(restaurant.querySelector('h3').getAttribute('lang'),'en');
-  assert.equal(restaurant.querySelector('script'),null);
-  assert.match(dining.querySelector('[data-ti-swedavia-group="shops"]').textContent,/tillfälligt otillgänglig/);
+  const directory=scope=>get('[data-ti-swedavia="'+scope+'"]');
+  function filter(scope,key,value){
+    const field=directory(scope).querySelector('[data-ti-swedavia-filter="'+key+'"]');
+    field.value=value;
+    field.dispatchEvent(new w.Event(key==='query'?'input':'change',{bubbles:true}));
+  }
+  assert.equal(dining.querySelectorAll('li').length,12);
+  dining.querySelector('[data-ti-swedavia-more]').click();
+  assert.equal(dining.querySelectorAll('li').length,14);
+  const terminal=dining.querySelector('[data-ti-swedavia-filter="terminal"]');
+  assert.deepEqual(Array.from(terminal.options,option=>option.value),['','Terminal 2','Terminal 5']);
+  filter('services','terminal','Terminal 5');
+  filter('services','query','cafe');
+  assert.equal(dining.querySelectorAll('li').length,1);
+  assert.match(dining.textContent,/Terminal café.*Efter säkerhetskontrollen.*Öppettider.*06:00–21:00/s);
+  assert.equal(dining.querySelector('li h3').getAttribute('lang'),'en');
+  assert.equal(dining.querySelector('script'),null);
+  filter('services','area','before');
+  assert.match(dining.textContent,/Inga resultat matchar dina filter/);
+  filter('services','area','');
+  filter('services','query','');
+  dining.querySelector('[data-ti-swedavia-category="shops"]').click();
+  assert.match(dining.textContent,/tillfälligt otillgänglig/);
+  dining.querySelector('[data-ti-swedavia-category="services"]').click();
+  assert.match(dining.textContent,/Information desk/);
 
-  const routes=await reveal('routes');
-  reply({items:[{iata:'CPH',airlines:['SAS']}]});
-  assert.match(routes.textContent,/CPH.*SAS/s);
+  assert.equal(queries().filter(m=>m.payload.scope==='routes').length,0);
+  get('[data-airport-tab="routes"]').click();
+  const routes=directory('routes');
+  reply({items:[{iata:'CPH',city:'Köpenhamn',name:'Kastrup',airlines:['SAS']},{iata:'HEL',city:'Helsinki',airlines:['Finnair']}]});
+  filter('routes','airline','SAS');
+  assert.match(routes.textContent,/Köpenhamn.*CPH.*SAS/s);
+  assert.doesNotMatch(routes.querySelector('[data-ti-swedavia-body]').textContent,/Helsinki/);
+  filter('routes','query','kopenhamn cph');
+  assert.equal(routes.querySelectorAll('li').length,1);
   get('[data-airport-tab="transport"]').click();
   const parking=await reveal('parking');
   reply({status:'unavailable'});
@@ -205,5 +234,28 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   open('airports','Luleå Airport');
   assert.equal(get('[data-ti-swedavia="security"]'),null);
   assert.ok(get('[data-ti-swedavia="services"]'));
+  assert.deepEqual(errors,[]);
+});
+
+test('the Travel Info board shows official remarks, codeshares and local update time',t=>{
+  const {get,open,receive,messages,errors}=setup(t,{airports:[{id:'ARN',iata:'ARN',title:'Arlanda'}]});
+  open('airports','Arlanda');
+  get('[data-airport-tab="flight-info"]').click();
+  const request=messages.at(-1);
+  const board={
+    requestId:request.payload.requestId,
+    meta:{provider:'swedavia',providerUpdatedAt:'2026-11-28T12:30:00Z'},
+    items:[{
+      id:'SK903|ARN|EWR',flightIata:'SK903',airlineIata:'SK',airlineName:'SAS',codeshareFlightIatas:['DL1234'],
+      status:'scheduled',fidsRemarks:{en:'Go to gate',sv:'Gå till gate'},checkInDesks:'14–20',
+      departure:{scheduledLocal:'14:53',terminal:'T5',gate:'F62'},arrival:{airport:'Newark',airportSv:'New York Newark',iata:'EWR'}
+    }]
+  };
+  receive('TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT',board);
+  assert.match(get('#tiAirportFlightRows').textContent,/SK 903.*DL 1234.*14:53.*F62.*Go to gate.*14–20/s);
+  assert.match(get('#tiAirportBoardMeta').textContent,/Source: Swedavia.*13:30/s);
+  assert.doesNotMatch(get('#tiAirportFlightRows').textContent,/FINAL CALL|ON TIME/);
+  receive('SKANDI_MASTER_CONFIG',{settings:{language:'SV'}});
+  assert.match(get('#tiAirportFlightRows').textContent,/Gå till gate/);
   assert.deepEqual(errors,[]);
 });
