@@ -34,3 +34,9 @@ The active receivers remain #htmlHome and #bookingFlowEmbed. The existing builde
 Home uses a full-width landscape and a single desktop row for the route, dates, travelers and search action. The calendar expands within the search form and closes an open traveler panel. On narrow screens the form flows into smaller rows and the traveler controls open inline. The editorial trip grid uses the same published inventory, with a full-card action for each trip. Continue planning, Explore Anywhere and the Velo message contracts keep their existing behavior.
 
 The default hero is skandi-embeds/home/assets/skandi-home-aegean.webp, an original generated editorial landscape inspired by the Aegean coast. The image is illustrative. The published home-hero slot in Media Control takes precedence. The existing builder compiles the bundled WebP with the active Home source.
+
+## INFO / LOG — Original homepage design restored
+
+The original Home appearance from ef1cd50 is the visual baseline. The centered headline, existing photograph, Montserrat, SKANDI navy and cyan, rounded booking panel and trust cards are active again. The preceding full-width coastal image and horizontal booking row are superseded. Media Control can still supply the published hero and copy.
+
+The date calendar and open traveler controls remain in the form. Customers apply a range explicitly and can recover a recent search or explore published trips. The search header restores the Collection entry and sends it to the existing Collection page. Published discovery data, pricing, saved searches and the current Home and Booking receivers use their established contracts.

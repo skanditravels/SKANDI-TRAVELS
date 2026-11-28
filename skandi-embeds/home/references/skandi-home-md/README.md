@@ -4,6 +4,8 @@
 
 ## INFO / LOG — 2026-11-09
 
+The [original homepage design restoration](../../README.md#info--log--original-homepage-design-restored) supersedes the full-width coastal treatment. It restores the original photo, colors, typography and booking panel while keeping the applied calendar and booking updates.
+
 The [Home design refresh](../../README.md#info--log--homepage-design-refresh) introduces a full-width hero, a compact responsive search and an editorial grid. The current sources retain the same booking handoff and Media Control slots.
 
 The current [homepage and trip planning implementation](../../README.md#info--log--homepage-and-trip-planning) consolidates discovery, requires an explicit date range and restores recent searches through the Booking handoff. The historical installation and embed source below are retained for provenance.
