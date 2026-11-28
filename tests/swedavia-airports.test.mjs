@@ -299,7 +299,7 @@ test('Travel Info Wix bridge correlates Swedavia replies and keeps provider erro
   const component = { postMessage: value => posts.push(value), onMessage: handler => { onMessage = handler; } };
   const $w = Object.assign(() => component, { onReady: run => run() });
   vm.runInNewContext(withoutImports(pageSource), {
-    $w, setTimeout, clearTimeout, URLSearchParams,
+    $w, setTimeout, clearTimeout, URLSearchParams, wixLocationFrontend:{query:{}},
     SITE_MAP: { travelInfo: '/travel-info' },
     getSwedaviaAirportInfo: async input => {
       calls.push(input);

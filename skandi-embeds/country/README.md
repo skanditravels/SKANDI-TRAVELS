@@ -1,5 +1,10 @@
 # SKANDI INFO / LOG — V12 journey integration
 
+## 2026-11-28 State, region and city detail
+
+The Explore controller resolves the canonical parent chain through `inventory_public_entities_v` and renders the selected place with named breadcrumbs. Older region and destination parameters continue to resolve after reclassification. Detail links skip the map, and the Wix page applies metadata for the selected place.
+
+
 ## 2026-11-27 — Explore by geographic scope
 
 - The existing `/destinations/explore` page and `#exploreEmbed` render the published place selected by `country`, `region`, `destination` and `area`. The path skips levels without a published relationship. The breadcrumbs and hotel links retain the verified scope.

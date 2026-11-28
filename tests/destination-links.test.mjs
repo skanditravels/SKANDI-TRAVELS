@@ -152,3 +152,26 @@ test('geography links narrow descendants through region and area, including exis
  assert.equal(c.resolveGeography({countrySlug:'sweden',regionSlug:'florida'}),undefined);
  assert.equal(c.hotelListPage('united-states','','','EN','florida').previewHotels[0].id,'hotel');
 });
+
+test('Explore resolves optional levels, canonical hotel links and older Florida links',async()=>{
+ const records=[
+  {id:'us',entityType:'COUNTRY',name:'United States'},
+  {id:'fl',entityType:'STATE',name:'Florida',parentEntityId:'us'},
+  {id:'cf',entityType:'REGION',name:'Central Florida',parentEntityId:'fl'},
+  {id:'or',entityType:'CITY',name:'Orlando',parentEntityId:'cf'},
+  {id:'mi',entityType:'CITY',name:'Miami',parentEntityId:'fl'},
+  {id:'dw',entityType:'AREA',name:'Disney World',parentEntityId:'or'},
+  {id:'hotel',entityType:'HOTEL',name:'Disney Hotel',parentEntityId:'dw',details:{destinationId:'or',regionId:'fl'}}
+ ];
+ const context=vm.createContext({...routes,inventoryCardImage,URLSearchParams});
+ vm.runInContext(withoutImports(await source('src/public/destinationContent.js')),context);
+ const content=context.createDestinationContent(()=>records);
+ const old=content.resolveGeography({countrySlug:'united-states',regionSlug:'florida',destinationSlug:'orlando',areaSlug:'disney-world'});
+ assert.equal(old.id,'dw');
+ assert.equal(content.countryPage(records[0],'EN').regions[0].path,'/destinations/explore?country=united-states&state=florida');
+ assert.deepEqual(Array.from(content.countryPage(records[1],'EN').regions,item=>item.name),['Central Florida','Miami']);
+ assert.deepEqual(Array.from(content.breadcrumbsFor(records.at(-1)),item=>item.name),['United States','Florida','Central Florida','Orlando','Disney World']);
+ assert.equal(content.previewHotel(records.at(-1)).path,'/destinations/explore/hotel-list?country=united-states&state=florida&region=central-florida&city=orlando&area=disney-world&hotel=disney-hotel&hotelId=hotel&view=hotel');
+ assert.equal(content.hotelListPage('united-states','','','EN','central-florida','florida','orlando').previewHotels[0].name,'Disney Hotel');
+ assert.equal(content.resolveGeography({stateSlug:'florida',regionSlug:'central-florida',citySlug:'miami'}),undefined);
+});

@@ -5,11 +5,13 @@
 // No webMethod wrappers, no routes, no UI code.
 
 import { randomUUID } from "crypto";
+import { createDestinationContent } from "public/destinationContent";
+import { inventoryGuidePath, inventorySeo } from "public/inventorySeo";
 import { generateText } from "ai";
 import { openai } from "@wix/ai";
 import { inventoryMediaUrl, isSupplierInventoryMedia, referenceInventoryBrand, referenceInventoryMedia } from "public/inventoryMedia";
 import { inventorySearchPriority } from "backend/SKANDI_CORE/inventoryRanking";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { restRequest, rpcRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import {
   listDuffelAirlinesCore,
@@ -31,14 +33,18 @@ import {
 export const INVENTORY_CORE_VERSION = "V12-INVENTORY-2026.10.05";
 
 const MASTER_TYPES = new Set([
-  "COUNTRY","REGION","DESTINATION","AREA","SUPPLIER","HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY",
+  "COUNTRY","STATE","REGION","CITY","DESTINATION","AREA","SUPPLIER","BRAND","AIRLINE_GROUP","HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY",
   "PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"
 ]);
+const GEOGRAPHY_LEVELS = ["COUNTRY","STATE","REGION","DESTINATION","CITY","AREA"];
+const INTERNAL_TYPES = new Set(["SUPPLIER","BRAND","AIRLINE_GROUP"]);
 const REFERENCE_TYPES = new Set(["AIRPORT","AIRLINE"]);
 const SELLABLE_TYPES = new Set(["HOTEL","FLIGHT","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
 const STATUS = new Set(["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"]);
 const CATALOG_TYPES = new Set(["NONE","SKANDI_COLLECTION","SKANDI_PARTNER"]);
 const MEDIA_ROLES = new Set(["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]);
+
+const COMBINED_MEDIA_ROLES = new Set(["COMBINED_LOGO","COMBINED_THUMBNAIL"]);
 
 const AIR_TABLES = Object.freeze({
   flight:{
@@ -545,7 +551,7 @@ async function getIncomingRelations(type,id){
   const relationQuery=reference?{target_record_type:qeq(type),target_record_id:qeq(id)}:{target_entity_id:qeq(id)};
   const tasks=[select("inventory_entity_relations",{select:"*",...relationQuery,active:"eq.true",limit:"3000"})];
   if(!reference){tasks.push(select("inventory_master_entities",{select:"id,public_id,entity_type,code,name,parent_entity_id,supplier_entity_id",parent_entity_id:qeq(id),limit:"3000"}),select("inventory_master_entities",{select:"id,public_id,entity_type,code,name,parent_entity_id,supplier_entity_id",supplier_entity_id:qeq(id),limit:"3000"}));
-    tasks.push(select("inventory_master_entities",{select:"id,public_id,entity_type,code,name",or:`(details->>countryId.eq.${id},details->>regionId.eq.${id},details->>destinationId.eq.${id},details->>areaId.eq.${id})`,limit:"3000"}));}
+    tasks.push(select("inventory_master_entities",{select:"id,public_id,entity_type,code,name",or:`(details->>countryId.eq.${id},details->>stateId.eq.${id},details->>regionId.eq.${id},details->>destinationId.eq.${id},details->>cityId.eq.${id},details->>areaId.eq.${id},details->>brandId.eq.${id})`,limit:"3000"}));}
   const [relations,children=[],supplied=[],geographic=[]]=await Promise.all(tasks);
   return {relations,children,supplied,geographic};
 }
@@ -582,7 +588,8 @@ async function getMasterBundle(id){
     select("inventory_catalog_entries",{select:"*",target_entity_id:qeq(id),limit:"1"}),
     getIncomingRelations(upper(row.entity_type,40),id)
   ]);
-  return{record:normalizeMaster(row),localizedContent:localized,media,relations,incoming,catalog:catalog[0]?normalizeCatalog(catalog[0]):null};
+  const record=await publicationDefaults(normalizeMaster(row),{localizedContent:localized,media});
+  return{record,localizedContent:localized,media,relations,incoming,catalog:catalog[0]?normalizeCatalog(catalog[0]):null};
 }
 async function getReferenceBundle(type,id){
   const isAirline=type==="AIRLINE";
@@ -599,7 +606,7 @@ async function getReferenceBundle(type,id){
   });
   const localizedContent=array(raw.localized_content);
   const media=referenceInventoryMedia(raw);
-  return{record,localizedContent,media,relations,incoming:await getIncomingRelations(type,id),catalog:cat[0]?normalizeCatalog(cat[0]):null};
+  return{record:await publicationDefaults(record,{localizedContent,media}),localizedContent,media,relations,incoming:await getIncomingRelations(type,id),catalog:cat[0]?normalizeCatalog(cat[0]):null};
 }
 
 export async function getInventoryRecordCore(input={}){
@@ -680,7 +687,7 @@ async function canonicalizeMasterRecord(input={}){
     if(!record.code)record.code=d.countryCode;
     if(record.name)d.countryName=record.name;
   }
-  if(type==="DESTINATION")d.level="DESTINATION";
+  if(GEOGRAPHY_LEVELS.includes(type))d.level=type;
 
   // R-003.6 canonical field-path recovery. Older/newer Inventory generations
   // wrote a few product attributes to competing paths. Keep one write contract
@@ -718,8 +725,13 @@ async function canonicalizeMasterRecord(input={}){
     delete d.maximumQuantity;
   }
 
-  if(["AREA","DESTINATION","REGION"].includes(type) && record.parentEntityId){
-    const parent=await resolveCanonicalReference(record.parentEntityId,["COUNTRY","REGION","DESTINATION"]);
+  if(GEOGRAPHY_LEVELS.indexOf(type)>0 && record.parentEntityId){
+    const parent=await resolveCanonicalReference(record.parentEntityId,GEOGRAPHY_LEVELS);
+    if(!parent)throw new Error("Choose an existing parent place.");
+    if(GEOGRAPHY_LEVELS.indexOf(parent.entityType)>=GEOGRAPHY_LEVELS.indexOf(type)){
+      const previous=record.id?await resolveCanonicalReference(record.id,[type]):null;
+      if(previous?.parentEntityId!==parent.id)throw new Error("Choose a parent higher in the geography hierarchy.");
+    }
     if(parent){
       record.parentEntityId=parent.id;
       const pd=object(parent.details);
@@ -740,16 +752,17 @@ async function canonicalizeMasterRecord(input={}){
       const supplier=await resolveCanonicalReference(record.supplierEntityId,["SUPPLIER"]);
       if(supplier)record.supplierEntityId=supplier.id;
     }
-    const area=await resolveCanonicalReference(d.areaId,["AREA"]);
-    const destination=await resolveCanonicalReference(d.destinationId,["DESTINATION"]);
+    const parent=await resolveCanonicalReference(record.parentEntityId,GEOGRAPHY_LEVELS);
+    const area=parent?null:await resolveCanonicalReference(d.areaId,["AREA"]);
+    const destination=parent?null:await resolveCanonicalReference(d.cityId||d.destinationId,["CITY","DESTINATION"]);
     if(area)d.areaId=area.id;
-    if(destination)d.destinationId=destination.id;
-    const geo=area||destination;
+    if(destination)d[destination.entityType==="CITY"?"cityId":"destinationId"]=destination.id;
+    const geo=parent||area||destination;
     if(geo){
       record.parentEntityId=geo.id;
       const gd=object(geo.details);
       d.parentPublicId=geo.publicId||d.parentPublicId||"";
-      d.destinationCode=destination?.code||gd.destinationCode||d.destinationCode||"";
+      d.destinationCode=destination?.code||(["CITY","DESTINATION"].includes(geo.entityType)?geo.code:gd.destinationCode)||d.destinationCode||"";
       if(gd.countryCode)d.countryCode=upper(gd.countryCode,8);
       if(gd.countryName)d.countryName=gd.countryName;
       inheritMissing(d,gd,["timezone","currency","nearestAirportId","secondaryAirportId"]);
@@ -780,23 +793,73 @@ async function canonicalizeMasterRecord(input={}){
 
   return record;
 }
+function validateInventoryFields(record,previous={}){
+  const type=upper(record.entityType,40), details=object(record.details);
+  const old=object(previous.details||previous.inventory_details);
+  const code=upper(record.code,180), previousCode=upper(previous.code??previous.iata??previous.iataCode,180);
+  if(code!==previousCode){
+    if(type==="AIRPORT"&&!/^[A-Z]{3}$/.test(code))throw new Error("Enter a three-letter airport IATA code.");
+    if(type==="COUNTRY"&&!/^[A-Z]{2}$/.test(code))throw new Error("Enter a two-letter ISO country code.");
+    if(MASTER_TYPES.has(type)&&type!=="COUNTRY"&&!/^[A-Z0-9][A-Z0-9._-]*$/.test(code))throw new Error("System codes can contain letters, numbers, periods, underscores and hyphens.");
+  }
+  const changed=key=>details[key]!=null&&details[key]!==""&&String(details[key])!==String(old[key]??"");
+  for(const [key,label,min,max] of [
+    ["latitude","Latitude",-90,90],["longitude","Longitude",-180,180],
+    ["officialStarRating","Official star rating",0,5],["guestRating","Guest rating",0,10],
+    ["minimumCheckinAge","Minimum check-in age",0,120]
+  ]){
+    if(changed(key)&&(!Number.isFinite(Number(details[key]))||Number(details[key])<min||Number(details[key])>max)){
+      throw new Error(`${label} must be between ${min} and ${max}.`);
+    }
+  }
+  for(const key of ["website","contactUrl","loyaltyProgramUrl"]){
+    if(!changed(key))continue;
+    let url;
+    try{url=new URL(details[key])}catch(_){}
+    if(!url||!["https:","http:"].includes(url.protocol)||url.username||url.password)throw new Error("Enter a valid website or contact URL.");
+  }
+  for(const key of ["checkinTime","checkoutTime","departureTime","arrivalTime"]){
+    if(changed(key)&&!/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(details[key]))throw new Error("Use a 24-hour time such as 15:00.");
+  }
+  if(changed("contactEmail")&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.contactEmail))throw new Error("Enter a valid contact email.");
+  if(changed("flightNumber")&&type==="FLIGHT"&&!/^(?:[A-Z0-9]{2,3}\s*)?\d{1,4}[A-Z]?$/i.test(details.flightNumber))throw new Error("Enter a valid flight number, for example SK903.");
+  if(type==="AIRPORT"&&changed("icaoCode")&&!/^[A-Z]{4}$/.test(upper(details.icaoCode,8)))throw new Error("Enter a four-letter airport ICAO code.");
+}
+async function publicationDefaults(record,bundle,existingMedia){
+  const slug=slugify(record.slug||record.name);
+  const input={...record,slug};
+  const chain=[input],seen=new Set([record.id]);
+  for(let id=record.parentEntityId;id&&!seen.has(id)&&chain.length<8;){
+    const parent=await resolveCanonicalReference(id,GEOGRAPHY_LEVELS);
+    if(!parent)break;
+    seen.add(id);chain.push(parent);id=parent.parentEntityId;
+  }
+  let path=inventoryGuidePath(input);
+  if(GEOGRAPHY_LEVELS.includes(input.entityType)||input.entityType==="HOTEL"){
+    path=createDestinationContent(()=>chain).geographyPath(input);
+  }
+  const localized=array(bundle.localizedContent).find(row=>upper(row.language,8)==="EN")||{};
+  const seo=inventorySeo(input,{path,location:chain[1]?.name,localized,media:bundle.media??existingMedia});
+  return {...input,seo};
+}
+
 function validateMasterRecord(record,bundle={}){
   const type=upper(record.entityType||record.entity_type,40);
   const d=object(record.details), status=safeStatus(record.status);
   const finalizing=status==="REVIEW"||status==="PUBLISHED";
   if(type==="COUNTRY"&&!upper(d.countryCode||record.code,8))throw new Error("INVENTORY_COUNTRY_CODE_REQUIRED");
-  if(finalizing&&["AREA","DESTINATION","REGION"].includes(type)&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_PARENT_REQUIRED");
-  if(finalizing&&type==="HOTEL"&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
-  if(finalizing&&["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","PACKAGE"].includes(type)&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
+  if(finalizing&&GEOGRAPHY_LEVELS.indexOf(type)>0&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_PARENT_REQUIRED");
+  if(finalizing&&type==="HOTEL"&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
+  if(finalizing&&["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","PACKAGE"].includes(type)&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
   if(finalizing&&type==="TRANSFER"&&!isUuid(d.airportId))throw new Error("INVENTORY_AIRPORT_REQUIRED");
-  if(finalizing&&type==="TRANSFER"&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
-  if(finalizing&&type==="CAR_RENTAL"&&!isUuid(d.destinationId)&&!isUuid(d.airportId))throw new Error("INVENTORY_LOCATION_REQUIRED");
+  if(finalizing&&type==="TRANSFER"&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
+  if(finalizing&&type==="CAR_RENTAL"&&!isUuid(record.parentEntityId)&&!isUuid(d.airportId))throw new Error("INVENTORY_LOCATION_REQUIRED");
   const catalog=object(bundle.catalog),catalogType=upper(catalog.catalogType??catalog.catalog_type??"NONE",80);
   if(finalizing&&catalogType==="SKANDI_PARTNER"&&["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE"].includes(type)&&!isUuid(record.supplierEntityId))throw new Error("INVENTORY_SUPPLIER_REQUIRED");
   const from=clean(catalog.validFrom??catalog.valid_from,20),to=clean(catalog.validTo??catalog.valid_to,20);
   if(from&&to&&to<from)throw new Error("INVENTORY_CATALOG_DATE_INVALID");
-  if(type==="SUPPLIER")record.customerVisible=false;
-  if(status==="PUBLISHED"&&catalogType!=="NONE")record.customerVisible=true;
+  if(INTERNAL_TYPES.has(type))record.customerVisible=false;
+  else if(status==="PUBLISHED"&&(catalogType!=="NONE"||GEOGRAPHY_LEVELS.includes(type)))record.customerVisible=true;
   return record;
 }
 
@@ -961,7 +1024,7 @@ async function resolveReferenceMediaRows(current,rows){
       if(upper(row.mediaType??row.media_type??"IMAGE",40)==="IMAGE"&&upper(asset.asset_type,40)!=="IMAGE")throw new Error("INVENTORY_IMAGE_ASSET_REQUIRED");
       if(!clean(asset.public_url,3000))throw new Error("INVENTORY_ASSET_PUBLIC_URL_MISSING");
       resolved.push({
-        ...row,role:MEDIA_ROLES.has(role)||role==="ICON"?role:"GALLERY",
+        ...row,role:MEDIA_ROLES.has(role)||COMBINED_MEDIA_ROLES.has(role)||role==="ICON"?role:"GALLERY",
         url:clean(asset.public_url,3000),assetId:asset.id,storageBucket:clean(asset.bucket,180),
         storagePath:clean(asset.storage_path,1000),mimeType:clean(asset.mime_type,160),
         fileSizeBytes:nullableNumber(asset.size_bytes,{integer:true,min:0}),sourceKind:"UPLOAD",
@@ -1035,7 +1098,7 @@ async function resolveAircraftChildAssetFields(kind,item={},current={}){
   return out;
 }
 
-const HIERARCHY_RELATIONS=Object.freeze({HOTEL:["HOTEL"],FLIGHT:["FLIGHT"],GUIDED_TOUR:["GUIDED_TOUR"],ACTIVITY:["ACTIVITY"],PARTNER_TICKET:["PARTNER_TICKET"],TRANSFER:["TRANSFER"],CAR_RENTAL:["CAR_RENTAL"],PACKAGE:["PACKAGE"],ANCILLARY:["ANCILLARY"],AIRPORT:["AIRPORT"],COUNTRY:["COUNTRY"],REGION:["REGION"],DESTINATION:["DESTINATION"],AREA:["AREA"],CHAIN:["SUPPLIER"],BOOKING_SUPPLIER:["SUPPLIER"],AIRLINE:["AIRLINE"]});
+const HIERARCHY_RELATIONS=Object.freeze({HOTEL:["HOTEL"],FLIGHT:["FLIGHT"],GUIDED_TOUR:["GUIDED_TOUR"],ACTIVITY:["ACTIVITY"],PARTNER_TICKET:["PARTNER_TICKET"],TRANSFER:["TRANSFER"],CAR_RENTAL:["CAR_RENTAL"],PACKAGE:["PACKAGE"],ANCILLARY:["ANCILLARY"],AIRPORT:["AIRPORT"],COUNTRY:["COUNTRY"],STATE:["STATE"],REGION:["REGION"],DESTINATION:["DESTINATION","CITY","AREA","REGION"],CITY:["CITY"],AREA:["AREA","REGION"],CHAIN:["SUPPLIER"],BRAND:["BRAND"],AIRLINE_GROUP:["AIRLINE_GROUP"],BOOKING_SUPPLIER:["SUPPLIER"],AIRLINE:["AIRLINE"]});
 async function validateHierarchyRelations(bundle){
   if(!Array.isArray(bundle.relations))return;
   const record=bundle.record||{},self=clean(record.id,100),type=upper(record.entityType||record.entity_type,40);
@@ -1052,16 +1115,16 @@ async function validateHierarchyRelations(bundle){
     const group=counts.get(kind)||[];group.push(isUnchanged);counts.set(kind,group);
     const target=await resolveCanonicalReference(id,allowed);
     if(!target&&!isUnchanged)throw new Error(`Select an existing ${kind.replace(/_/g," ").toLowerCase()} record.`);
-    if(target&&["COUNTRY","REGION","DESTINATION","AREA"].includes(kind))selected.set(kind,{target,unchanged:isUnchanged});
+    if(target&&["COUNTRY","STATE","REGION","DESTINATION","CITY","AREA"].includes(kind))selected.set(kind,{target,unchanged:isUnchanged});
   }
   for(const [kind,items] of counts)if(items.length>1&&!items.every(Boolean))throw new Error(`Only one ${kind.replace(/_/g," ").toLowerCase()} can be selected.`);
-  const levels=["AREA","DESTINATION","REGION","COUNTRY"],cache=new Map();
-  async function read(id){if(!id)return null;if(!cache.has(id))cache.set(id,await resolveCanonicalReference(id,["COUNTRY","REGION","DESTINATION","AREA"]));return cache.get(id)}
+  const levels=["AREA","CITY","DESTINATION","REGION","STATE","COUNTRY"],cache=new Map();
+  async function read(id){if(!id)return null;if(!cache.has(id))cache.set(id,await resolveCanonicalReference(id,levels));return cache.get(id)}
   for(let i=0;i<levels.length;i++){
     const child=selected.get(levels[i]);if(!child)continue;
     const seen=new Set([child.target.id]),queue=[child.target],ancestors=[];
     while(queue.length&&seen.size<30){const current=queue.shift(),d=object(current.details);
-      for(const id of [current.parentEntityId,d.countryId,d.regionId,d.destinationId,d.areaId]){const parent=await read(clean(id,100));if(parent&&!seen.has(parent.id)){seen.add(parent.id);ancestors.push(parent);queue.push(parent)}}
+      for(const id of [current.parentEntityId,d.countryId,d.stateId,d.regionId,d.destinationId,d.cityId,d.areaId]){const parent=await read(clean(id,100));if(parent&&!seen.has(parent.id)){seen.add(parent.id);ancestors.push(parent);queue.push(parent)}}
     }
     for(const parentKind of levels.slice(i+1)){const chosen=selected.get(parentKind);if(!chosen)continue;const known=ancestors.filter(x=>x.entityType===parentKind);
       if(known.length&&!known.some(x=>x.id===chosen.target.id)&&(!child.unchanged||!chosen.unchanged))throw new Error(`The selected ${levels[i].toLowerCase()} does not belong to the selected ${parentKind.toLowerCase()}.`);
@@ -1334,10 +1397,25 @@ function airlineLegacyPatch(details={},existing={}){
   }
   return patch;
 }
-async function savePrimary(session,bundle,referenceBase){
+function airlineDisplay(record,media,previous){
+  const details=object(record.details), config=object(details.publicDisplay);
+  const mode=upper(config.mode,20);
+  if(!mode)return {...record,details:{...details,publicDisplay:null}};
+  if(!["SIDE_BY_SIDE","COMBINED"].includes(mode)||!clean(config.partnerId,100)||config.partnerId===record.id){
+    throw new Error("Select another airline and a shared branding mode.");
+  }
+  if(mode==="COMBINED"){
+    const roles=new Set(array(media??previous?.media_assets).filter(row=>row.active!==false&&row.mediaType!=="VIDEO"&&
+      (row.assetId||row.payload?.assetId)&&inventoryMediaUrl(row)).map(row=>row.role));
+    if(![...COMBINED_MEDIA_ROLES].every(role=>roles.has(role)))throw new Error("Add both a combined logo and a combined thumbnail in Media.");
+  }
+  return {...record,details:{...details,publicDisplay:{mode,partnerId:clean(config.partnerId,100),name:clean(config.name,160)}}};
+}
+
+async function savePrimary(session,bundle,referenceBase,existingMedia){
   const r=object(bundle.record),type=upper(r.entityType||r.entity_type,40);
   if(MASTER_TYPES.has(type)){
-    const canonical=validateMasterRecord(await canonicalizeMasterRecord(r),bundle);
+    const canonical=await publicationDefaults(validateMasterRecord(await canonicalizeMasterRecord(r),bundle),bundle,existingMedia);
     await assertUniqueMaster(canonical);await assertNoHierarchyCycle(canonical);
     const id=clean(canonical.id,80),body=masterBody(canonical,session);
     if(id){
@@ -1352,7 +1430,8 @@ async function savePrimary(session,bundle,referenceBase){
   if(REFERENCE_TYPES.has(type)){
     const isAirline=type==="AIRLINE",table=isAirline?"travel_info_airlines":"travel_info_airports";
     const id=clean(r.id,100)||(isAirline?randomUUID():"");
-    const record={...r,id,localizedContent:bundle.localizedContent,media:bundle.media};
+    const raw={...r,id,localizedContent:bundle.localizedContent,media:bundle.media};
+    const record=await publicationDefaults(isAirline?airlineDisplay(raw,bundle.media,referenceBase):raw,bundle,existingMedia);
     const preCatalog=bundle.catalog?normalizeCatalog(bundle.catalog):null;
     const body=referenceBody(type,record,preCatalog);
     if(Array.isArray(record.media)){
@@ -1397,6 +1476,7 @@ export async function saveInventoryBundleCore(input={},{supplierRefresh=false}={
   const rollback=await snapshotBundleForRollback(bundle.record);
   const isReference=REFERENCE_TYPES.has(type);
   const previous=rollback.primary;
+  validateInventoryFields(bundle.record,previous||{});
   let validated=bundle;
   if(isReference){
     const record=bundle.record;
@@ -1409,23 +1489,43 @@ export async function saveInventoryBundleCore(input={},{supplierRefresh=false}={
     }:record};
     if(Array.isArray(bundle.media))validated.media=await resolveReferenceMediaRows(previous||{},bundle.media);
   }
-  let record=null;
+  let record=null,reparentUncertain=false;
 
   try{
     // One public server operation owns the complete save. If a later child/catalog
     // write fails, the previous state is restored before the error returns.
-    record=await savePrimary(session,validated,isReference?previous:null);
+    record=await savePrimary(session,validated,isReference?previous:null,isReference?previous?.media_assets:rollback.media);
     const normalizedBundle={...validated,record};
     const catalog=MASTER_TYPES.has(type)
       ? await syncMasterChildren(session,record,normalizedBundle)
       : await syncReferenceChildren(session,record,normalizedBundle);
 
+    const savedBundle=await getInventoryRecordCore({id:record.id,entityType:type});
+    if(bundle.reparentChildren?.length){
+      const children=[...new Set(bundle.reparentChildren)];
+      if(!record.parentEntityId||children.length>200||!children.every(isUuid))throw new Error("Select valid children of the same parent.");
+      const request={functionName:"inventory_insert_geography_level",body:{
+        p_new_parent:record.id,p_old_parent:record.parentEntityId,p_children:children,p_actor:actorId(session)
+      }};
+      try{
+        await rpcRequest(request);
+      }catch(error){
+        if(error?.status&&error.status<500&&error.code!=="SUPABASE_INVALID_JSON_RESPONSE")throw error;
+        reparentUncertain=true;
+        await rpcRequest(request);
+        reparentUncertain=false;
+      }
+    }
     await audit(session,"INVENTORY_BUNDLE_SAVED",record.sourceTable,record.id,`${type} ${record.code} saved.`,{
       status:record.status,catalogType:catalog?.catalogType||"NONE"
     });
 
-    return{ok:true,bundle:{...(await getInventoryRecordCore({id:record.id,entityType:type})),catalog}};
+    return{ok:true,bundle:{...savedBundle,catalog},reparented:bundle.reparentChildren||[]};
   }catch(error){
+    if(reparentUncertain){
+      error.publicMessage="The parent record was saved. Reopen it to confirm which children moved before trying again.";
+      throw error;
+    }
     if(!record&&error?.message==="INVENTORY_AIRLINE_RECORD_CHANGED")throw error;
     const restored=await compensateBundleSave(rollback,record);
     await audit(session,restored?"INVENTORY_BUNDLE_ROLLED_BACK":"INVENTORY_BUNDLE_RESTORE_FAILED",record?.sourceTable||type,record?.id||rollback?.id||null,
@@ -1461,7 +1561,7 @@ async function providerExistingIndex(type){
   let rows=[];
   if(type==="AIRLINE") rows=await select("travel_info_airlines",{select:"ID,iataCode,Title,shortName,status,source,source_reference",limit:"3000"});
   else if(type==="AIRPORT") rows=await select("travel_info_airports",{select:"ID,iata,title,status,source,source_reference",limit:"5000"});
-  else if(type==="HOTEL"||type==="DESTINATION") rows=await select("inventory_master_entities",{select:"id,entity_type,code,name,status,source,source_reference",entity_type:qeq(type),limit:"5000"});
+  else if(type==="HOTEL"||type==="DESTINATION") rows=await select("inventory_master_entities",{select:"id,entity_type,code,name,status,source,source_reference",entity_type:type==="DESTINATION"?"in.(CITY,DESTINATION)":qeq(type),limit:"5000"});
   const normalized=rows.map(row=>providerExistingSummary(type,row));
   const byProvider=new Map();
   const byCode=new Map();
@@ -1564,7 +1664,7 @@ function providerDetails(type,resource,current={}){
   };
   if(type==="DESTINATION")return{
     ...existing,
-    level:"DESTINATION",
+    level:existing.level||"CITY",
     iataCode:existing.iataCode||resource.iataCode,
     countryCode:existing.countryCode||resource.iataCountryCode,
     airports:Array.isArray(existing.airports)&&existing.airports.length?existing.airports:array(resource.airports),
@@ -1585,7 +1685,7 @@ function newProviderBundle(type,resource,raw,input={}){
   const providerId=clean(resource.id,180);
   if(!providerId)throw new Error("INVENTORY_PROVIDER_RESOURCE_INVALID");
   const base={
-    id:"",entityType:type,name:clean(input.name||resource.name,300),slug:"",status:"DRAFT",active:true,
+    id:"",entityType:type==="DESTINATION"?"CITY":type,name:clean(input.name||resource.name,300),slug:"",status:"DRAFT",active:true,
     customerVisible:false,staffVisible:true,alteaVisible:true,featured:false,homepageFeatured:false,sortPriority:100,
     parentEntityId:isUuid(input.parentEntityId)?clean(input.parentEntityId,80):"",
     supplierEntityId:isUuid(input.supplierEntityId)?clean(input.supplierEntityId,80):"",
@@ -1697,7 +1797,8 @@ export async function importInventoryProviderResourceCore(input={}){
 
 export async function refreshInventoryProviderResourceCore(input={}){
   const session=await requireInventoryAccess({write:true});
-  const type=upper(input.entityType||input.resourceType,40);
+  const requestedType=upper(input.entityType||input.resourceType,40);
+  const type=requestedType==="CITY"?"DESTINATION":requestedType;
   if(!PROVIDER_IMPORT_TYPES.has(type))throw new Error("INVENTORY_PROVIDER_IMPORT_TYPE_UNSUPPORTED");
   const id=clean(input.id||input.entityId,100);
   if(!id)throw new Error("INVENTORY_ID_REQUIRED");
@@ -2138,7 +2239,7 @@ export async function getInventoryQualityCore(){
   const mismatch=aircraft.filter(a=>(nullableNumber(a.total_seats,{integer:true})||0)!==(sums.get(clean(a.id,80))||0));
   const noCabins=aircraft.filter(a=>!counts.get(clean(a.id,80)));
   const noViews=aircraft.filter(a=>!views.some(v=>clean(v.aircraft_id,80)===clean(a.id,80)));
-  const publicNoMedia=canonical.map(normalizeCanonical).filter(r=>r.active&&r.customerVisible&&r.status==="PUBLISHED"&&["HOTEL","DESTINATION","AREA"].includes(r.entityType)&&!r.media.length);
+  const publicNoMedia=canonical.map(normalizeCanonical).filter(r=>r.active&&r.customerVisible&&r.status==="PUBLISHED"&&["HOTEL","CITY","DESTINATION","AREA"].includes(r.entityType)&&!r.media.length);
   return{
     ok:true,generatedAt:now(),aircraftSync:syncHealth(airlines,aircraft),
     counts:{canonical:canonical.length,catalog:catalog.length,searchableCatalog:catalog.filter(c=>c.active&&c.searchable).length,aircraft:aircraft.length,cabins:cabins.length,views:views.length,hotspots:hotspots.length,walkScenes:scenes.length,sceneHotspots:sceneHotspots.length},

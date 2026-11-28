@@ -1,5 +1,10 @@
 # Baggage Allowance
 
+## 2026-11-28 Shared baggage and airline listing
+
+The standalone guide displays the published general baggage topic and the same canonical fare, bag and operating-airline data as Travel Info. Paired airlines share one list entry, with a selector for the operating code and its individual allowance.
+
+
 > Current document: `skandi-embeds/baggage-allowance/README.md`. Original reference: `HTML_REF/skandi/Baggage Allowance.md`.
 
 

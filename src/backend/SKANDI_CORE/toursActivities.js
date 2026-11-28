@@ -35,7 +35,7 @@ function lists(v) {
 function nameOf(record) { return clean(record?.name, 240); }
 function countryName(code, entities) { return nameOf(entities.find(x => x.entity_type === 'COUNTRY' && clean(x.code).toUpperCase() === code)) || code; }
 function mediaOf(entry) {
-  const images = arr(entry.media).filter(x => url(x?.url) && clean(x.role,40).toUpperCase() !== 'THUMBNAIL').sort((a, b) => {
+  const images = arr(entry.media).filter(x => x?.active!==false && clean(x?.mediaType??x?.media_type??"IMAGE",40).toUpperCase()==="IMAGE" && url(x.url) && clean(x.role,40).toUpperCase() !== 'THUMBNAIL').sort((a, b) => {
     const rank = x => x?.isCard === true ? 0 : x?.isPrimary === true ? 1 : x?.isHero === true ? 2 : x?.role === 'CARD' ? 3 : 4;
     return rank(a) - rank(b) || Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0);
   });
@@ -65,7 +65,7 @@ function publicSchedule(record) {
 function publicExperience(entry, entities, schedule, lang) {
   const details = obj(entry.details), commercial = obj(entry.commercial), loc = localized(entry, lang);
   const destinationId = clean(details.destinationId || entry.parent_entity_id, 80);
-  const dest = entities.find(x => x.id === destinationId) || entities.find(x => x.entity_type === 'DESTINATION' && arr(entry.relations).some(y => y.targetEntityId === x.id && y.relationType === 'DESTINATION'));
+  const dest = entities.find(x => x.id === destinationId) || entities.find(x => ['CITY','DESTINATION'].includes(x.entity_type) && arr(entry.relations).some(y => y.targetEntityId === x.id && ['CITY','DESTINATION'].includes(y.relationType)));
   const iso = clean(details.countryCode, 4).toUpperCase();
   const imageUrls = mediaOf(entry);
   const minutes = Number(details.durationMinutes);
@@ -105,7 +105,7 @@ async function catalog(lang = 'EN') {
   // inventory_public_entities_v already restricts to published public-safe records.
   const all = await select(PUBLIC_VIEW, {
     select: 'id,public_id,entity_type,code,name,slug,featured,homepage_featured,sort_priority,parent_entity_id,details,commercial,localized,media,relations',
-    entity_type: 'in.(GUIDED_TOUR,ACTIVITY,PARTNER_TICKET,DESTINATION,AREA,COUNTRY)', limit: '1500', order: 'sort_priority.asc,name.asc'
+    entity_type: 'in.(GUIDED_TOUR,ACTIVITY,PARTNER_TICKET,CITY,DESTINATION,AREA,COUNTRY)', limit: '1500', order: 'sort_priority.asc,name.asc'
   });
   const inventory = all.filter(x => TYPES.has(x.entity_type));
   const ids = inventory.map(x => x.id).filter(isUuid);
@@ -117,7 +117,7 @@ async function catalog(lang = 'EN') {
   const validDates = future.filter(x => !x.stop_sale && !x.blackout && !['CLOSED','CANCELLED','SUSPENDED','ARCHIVED','STOP_SALE'].includes(clean(x.status).toUpperCase()) && Number(x.available) > 0);
   const experiences = inventory.map(x => publicExperience(x, all, validDates, lang));
   const counts = new Map(); for (const x of experiences) { const key=x.destinationId; if(key) counts.set(key,(counts.get(key)||0)+1); }
-  const destinations = all.filter(x => x.entity_type === 'DESTINATION' || x.entity_type === 'AREA').map(x => ({
+  const destinations = all.filter(x => ['CITY','DESTINATION','AREA'].includes(x.entity_type)).map(x => ({
     id: clean(x.slug || x.id, 200), entityId: clean(x.id, 80), country: clean(obj(x.details).countryCode, 4).toLowerCase(),
     name: clean(x.name, 240), count: counts.get(x.id) || 0, image: mediaOf(x)[0] || ''
   })).filter(x => x.count > 0).sort((a,b) => b.count-a.count || a.name.localeCompare(b.name));

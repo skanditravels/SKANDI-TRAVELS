@@ -124,7 +124,7 @@ const RPC_FUNCTIONS = new Set([
   "ops_transport_save_service_v2", "ops_transport_approve_no_host_v2", "ops_transport_scan_alerts_v2",
   "skandi_record_twilio_whatsapp_inbound", "skandi_record_twilio_whatsapp_status",
   "get_public_about_payload",
-  "get_public_network_map_payload",
+  "inventory_insert_geography_level", "get_public_network_map_payload",
   "publish_voy_issue"
 ]);
 

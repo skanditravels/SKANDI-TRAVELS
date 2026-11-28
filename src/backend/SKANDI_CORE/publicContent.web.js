@@ -36,7 +36,7 @@ import {
   saveNewsroomMediaAssetCore,
   saveNewsroomPressContactCore
 } from "backend/SKANDI_CORE/publicContent";
-import { applyInventoryAuthorityToTravelInfoCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
+import { applyInventoryAuthorityToTravelInfoCore, applyInventoryAuthorityToBaggageCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
 
 const normalizeInput = input => input && typeof input === "object" ? input : {};
 
@@ -65,7 +65,7 @@ export const getPublicTravelInfoAircraft = webMethod(
 
 export const getPublicBaggagePayload = webMethod(
   Permissions.Anyone,
-  input => getPublicBaggagePayloadCore(normalizeInput(input))
+  async input => applyInventoryAuthorityToBaggageCore(await getPublicBaggagePayloadCore(normalizeInput(input)))
 );
 
 export const getPublicPassportVisaPayload = webMethod(

@@ -10,7 +10,7 @@
 // compatibility projections maintained by the accompanying database migration.
 
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
-import { inventoryCardImage, inventoryMediaUrl, referenceInventoryBrand } from "public/inventoryMedia";
+import { inventoryCardImage, inventoryMediaUrl, preferredInventoryMedia, referenceInventoryBrand } from "public/inventoryMedia";
 
 const ACTIVE = "eq.true";
 const PUBLISHED = "eq.PUBLISHED";
@@ -109,8 +109,8 @@ function canonicalSections(details = {}) {
 }
 
 function mediaUrl(row = {}, preferredRoles = []) {
-  const media = arr(structured(row.media_assets, [])).filter(item => item && item.active !== false &&
-    !["LOGO", "THUMBNAIL", "ICON"].includes(upper(item.role, 40)) && inventoryMediaUrl(item));
+  const media = arr(structured(row.media_assets, [])).filter(item => item && item.active !== false && upper(item.mediaType??item.media_type??"IMAGE",40)==="IMAGE" &&
+    !["LOGO", "THUMBNAIL", "ICON", "COMBINED_LOGO", "COMBINED_THUMBNAIL"].includes(upper(item.role, 40)) && inventoryMediaUrl(item));
   for (const role of preferredRoles) {
     const wanted = upper(role, 40);
     const hit = media.find(item => upper(item.role, 40) === wanted);
@@ -149,7 +149,7 @@ async function referenceRows() {
       table: "travel_info_airlines",
       method: "GET",
       query: {
-        select: "ID,Title,shortName,iataCode,icaoCode,logoFile,logoIcon,inventory_details,media_assets,sort_order",
+        select: "ID,Title,shortName,iataCode,icaoCode,logoFile,logoIcon,inventory_details,media_assets,sort_order,seo,slug",
         active: ACTIVE,
         customer_visible: ACTIVE,
         status: PUBLISHED,
@@ -162,7 +162,7 @@ async function referenceRows() {
       table: "travel_info_airports",
       method: "GET",
       query: {
-        select: "ID,title,iata,icao,logoUrl,logoIconUrl,inventory_details,media_assets,sort_order",
+        select: "ID,title,iata,icao,logoUrl,logoIconUrl,inventory_details,media_assets,sort_order,seo,slug",
         active: ACTIVE,
         customer_visible: ACTIVE,
         status: PUBLISHED,
@@ -175,7 +175,7 @@ async function referenceRows() {
       table: "inventory_public_entities_v",
       method: "GET",
       query: {
-        select: "id,entity_type,code,name,slug,details,localized,media,sort_priority",
+        select: "id,entity_type,code,name,slug,details,localized,media,seo,sort_priority",
         entity_type: "in.(HOTEL,TRANSFER,GUIDED_TOUR,ACTIVITY,PARTNER_TICKET)",
         order: "sort_priority.asc,name.asc",
         limit: "2000"
@@ -245,6 +245,7 @@ function projectAirline(item = {}, row = {}) {
     lounges: structured(canonical(d, "lounges", item.lounges), []),
     cabins: structured(canonical(d, "cabinsJson", item.cabins), []),
     sections: sections && typeof sections === "object" ? sections : {},
+    seo:obj(row.seo),slug:clean(row.slug,240),
     fleetSummary: structured(canonical(d, "fleetSummaryJson", item.fleetSummary), []),
     baggage,
     baggageAllowance: baggage.mode === "narrative" ? baggage.text : "",
@@ -256,9 +257,50 @@ function projectAirline(item = {}, row = {}) {
     loyaltyProgramUrl: clean(canonical(d, "loyaltyProgramUrl", item.loyaltyProgramUrl), 2000),
     hubs: structured(canonical(d, "hubsJson", item.hubs), []),
     specialAssistance: structured(canonical(d, "specialAssistance", item.specialAssistance), ""),
+    disruption:structured(canonical(d,"delaysCancellationsJson",item.disruption),""),
+    damagedBaggage:structured(canonical(d,"damagedBaggageJson",item.damagedBaggage),""),
+    lostBaggage:structured(canonical(d,"lostFoundJson",item.lostBaggage),""),
+    quickFacts:structured(canonical(d,"quickFactsJson",item.quickFacts),[]),
+    sourceLinks:structured(canonical(d,"sourceUrlsJson",item.sourceLinks),[]),
     sortOrder: finite(row.sort_order, item.sortOrder ?? 100),
     canonicalSource: "INVENTORY_CONTROL_SUPABASE"
   };
+}
+
+function projectAirlineDirectory(items,rows){
+  const index=indexes(rows,"iataCode","Title");
+  const projected=arr(items).map(item=>{
+    const row=matchReference(item,index,["iataCode","code"]);
+    return row?projectAirline(item,row):item;
+  });
+  const byId=new Map(projected.map(item=>[item.id,item]));
+  const grouped=new Set();
+  for(const row of rows){
+    const settings=obj(row.inventory_details?.publicDisplay);
+    const primary=byId.get(clean(row.ID,180)),partner=byId.get(clean(settings.partnerId,180));
+    if(!primary||!partner||primary===partner||primary.iataCode===partner.iataCode||grouped.has(primary.id)||grouped.has(partner.id))continue;
+    let logos=[],thumbnails=[];
+    if(settings.mode==="COMBINED"){
+      logos=[inventoryMediaUrl(preferredInventoryMedia(row.media_assets,["COMBINED_LOGO"]))];
+      thumbnails=[inventoryMediaUrl(preferredInventoryMedia(row.media_assets,["COMBINED_THUMBNAIL"]))];
+      if(!logos[0]||!thumbnails[0])continue;
+    }else if(settings.mode==="SIDE_BY_SIDE"){
+      logos=[primary.logo,partner.logo];
+      thumbnails=[primary.logoIcon||primary.logo,partner.logoIcon||partner.logo];
+    }else continue;
+    const displayGroup={
+      id:primary.id,name:clean(settings.name,160)||primary.name,
+      codes:[primary.iataCode,partner.iataCode],logos,thumbnails
+    };
+    primary.displayGroup=partner.displayGroup=displayGroup;
+    grouped.add(primary.id);grouped.add(partner.id);
+  }
+  return projected;
+}
+
+export async function applyInventoryAuthorityToBaggageCore(payload){
+  const {airlines}=await referenceRows();
+  return {...payload,airlines:projectAirlineDirectory(payload.airlines,airlines)};
 }
 
 function projectAirport(item = {}, row = {}) {
@@ -294,6 +336,7 @@ function projectAirport(item = {}, row = {}) {
     logo: brand.logoUrl || item.logo,
     logoIcon: brand.thumbnailUrl || item.logoIcon,
     sections,
+    seo:obj(row.seo),slug:clean(row.slug,240),
     arrival: structured(canonical(d, "arrivalInfo", item.arrival), ""),
     departure: structured(canonical(d, "departureInfo", item.departure), ""),
     checkIn: structured(canonical(d, "checkinInfo", d.checkInInfo, item.checkIn), ""),
@@ -328,7 +371,7 @@ function localizedMaster(row = {}, language = "EN") {
 }
 
 function masterMediaUrl(row = {}) {
-  const media = arr(structured(row.media, [])).filter(item=>item?.active!==false && inventoryMediaUrl(item) &&
+  const media = arr(structured(row.media, [])).filter(item=>item?.active!==false && upper(item?.mediaType??item?.media_type??"IMAGE",40)==="IMAGE" && inventoryMediaUrl(item) &&
     !["LOGO","THUMBNAIL","ICON"].includes(upper(item?.role,40)));
   const preferred = media.find(item => item?.isPrimary === true || item?.is_primary === true || upper(item?.role, 40) === "PRIMARY") ||
     media.find(item => item?.isHero === true || item?.is_hero === true || upper(item?.role, 40) === "HERO") ||
@@ -404,6 +447,7 @@ function projectMaster(row = {}, language = "EN") {
     title,
     name: title,
     slug: clean(row.slug, 300),
+    seo:obj(row.seo),
     category: upper(row.entity_type, 80),
     body,
     description: body,
@@ -449,15 +493,11 @@ function masterLibraries(rows = [], language = "EN") {
 export async function applyInventoryAuthorityToTravelInfoCore(payload = {}) {
   const result = payload && typeof payload === "object" ? payload : {};
   const refs = await referenceRows();
-  const airlineIndex = indexes(refs.airlines, "iataCode", "Title");
   const airportIndex = indexes(refs.airports, "iata", "title");
   const masters = masterLibraries(refs.masters, result.language || "EN");
   return {
     ...result,
-    airlines: arr(result.airlines).map(item => {
-      const row = matchReference(item, airlineIndex, ["iataCode", "code"]);
-      return row ? projectAirline(item, row) : item;
-    }),
+    airlines: projectAirlineDirectory(result.airlines,refs.airlines),
     airports: arr(result.airports).map(item => {
       const row = matchReference(item, airportIndex, ["iata", "iataCode", "code"]);
       return row ? projectAirport(item, row) : item;

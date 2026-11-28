@@ -640,3 +640,15 @@ h1 { margin: 4px 0 0; font-size: 20px; font-weight: normal; color: var(--navy); 
   .ic-editor-tabs,.ic-topic-tabs{padding-bottom:3px}
   .ic-editor-tabs .tab,.ic-topic-tabs .tab{flex-shrink:0}
 }
+
+.ic-child-options{display:grid;gap:8px;margin-top:8px;max-height:220px;overflow:auto}
+.ic-child-options label{display:flex;align-items:center;gap:8px}
+.ic-entry-media .toolbar{margin-top:12px;flex-wrap:wrap}
+.ic-entry-group{margin-top:20px}
+.ic-entry-group h4{margin:0 0 8px}
+.ic-entry-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px}
+.ic-entry-asset{min-width:0;padding:10px;border:1px solid var(--line);overflow-wrap:anywhere}
+.ic-entry-preview{display:grid;place-items:center;height:104px;overflow:hidden;background:#fff;border:1px solid var(--line2)}
+.ic-entry-preview img{display:block;width:100%;height:100%;object-fit:contain;min-height:0}
+.ic-entry-asset .formgrid{grid-template-columns:1fr}
+.ic-asset-report{max-height:180px;overflow:auto;overflow-wrap:anywhere}

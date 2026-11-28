@@ -81,7 +81,7 @@ function publicImage(row = {}) {
 
 function collectionTypeFor(entityType) {
   switch (upper(entityType, 80)) {
-    case "DESTINATION": case "COUNTRY": case "AREA": return "destinations";
+    case "CITY": case "STATE": case "REGION": case "DESTINATION": case "COUNTRY": case "AREA": return "destinations";
     case "HOTEL": return "hotels";
     case "GUIDED_TOUR": case "TOUR": case "ACTIVITY": case "PARTNER_TICKET": return "tours";
     case "AIRLINE": return "airlines";
@@ -95,7 +95,7 @@ function collectionTypeFor(entityType) {
 
 function routeKeyFor(entityType) {
   switch (upper(entityType, 80)) {
-    case "DESTINATION": case "COUNTRY": case "AREA": return "destinations";
+    case "CITY": case "STATE": case "REGION": case "DESTINATION": case "COUNTRY": case "AREA": return "destinations";
     case "HOTEL": return "hotels";
     case "GUIDED_TOUR": case "TOUR": case "ACTIVITY": case "PARTNER_TICKET": return "tours";
     case "AIRLINE": case "AIRPORT": return "travelInfo";
@@ -304,6 +304,11 @@ function publicAirline(row = {}) {
     loyaltyProgram: clean(row.loyaltyProgram, 500),
     loyaltyProgramUrl: clean(row.loyaltyProgramUrl, 2000),
     hubs: jsonValue(row.hubsJson, []),
+    disruption: jsonValue(row.delayCancellationJson,row.delayCancellationJson),
+    damagedBaggage: jsonValue(row.damagedBaggageJson,row.damagedBaggageJson),
+    lostBaggage: jsonValue(row.lostFoundJson,row.lostFoundJson),
+    quickFacts: jsonValue(row.quickFactsJson,[]),
+    sourceLinks: jsonValue(row.sourceUrlsJson,[]),
     sortOrder: num(row.sort_order, 100)
   };
 }
@@ -433,7 +438,7 @@ export async function getPublicBaggagePayloadCore(input = {}) {
     airlines: payload.airlines.map(({ id, name, title, shortName, iataCode, icaoCode, logo, website, contactUrl, baggage, baggageAllowance }) => ({
       id, name, title, shortName, iataCode, icaoCode, logo, website, contactUrl, baggage, baggageAllowance
     })),
-    guidance: payload.articles.filter(item => /baggage|bagage/i.test(`${item.category} ${item.title} ${item.tags?.join?.(" ") || ""}`)),
+    guidance: [...payload.helpCenter.topics.filter(item=>item.topicId==="baggage"),...payload.articles.filter(item => /baggage|bagage/i.test(`${item.category} ${item.title} ${item.tags?.join?.(" ") || ""}`))],
     generatedAt: payload.generatedAt
   };
 }
@@ -441,7 +446,7 @@ export async function getPublicBaggagePayloadCore(input = {}) {
 export async function getPublicPassportVisaPayloadCore(input = {}) {
   const [travel, destinations] = await Promise.all([
     getPublicTravelInfoPayloadCore(input),
-    select("inventory_public_entities_v", { select: "id,entity_type,code,name,slug,details,localized,media,sort_priority", entity_type: "in.(COUNTRY,DESTINATION,AREA)", order: "sort_priority.asc,name.asc", limit: "2000" })
+    select("inventory_public_entities_v", { select: "id,entity_type,code,name,slug,details,localized,media,sort_priority", entity_type: "in.(COUNTRY,STATE,REGION,CITY,DESTINATION,AREA)", order: "sort_priority.asc,name.asc", limit: "2000" })
   ]);
   return {
     ok: true,

@@ -1,5 +1,10 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+## 2026-11-28 Explore entry and the place directory
+
+Explore opens the map at `/destinations`. The directory uses Country → State → Region → City → Area → Hotels, with optional levels skipped. Inventory-backed map cards and contextual destination links open their existing detail or hotel-list routes. Explicit pin links still select items on the map.
+
+
 ## 2026-11-27 — Destinations map and place navigation
 
 - `/destinations` uses the full viewport. Search, the country directory, the legend and the selected-place panel live over the map. The page has no editorial chapters or footer. The public desktop header and mobile navigation use the shared shell.

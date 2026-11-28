@@ -113,3 +113,29 @@ test('Travel Info shares the selected brand asset while keeping card thumbnails 
     thumbnailUrl:'https://static.wixstatic.com/media/example_airline~mv2.png'
   });
 });
+
+test('airline directory and baggage share public brands while preserving separate operating allowances',async()=>{
+  const main={ID:'one',iataCode:'DY',Title:'Primary',logoFile:'https://example.test/dy.svg',
+    inventory_details:{publicDisplay:{partnerId:'two',mode:'SIDE_BY_SIDE',name:'Shared brand'},baggageAllowance:'Allowance DY'}};
+  const second={ID:'two',iataCode:'D8',Title:'Other',logoFile:'https://example.test/d8.svg',
+    inventory_details:{baggageAllowance:'Allowance D8'}};
+  const ctx=vm.createContext({restRequest:async({table})=>table==='travel_info_airlines'?[main,second]:[],...inventoryMedia});
+  vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/publicContentInventoryProjection.js')),ctx);
+  const candidates=[{id:'one',iataCode:'DY'},{id:'two',iataCode:'D8'}];
+  const guide=await ctx.applyInventoryAuthorityToTravelInfoCore({airlines:candidates});
+  const baggage=await ctx.applyInventoryAuthorityToBaggageCore({airlines:candidates});
+  for(const {airlines} of [guide,baggage]){
+    assert.deepEqual(Array.from(airlines[0].displayGroup.codes),['DY','D8']);
+    assert.deepEqual(Array.from(airlines[0].displayGroup.logos),[main.logoFile,second.logoFile]);
+    assert.deepEqual(Array.from(airlines,item=>item.baggage.text),['Allowance DY','Allowance D8']);
+  }
+  main.inventory_details.publicDisplay.mode='COMBINED';
+  main.media_assets=[
+    {role:'COMBINED_LOGO',url:'https://example.test/both.svg',sourceKind:'UPLOAD'},
+    {role:'COMBINED_THUMBNAIL',url:'https://example.test/both-icon.svg',sourceKind:'UPLOAD'}
+  ];
+  const combined=(await ctx.applyInventoryAuthorityToTravelInfoCore({airlines:candidates})).airlines[0];
+  assert.equal(combined.logo,main.logoFile);
+  assert.equal(combined.displayGroup.logos[0],'https://example.test/both.svg');
+  assert.equal(combined.displayGroup.thumbnails[0],'https://example.test/both-icon.svg');
+});

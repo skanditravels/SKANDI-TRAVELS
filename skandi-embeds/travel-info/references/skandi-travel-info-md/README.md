@@ -1,5 +1,10 @@
 # INFO / LOG — Travel Info
 
+## 2026-11-28 Travel Help and carrier-specific policies
+
+The Travel Help guide keeps its published general guidance and offers a selector for the relevant airline, airport, hotel, transfer or experience. Policy fields are read from the canonical reference projection. A paired airline is shown once in the directory and the traveler selects the operating code for its individual policy. The same projection feeds Baggage Allowance. Swedavia AirportInfo and FIDS retain their existing provider and message contracts.
+
+
 > Current document: `skandi-embeds/travel-info/references/skandi-travel-info-md/README.md`. Original reference: `HTML_REF/skandi/Travel Info.md`.
 
 

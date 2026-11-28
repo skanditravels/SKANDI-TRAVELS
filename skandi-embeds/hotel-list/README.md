@@ -1,5 +1,10 @@
 # INFO / LOG — Hotel List
 
+## 2026-11-28 Hotel scopes and metadata
+
+The list resolves the same optional geographic levels as Explore. A property retains the full scope in its canonical route and exposes its Inventory metadata in the Wix page head.
+
+
 ## 2026-11-27 — Scoped hotel list and property guide
 
 - The list uses the published country, region or state, destination and area. Direct property visits resolve the published Inventory ID. Breadcrumbs link to each published place and back to the scoped hotel list.

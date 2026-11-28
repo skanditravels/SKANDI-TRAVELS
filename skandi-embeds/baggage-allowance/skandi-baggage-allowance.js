@@ -7,12 +7,50 @@ function safeUrl(value){try{const u=new URL(String(value||"").trim());return u.p
 function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
 function icon(name){const paths={copy:'<path d="M9 9h10v10H9z"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'};return `<svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">${paths[name]||""}</svg>`}
 function airlineLabel(x){return x.name||x.title||x.shortName||x.iataCode||"Airline"}
-function filteredAirlines(){const q=String($("airlineSearch").value||"").trim().toLowerCase();const rows=Array.isArray(DATA.airlines)?DATA.airlines:[];return (q?rows.filter(x=>`${x.name||""} ${x.title||""} ${x.shortName||""} ${x.iataCode||""} ${x.icaoCode||""}`.toLowerCase().includes(q)):rows).slice(0,100)}
-function renderAirlineList(){const rows=filteredAirlines();$("airlineList").innerHTML=rows.length?rows.map(x=>`<button type="button" class="airline-option ${selectedId===String(x.id)?"active":""}" data-airline-id="${esc(x.id)}"><strong>${esc(airlineLabel(x))}</strong><span>${esc(x.iataCode||x.icaoCode||"")}</span></button>`).join(""):`<div class="notice">No matching published airline was found.</div>`;$("airlineList").querySelectorAll("[data-airline-id]").forEach(btn=>btn.onclick=()=>selectAirline(btn.dataset.airlineId))}
+function filteredAirlines(){
+  const query=$("airlineSearch").value.trim().toLowerCase();
+  const rows=Array.isArray(DATA.airlines)?DATA.airlines:[];
+  const grouped=new Map();
+  for(const item of rows){
+    const key=item.displayGroup?.id||item.id;
+    if(!grouped.has(key))grouped.set(key,[]);
+    grouped.get(key).push(item);
+  }
+  return [...grouped.values()].filter(members=>!query||members.some(item=>
+    [airlineLabel(item),item.displayGroup?.name,item.shortName,item.iataCode,item.icaoCode].join(" ").toLowerCase().includes(query)
+  )).slice(0,100);
+}
+function renderAirlineList(){
+  const groups=filteredAirlines();
+  $("airlineList").innerHTML=groups.length?groups.map(members=>{
+    const group=members[0].displayGroup;
+    const current=members.find(item=>String(item.id)===selectedId);
+    const entry=current||members.find(item=>item.id===group?.id)||members[0];
+    return `<button type="button" class="airline-option ${current?"active":""}" data-airline-id="${esc(entry.id)}"><strong>${esc(group?.name||airlineLabel(entry))}</strong><span>${esc(group?.codes?.join(" / ")||entry.iataCode||entry.icaoCode||"")}</span></button>`;
+  }).join(""):`<div class="notice">No matching published airline was found.</div>`;
+  $("airlineList").querySelectorAll("[data-airline-id]").forEach(button=>button.onclick=()=>selectAirline(button.dataset.airlineId));
+}
 function renderStructured(baggage){return (baggage.cabins||[]).map(c=>`<section class="cabin-block"><h4>${esc(c.cabinType||c.travelClass||"Cabin")}</h4><div class="fare-grid">${(c.fares||[]).map(f=>`<article class="fare-card"><h5>${esc(f.name||"Fare")}</h5>${f.description?`<p>${esc(f.description)}</p>`:""}${f.underSeatBag?`<div class="allowance-line"><strong>Under-seat</strong><span>${esc(f.underSeatBag)}</span></div>`:""}${f.overheadCarryOn?`<div class="allowance-line"><strong>Cabin bag</strong><span>${esc(f.overheadCarryOn)}</span></div>`:""}${f.checkedBag?`<div class="allowance-line"><strong>Checked bag</strong><span>${esc(f.checkedBag)}</span></div>`:""}</article>`).join("")}</div></section>`).join("")}
-function selectAirline(id){const x=(DATA.airlines||[]).find(item=>String(item.id)===String(id));if(!x)return;selectedId=String(id);renderAirlineList();const bag=x.baggage||{mode:"none"};let body="";if(bag.mode==="structured")body=renderStructured(bag);else if(bag.mode==="narrative"&&bag.text)body=`<div class="narrative">${esc(bag.text)}</div>`;else body=`<div class="notice" style="margin-top:20px">No baggage allowance is currently published for this airline in SKANDI Travel Info. Check your booking and the operating airline's official information.</div>`;const logo=safeUrl(x.logo),website=safeUrl(x.website);$("airlineResult").classList.remove("empty");$("airlineResult").innerHTML=`<div class="airline-head">${logo?`<img class="airline-logo" src="${esc(logo)}" alt="${esc(airlineLabel(x))} logo">`:""}<div><div class="airline-code">Published airline baggage guidance</div><h3>${esc(airlineLabel(x))}</h3><div class="airline-code">${x.iataCode?`IATA ${esc(x.iataCode)}`:""}${x.iataCode&&x.icaoCode?" · ":""}${x.icaoCode?`ICAO ${esc(x.icaoCode)}`:""}</div></div></div>${body}${website?`<div class="airline-source"><a href="${esc(website)}" target="_blank" rel="noopener noreferrer">Open the airline's official website ↗</a></div>`:""}<div class="airline-source">Always use the operating carrier and the baggage line on your booked fare as the final authority.</div>`;queueResize()}
+function selectAirline(id){
+  const rows=DATA.airlines||[],airline=rows.find(item=>String(item.id)===String(id));
+  if(!airline)return;
+  selectedId=String(id);
+  renderAirlineList();
+  const group=airline.displayGroup,bag=airline.baggage||{};
+  const name=group?.name||airlineLabel(airline),website=safeUrl(airline.website);
+  const members=group?rows.filter(item=>item.displayGroup?.id===group.id):[];
+  const picker=members.length>1?`<label class="baggage-carrier">Operating airline<select id="baggageCarrier">${members.map(item=>`<option value="${esc(item.id)}"${item.id===airline.id?" selected":""}>${esc(airlineLabel(item))} (${esc(item.iataCode)})</option>`).join("")}</select></label>`:"";
+  const logos=(group?.logos||[airline.logo]).map(safeUrl).filter(Boolean).map(url=>`<img class="airline-logo" src="${esc(url)}" alt="">`).join("");
+  const body=bag.mode==="structured"?renderStructured(bag):bag.mode==="narrative"&&bag.text?`<div class="narrative">${esc(bag.text)}</div>`:
+    '<div class="notice">Check your booking or the operating airline’s website for your baggage allowance.</div>';
+  const result=$("airlineResult");
+  result.classList.remove("empty");
+  result.innerHTML=`<div class="airline-head">${logos}<div><h3>${esc(name)}</h3><div class="airline-code">${esc(group?.codes?.join(" / ")||airline.iataCode||"")}</div></div></div>${picker}${body}${website?`<div class="airline-source"><a href="${esc(website)}" target="_blank" rel="noopener noreferrer">Open the airline's official website ↗</a></div>`:""}<div class="airline-source">Check the baggage line on your booked fare before departure.</div>`;
+  $("baggageCarrier")?.addEventListener("change",event=>{selectAirline(event.target.value);$("baggageCarrier")?.focus()});
+  queueResize();
+}
 function renderGuidance(){const rows=Array.isArray(DATA.guidance)?DATA.guidance:[];$("guidance").innerHTML=rows.slice(0,9).map(x=>`<article class="guidance-card"><h3>${esc(x.title||"Baggage guidance")}</h3><p>${esc(x.excerpt||x.summary||x.body||"")}</p></article>`).join("")}
-function renderData(){renderAirlineList();renderGuidance();if((DATA.airlines||[]).length){const first=(DATA.airlines||[])[0];if(!selectedId&&first?.id)selectAirline(first.id)}else{$("airlineResult").textContent="No published airline baggage data is currently available. Confirm allowance directly with the operating airline."}queueResize()}
+function renderData(){renderAirlineList();renderGuidance();if((DATA.airlines||[]).length){const first=(DATA.airlines||[])[0];selectAirline((DATA.airlines||[]).find(item=>String(item.id)===selectedId)?.id||first.id)}else{$("airlineResult").textContent="No published airline baggage data is currently available. Confirm allowance directly with the operating airline."}queueResize()}
 function seasonFor(dateValue,hemisphere){const d=new Date(`${dateValue}T12:00:00`);if(Number.isNaN(d.getTime()))return"Season not set";if(hemisphere==="equatorial")return"Tropical / year-round";const m=d.getMonth()+1;let north=m===12||m<=2?"Winter":m<=5?"Spring":m<=8?"Summer":"Autumn";if(hemisphere==="south")north={Winter:"Summer",Spring:"Autumn",Summer:"Winter",Autumn:"Spring"}[north];return north}
 function qty(days,laundry,perDay=1,min=1,max=14){const effective=laundry&&days>5?Math.ceil(days/2)+1:days;return Math.max(min,Math.min(max,Math.ceil(effective*perDay)))}
 function parseAges(value){return String(value||"").split(/[,;\s]+/).map(v=>Number(v)).filter(v=>Number.isFinite(v)&&v>=0&&v<=120)}

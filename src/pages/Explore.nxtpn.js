@@ -1,6 +1,8 @@
 // /src/pages/Explore.nxtpn.js — /destinations/explore, #exploreEmbed.
 // Country V12 — public Inventory content and canonical customer booking.
 // Shared header/footer/session/settings remain owned by masterPage.js.
+import wixSeoFrontend from "wix-seo-frontend";
+import { applyInventorySeo } from "public/inventorySeo";
 import wixLocationFrontend from "wix-location-frontend";
 import { getDestinationFlowCatalog } from "backend/SKANDI_CORE/destinationFlow.web";
 import { searchUnifiedOffers, createBookingCartFromOffer } from "backend/SKANDI_CORE/customerBooking.web";
@@ -73,8 +75,10 @@ function requestedPlace(query = {}) {
   query=obj(query);
   return {
     countrySlug:slug(query.country),
+    stateSlug:slug(query.state),
     regionSlug:slug(query.region),
     destinationSlug:slug(query.destination),
+    citySlug:slug(query.city),
     areaSlug:slug(query.area)
   };
 }
@@ -145,6 +149,8 @@ async function loadCountry(message) {
       job.result={page,directory,settings:job.settings,routes:{...SITE_MAP,...APP_ROUTES},source:"SUPABASE_PUBLIC_INVENTORY"};
       job.complete=true; job.completedAt=Date.now();
       post("COUNTRY_PAGE_RESULT",job.result,job.requestId);
+      if(record)void Promise.resolve().then(()=>applyInventorySeo(wixSeoFrontend,content.pageSeo(record,job.settings.language)))
+        .catch(error=>console.warn("[Explore metadata]",error?.message));
     } catch(error) { if(pageJob===job) {pageJob=null;report(error,{...message,requestId:job.requestId});} }
   })();
   return job.promise;
@@ -249,7 +255,7 @@ async function receive(event,embed) {
         await loadCountry(message);
         const loadedSlug=slug(currentCountry?.slug||currentCountry?.name);
         const q=wixLocationFrontend.query||{};
-        if(loadedSlug===selectedSlug&&(slug(q.country)!==loadedSlug||q.region||q.destination||q.area)) {
+        if(loadedSlug===selectedSlug&&(slug(q.country)!==loadedSlug||q.state||q.region||q.destination||q.city||q.area)) {
           navigate(APP_ROUTES.country+"?country="+encodeURIComponent(loadedSlug));
         }
         break;
@@ -281,11 +287,16 @@ function discover() {
   if(discoveryCount<40)discoveryTimer=setTimeout(discover,500);
   else console.error("[Explore] No page response from #exploreEmbed.");
 }
-$w.onReady(() => {
+$w.onReady(async () => {
   exploreRouteKey=JSON.stringify(requestedPlace(wixLocationFrontend.query));
   wixLocationFrontend.onChange?.(location=>{
     if(Array.isArray(location?.path)&&normalizeSitePath("/"+location.path.join("/"))!==APP_ROUTES.country)return;
     refreshExploreRoute(location?.query??wixLocationFrontend.query);
   });
   discover();
+  try {
+    await ensureCatalog();
+    const record=content.resolveGeography(requestedPlace(wixLocationFrontend.query));
+    if(record)await applyInventorySeo(wixSeoFrontend,content.pageSeo(record,settings.language));
+  } catch(error) { console.warn("[Explore metadata]",error?.message); }
 });

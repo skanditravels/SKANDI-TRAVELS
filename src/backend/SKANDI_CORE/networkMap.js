@@ -14,13 +14,13 @@ export async function getPublicNetworkMapDataCore() {
 
   const inventory = hierarchyResult?.ok ? hierarchyResult.records : [];
   const content = createDestinationContent(() => inventory);
-  const publishedLocations = inventory.filter(r => ["COUNTRY", "REGION", "DESTINATION", "AREA", "HOTEL"].includes(r.entityType));
+  const publishedLocations = inventory.filter(r => ["COUNTRY", "STATE", "REGION", "DESTINATION", "CITY", "AREA", "HOTEL"].includes(r.entityType));
   const keyOf = value => String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
   const countryFor = item => content.byTypeSlug("COUNTRY", item.country) || content.byTypeSlug("COUNTRY",item.countryCode);
   const ranked = (items, type) => (Array.isArray(items) ? items : []).map(item => {
     const keys = [item.id, item.publicId, item.code, item.slug, item.iata].map(keyOf).filter(Boolean);
     const country = type==="DESTINATION"?countryFor(item):null;
-    const candidates = inventory.filter(row=>row.entityType===type&&(!country||content.isUnder(row,country)));
+    const candidates = inventory.filter(row=>(row.entityType===type||(type==="DESTINATION"&&row.entityType==="CITY"))&&(!country||content.isUnder(row,country)));
     const exact = candidates.filter(row=>[row.id,row.publicId,row.code,row.slug].map(keyOf).some(key=>keys.includes(key)));
     const byName = type==="DESTINATION"&&country&&item.name
       ? candidates.filter(row=>keyOf(row.name)===keyOf(item.name)):[];
@@ -43,9 +43,11 @@ export async function getPublicNetworkMapDataCore() {
     destinations: ranked(payload.destinations,"DESTINATION"),
     inventoryHierarchy: hierarchyResult?.ok ? publishedLocations.map(r=>({
       id:r.id,publicId:r.publicId,type:r.entityType,code:r.code,name:r.name,slug:r.slug,searchPriority:r.sortPriority,
-      parentId:r.parentEntityId,details:{countryId:r.details?.countryId||r.details?.countryEntityId,regionId:r.details?.regionId||r.details?.regionEntityId,
-        destinationId:r.details?.destinationId||r.details?.destinationEntityId,areaId:r.details?.areaId||r.details?.areaEntityId},
-      relations:(r.relations||[]).filter(x=>["COUNTRY","REGION","DESTINATION","AREA","PARENT"].includes(x.relationType)).map(x=>({type:x.relationType,id:x.targetEntityId})),
+      parentId:content.ancestors(r)[0]?.id||"",
+      details:{countryId:r.details?.countryId||r.details?.countryEntityId,stateId:r.details?.stateId,regionId:r.details?.regionId||r.details?.regionEntityId,
+        destinationId:r.details?.destinationId||r.details?.destinationEntityId,cityId:r.details?.cityId,areaId:r.details?.areaId||r.details?.areaEntityId},
+      relations:(r.relations||[]).filter(x=>["COUNTRY","STATE","REGION","DESTINATION","CITY","AREA","PARENT"].includes(x.relationType))
+        .map(x=>({type:x.relationType,id:x.targetEntityId})),
       path:content.geographyPath(r),
       parentNames:content.breadcrumbsFor(r).filter(crumb=>crumb.name!==r.name).map(crumb=>crumb.name)
     })) : null,

@@ -3,6 +3,7 @@
 // Public Home content is projected from the same canonical public Inventory view used by Destination Flow.
 // Provider access reuses customerBooking; no provider HTTP, secrets or booking mutation here.
 
+import { createDestinationContent } from "public/destinationContent";
 import { restRequest, storageGetPublicUrl } from "backend/SKANDI_CORE/supabaseServer";
 import { searchLiveFlightOffersCore, searchLiveStaysCore } from "backend/SKANDI_CORE/customerBooking";
 import { ensureEditorialContext } from "backend/SKANDI_CORE/publicContent";
@@ -101,6 +102,7 @@ function mediaUrl(record) {
   for (const raw of rows) {
     if (typeof raw === "string" && clean(raw, 1800)) return clean(raw, 1800);
     const row = obj(raw);
+    if(row.active===false||upper(row.mediaType??row.media_type??"IMAGE",40)!=="IMAGE")continue;
     const value = clean(row.url || row.publicUrl || row.public_url || row.assetUrl || row.asset_url || row.src, 1800);
     if (value) return value;
   }
@@ -137,7 +139,7 @@ function linkedGeography(records, record, type, visited = new Set()) {
   if (!record || visited.has(record.id)) return null;
   if (record.entityType === type) return record;
   visited.add(record.id);
-  const id = obj(record.details)[type === "REGION" ? "regionId" : "countryId"];
+  const id = obj(record.details)[type.toLowerCase()+"Id"];
   const direct = (id && records.find(row => row.id === id && row.entityType === type))
     || relationTarget(records, record, [type], [type]);
   return direct?.entityType === type ? direct : linkedGeography(records, parentOf(records, record), type, visited);
@@ -145,7 +147,7 @@ function linkedGeography(records, record, type, visited = new Set()) {
 
 function placeGeography(records, record, language) {
   const details = obj(record.details);
-  const region = linkedGeography(records, record, "REGION");
+  const region = linkedGeography(records, record, "STATE") || linkedGeography(records, record, "REGION");
   const country = linkedGeography(records, record, "COUNTRY");
   return {
     region: clean(localized(region, language).title || region?.name || details.region || details.state, 200),
@@ -180,15 +182,15 @@ function airportFor(records, record, visited = new Set()) {
   return parent && parent.id !== record.id ? airportFor(records, parent, visited) : null;
 }
 
-function customerPath(record) {
+function customerPath(records, record) {
+  if (["HOTEL","COUNTRY","STATE","REGION","DESTINATION","CITY","AREA"].includes(record.entityType)){
+    return createDestinationContent(()=>records).geographyPath(record);
+  }
   const details = obj(record.details);
   const commercial = obj(record.commercial);
   const explicit = clean(details.customerPath || details.customer_path || details.url || commercial.customerPath || commercial.customer_path, 1200);
   if (/^\/(?!\/)/.test(explicit) && !/[\\\u0000-\u0020]/.test(explicit)) return explicit;
-  const slug = slugify(record.slug || record.name || record.code);
-  if (record.entityType === "HOTEL") return `/hotel-detail?hotel=${encodeURIComponent(slug || record.id)}`;
-  if (["COUNTRY", "DESTINATION", "AREA"].includes(record.entityType)) return `/destinations?${record.entityType.toLowerCase()}=${encodeURIComponent(slug)}`;
-  return "/destinations";
+  return "/destinations/explore";
 }
 
 function card(records, record, language = "EN") {
@@ -212,7 +214,7 @@ function card(records, record, language = "EN") {
     eyebrow: clean(loc.eyebrow, 300),
     description: clean(loc.shortDescription || loc.short_description || loc.description || details.shortDescription || details.short_description, 1500),
     image: mediaUrl(record),
-    href: customerPath(record),
+    href: customerPath(records,record),
     fromPrice: price > 0 ? price : null,
     currency: currency || "",
     badges: arr(details.tags || commercial.tags).map(value => clean(value, 80)).filter(Boolean).slice(0, 8),
@@ -693,17 +695,17 @@ export async function getHomeContentCore(input = {}) {
   const featured = visible.filter(row => row.homepageFeatured || row.featured).sort((a, b) => a.sortPriority - b.sortPriority || a.name.localeCompare(b.name));
   let airports = visible.filter(row => row.entityType === "AIRPORT").map(row => airportDto(visible, row, language));
   if (!airports.length) airports = await readAirportFallback();
-  const searchDestinations = visible.filter(row => ["DESTINATION", "AREA"].includes(row.entityType)).map(row => destinationSearchDto(visible, row, language));
-  const primaryCities = new Map(searchDestinations.filter(row => row.type === "DESTINATION" && row.iata)
+  const searchDestinations = visible.filter(row => ["CITY","DESTINATION", "AREA"].includes(row.entityType)).map(row => destinationSearchDto(visible, row, language));
+  const primaryCities = new Map(searchDestinations.filter(row => ["CITY","DESTINATION"].includes(row.type) && row.iata)
     .map(row => [row.iata + ":" + slugify(row.name), row]));
   airports = airports.map(airport => {
     const city = primaryCities.get(airport.iata + ":" + slugify(airport.city));
     return city ? {...airport, region:airport.region || city.region, country:airport.country || city.country} : airport;
   });
-  const destinations = featured.filter(row => ["DESTINATION", "AREA", "COUNTRY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
+  const destinations = featured.filter(row => ["CITY","DESTINATION", "AREA", "COUNTRY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
   const hotels = featured.filter(row => row.entityType === "HOTEL").slice(0, 10).map(row => card(visible, row, language));
   const offers = featured.filter(row => ["PACKAGE", "GUIDED_TOUR", "ACTIVITY", "TRANSFER", "CAR_RENTAL"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
-  const inspiration = featured.filter(row => ["DESTINATION", "AREA", "COUNTRY", "GUIDED_TOUR", "ACTIVITY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
+  const inspiration = featured.filter(row => ["CITY","DESTINATION", "AREA", "COUNTRY", "GUIDED_TOUR", "ACTIVITY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
   const content = {
     source: "SUPABASE_PUBLIC_INVENTORY",
     protocolVersion: "V12-HOME",
