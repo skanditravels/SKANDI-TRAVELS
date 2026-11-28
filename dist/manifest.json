@@ -93,8 +93,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
       "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "aea5aef08c1188320aefd2a1e1a12db28513a5341e38c9bdd8ba2df241278707",
-      "bytes": 707924
+      "sha256": "a449d60903d9fdff73a9e8e4d0cb24f30f160aa1c5e1bfbf26166651655d907a",
+      "bytes": 708055
     },
     {
       "key": "search",
