@@ -6,7 +6,11 @@ import {createRequire} from 'node:module';
 const require=createRequire(new URL('../scripts/package.json',import.meta.url));
 const {JSDOM,VirtualConsole}=require('jsdom');
 const base=new URL('../skandi-embeds/travel-info/skandi-travel-info',import.meta.url);
-const [markup,script]=await Promise.all(['.html','.js'].map(ext=>fs.readFile(new URL(base.href+ext),'utf8')));
+const [markup,script,airportFids]=await Promise.all([
+  fs.readFile(new URL(base.href+'.html'),'utf8'),
+  fs.readFile(new URL(base.href+'.js'),'utf8'),
+  fs.readFile(new URL('../skandi-embeds/flight-status/airport-fids.js',import.meta.url),'utf8')
+]);
 
 function setup(t,data) {
   const errors=[],messages=[];
@@ -22,7 +26,7 @@ function setup(t,data) {
   w.scrollTo=()=>{};
   w.requestAnimationFrame=()=>0;
   w.postMessage=message=>messages.push(message);
-  w.eval(script);
+  w.eval(airportFids+'\n'+script);
   const receive=(type,payload)=>w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type,payload}}));
   receive('TRAVEL_INFO_DATA',data);
   const get=selector=>w.document.querySelector(selector);
@@ -111,7 +115,8 @@ test('airport guide groups terminals, transport and services with the existing a
     terminals:[{terminal:'4',description:'International terminal'}],
     transport:[{name:'AirTrain',description:'Connect to the subway'}],
     parkingInfo:'Book parking through the airport.',
-    lounges:[{name:'Terminal 4 Lounge',location:'After security'}]
+    lounges:[{name:'Terminal 4 Lounge',location:'After security'}],
+    destinationsServing:[{name:'London Heathrow'}]
   };
   const {get,open,receive,messages,errors}=setup(t,{airports:[airport]});
   open('airports','Kennedy Airport');
@@ -124,6 +129,8 @@ test('airport guide groups terminals, transport and services with the existing a
   assert.match(get('[data-airport-panel="transport"]').textContent,/AirTrain.*parking/s);
   get('[data-airport-tab="services"]').click();
   assert.match(get('[data-airport-panel="services"]').textContent,/Terminal 4 Lounge/);
+  assert.match(get('[data-airport-panel="services"]').textContent,/Destinations served.*London Heathrow/s);
+  assert.equal(get('[data-airport-tab="routes"]'),null);
   get('[data-airport-tab="flight-info"]').click();
   assert.equal(messages.at(-1).payload.boardType,'departures');
   get('[data-ti-board-type="arrivals"]').click();
@@ -135,7 +142,7 @@ test('airport guide groups terminals, transport and services with the existing a
 
 test('Swedavia panels request only open sections, localize labels and protect wait times',async t=>{
   const airports=[
-    {id:'ARN',title:'Stockholm Arlanda Airport',iata:'ARN',terminals:[{name:'Terminal 5'}]},
+    {id:'ARN',title:'Stockholm Arlanda Airport',iata:'ARN',terminals:[{name:'Terminal 5'}],destinationsServing:[{name:'Old route guide'}]},
     {id:'LLA',title:'Luleå Airport',iata:'LLA'}
   ];
   const {w,get,open,receive,messages,errors}=setup(t,{airports});
@@ -216,6 +223,7 @@ test('Swedavia panels request only open sections, localize labels and protect wa
   assert.equal(queries().filter(m=>m.payload.scope==='routes').length,0);
   get('[data-airport-tab="routes"]').click();
   const routes=directory('routes');
+  assert.doesNotMatch(get('#tiDetailMount').textContent,/Destinations served|Old route guide/);
   reply({items:[{iata:'CPH',city:'Köpenhamn',name:'Kastrup',airlines:['SAS']},{iata:'HEL',city:'Helsinki',airlines:['Finnair']}]});
   filter('routes','airline','SAS');
   assert.match(routes.textContent,/Köpenhamn.*CPH.*SAS/s);
@@ -253,10 +261,18 @@ test('the Travel Info board shows official remarks, codeshares and local update 
     }]
   };
   receive('TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT',board);
-  assert.match(get('#tiAirportFlightRows').textContent,/SK 903.*DL 1234.*14:53.*F62.*Go to gate.*14–20/s);
+  const casing=get('.flight-board-shell.airport-fids-screen');
+  assert.equal(casing.dataset.fidsDirection,'departures');
+  assert.match(casing.querySelector('.board-brand').textContent,/Departures.*Arlanda.*ARN/s);
+  const headers=Array.from(casing.querySelectorAll('.board-columns [role="columnheader"]'),column=>column.textContent);
+  assert.deepEqual(headers,['Time','To','Airline','Flight','Codeshare','Terminal','Remarks','Gate']);
+  const labels=Array.from(get('#tiAirportFlightRows .fids-row').children,column=>column.dataset.label);
+  assert.deepEqual(labels,headers);
+  assert.match(get('#tiAirportFlightRows').textContent,/14:53.*SK 903.*DL 1234.*Go to gate.*14–20.*F62/s);
   assert.match(get('#tiAirportBoardMeta').textContent,/Source: Swedavia.*13:30/s);
   assert.doesNotMatch(get('#tiAirportFlightRows').textContent,/FINAL CALL|ON TIME/);
   receive('SKANDI_MASTER_CONFIG',{settings:{language:'SV'}});
   assert.match(get('#tiAirportFlightRows').textContent,/Gå till gate/);
+  assert.equal(get('#tiAirportPlaceHeader').textContent,'Till / To');
   assert.deepEqual(errors,[]);
 });

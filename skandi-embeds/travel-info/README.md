@@ -37,6 +37,9 @@
 
 ### Swedavia airport information · 2026-11-28
 
+- Direct flights is the route list for guides with that tab. Guides without the tab can show their published Destinations served details.
+- The supplied Arlanda screen is the design reference for the Swedavia Flight Info tab. The page shares `flight-status/airport-fids.css` and `flight-status/airport-fids.js` with the standalone board. The eight columns read Time, To/From, Airline, Flight, Codeshare, Terminal, Remarks and Gate/Belt. At narrow widths each flight displays as a labeled card. The existing receiver loads the compiled presentation.
+
 - Published Swedavia guides group information under Terminals & security, Flight Info, Eat, shop & services, Getting there and Direct flights. The venue directory filters by category, terminal, security area and search terms. Direct flights filter by city, airport code and airline. Both directories open with up to 12 results and a Show more control. The parking block sends travelers to Swedavia to check availability for their dates.
 - Swedavia FlightInfo v2 supplies airport boards for all ten supported airports. Travel Info and the standalone Flight Status page share the same provider selection. Swedavia results use the airport's local date and time, official remarks, codeshares, terminals, departure gates and arrival baggage belts. The board identifies an AirLabs fallback when Swedavia is unavailable. AirLabs also serves airports outside Swedavia and standalone flight-number and route lookups.
 - Published airport records, destination names when available and SKANDI media come from Inventory Control. Swedavia supplies the venue and route lists and official board data.

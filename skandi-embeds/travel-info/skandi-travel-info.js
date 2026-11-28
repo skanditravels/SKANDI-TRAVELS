@@ -501,7 +501,6 @@ function tiAirportResolved(x){
   }
   return resolved;
 }
-const SWEDAVIA_AIRPORTS=new Set(["ARN","BMA","GOT","MMX","LLA","UME","OSD","VBY","RNB","KRN"]);
 const SWEDAVIA_SECURITY=new Set(["ARN","BMA","GOT"]);
 const SWEDAVIA_REFRESH_MS={security:60_000,services:30*60_000,parking:10*60_000,routes:60*60_000};
 const SWEDAVIA_COPY={
@@ -516,7 +515,7 @@ const SWEDAVIA_COPY={
     facilitySearch:"Search names or locations",routeSearch:"Search cities, airports or airlines",terminal:"Terminal",allTerminals:"All terminals",
     area:"Security area",allAreas:"All areas",airline:"Airline",allAirlines:"All airlines",details:"Details",
     more:"Show more",noMatch:"No results match your filters.",count:"Showing {shown} of {total}",routePeriod:"Scheduled departures this month and the next two months.",
-    officialBoard:"Source: Swedavia",backupBoard:"Swedavia is unavailable. Source: AirLabs.",updated:"Feed updated",checkInDesks:"Check-in desks",unknownStatus:"Status unavailable"
+    officialBoard:"Source: Swedavia",backupBoard:"Swedavia is unavailable. Source: AirLabs.",updated:"Feed updated",checkInDesks:"Check-in desks"
   },
   sv:{
     security:"Väntetider i säkerhetskontrollen",services:"Mat, butiker och service",parking:"Swedavias parkeringar",routes:"Planerade direktdestinationer",
@@ -529,7 +528,7 @@ const SWEDAVIA_COPY={
     facilitySearch:"Sök namn eller plats",routeSearch:"Sök stad, flygplats eller flygbolag",terminal:"Terminal",allTerminals:"Alla terminaler",
     area:"Säkerhetsområde",allAreas:"Alla områden",airline:"Flygbolag",allAirlines:"Alla flygbolag",details:"Mer information",
     more:"Visa fler",noMatch:"Inga resultat matchar dina filter.",count:"Visar {shown} av {total}",routePeriod:"Planerade avgångar den här månaden och de kommande två månaderna.",
-    officialBoard:"Källa: Swedavia",backupBoard:"Swedavia är otillgängligt. Källa: AirLabs.",updated:"Flödet uppdaterades",checkInDesks:"Incheckningsdiskar",unknownStatus:"Status saknas"
+    officialBoard:"Källa: Swedavia",backupBoard:"Swedavia är otillgängligt. Källa: AirLabs.",updated:"Flödet uppdaterades",checkInDesks:"Incheckningsdiskar"
   },
   no:{
     security:"Ventetider i sikkerhetskontrollen",services:"Mat, butikker og tjenester",parking:"Swedavias parkeringsplasser",routes:"Planlagte direkteruter",
@@ -542,7 +541,7 @@ const SWEDAVIA_COPY={
     facilitySearch:"Søk etter navn eller sted",routeSearch:"Søk etter by, flyplass eller flyselskap",terminal:"Terminal",allTerminals:"Alle terminaler",
     area:"Sikkerhetsområde",allAreas:"Alle områder",airline:"Flyselskap",allAirlines:"Alle flyselskaper",details:"Mer informasjon",
     more:"Vis flere",noMatch:"Ingen resultater samsvarer med filtrene.",count:"Viser {shown} av {total}",routePeriod:"Planlagte avganger denne måneden og de neste to månedene.",
-    officialBoard:"Kilde: Swedavia",backupBoard:"Swedavia er utilgjengelig. Kilde: AirLabs.",updated:"Oppdatert",checkInDesks:"Innsjekkingsskranker",unknownStatus:"Status utilgjengelig"
+    officialBoard:"Kilde: Swedavia",backupBoard:"Swedavia er utilgjengelig. Kilde: AirLabs.",updated:"Oppdatert",checkInDesks:"Innsjekkingsskranker"
   },
   da:{
     security:"Ventetider i sikkerhedskontrollen",services:"Mad, butikker og service",parking:"Swedavias parkeringspladser",routes:"Planlagte direkte ruter",
@@ -555,7 +554,7 @@ const SWEDAVIA_COPY={
     facilitySearch:"Søg efter navn eller sted",routeSearch:"Søg efter by, lufthavn eller flyselskab",terminal:"Terminal",allTerminals:"Alle terminaler",
     area:"Sikkerhedsområde",allAreas:"Alle områder",airline:"Flyselskab",allAirlines:"Alle flyselskaber",details:"Mere information",
     more:"Vis flere",noMatch:"Ingen resultater matcher dine filtre.",count:"Viser {shown} af {total}",routePeriod:"Planlagte afgange denne måned og de næste to måneder.",
-    officialBoard:"Kilde: Swedavia",backupBoard:"Swedavia er utilgængelig. Kilde: AirLabs.",updated:"Opdateret",checkInDesks:"Check-in-skranker",unknownStatus:"Status utilgængelig"
+    officialBoard:"Kilde: Swedavia",backupBoard:"Swedavia er utilgængelig. Kilde: AirLabs.",updated:"Opdateret",checkInDesks:"Check-in-skranker"
   },
   fi:{
     security:"Turvatarkastuksen jonotusajat",services:"Ravintolat, kaupat ja palvelut",parking:"Swedavian pysäköintialueet",routes:"Suunnitellut suorat lentokohteet",
@@ -568,7 +567,7 @@ const SWEDAVIA_COPY={
     facilitySearch:"Hae nimellä tai sijainnilla",routeSearch:"Hae kaupungin, lentoaseman tai lentoyhtiön mukaan",terminal:"Terminaali",allTerminals:"Kaikki terminaalit",
     area:"Turvatarkastusalue",allAreas:"Kaikki alueet",airline:"Lentoyhtiö",allAirlines:"Kaikki lentoyhtiöt",details:"Lisätiedot",
     more:"Näytä lisää",noMatch:"Hakuehtoja vastaavia tuloksia ei löytynyt.",count:"Näytetään {shown}/{total}",routePeriod:"Suunnitellut lähdöt tässä kuussa ja kahden seuraavan kuukauden aikana.",
-    officialBoard:"Lähde: Swedavia",backupBoard:"Swedavian tiedot eivät ole saatavilla. Lähde: AirLabs.",updated:"Päivitetty",checkInDesks:"Lähtöselvitystiskit",unknownStatus:"Tilatieto puuttuu"
+    officialBoard:"Lähde: Swedavia",backupBoard:"Swedavian tiedot eivät ole saatavilla. Lähde: AirLabs.",updated:"Päivitetty",checkInDesks:"Lähtöselvitystiskit"
   }
 };
 let swedaviaExpiryTimer=0;
@@ -587,7 +586,7 @@ function tiSwedaviaKey(iata,scope,language){
 
 function tiSwedaviaMarkup(airport,scope){
   const iata=tiAirportIata(airport);
-  if(!(scope==="security"?SWEDAVIA_SECURITY:SWEDAVIA_AIRPORTS).has(iata))return "";
+  if(!(scope==="security"?SWEDAVIA_SECURITY.has(iata):airportFids.iata(iata)))return "";
   const copy=SWEDAVIA_COPY[STATE.swedaviaLanguage];
   const title=esc(copy[scope]);
   const directory=scope==="services"||scope==="routes";
@@ -819,7 +818,7 @@ function tiSetSwedaviaLanguage(value){
   const language=lower(value).split("-")[0];
   if(!Object.hasOwn(SWEDAVIA_COPY,language)||language===STATE.swedaviaLanguage)return;
   STATE.swedaviaLanguage=language;
-  if(STATE.activeDetail?._library==="airports"&&SWEDAVIA_AIRPORTS.has(tiAirportIata(STATE.activeDetail))){
+  if(STATE.activeDetail?._library==="airports"&&airportFids.iata(tiAirportIata(STATE.activeDetail))){
     const mount=$("tiDetailMount"),copy=SWEDAVIA_COPY[language];
     mount.querySelectorAll("[data-airport-tab]").forEach(button=>{button.textContent=copy[SWEDAVIA_TAB_LABELS[button.dataset.airportTab]]});
     tiUpdateSwedaviaPanels(mount);
@@ -849,7 +848,7 @@ function airportRelatedHtml(x,a){
 }
 function airportGuideTabs(x,a){
   const s=obj(a.sections);
-  const swedavia=SWEDAVIA_AIRPORTS.has(tiAirportIata(x));
+  const swedavia=Boolean(airportFids.iata(tiAirportIata(x)));
   const copy=SWEDAVIA_COPY[STATE.swedaviaLanguage];
   const section=(id,title,value,fallback,open=false)=>guideSectionHtml(toGuideSection(id,title,value,fallback),open);
   const overview=[
@@ -884,7 +883,7 @@ function airportGuideTabs(x,a){
     transport:{label:"Getting there",content:transportation},
     services:{label:"Airport services",content:services},
     "flight-info":{label:"Flight Info",content:tiAirportFlightPanelHtml(x)},
-    routes:{content:tiSwedaviaMarkup(x,"routes")+section("destinations","Destinations served",a.destinationsServing)}
+    routes:{content:tiSwedaviaMarkup(x,"routes")}
   };
   const order=swedavia?["overview","flight-info","services","transport","routes"]:["overview","transport","services","flight-info"];
   return order.filter(id=>tabs[id].content).map(id=>({id,...tabs[id],label:swedavia?copy[SWEDAVIA_TAB_LABELS[id]]:tabs[id].label}));
@@ -912,7 +911,7 @@ function tiActualFlightTime(side){
   return tiProviderClock(side?.actualLocal,side?.actual)
 }
 function tiAirportLocalClock(x){
-  const zone=SWEDAVIA_AIRPORTS.has(tiAirportIata(x))?"Europe/Stockholm":text(tiAirportResolved(x)?.timezone)||"UTC";
+  const zone=airportFids.iata(tiAirportIata(x))?"Europe/Stockholm":text(tiAirportResolved(x)?.timezone)||"UTC";
   try{
     return {
       time:new Intl.DateTimeFormat("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:zone}).format(new Date()),
@@ -1049,19 +1048,8 @@ function tiAirportFlightIsEarlier(item,arrivals){
 function tiAirportStatus(item,arrivals,meta){
   const raw=lower(item?.status),side=arrivals?obj(item?.arrival):obj(item?.departure),now=Date.now();
   if(meta?.provider==="swedavia"){
-    const lang=STATE.swedaviaLanguage==="sv"?"sv":"en";
-    const remarks=obj(item.fidsRemarks),labels=obj(item.statusLabels);
-    const official=text(remarks[lang]||remarks.en||remarks.sv||labels[lang]||labels.en||labels.sv);
-    const time=side.actualLocal;
-    const completed=tiAirportCompleted(item,arrivals);
-    let label=official;
-    if(!label&&completed)label=arrivals?(lang==="sv"?"Landat":"Landed"):(lang==="sv"?"Avgått":"Departed");
-    if(!label&&raw==="cancelled")label=lang==="sv"?"Inställt":"Cancelled";
-    if(!label&&raw==="diverted")label=lang==="sv"?"Omdirigerat":"Diverted";
-    if(completed&&time&&!label.includes(time))label+=` · ${time}`;
-    const cancelled=["cancelled","diverted","suspended"].includes(raw);
-    const attention=/delay|försen|final call|sista utrop/i.test(official);
-    return [label||SWEDAVIA_COPY[STATE.swedaviaLanguage].unknownStatus,cancelled?"flap-bad":attention?"flap-warn":"flap-ok"];
+    const {message,tone}=airportFids.officialStatus(item,arrivals,STATE.swedaviaLanguage);
+    return [message,tone];
   }
   if(raw.includes("cancel"))return["CANCELLED","flap-bad"];
   if(raw.includes("divert"))return["DIVERTED","flap-bad"];
@@ -1103,7 +1091,13 @@ function tiTerminal(v){
   const raw=text(v).toUpperCase().replace(/^TERMINAL\s*/i,"").replace(/^T(?=\d)/,"").trim();
   return raw||"—"
 }
-function tiFidsRowHtml(item,index,arrivals,entry,extraClass=""){
+const TI_FIDS_COLUMNS=["airline","flight","codeshare","time","place","terminal","facility","remarks"];
+function tiFidsLabels(arrivals,screen){
+  return screen?airportFids.labels(STATE.swedaviaLanguage,arrivals):{
+    airline:"Logo",flight:"Flight No",codeshare:"Codeshare",time:"Time",place:arrivals?"From":"To",terminal:"Terminal",facility:arrivals?"Belt":"Gate",remarks:"Remarks"
+  };
+}
+function tiFidsRowHtml(item,index,arrivals,entry,screen,extraClass=""){
   const side=arrivals?obj(item.arrival):obj(item.departure);
   const place=arrivals?obj(item.departure):obj(item.arrival);
   const airline=text(item.displayAirlineIata||item.operatingAirlineIata||item.airlineIata).toUpperCase();
@@ -1120,19 +1114,24 @@ function tiFidsRowHtml(item,index,arrivals,entry,extraClass=""){
   const codeshareData=codeshares.join("|");
   const dest=tiAirportDirectoryLabel(place);
   const status=tiAirportStatus(item,arrivals,entry.meta);
-  const facility=arrivals?tiBelt(item.arrival?.baggage):(text(side?.gate).toUpperCase()||"—");
-  return `<div class="fids-row fids-layout ${esc(extraClass)}" role="row" style="--row:${index}">
-    <div class="fids-cell cell-airline" data-label="Logo" role="cell"><div class="fids-carrier" title="${esc(carrier)}"><span class="fids-tail ${logo?"":"fallback"}" data-code="${esc(airline||"--")}">${logo?`<img src="${esc(logo)}" alt="${esc(carrier)}" decoding="async">`:`<span class="fids-logo-fallback">${esc(airline||"--")}</span>`}</span><span class="fids-carrier-name">${esc(carrier)}</span></div></div>
-    <div class="fids-cell cell-flight" data-label="Flight No" role="cell"><div class="fids-flight"><strong>${esc(flight)}</strong></div></div>
-    <div class="fids-cell cell-codeshare" data-label="Codeshare" role="cell"><span class="fids-codeshare" data-ti-codeshare data-codeshares="${esc(codeshareData)}" data-codeshare-index="0" aria-label="${esc(codeshares.length?`Codeshares ${codeshares.map(tiFlightDisplay).join(", ")}`:"No codeshare")}"><span data-ti-codeshare-value>${esc(codeshareFirst)}</span>${codeshares.length>1?`<span class="fids-codeshare-rotate" aria-hidden="true">↻</span>`:""}</span></div>
-    <div class="fids-cell cell-time" data-label="Time" role="cell"><div class="fids-time"><strong class="fids-time-main">${esc(tiScheduledFlightTime(side))}</strong></div></div>
-    <div class="fids-cell cell-place" data-label="${arrivals?"From":"To"}" role="cell"><div class="fids-destination"><strong>${esc(dest.place)}</strong></div></div>
-    <div class="fids-cell cell-terminal" data-label="Terminal" role="cell"><span class="fids-terminal">${esc(tiTerminal(side.terminal))}</span></div>
-    <div class="fids-cell cell-gate" data-label="${arrivals?"Belt":"Gate"}" role="cell"><span class="fids-gate ${arrivals?"is-belt":""}">${esc(facility)}</span></div>
-    <div class="fids-cell cell-remarks" data-label="Remarks" role="cell"><span class="fids-status ${status[1]}">${esc(status[0])}</span>${!arrivals&&item.checkInDesks?`<small class="ti-fids-check-in">${esc(SWEDAVIA_COPY[STATE.swedaviaLanguage].checkInDesks)} ${esc(item.checkInDesks)}</small>`:""}</div>
-  </div>`
+  const facility=arrivals?(screen?text(side.baggage).replace(/^BELT\s*/i,"")||"—":tiBelt(side.baggage)):(text(side.gate).toUpperCase()||"—");
+  const cells={
+    airline:`<div class="fids-carrier" title="${esc(carrier)}"><span class="fids-tail ${logo?"":"fallback"}" data-code="${esc(airline||"--")}">${logo?`<img src="${esc(logo)}" alt="${esc(carrier)}" decoding="async">`:`<span class="fids-logo-fallback">${esc(airline||"--")}</span>`}</span><span class="fids-carrier-name">${esc(carrier)}</span></div>`,
+    flight:`<div class="fids-flight"><strong>${esc(flight)}</strong></div>`,
+    codeshare:`<span class="fids-codeshare" data-ti-codeshare data-codeshares="${esc(codeshareData)}" data-codeshare-index="0" aria-label="${esc(codeshares.length?`Codeshares ${codeshares.map(tiFlightDisplay).join(", ")}`:"No codeshare")}"><span data-ti-codeshare-value>${esc(codeshareFirst)}</span>${codeshares.length>1&&!screen?`<span class="fids-codeshare-rotate" aria-hidden="true">↻</span>`:""}</span>`,
+    time:`<div class="fids-time"><strong class="fids-time-main">${esc(tiScheduledFlightTime(side))}</strong></div>`,
+    place:`<div class="fids-destination"><strong>${esc(dest.place)}</strong></div>`,
+    terminal:`<span class="fids-terminal">${esc(tiTerminal(side.terminal))}</span>`,
+    facility:`<span class="fids-gate ${arrivals?"is-belt":""}">${esc(facility)}</span>`,
+    remarks:`<span class="fids-status ${status[1]}">${esc(status[0])}</span>${!arrivals&&item.checkInDesks?`<small class="ti-fids-check-in">${esc(SWEDAVIA_COPY[STATE.swedaviaLanguage].checkInDesks)} ${esc(item.checkInDesks)}</small>`:""}`
+  };
+  const labels=tiFidsLabels(arrivals,screen);
+  const columns=screen?airportFids.columns:TI_FIDS_COLUMNS;
+  const content=columns.map(key=>`<div class="fids-cell cell-${key==="facility"?"gate":key}" data-fids-column="${key}" data-label="${esc(labels[key])}" role="cell">${cells[key]}</div>`).join("");
+  return `<div class="fids-row fids-layout ${esc(extraClass)}" role="row" style="--row:${index}">${content}</div>`;
 }
 function tiAdvanceCodeshareTicker(){
+  if(REDUCED||document.hidden)return;
   document.querySelectorAll("#tiAirportFlightRows [data-ti-codeshare]").forEach(node=>{
     const list=text(node.dataset.codeshares).split("|").map(tiFlightToken).filter(Boolean);
     const value=node.querySelector("[data-ti-codeshare-value]");
@@ -1152,9 +1151,13 @@ function tiRenderAirportFlights(){
   const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",key=tiAirportCacheKey(iata,type),entry=STATE.airportFlights.get(key),host=$("tiAirportFlightRows");
   if(!host)return;
   const arrivals=type==="arrivals";
+  const screen=Boolean(airportFids.iata(iata));
   $("tiAirportScreenCode")&&( $("tiAirportScreenCode").textContent=iata );
-  $("tiAirportPlaceHeader")&&( $("tiAirportPlaceHeader").textContent=arrivals?"From":"To" );
-  $("tiAirportFacilityHeader")&&( $("tiAirportFacilityHeader").textContent=arrivals?"Belt":"Gate" );
+  const columns=host.closest(".board-screen")?.querySelectorAll(".board-columns [data-fids-column]");
+  const labels=tiFidsLabels(arrivals,screen);
+  columns?.forEach(column=>{column.textContent=labels[column.dataset.fidsColumn]});
+  const heading=$("tiAirportFidsHeading");
+  if(heading)heading.textContent=labels.title;
   tiUpdateAirportClock(x);
   if(!entry){
     const pending=STATE.airportFlightPending.has(key);
@@ -1190,11 +1193,11 @@ function tiRenderAirportFlights(){
     let markup="";
     if(earlierRows.length){
       markup+=`<div class="fids-group-divider" role="row"><span>Earlier flights</span><small>Completed ${esc(type)}</small></div>`;
-      markup+=earlierRows.map((item,index)=>tiFidsRowHtml(item,index,arrivals,entry,"is-earlier")).join("")
+      markup+=earlierRows.map((item,index)=>tiFidsRowHtml(item,index,arrivals,entry,screen,"is-earlier")).join("")
     }
     if(current.length){
       if(earlierRows.length)markup+=`<div class="fids-group-divider is-current" role="row"><span>Current flights</span><small>Now and upcoming</small></div>`;
-      markup+=current.map((item,index)=>tiFidsRowHtml(item,index+earlierRows.length,arrivals,entry)).join("")
+      markup+=current.map((item,index)=>tiFidsRowHtml(item,index+earlierRows.length,arrivals,entry,screen)).join("")
     }
     host.innerHTML=markup
   }
@@ -1214,38 +1217,46 @@ function tiRenderAirportFlights(){
         ?`${copy.updated} ${new Intl.DateTimeFormat(STATE.swedaviaLanguage,{timeZone:"Europe/Stockholm",dateStyle:"medium",timeStyle:"short",hourCycle:"h23"}).format(updatedAt)}`:"";
       meta.textContent=[copy.officialBoard,updated,board.note].filter(Boolean).join(" · ");
     }else{
-      meta.textContent=board.note||(SWEDAVIA_AIRPORTS.has(iata)&&board.provider==="airlabs"?copy.backupBoard:
+      meta.textContent=board.note||(screen&&board.provider==="airlabs"?copy.backupBoard:
         `${count} current ${type}${earlier.length?` · ${earlier.length} earlier`:""}. Time shows the scheduled ${arrivals?"arrival":"departure"}; completion time appears in Remarks.`);
     }
   }
 }
 function tiAirportFlightPanelHtml(x){
   const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",arrivals=type==="arrivals";
-  const clock=tiAirportLocalClock(x),direction=arrivals?"Arrivals":"Departures";
-  return `<section class="ti-airport-flight-panel ${arrivals?"is-arrivals":"is-departures"}">
-    <div class="ti-airport-flight-heading">
-      <h2>${esc(iata)} ${direction.toLowerCase()}</h2>
-      <div class="airport-board-toggle" role="group" aria-label="Arrivals or departures">
-        <button type="button" class="airport-toggle" data-ti-board-type="departures">Departures</button>
-        <button type="button" class="airport-toggle" data-ti-board-type="arrivals">Arrivals</button>
-      </div>
+  const clock=tiAirportLocalClock(x),screen=Boolean(airportFids.iata(iata));
+  const labels=tiFidsLabels(arrivals,screen),direction=arrivals?"Arrivals":"Departures";
+  const toggle=`<div class="airport-board-toggle" role="group" aria-label="Arrivals or departures">
+    <button type="button" class="airport-toggle" data-ti-board-type="departures">Departures</button>
+    <button type="button" class="airport-toggle" data-ti-board-type="arrivals">Arrivals</button>
+  </div>`;
+  const sourceClock=`<small id="tiAirportLocalDate">${esc(clock.date)}</small> <strong id="tiAirportLocalTime">${esc(clock.time)}</strong>`;
+  const airportCode=`<strong id="tiAirportScreenCode">${esc(iata)}</strong>`;
+  const screenHeader=screen?`<div class="board-top">
+    <div class="board-brand">
+      <div class="board-monogram" aria-hidden="true"></div>
+      <div><h2 id="tiAirportFidsHeading">${esc(labels.title)}</h2>
+        <span>${esc(itemTitle(x))} (${airportCode})</span></div>
     </div>
-    <div class="terminal-bay"><div class="flight-board-shell">
+    <div class="board-header-actions"><div class="board-header-clock">${sourceClock}</div>${toggle}</div>
+  </div>`:"";
+  const airportBar=screen?"":`<div class="board-airport-bar">
+    <div><small>AIRPORT</small>${airportCode}</div>
+    <div><small>FLIGHT INFORMATION</small><strong>${direction.toUpperCase()}</strong></div>
+    <div class="board-clock">${sourceClock}</div>
+  </div>`;
+  const headers={place:"tiAirportPlaceHeader",facility:"tiAirportFacilityHeader"};
+  const columns=(screen?airportFids.columns:TI_FIDS_COLUMNS).map(key=>
+    `<div role="columnheader" data-fids-column="${key}"${headers[key]?` id="${headers[key]}"`:""}>${esc(labels[key])}</div>`
+  ).join("");
+  return `<section class="ti-airport-flight-panel ${arrivals?"is-arrivals":"is-departures"}">
+    ${screen?"":`<div class="ti-airport-flight-heading"><h2>${esc(iata)} ${direction.toLowerCase()}</h2>${toggle}</div>`}
+    <div class="terminal-bay"><div class="flight-board-shell${screen?" airport-fids-screen":""}" data-fids-direction="${type}">
+      ${screenHeader}
       <div class="board-screen" role="table" aria-label="${esc(iata)} ${direction.toLowerCase()}">
-        <div class="board-airport-bar">
-          <div><small>AIRPORT</small><strong id="tiAirportScreenCode">${esc(iata)}</strong></div>
-          <div><small>FLIGHT INFORMATION</small><strong>${direction.toUpperCase()}</strong></div>
-          <div class="board-clock"><small id="tiAirportLocalDate">${esc(clock.date)}</small><strong id="tiAirportLocalTime">${esc(clock.time)}</strong></div>
-        </div>
-        <div class="board-columns fids-layout" role="row">
-          <div role="columnheader">Logo</div><div role="columnheader">Flight No</div>
-          <div role="columnheader">Codeshare</div><div role="columnheader">Time</div>
-          <div role="columnheader" id="tiAirportPlaceHeader">${arrivals?"From":"To"}</div>
-          <div role="columnheader">Terminal</div>
-          <div role="columnheader" id="tiAirportFacilityHeader">${arrivals?"Belt":"Gate"}</div>
-          <div role="columnheader">Remarks</div>
-        </div>
-        <div class="board-scroll"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup">
+        ${airportBar}
+        <div class="board-columns fids-layout" role="row">${columns}</div>
+        <div class="board-scroll" tabindex="0" aria-label="Airport flight list"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup">
           <div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Loading ${esc(type)} for ${esc(iata)}.</span></div>
         </div></div>
       </div>

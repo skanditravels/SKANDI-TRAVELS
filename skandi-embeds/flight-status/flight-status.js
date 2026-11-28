@@ -10,6 +10,7 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             let contextTimer = 0;
             const SEARCH_TIMEOUT_MS = 25000;
             const CONTEXT_TIMEOUT_MS = 15000;
+            const STANDARD_FLIGHT_COLUMNS = ["airline","flight","time","place","terminal","facility","remarks"];
             let airportTimezone = "UTC";
             let activeAirportContext = null;
             let contextRequestSerial = 0;
@@ -26,9 +27,21 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             let activeSuggestionIndex = -1;
             let lastFlightItems = [];
             let lastFlightMeta = {};
+            let displayedAirport = "";
+            let boardLanguage = airportFids.locale(window.navigator.language);
+            let codeshareIndex = 0;
             let codeshareTick = false;
             window.setInterval(() => {
+                if (document.hidden || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
                 codeshareTick = !codeshareTick;
+                codeshareIndex++;
+                if (el("hardwareCasing")?.classList.contains("airport-fids-screen")) {
+                    for (const node of el("rows").querySelectorAll("[data-fids-codeshares]")) {
+                        const list = node.dataset.fidsCodeshares.split("|");
+                        node.textContent = list[codeshareIndex % list.length];
+                    }
+                    return;
+                }
                 if (lastFlightItems && lastFlightItems.length) {
                     refreshVisibleFidsRows();
                 }
@@ -424,6 +437,10 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             function clearRequestTimeouts() {
                 pendingSearch = "";
                 lastQuery = "";
+                displayedAirport = "";
+                lastFlightItems = [];
+                lastFlightMeta = {};
+                showHistoricalFlights = false;
                 searchSerial++;
                 clearSearchTimeout();
                 clearContextTimeout();
@@ -488,6 +505,14 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                     if (v.from) setSelectedIata("from", v.from);
                     if (v.to) setSelectedIata("to", v.to);
                 }
+                if (v.mode === "airport" && v.airport !== displayedAirport) showHistoricalFlights = false;
+                displayedAirport = v.mode === "airport" ? v.airport : "";
+                if (v.mode === "airport") {
+                    airportTimezone = airportFids.iata(v.airport) ? "Europe/Stockholm"
+                        : airportDirectory.find(airport => airport.iata === v.airport || airport.icao === v.airport)?.timezone || "UTC";
+                }
+                updateBoardType();
+                updateClock();
                 setBoardBusy(true);
                 el("hardwareCasing")?.classList.add("is-searching");
                 el("rows")?.closest(".board-screen")?.setAttribute("aria-busy", "true");
@@ -700,6 +725,9 @@ function render(items, meta) {
   lastFlightItems = Array.isArray(items) ? items : [];
   lastFlightMeta = meta && typeof meta === "object" ? meta : {};
   const swedavia = meta?.provider === "swedavia";
+  if (currentMode === "airport" && meta?.airport) displayedAirport = meta.airport;
+  const screen = Boolean(currentMode === "airport" && airportFids.iata(displayedAirport));
+  updateBoardType();
   const zone = meta?.timezone || airportTimezone || "UTC";
   if (swedavia) {
     airportTimezone = zone;
@@ -726,6 +754,7 @@ function render(items, meta) {
   }
 
   const arrivals = currentMode === "airport" && el("boardType").value === "arrivals";
+  const labels = screen ? airportFids.labels(boardLanguage, arrivals) : null;
   const nowTime = new Date();
 
   // 1. Sort all incoming items in perfect chronological sequence
@@ -760,19 +789,20 @@ function render(items, meta) {
     const side = arrivals ? item.arrival : item.departure;
     const destination = arrivals ? item.departure : item.arrival;
     
-    const hasCodeshare = !!(item.operatingFlightIata || item.operatingAirlineIata);
-    const displayAsCodeshare = hasCodeshare && codeshareTick;
+    const hasCodeshare = Boolean(item.operatingFlightIata || item.operatingAirlineIata);
+    const displayOperating = hasCodeshare && (screen || codeshareTick);
     
-    const activeAirline = displayAsCodeshare ? item.operatingAirlineIata : item.airlineIata;
-    const activeFlightNo = displayAsCodeshare ? item.operatingFlightIata : item.flightIata;
+    const activeAirline = (displayOperating && item.operatingAirlineIata) || item.airlineIata;
+    const activeFlightNo = (displayOperating && item.operatingFlightIata) || item.flightIata || item.flightIcao;
     
     const rules = lastFlightMeta.boardingRules || {};
     const carrierName = rules[activeAirline]?.name || item.airlineName || activeAirline;
-    const canonicalLogo = safeUrl(displayAsCodeshare ? item.operatingAirlineLogoUrl : item.airlineLogoUrl);
+    const canonicalLogo = safeUrl(displayOperating ? item.operatingAirlineLogoUrl || item.airlineLogoUrl : item.airlineLogoUrl);
     const logoUrl = canonicalLogo || KNOWN_AIRLINE_LOGOS[activeAirline] || "";
 
     // Safely fetch city tracking values out of the schema models without duplication loops
-    const targetCity = destination?.city || (swedavia ? destination?.airport || destination?.airportSv : "") || "";
+    const publishedPlace = boardLanguage === "sv" ? destination?.airportSv || destination?.airport : destination?.airport || destination?.airportSv;
+    const targetCity = destination?.city || (swedavia ? publishedPlace : "") || "";
     const targetIata = destination?.iata || "";
     const visibleAirportCode = escapeHtml(targetIata.toUpperCase());
     const cleanDestinationLabel = targetCity
@@ -791,11 +821,9 @@ function render(items, meta) {
     const isPastFlight = flightTime && (nowTime - flightTime) > (15 * 60 * 1000);
 
     if (swedavia) {
-      statusText = item.fidsRemarks?.en || item.fidsRemarks?.sv || item.statusLabels?.en || item.statusLabels?.sv ||
-        ({ cancelled: "Cancelled", diverted: "Diverted", landed: "Landed", departed: "Departed" })[statusStr] || "Status unavailable";
-      if (side?.actualLocal && !statusText.includes(side.actualLocal)) statusText += ` · ${side.actualLocal}`;
-      if (["cancelled", "diverted", "suspended"].includes(statusStr)) statusClass = "flap-bad";
-      else if (/delay|final call/i.test(statusText)) statusClass = "flap-warn";
+      const official = airportFids.officialStatus(item, arrivals, boardLanguage);
+      statusText = official.message;
+      statusClass = official.tone;
     } else if (isPastFlight) {
       if (statusStr === "cancelled") {
         statusText = "CANCELLED";
@@ -815,42 +843,32 @@ function render(items, meta) {
     const baggageBelt = item.arrival?.baggage || "—";
     const activeFacilityText = arrivals ? baggageBelt : gateValue;
     const compactMobileLabel = arrivals ? "Belt" : "Gate";
-
-    return `
-      <div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" data-flight-key="${escapeHtml(key)}">
-        <div class="fids-cell cell-airline" role="cell">
-          <div class="fids-carrier" title="${escapeHtml(carrierName)}">
-            <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
-              <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
-              ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
-            </span>
-            <span class="fids-carrier-name">${escapeHtml(carrierName)}</span>
-          </div>
-        </div>
-        <div class="fids-cell cell-flight" role="cell">
-          <div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong>
-            ${swedavia && item.codeshareFlightIatas?.length ? `<small class="fids-swedavia-codeshares">${escapeHtml(item.codeshareFlightIatas.join(" · "))}</small>` : ""}
-          </div>
-        </div>
-        <div class="fids-cell cell-time" role="cell">
-          <div class="fids-time">
-            <strong class="fids-time-main">${escapeHtml(timeDisplayValue)}</strong>
-          </div>
-        </div>
-        <div class="fids-cell cell-place" role="cell">
-          <div class="fids-destination"><strong>${cleanDestinationLabel}</strong></div>
-        </div>
-        <div class="fids-cell cell-terminal" role="cell">
-          <span class="fids-terminal">${escapeHtml(side?.terminal || "—")}</span>
-        </div>
-        <div class="fids-cell cell-gate" data-label="${compactMobileLabel}" role="cell">
-          <span class="fids-gate is-changing">${escapeHtml(activeFacilityText)}</span>
-        </div>
-        <div class="fids-cell cell-remarks" role="cell">
-          <span class="fids-status ${statusClass} is-changing">${escapeHtml(statusText)}</span>
-        </div>
-      </div>
-    `;
+    const reportedShares = Array.isArray(item.codeshareFlightIatas) ? item.codeshareFlightIatas : [];
+    const codeshares = [...new Set([...reportedShares, item.flightIata].filter(code => code && code !== activeFlightNo))];
+    const codeshareLabel = codeshares.length ? codeshares.join(", ") : "No codeshare";
+    const displayCodeshare = codeshares.length ? codeshares[codeshareIndex % codeshares.length] : "—";
+    const cells = {
+      airline: `<div class="fids-carrier" title="${escapeHtml(carrierName)}">
+        <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
+          <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
+          ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
+        </span>
+        <span class="fids-carrier-name">${escapeHtml(carrierName)}</span>
+      </div>`,
+      flight: `<div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong></div>`,
+      time: `<div class="fids-time"><strong class="fids-time-main">${escapeHtml(timeDisplayValue)}</strong></div>`,
+      place: `<div class="fids-destination"><strong>${cleanDestinationLabel}</strong></div>`,
+      terminal: `<span class="fids-terminal">${escapeHtml(side?.terminal || "—")}</span>`,
+      facility: `<span class="fids-gate is-changing">${escapeHtml(activeFacilityText)}</span>`,
+      remarks: `<span class="fids-status ${statusClass} is-changing">${escapeHtml(statusText)}</span>`,
+      codeshare: `<span class="fids-codeshare" aria-label="${escapeHtml(codeshareLabel)}"${codeshares.length > 1 ? ` data-fids-codeshares="${escapeHtml(codeshares.join("|"))}"` : ""}>${escapeHtml(displayCodeshare)}</span>`
+    };
+    const columnLabels = labels || { airline:"Airline", flight:"Flight", time:"Time", place:arrivals?"From":"To", terminal:"Terminal", facility:compactMobileLabel, remarks:"Remarks" };
+    const columns = screen ? airportFids.columns : STANDARD_FLIGHT_COLUMNS;
+    const content = columns.map(column =>
+      `<div class="fids-cell cell-${column === "facility" ? "gate" : column}" data-fids-column="${column}" data-label="${escapeHtml(columnLabels[column])}" role="cell">${cells[column]}</div>`
+    ).join("");
+    return `<div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" data-flight-key="${escapeHtml(key)}">${content}</div>`;
   };
 
   // 5. Assemble layout arrays with interactive history toggle row button
@@ -860,7 +878,7 @@ function render(items, meta) {
     finalHtmlOutput += `
       <div class="fids-history-toggle-row">
         <button type="button" class="fids-history-btn" id="toggleHistoryBtn">
-          ${showHistoricalFlights ? "↑ Hide completed flights" : `↓ See previous flights (\\${previousFlights.length})`}
+          ${showHistoricalFlights ? "↑ Hide completed flights" : `↓ See previous flights (${previousFlights.length})`}
         </button>
       </div>
     `;
@@ -1192,6 +1210,17 @@ function render(items, meta) {
                 const data = event.data || {};
                 if (data.source !== PARENT_SOURCE) return;
 
+                if (["SKANDI_MASTER_CONFIG", "CUSTOMER_SETTINGS_STATE", "SKANDI_SETTINGS_STATE"].includes(data.type)) {
+                    const language = data.payload?.settings?.language || data.payload?.language;
+                    if (language) {
+                        boardLanguage = airportFids.locale(language);
+                        if (el("hardwareCasing").classList.contains("airport-fids-screen") && !pendingSearch && lastFlightItems.length) {
+                            refreshVisibleFidsRows();
+                        } else updateBoardType();
+                    }
+                    return;
+                }
+
                 if (data.type === "FLIGHT_STATUS_RESULTS") {
                     const payload = data.payload || {};
                     if (!pendingSearch || String(payload.requestId) !== pendingSearch) return;
@@ -1213,7 +1242,9 @@ function render(items, meta) {
                         timezone: textValue(item?.timezone),
                         logoUrl: safeUrl(item?.logoUrl)
                     })).filter(item => item.iata);
-                    if (!pendingSearch && lastFlightItems.length && el("rows").querySelector(".fids-row")) {
+                    if (el("hardwareCasing").classList.contains("airport-fids-screen")) {
+                        updateBoardType();
+                    } else if (!pendingSearch && lastFlightItems.length && el("rows").querySelector(".fids-row")) {
                         const arrivals = currentMode === "airport" && el("boardType").value === "arrivals";
                         el("rows").querySelectorAll(".fids-row").forEach(row => {
                             const item = lastFlightItems.find(item => flightKey(item) === row.dataset.flightKey);
@@ -1277,32 +1308,54 @@ function render(items, meta) {
             });
 
             function updateBoardType() {
-  const type = el("boardType")?.value || "departures";
-  const arrivals = currentMode === "airport" && type === "arrivals";
-  
-  // FIXED: Correctly grab the individual column element by index to prevent crashes
-  const columns = document.querySelectorAll(".board-columns > div");
-  if (columns && columns.length >= 6) {
-    // Index 5 targets the 6th header column: Gate / Belt
-    columns[5].textContent = arrivals ? "Belt" : "Gate";
-  }
-  
-  // Keep the rest of your standard updateBoardType logic here...
-  let label = "Departures";
-  if (currentMode === "airport") label = type === "arrivals" ? "Arrivals" : "Departures";
-  else if (currentMode === "flight") label = "Flight status";
-  else if (currentMode === "route") label = "Route status";
-  if (el("boardSubMode")) el("boardSubMode").textContent = label;
-  if (el("railTitle")) el("railTitle").textContent = label.toUpperCase();
-  
-  if (el("timeHeader")) el("timeHeader").textContent = currentMode !== "airport" ? "Departure / Arrival" : arrivals ? "Arrival time" : "Departure time";
-  if (el("placeHeader")) el("placeHeader").textContent = arrivals ? "From" : "To";
-  if (el("boardDirectionIcon")) el("boardDirectionIcon").textContent = arrivals ? "↘" : "↗";
-  document.querySelectorAll("[data-board-view]").forEach(btn => btn.classList.toggle("active", currentMode === "airport" && btn.dataset.boardView === type));
-  if (el("commerceHeading")) el("commerceHeading").textContent = type === "arrivals" ? "From arrivals into the next part of the trip." : "Make the time before departure work harder.";
-  document.body.classList.toggle("context-arrivals", currentMode === "airport" && type === "arrivals");
-  document.body.classList.toggle("context-departures", currentMode !== "airport" || type !== "arrivals");
-}
+                const type = el("boardType").value;
+                const arrivals = currentMode === "airport" && type === "arrivals";
+                const airport = currentMode === "airport" ? airportFids.iata(displayedAirport) : "";
+                const screen = Boolean(airport);
+                const localLabels = airportFids.labels(boardLanguage, arrivals);
+                const direction = arrivals ? "Arrivals" : "Departures";
+                const label = currentMode === "airport" ? direction : currentMode === "flight" ? "Flight status" : "Route status";
+                const casing = el("hardwareCasing");
+                casing.classList.toggle("airport-fids-screen", screen);
+                casing.dataset.fidsDirection = type;
+                el("boardSubMode").textContent = label;
+                el("railTitle").textContent = (screen ? localLabels.title : label).toUpperCase();
+                const directoryAirport = airportDirectory.find(item => item.iata === airport);
+                el("boardAirportTitle").textContent = screen
+                    ? (directoryAirport?.title ? `${directoryAirport.title} (${airport})` : airport)
+                    : "Passenger Flight Information Display";
+                el("boardDirectionIcon").textContent = arrivals ? "↘" : "↗";
+                el("querySummary").parentElement.hidden = screen;
+                const actions = el("flightBoardActions");
+                const toggles = el("airportBoardToggle");
+                actions.hidden = !screen;
+                if (screen && toggles.parentElement !== actions) actions.append(toggles);
+                if (!screen && toggles.parentElement === actions) el("boardType").before(toggles);
+                toggles.hidden = currentMode !== "airport";
+                const labels = screen ? localLabels : {
+                    airline:"Airline", flight:"Flight No.", terminal:"Terminal", remarks:"Remarks", codeshare:"Codeshare",
+                    time:currentMode !== "airport" ? "Departure / Arrival" : arrivals ? "Arrival time" : "Departure time",
+                    place:arrivals ? "From" : "To", facility:arrivals ? "Belt" : "Gate"
+                };
+                const header = el("flightBoardColumns");
+                const order = screen ? airportFids.columns : [...STANDARD_FLIGHT_COLUMNS, "codeshare"];
+                const cells = new Map([...header.children].map(cell => [cell.dataset.fidsColumn, cell]));
+                const headers = order.map(key => {
+                    const cell = cells.get(key);
+                    cell.textContent = labels[key];
+                    cell.hidden = key === "codeshare" && !screen;
+                    return cell;
+                });
+                if (headers.some((cell, index) => header.children[index] !== cell)) header.append(...headers);
+                document.querySelectorAll("[data-board-view]").forEach(btn => {
+                    const active = currentMode === "airport" && btn.dataset.boardView === type;
+                    btn.classList.toggle("active", active);
+                    btn.setAttribute("aria-pressed", String(active));
+                });
+                if (el("commerceHeading")) el("commerceHeading").textContent = type === "arrivals" ? "From arrivals into the next part of the trip." : "Make the time before departure work harder.";
+                document.body.classList.toggle("context-arrivals", currentMode === "airport" && arrivals);
+                document.body.classList.toggle("context-departures", currentMode !== "airport" || !arrivals);
+            }
 
   
 
@@ -1330,6 +1383,8 @@ function render(items, meta) {
                     }).format(now);
                 }
                 if (el("utcClock")) el("utcClock").textContent = `${value} ${airportTimezone==="UTC"?"UTC":"LOCAL"}`;
+                el("boardClockEcho").textContent = value;
+                el("boardClockLabel").textContent = airportTimezone === "UTC" ? "UTC" : "Local time";
                 if (el("boardClockEcho")) el("boardClockEcho").textContent = value;
                 if (el("boardClockLabel")) el("boardClockLabel").textContent = airportTimezone === "UTC" ? "UTC" : "LOCAL";
             }
@@ -1404,6 +1459,7 @@ function render(items, meta) {
 
             document.querySelectorAll("[data-board-view]").forEach((button) => {
                 button.addEventListener("click", () => {
+                    if (button.dataset.boardView !== el("boardType").value) showHistoricalFlights = false;
                     el("boardType").value = button.dataset.boardView;
                     updateBoardType();
                     const v = values();

@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="flight-status.css">
+<link rel="stylesheet" href="airport-fids.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap">
 <div class="page">
 <section aria-label="Flight information" class="hero" id="hero">
 <div class="wrap hero-inner">
@@ -85,13 +88,14 @@
 <div aria-hidden="true" class="board-monogram" id="boardDirectionIcon">↗</div>
 <div>
 <strong id="railTitle">DEPARTURES</strong>
-<span>Passenger Flight Information Display</span>
+<span id="boardAirportTitle">Passenger Flight Information Display</span>
 </div>
 </div>
 <div class="board-query">
 <label id="queryLabel">Airport board</label>
 <strong id="querySummary">Select an airport to load the board</strong>
 </div>
+<div class="board-header-actions" id="flightBoardActions" hidden></div>
 
 </div>
 <div aria-label="Airport flight information display" class="board-screen" role="table">
@@ -100,16 +104,17 @@
 <div class="airport-date-display"><small>DATE</small><strong id="screenDate">---</strong></div>
 <div class="airport-clock-display"><small id="boardClockLabel">UTC</small><strong id="boardClockEcho">--:--:--</strong></div>
 </div>
-<div class="board-columns fids-layout" role="row">
-<div role="columnheader">Airline</div>
-<div role="columnheader">Flight No.</div>
-<div id="timeHeader" role="columnheader">Departure time</div>
-<div id="placeHeader" role="columnheader">To</div>
-<div role="columnheader">Terminal</div>
-<div role="columnheader">Gate</div>
-<div role="columnheader">Remarks</div>
+<div class="board-columns fids-layout" id="flightBoardColumns" role="row">
+<div data-fids-column="airline" role="columnheader">Airline</div>
+<div data-fids-column="flight" role="columnheader">Flight No.</div>
+<div id="timeHeader" data-fids-column="time" role="columnheader">Departure time</div>
+<div id="placeHeader" data-fids-column="place" role="columnheader">To</div>
+<div data-fids-column="terminal" role="columnheader">Terminal</div>
+<div id="gateHeader" data-fids-column="facility" role="columnheader">Gate</div>
+<div data-fids-column="remarks" role="columnheader">Remarks</div>
+<div data-fids-column="codeshare" role="columnheader" hidden>Codeshare</div>
 </div>
-<div class="board-scroll">
+<div class="board-scroll" tabindex="0" aria-label="Airport flight list">
 <div class="flip-body" id="rows" role="rowgroup">
 <div class="board-message">Preparing airport board…</div>
 </div>
@@ -123,3 +128,5 @@
 </section>
 
 </div>
+<script src="airport-fids.js"></script>
+<script src="flight-status.js"></script>

@@ -27,6 +27,8 @@
 
 ## CHANGE LOG
 
+- 2026-11-28 — The Direct flights tab replaces the duplicate Destinations served listing. Swedavia Flight Info uses the provided Arlanda display design and the existing official feed. The active page notes identify the shared presentation assets and release path.
+
 - 2026-11-28 — Swedavia guides gain searchable venue and direct-flight directories, terminal and security-area filters, and a separate Direct flights tab. The airport boards share Swedavia FlightInfo v2 through the existing Flight Status backend. See the [active page notes](../../README.md) for installation and live validation.
 
 - 2026-11-28 — The active airport guides read Swedavia's directory, parking, scheduled destinations and checkpoint estimates through the existing Wix component. The provider details augment published Inventory Control guides. The HTML snapshot below predates this addition. See the [active page notes](../../README.md) for the message contract, credentials and release checks.
