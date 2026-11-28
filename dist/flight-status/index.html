@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap">
 <style data-skandi-part="header">#skandi-global-header-root{
   --sk-navy:#022e64;
   --sk-blue:#0b3a7a;
@@ -4084,7 +4084,310 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
             }
         }
 
-#skandi-app-root .fids-swedavia-codeshares{display:block;margin-top:4px;color:#bfced6;line-height:1.25;overflow-wrap:anywhere}
+#skandi-app-root .flight-board-shell.airport-fids-screen {
+  --board-frame: #070a24;
+  --board-header: #0b1047;
+  --board-surface: #121a6e;
+  --board-row: #141d75;
+  --board-hover: #1c2894;
+  --board-line: #3e4da7;
+  --board-yellow: #f7d046;
+  --board-white: #f8faff;
+  --board-ice: #c8d4ff;
+  --board-green: #73e9af;
+  --board-red: #ff989e;
+  --board-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+  container-type: inline-size;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 4px solid var(--board-frame);
+  border-radius: 6px;
+  background: var(--board-surface);
+  color: var(--board-white);
+  font-family: Inter, system-ui, sans-serif;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 16px;
+  color: var(--board-ice);
+  border-bottom: 1px solid var(--board-line);
+  background: var(--board-header);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-brand strong,
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-brand h2 {
+  display: block;
+  margin: 0;
+  color: var(--board-yellow);
+  font: 700 1.08rem/1.25 Inter, system-ui, sans-serif;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-brand span {
+  display: block;
+  margin: 2px 0 0;
+  color: var(--board-ice);
+  font: 600 .81rem/1.35 Inter, system-ui, sans-serif;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-brand span strong {
+  display: inline;
+  font: inherit;
+  color: var(--board-yellow);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-monogram {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: 3px;
+  background: var(--board-yellow) url("https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/system_icons/airplane-takeoff-fill-svgrepo-com.svg") center/21px auto no-repeat;
+  color: transparent;
+  box-shadow: none;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen[data-fids-direction="arrivals"] .board-monogram {
+  background-image: url("https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/system_icons/airplane-landing-fill-svgrepo-com.svg");
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-query {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-query label,
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-query strong { color: var(--board-ice); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .airport-board-toggle {
+  display: inline-flex;
+  min-width: 0;
+  gap: 3px;
+  padding: 2px;
+  border: 1px solid var(--board-line);
+  border-radius: 4px;
+  background: var(--board-frame);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .airport-toggle {
+  min-height: 40px;
+  border: 0;
+  border-radius: 2px;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--board-ice);
+  font-weight: 700;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .airport-toggle[aria-pressed="true"] {
+  background: var(--board-yellow);
+  color: var(--board-header);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-screen,
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-scroll { background: var(--board-surface); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-scroll {
+  min-height: 0;
+  max-height: min(66vh, 620px);
+  padding: 0;
+  overflow: auto;
+  scrollbar-color: #8a97df var(--board-header);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-airport-bar,
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-footer {
+  border-color: var(--board-line);
+  background: var(--board-header);
+  color: var(--board-ice);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-airport-bar > div { border-color: var(--board-line); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-airport-bar small { color: var(--board-ice); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-airport-bar strong { color: var(--board-yellow); }
+#skandi-app-root .airport-fids-screen .board-header-clock {
+  color: var(--board-ice);
+  font: 600 .86rem/1.3 var(--board-mono);
+}
+#skandi-app-root .airport-fids-screen .board-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-layout {
+  display: grid;
+  grid-template-columns: minmax(3.1rem,.52fr) minmax(8rem,1.55fr) minmax(4.1rem,.74fr) minmax(4rem,.73fr)
+    minmax(5.25rem,.85fr) minmax(4.5rem,.74fr) minmax(8.5rem,1.6fr) minmax(3.3rem,.58fr);
+  grid-template-areas: "time place airline flight codeshare terminal remarks facility";
+  grid-auto-flow: row;
+  grid-auto-rows: auto;
+  align-items: center;
+  gap: 5px 9px;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-columns,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  height: auto;
+  padding: 7px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--board-line);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-columns {
+  background: #0d1357;
+  border-bottom-color: #9a8c55;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-columns > div {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--board-ice);
+  font: 700 .81rem/1.26 var(--board-mono);
+  letter-spacing: .035em;
+  white-space: normal;
+  text-transform: uppercase;
+  text-align: start;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row:nth-of-type(even) {
+  margin: 0;
+  border-radius: 0;
+  background: var(--board-row);
+  box-shadow: none;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row:hover { background: var(--board-hover); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-cell {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  align-self: center;
+  padding: 0;
+  border: 0;
+  color: var(--board-white);
+  text-align: start;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-row .fids-cell::before { content: none; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="time"] { grid-area: time; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="place"] { grid-area: place; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="airline"] { grid-area: airline; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="flight"] { grid-area: flight; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="codeshare"] { grid-area: codeshare; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="terminal"] { grid-area: terminal; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="remarks"] { grid-area: remarks; }
+#skandi-app-root .flight-board-shell.airport-fids-screen [data-fids-column="facility"] { grid-area: facility; }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-time-main,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-flight strong,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-codeshare,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-terminal,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-gate {
+  color: var(--board-white);
+  font: 600 .93rem/1.25 var(--board-mono);
+  font-variant-numeric: tabular-nums;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-destination strong,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-destination strong span {
+  color: var(--board-yellow);
+  font: 650 .94rem/1.3 Inter, system-ui, sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail.fallback {
+  width: 74px;
+  max-width: 100%;
+  height: 25px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: none;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-tail.fallback {
+  background: #edf2ff;
+  color: var(--board-header);
+  font: 750 .82rem var(--board-mono);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-gate {
+  display: inline;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--board-yellow);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen[data-fids-direction="arrivals"] .fids-gate { color: var(--board-green); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-status {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--board-white);
+  font: 600 .87rem/1.28 Inter, system-ui, sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-status::before { color: var(--board-green); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-status.flap-warn,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-status.flap-warn::before { color: var(--board-yellow); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-status.flap-bad,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-status.flap-bad::before { color: var(--board-red); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .ti-fids-check-in { color: var(--board-ice); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-message-title,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-earlier-control,
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-history-btn { color: var(--board-yellow); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-message-note,
+#skandi-app-root .flight-board-shell.airport-fids-screen .board-footer strong { color: var(--board-ice); }
+#skandi-app-root .flight-board-shell.airport-fids-screen .fids-history-btn {
+  width: 100%;
+  background: var(--board-header);
+  border-color: var(--board-line);
+}
+#skandi-app-root .flight-board-shell.airport-fids-screen :focus-visible { outline-offset: -2px; outline: 2px solid var(--board-yellow); }
+#skandi-app-root .flight-board-shell .board-columns > [hidden] { display: none; }
+
+@container (max-width: 790px) {
+  #skandi-app-root .flight-board-shell.airport-fids-screen .board-columns.fids-layout { display: none; }
+  #skandi-app-root .flight-board-shell.airport-fids-screen .fids-row.fids-layout {
+    grid-template-columns: minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) !important;
+    grid-template-areas: "time place facility" "airline flight codeshare" "terminal remarks remarks";
+    width: auto;
+    margin: 7px 8px !important;
+    padding: 10px;
+    gap: 10px 8px;
+    border: 1px solid var(--board-line) !important;
+    border-radius: 4px !important;
+  }
+  #skandi-app-root .flight-board-shell.airport-fids-screen .fids-row .fids-cell {
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  #skandi-app-root .flight-board-shell.airport-fids-screen .fids-row .fids-cell::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    color: var(--board-ice);
+    font: 650 .81rem/1.15 var(--board-mono);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+  #skandi-app-root .flight-board-shell.airport-fids-screen .board-top { padding: 9px 12px; }
+}
+
+@media(prefers-reduced-motion: reduce) {
+  #skandi-app-root .airport-fids-screen .fids-codeshare { transition: none; }
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -4383,7 +4686,10 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   </aside>
 </div>
 </div>
-<div id="skandi-app-root"><div class="page">
+<div id="skandi-app-root">
+
+
+<div class="page">
 <section aria-label="Flight information" class="hero" id="hero">
 <div class="wrap hero-inner">
 <div class="hero-copy">
@@ -4470,13 +4776,14 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 <div aria-hidden="true" class="board-monogram" id="boardDirectionIcon">↗</div>
 <div>
 <strong id="railTitle">DEPARTURES</strong>
-<span>Passenger Flight Information Display</span>
+<span id="boardAirportTitle">Passenger Flight Information Display</span>
 </div>
 </div>
 <div class="board-query">
 <label id="queryLabel">Airport board</label>
 <strong id="querySummary">Select an airport to load the board</strong>
 </div>
+<div class="board-header-actions" id="flightBoardActions" hidden=""></div>
 
 </div>
 <div aria-label="Airport flight information display" class="board-screen" role="table">
@@ -4485,16 +4792,17 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 <div class="airport-date-display"><small>DATE</small><strong id="screenDate">---</strong></div>
 <div class="airport-clock-display"><small id="boardClockLabel">UTC</small><strong id="boardClockEcho">--:--:--</strong></div>
 </div>
-<div class="board-columns fids-layout" role="row">
-<div role="columnheader">Airline</div>
-<div role="columnheader">Flight No.</div>
-<div id="timeHeader" role="columnheader">Departure time</div>
-<div id="placeHeader" role="columnheader">To</div>
-<div role="columnheader">Terminal</div>
-<div role="columnheader">Gate</div>
-<div role="columnheader">Remarks</div>
+<div class="board-columns fids-layout" id="flightBoardColumns" role="row">
+<div data-fids-column="airline" role="columnheader">Airline</div>
+<div data-fids-column="flight" role="columnheader">Flight No.</div>
+<div id="timeHeader" data-fids-column="time" role="columnheader">Departure time</div>
+<div id="placeHeader" data-fids-column="place" role="columnheader">To</div>
+<div data-fids-column="terminal" role="columnheader">Terminal</div>
+<div id="gateHeader" data-fids-column="facility" role="columnheader">Gate</div>
+<div data-fids-column="remarks" role="columnheader">Remarks</div>
+<div data-fids-column="codeshare" role="columnheader" hidden="">Codeshare</div>
 </div>
-<div class="board-scroll">
+<div class="board-scroll" tabindex="0" aria-label="Airport flight list">
 <div class="flip-body" id="rows" role="rowgroup">
 <div class="board-message">Preparing airport board…</div>
 </div>
@@ -4508,6 +4816,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 </section>
 
 </div>
+
+
 </div>
 <div id="skandi-global-footer-root"><footer id="skandi-customer-footer" aria-label="SKANDI footer">
   <div class="skf-newsletter">
@@ -6189,6 +6499,73 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
 <script data-skandi-part="flight-status">(function(){
 const __root=window.document.getElementById("skandi-app-root");
 const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+/* Shared presentation for the Swedavia airport screens. */
+const airportFids = (() => {
+  const airports = Object.freeze({
+    ARN: "ESSA", BMA: "ESSB", GOT: "ESGG", MMX: "ESMS", LLA: "ESPA",
+    UME: "ESNU", OSD: "ESNZ", VBY: "ESSV", RNB: "ESDF", KRN: "ESNQ"
+  });
+  const columns = Object.freeze(["time", "place", "airline", "flight", "codeshare", "terminal", "remarks", "facility"]);
+  const copy = {
+    en: { dep: "Departures", arr: "Arrivals", time: "Time", to: "To", from: "From", airline: "Airline", flight: "Flight", remarks: "Remarks", belt: "Belt", unknown: "Status unavailable" },
+    sv: { dep: "Avgångar", arr: "Ankomster", time: "Tid", to: "Till", from: "Från", airline: "Bolag", flight: "Flyg", remarks: "Info", belt: "Band", unknown: "Status saknas" },
+    no: { dep: "Avganger", arr: "Ankomster", time: "Tid", to: "Til", from: "Fra", airline: "Selskap", flight: "Flyg", remarks: "Info", belt: "Bånd", unknown: "Status utilgjengelig" },
+    da: { dep: "Afgange", arr: "Ankomster", time: "Tid", to: "Til", from: "Fra", airline: "Selskab", flight: "Fly", remarks: "Info", belt: "Bånd", unknown: "Status utilgængelig" },
+    fi: { dep: "Lähtevät", arr: "Saapuvat", time: "Aika", to: "Kohde", from: "Lähtöpaikka", airline: "Lentoyhtiö", flight: "Lento", remarks: "Tiedot", belt: "Hihna", unknown: "Tilatieto puuttuu" }
+  };
+  const statusCopy = {
+    en: { departed: "Departed", landed: "Landed", cancelled: "Cancelled", diverted: "Diverted" },
+    sv: { departed: "Avgått", landed: "Landat", cancelled: "Inställt", diverted: "Omdirigerat" }
+  };
+
+  function locale(value) {
+    const code = String(value || "").trim().toLowerCase().split(/[-_]/)[0];
+    if (code === "nb" || code === "nn") return "no";
+    return Object.hasOwn(copy, code) ? code : "en";
+  }
+
+  function iata(value) {
+    const code = String(value || "").trim().toUpperCase();
+    return Object.hasOwn(airports, code) ? code : Object.keys(airports).find(key => airports[key] === code) || "";
+  }
+
+  function labels(language, arrivals) {
+    const lang = locale(language);
+    const chosen = copy[lang];
+    const bilingual = key => lang === "en" ? chosen[key] : `${chosen[key]} / ${copy.en[key]}`;
+    return {
+      title: bilingual(arrivals ? "arr" : "dep"),
+      time: bilingual("time"),
+      place: bilingual(arrivals ? "from" : "to"),
+      airline: chosen.airline,
+      flight: chosen.flight,
+      codeshare: "Codeshare",
+      terminal: "Terminal",
+      remarks: bilingual("remarks"),
+      facility: arrivals ? bilingual("belt") : "Gate"
+    };
+  }
+
+  function officialStatus(item, arrivals, language) {
+    const lang = locale(language);
+    const primary = lang === "sv" ? "sv" : "en";
+    const alt = primary === "sv" ? "en" : "sv";
+    const status = String(item.status || "").toLowerCase();
+    const side = arrivals ? item.arrival : item.departure;
+    const remarks = item.fidsRemarks || {};
+    const labels = item.statusLabels || {};
+    const abnormal = ["cancelled", "diverted", "suspended"].includes(status);
+    const completed = !abnormal && (["landed", "departed"].includes(status) || side?.actual);
+    let message = String(remarks[primary] || remarks[alt] || labels[primary] || labels[alt] ||
+      statusCopy[primary][status] || copy[lang].unknown).trim();
+    if (completed && side?.actualLocal && !message.includes(side.actualLocal)) message += ` · ${side.actualLocal}`;
+    const tone = abnormal ? "flap-bad" : /delay|försen|final call|sista utrop/i.test(message) ? "flap-warn" : "flap-ok";
+    return { message, tone };
+  }
+
+  return { columns, iata, labels, locale, officialStatus };
+})();
+
 const SOURCE = "SKANDI_FLIGHT_STATUS";
             const PARENT_SOURCE = "SKANDI_WIX_PARENT";
             let currentMode = "airport";
@@ -6201,6 +6578,7 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             let contextTimer = 0;
             const SEARCH_TIMEOUT_MS = 25000;
             const CONTEXT_TIMEOUT_MS = 15000;
+            const STANDARD_FLIGHT_COLUMNS = ["airline","flight","time","place","terminal","facility","remarks"];
             let airportTimezone = "UTC";
             let activeAirportContext = null;
             let contextRequestSerial = 0;
@@ -6217,9 +6595,21 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             let activeSuggestionIndex = -1;
             let lastFlightItems = [];
             let lastFlightMeta = {};
+            let displayedAirport = "";
+            let boardLanguage = airportFids.locale(window.navigator.language);
+            let codeshareIndex = 0;
             let codeshareTick = false;
             window.setInterval(() => {
+                if (document.hidden || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
                 codeshareTick = !codeshareTick;
+                codeshareIndex++;
+                if (el("hardwareCasing")?.classList.contains("airport-fids-screen")) {
+                    for (const node of el("rows").querySelectorAll("[data-fids-codeshares]")) {
+                        const list = node.dataset.fidsCodeshares.split("|");
+                        node.textContent = list[codeshareIndex % list.length];
+                    }
+                    return;
+                }
                 if (lastFlightItems && lastFlightItems.length) {
                     refreshVisibleFidsRows();
                 }
@@ -6615,6 +7005,10 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
             function clearRequestTimeouts() {
                 pendingSearch = "";
                 lastQuery = "";
+                displayedAirport = "";
+                lastFlightItems = [];
+                lastFlightMeta = {};
+                showHistoricalFlights = false;
                 searchSerial++;
                 clearSearchTimeout();
                 clearContextTimeout();
@@ -6679,6 +7073,14 @@ const SOURCE = "SKANDI_FLIGHT_STATUS";
                     if (v.from) setSelectedIata("from", v.from);
                     if (v.to) setSelectedIata("to", v.to);
                 }
+                if (v.mode === "airport" && v.airport !== displayedAirport) showHistoricalFlights = false;
+                displayedAirport = v.mode === "airport" ? v.airport : "";
+                if (v.mode === "airport") {
+                    airportTimezone = airportFids.iata(v.airport) ? "Europe/Stockholm"
+                        : airportDirectory.find(airport => airport.iata === v.airport || airport.icao === v.airport)?.timezone || "UTC";
+                }
+                updateBoardType();
+                updateClock();
                 setBoardBusy(true);
                 el("hardwareCasing")?.classList.add("is-searching");
                 el("rows")?.closest(".board-screen")?.setAttribute("aria-busy", "true");
@@ -6891,6 +7293,9 @@ function render(items, meta) {
   lastFlightItems = Array.isArray(items) ? items : [];
   lastFlightMeta = meta && typeof meta === "object" ? meta : {};
   const swedavia = meta?.provider === "swedavia";
+  if (currentMode === "airport" && meta?.airport) displayedAirport = meta.airport;
+  const screen = Boolean(currentMode === "airport" && airportFids.iata(displayedAirport));
+  updateBoardType();
   const zone = meta?.timezone || airportTimezone || "UTC";
   if (swedavia) {
     airportTimezone = zone;
@@ -6917,6 +7322,7 @@ function render(items, meta) {
   }
 
   const arrivals = currentMode === "airport" && el("boardType").value === "arrivals";
+  const labels = screen ? airportFids.labels(boardLanguage, arrivals) : null;
   const nowTime = new Date();
 
   // 1. Sort all incoming items in perfect chronological sequence
@@ -6951,19 +7357,20 @@ function render(items, meta) {
     const side = arrivals ? item.arrival : item.departure;
     const destination = arrivals ? item.departure : item.arrival;
     
-    const hasCodeshare = !!(item.operatingFlightIata || item.operatingAirlineIata);
-    const displayAsCodeshare = hasCodeshare && codeshareTick;
+    const hasCodeshare = Boolean(item.operatingFlightIata || item.operatingAirlineIata);
+    const displayOperating = hasCodeshare && (screen || codeshareTick);
     
-    const activeAirline = displayAsCodeshare ? item.operatingAirlineIata : item.airlineIata;
-    const activeFlightNo = displayAsCodeshare ? item.operatingFlightIata : item.flightIata;
+    const activeAirline = (displayOperating && item.operatingAirlineIata) || item.airlineIata;
+    const activeFlightNo = (displayOperating && item.operatingFlightIata) || item.flightIata || item.flightIcao;
     
     const rules = lastFlightMeta.boardingRules || {};
     const carrierName = rules[activeAirline]?.name || item.airlineName || activeAirline;
-    const canonicalLogo = safeUrl(displayAsCodeshare ? item.operatingAirlineLogoUrl : item.airlineLogoUrl);
+    const canonicalLogo = safeUrl(displayOperating ? item.operatingAirlineLogoUrl || item.airlineLogoUrl : item.airlineLogoUrl);
     const logoUrl = canonicalLogo || KNOWN_AIRLINE_LOGOS[activeAirline] || "";
 
     // Safely fetch city tracking values out of the schema models without duplication loops
-    const targetCity = destination?.city || (swedavia ? destination?.airport || destination?.airportSv : "") || "";
+    const publishedPlace = boardLanguage === "sv" ? destination?.airportSv || destination?.airport : destination?.airport || destination?.airportSv;
+    const targetCity = destination?.city || (swedavia ? publishedPlace : "") || "";
     const targetIata = destination?.iata || "";
     const visibleAirportCode = escapeHtml(targetIata.toUpperCase());
     const cleanDestinationLabel = targetCity
@@ -6982,11 +7389,9 @@ function render(items, meta) {
     const isPastFlight = flightTime && (nowTime - flightTime) > (15 * 60 * 1000);
 
     if (swedavia) {
-      statusText = item.fidsRemarks?.en || item.fidsRemarks?.sv || item.statusLabels?.en || item.statusLabels?.sv ||
-        ({ cancelled: "Cancelled", diverted: "Diverted", landed: "Landed", departed: "Departed" })[statusStr] || "Status unavailable";
-      if (side?.actualLocal && !statusText.includes(side.actualLocal)) statusText += ` · ${side.actualLocal}`;
-      if (["cancelled", "diverted", "suspended"].includes(statusStr)) statusClass = "flap-bad";
-      else if (/delay|final call/i.test(statusText)) statusClass = "flap-warn";
+      const official = airportFids.officialStatus(item, arrivals, boardLanguage);
+      statusText = official.message;
+      statusClass = official.tone;
     } else if (isPastFlight) {
       if (statusStr === "cancelled") {
         statusText = "CANCELLED";
@@ -7006,42 +7411,32 @@ function render(items, meta) {
     const baggageBelt = item.arrival?.baggage || "—";
     const activeFacilityText = arrivals ? baggageBelt : gateValue;
     const compactMobileLabel = arrivals ? "Belt" : "Gate";
-
-    return `
-      <div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" data-flight-key="${escapeHtml(key)}">
-        <div class="fids-cell cell-airline" role="cell">
-          <div class="fids-carrier" title="${escapeHtml(carrierName)}">
-            <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
-              <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
-              ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
-            </span>
-            <span class="fids-carrier-name">${escapeHtml(carrierName)}</span>
-          </div>
-        </div>
-        <div class="fids-cell cell-flight" role="cell">
-          <div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong>
-            ${swedavia && item.codeshareFlightIatas?.length ? `<small class="fids-swedavia-codeshares">${escapeHtml(item.codeshareFlightIatas.join(" · "))}</small>` : ""}
-          </div>
-        </div>
-        <div class="fids-cell cell-time" role="cell">
-          <div class="fids-time">
-            <strong class="fids-time-main">${escapeHtml(timeDisplayValue)}</strong>
-          </div>
-        </div>
-        <div class="fids-cell cell-place" role="cell">
-          <div class="fids-destination"><strong>${cleanDestinationLabel}</strong></div>
-        </div>
-        <div class="fids-cell cell-terminal" role="cell">
-          <span class="fids-terminal">${escapeHtml(side?.terminal || "—")}</span>
-        </div>
-        <div class="fids-cell cell-gate" data-label="${compactMobileLabel}" role="cell">
-          <span class="fids-gate is-changing">${escapeHtml(activeFacilityText)}</span>
-        </div>
-        <div class="fids-cell cell-remarks" role="cell">
-          <span class="fids-status ${statusClass} is-changing">${escapeHtml(statusText)}</span>
-        </div>
-      </div>
-    `;
+    const reportedShares = Array.isArray(item.codeshareFlightIatas) ? item.codeshareFlightIatas : [];
+    const codeshares = [...new Set([...reportedShares, item.flightIata].filter(code => code && code !== activeFlightNo))];
+    const codeshareLabel = codeshares.length ? codeshares.join(", ") : "No codeshare";
+    const displayCodeshare = codeshares.length ? codeshares[codeshareIndex % codeshares.length] : "—";
+    const cells = {
+      airline: `<div class="fids-carrier" title="${escapeHtml(carrierName)}">
+        <span class="fids-tail ${logoUrl ? "" : "fallback"} ${!canonicalLogo && logoUrl ? "logo-dark" : ""} is-changing">
+          <span class="fids-logo-fallback" ${logoUrl ? "hidden" : ""}>${escapeHtml(activeAirline)}</span>
+          ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(carrierName)}" decoding="async">` : ""}
+        </span>
+        <span class="fids-carrier-name">${escapeHtml(carrierName)}</span>
+      </div>`,
+      flight: `<div class="fids-flight"><strong class="is-changing">${escapeHtml(activeFlightNo)}</strong></div>`,
+      time: `<div class="fids-time"><strong class="fids-time-main">${escapeHtml(timeDisplayValue)}</strong></div>`,
+      place: `<div class="fids-destination"><strong>${cleanDestinationLabel}</strong></div>`,
+      terminal: `<span class="fids-terminal">${escapeHtml(side?.terminal || "—")}</span>`,
+      facility: `<span class="fids-gate is-changing">${escapeHtml(activeFacilityText)}</span>`,
+      remarks: `<span class="fids-status ${statusClass} is-changing">${escapeHtml(statusText)}</span>`,
+      codeshare: `<span class="fids-codeshare" aria-label="${escapeHtml(codeshareLabel)}"${codeshares.length > 1 ? ` data-fids-codeshares="${escapeHtml(codeshares.join("|"))}"` : ""}>${escapeHtml(displayCodeshare)}</span>`
+    };
+    const columnLabels = labels || { airline:"Airline", flight:"Flight", time:"Time", place:arrivals?"From":"To", terminal:"Terminal", facility:compactMobileLabel, remarks:"Remarks" };
+    const columns = screen ? airportFids.columns : STANDARD_FLIGHT_COLUMNS;
+    const content = columns.map(column =>
+      `<div class="fids-cell cell-${column === "facility" ? "gate" : column}" data-fids-column="${column}" data-label="${escapeHtml(columnLabels[column])}" role="cell">${cells[column]}</div>`
+    ).join("");
+    return `<div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" data-flight-key="${escapeHtml(key)}">${content}</div>`;
   };
 
   // 5. Assemble layout arrays with interactive history toggle row button
@@ -7051,7 +7446,7 @@ function render(items, meta) {
     finalHtmlOutput += `
       <div class="fids-history-toggle-row">
         <button type="button" class="fids-history-btn" id="toggleHistoryBtn">
-          ${showHistoricalFlights ? "↑ Hide completed flights" : `↓ See previous flights (\\${previousFlights.length})`}
+          ${showHistoricalFlights ? "↑ Hide completed flights" : `↓ See previous flights (${previousFlights.length})`}
         </button>
       </div>
     `;
@@ -7383,6 +7778,17 @@ function render(items, meta) {
                 const data = event.data || {};
                 if (data.source !== PARENT_SOURCE) return;
 
+                if (["SKANDI_MASTER_CONFIG", "CUSTOMER_SETTINGS_STATE", "SKANDI_SETTINGS_STATE"].includes(data.type)) {
+                    const language = data.payload?.settings?.language || data.payload?.language;
+                    if (language) {
+                        boardLanguage = airportFids.locale(language);
+                        if (el("hardwareCasing").classList.contains("airport-fids-screen") && !pendingSearch && lastFlightItems.length) {
+                            refreshVisibleFidsRows();
+                        } else updateBoardType();
+                    }
+                    return;
+                }
+
                 if (data.type === "FLIGHT_STATUS_RESULTS") {
                     const payload = data.payload || {};
                     if (!pendingSearch || String(payload.requestId) !== pendingSearch) return;
@@ -7404,7 +7810,9 @@ function render(items, meta) {
                         timezone: textValue(item?.timezone),
                         logoUrl: safeUrl(item?.logoUrl)
                     })).filter(item => item.iata);
-                    if (!pendingSearch && lastFlightItems.length && el("rows").querySelector(".fids-row")) {
+                    if (el("hardwareCasing").classList.contains("airport-fids-screen")) {
+                        updateBoardType();
+                    } else if (!pendingSearch && lastFlightItems.length && el("rows").querySelector(".fids-row")) {
                         const arrivals = currentMode === "airport" && el("boardType").value === "arrivals";
                         el("rows").querySelectorAll(".fids-row").forEach(row => {
                             const item = lastFlightItems.find(item => flightKey(item) === row.dataset.flightKey);
@@ -7468,32 +7876,54 @@ function render(items, meta) {
             });
 
             function updateBoardType() {
-  const type = el("boardType")?.value || "departures";
-  const arrivals = currentMode === "airport" && type === "arrivals";
-  
-  // FIXED: Correctly grab the individual column element by index to prevent crashes
-  const columns = document.querySelectorAll(".board-columns > div");
-  if (columns && columns.length >= 6) {
-    // Index 5 targets the 6th header column: Gate / Belt
-    columns[5].textContent = arrivals ? "Belt" : "Gate";
-  }
-  
-  // Keep the rest of your standard updateBoardType logic here...
-  let label = "Departures";
-  if (currentMode === "airport") label = type === "arrivals" ? "Arrivals" : "Departures";
-  else if (currentMode === "flight") label = "Flight status";
-  else if (currentMode === "route") label = "Route status";
-  if (el("boardSubMode")) el("boardSubMode").textContent = label;
-  if (el("railTitle")) el("railTitle").textContent = label.toUpperCase();
-  
-  if (el("timeHeader")) el("timeHeader").textContent = currentMode !== "airport" ? "Departure / Arrival" : arrivals ? "Arrival time" : "Departure time";
-  if (el("placeHeader")) el("placeHeader").textContent = arrivals ? "From" : "To";
-  if (el("boardDirectionIcon")) el("boardDirectionIcon").textContent = arrivals ? "↘" : "↗";
-  document.querySelectorAll("[data-board-view]").forEach(btn => btn.classList.toggle("active", currentMode === "airport" && btn.dataset.boardView === type));
-  if (el("commerceHeading")) el("commerceHeading").textContent = type === "arrivals" ? "From arrivals into the next part of the trip." : "Make the time before departure work harder.";
-  document.body.classList.toggle("context-arrivals", currentMode === "airport" && type === "arrivals");
-  document.body.classList.toggle("context-departures", currentMode !== "airport" || type !== "arrivals");
-}
+                const type = el("boardType").value;
+                const arrivals = currentMode === "airport" && type === "arrivals";
+                const airport = currentMode === "airport" ? airportFids.iata(displayedAirport) : "";
+                const screen = Boolean(airport);
+                const localLabels = airportFids.labels(boardLanguage, arrivals);
+                const direction = arrivals ? "Arrivals" : "Departures";
+                const label = currentMode === "airport" ? direction : currentMode === "flight" ? "Flight status" : "Route status";
+                const casing = el("hardwareCasing");
+                casing.classList.toggle("airport-fids-screen", screen);
+                casing.dataset.fidsDirection = type;
+                el("boardSubMode").textContent = label;
+                el("railTitle").textContent = (screen ? localLabels.title : label).toUpperCase();
+                const directoryAirport = airportDirectory.find(item => item.iata === airport);
+                el("boardAirportTitle").textContent = screen
+                    ? (directoryAirport?.title ? `${directoryAirport.title} (${airport})` : airport)
+                    : "Passenger Flight Information Display";
+                el("boardDirectionIcon").textContent = arrivals ? "↘" : "↗";
+                el("querySummary").parentElement.hidden = screen;
+                const actions = el("flightBoardActions");
+                const toggles = el("airportBoardToggle");
+                actions.hidden = !screen;
+                if (screen && toggles.parentElement !== actions) actions.append(toggles);
+                if (!screen && toggles.parentElement === actions) el("boardType").before(toggles);
+                toggles.hidden = currentMode !== "airport";
+                const labels = screen ? localLabels : {
+                    airline:"Airline", flight:"Flight No.", terminal:"Terminal", remarks:"Remarks", codeshare:"Codeshare",
+                    time:currentMode !== "airport" ? "Departure / Arrival" : arrivals ? "Arrival time" : "Departure time",
+                    place:arrivals ? "From" : "To", facility:arrivals ? "Belt" : "Gate"
+                };
+                const header = el("flightBoardColumns");
+                const order = screen ? airportFids.columns : [...STANDARD_FLIGHT_COLUMNS, "codeshare"];
+                const cells = new Map([...header.children].map(cell => [cell.dataset.fidsColumn, cell]));
+                const headers = order.map(key => {
+                    const cell = cells.get(key);
+                    cell.textContent = labels[key];
+                    cell.hidden = key === "codeshare" && !screen;
+                    return cell;
+                });
+                if (headers.some((cell, index) => header.children[index] !== cell)) header.append(...headers);
+                document.querySelectorAll("[data-board-view]").forEach(btn => {
+                    const active = currentMode === "airport" && btn.dataset.boardView === type;
+                    btn.classList.toggle("active", active);
+                    btn.setAttribute("aria-pressed", String(active));
+                });
+                if (el("commerceHeading")) el("commerceHeading").textContent = type === "arrivals" ? "From arrivals into the next part of the trip." : "Make the time before departure work harder.";
+                document.body.classList.toggle("context-arrivals", currentMode === "airport" && arrivals);
+                document.body.classList.toggle("context-departures", currentMode !== "airport" || !arrivals);
+            }
 
   
 
@@ -7521,6 +7951,8 @@ function render(items, meta) {
                     }).format(now);
                 }
                 if (el("utcClock")) el("utcClock").textContent = `${value} ${airportTimezone==="UTC"?"UTC":"LOCAL"}`;
+                el("boardClockEcho").textContent = value;
+                el("boardClockLabel").textContent = airportTimezone === "UTC" ? "UTC" : "Local time";
                 if (el("boardClockEcho")) el("boardClockEcho").textContent = value;
                 if (el("boardClockLabel")) el("boardClockLabel").textContent = airportTimezone === "UTC" ? "UTC" : "LOCAL";
             }
@@ -7595,6 +8027,7 @@ function render(items, meta) {
 
             document.querySelectorAll("[data-board-view]").forEach((button) => {
                 button.addEventListener("click", () => {
+                    if (button.dataset.boardView !== el("boardType").value) showHistoricalFlights = false;
                     el("boardType").value = button.dataset.boardView;
                     updateBoardType();
                     const v = values();
