@@ -189,6 +189,32 @@ test('the homepage resume link is limited to an unexpired same-tab draft and omi
   assert.equal(page.planning.readResumableBooking(),null);
 });
 
+test('an expired offer reruns the same search without creating a cart for the stale offer', async () => {
+  const store=new Map(), searches=[];
+  let guestSessions=0;
+  const page=await hostHarness({},store,{
+    searchUnifiedOffers:async({search})=>{
+      searches.push(clone(search));
+      return {items:[searches.length===1
+        ? {id:'off_expired', expiresAt:'2000-01-01T00:00:00Z'}
+        : {id:'off_fresh', expiresAt:'2090-06-01T00:00:00Z'}]};
+    },
+    beginGuestBookingSession:async()=>{guestSessions++;return {cartToken:'a'.repeat(64)};}
+  });
+  const search={tripType:'flightOnly',origin:'ARN',destination:'JFK',departureDate:'2090-06-01',returnDate:'2090-06-08'};
+  const path=page.planning.startBookingSearch(search,'HOME');
+  await page.host.startSearch(new URL(path,'https://skanditravels.com').searchParams.get('searchId'));
+  const command=(type,extra={})=>page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type,...extra});
+  await command('BOOKING_OFFER_READY');
+  await command('BOOKING_SEARCH_SELECT',{offerId:'off_expired'});
+  assert.equal(page.messages.at(-1).payload.canSearchAgain,true);
+  assert.equal(guestSessions,0);
+  await command('BOOKING_SEARCH_AGAIN');
+  assert.deepEqual(searches,[search,search]);
+  assert.equal(page.messages.at(-1).payload.items[0].id,'off_fresh');
+  assert.doesNotMatch(store.get('SKANDI_RECENT_TRAVEL_SEARCH'),/off_expired|off_fresh/);
+});
+
 test('selecting an offer starts a guest checkout and reload restores it without a login dialog', async () => {
   const store=new Map();
   const first=await hostHarness({searchId:'search-1'},store);

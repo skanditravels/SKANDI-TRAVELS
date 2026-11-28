@@ -1090,11 +1090,13 @@ async function handleMasterMessage(embed, message = {}) {
       await handleGlobalMobileDrawerResize(embed, message);
       return true;
     }
-    if (type === "HOME_APP_FOCUS_SEARCH" && normalizePath(currentPathString()) !== "/") {
-      navigate(SITE_MAP.home);
+    if (type === "HOME_APP_FOCUS_SEARCH") {
+      if (["/", "/home"].includes(normalizePath(currentPathString()))) {
+        const home = firstHtml(PAGE_BUILD_INTEGRATIONS.home.embedIds);
+        if (home) postToEmbed(home, "HOME_FOCUS_SEARCH", {});
+      } else navigate(SITE_MAP.home);
       return true;
     }
-    // On Home, its existing V12 page controller still owns focus-search and refresh.
     // Other navigation intents retain the canonical MASTER_NAVIGATE contract below.
   }
 
@@ -1124,7 +1126,10 @@ async function handleMasterMessage(embed, message = {}) {
         catch (error) { console.warn("[MasterPage] Could not size the full-viewport host.", error); }
       }
       if (hasPageMobileNavigation(identity.route)) {
-        try { embed.customClassList?.add("skandi-compiled-mobile-host"); }
+        try {
+          embed.customClassList?.add("skandi-compiled-mobile-host");
+          if (identity.key === "home") embed.customClassList?.add("skandi-home-mobile-host");
+        }
         catch (error) { console.warn("[MasterPage] Could not size the compiled mobile host.", error); }
       }
       stopMobileFooterGate();

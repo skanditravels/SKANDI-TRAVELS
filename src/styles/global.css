@@ -44,6 +44,10 @@
     max-height: 100vh !important;
     max-height: 100dvh !important;
   }
+  .skandi-home-mobile-host,
+  .skandi-home-mobile-host iframe {
+    background-color: #022e64 !important;
+  }
 }
 
 /* Keep editable controls legible on the Wix host as well as in compiled embeds. */
@@ -100,8 +104,8 @@ div:has(> .skandi-alexandra-host) {
   width: min(306px, 100%) !important;
 }
 @media (max-width: 1020px) {
-  .skandi-alexandra-host { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
-  .skandi-alexandra-host-open { height: min(678px, calc(100dvh - 100px - env(safe-area-inset-bottom, 0px))) !important; }
+  .skandi-alexandra-host { bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important; }
+  .skandi-alexandra-host-open { height: min(678px, calc(100dvh - 112px - env(safe-area-inset-bottom, 0px))) !important; }
 }
 @media (max-width: 699px) {
   .skandi-alexandra-host-open { width: 100% !important; }

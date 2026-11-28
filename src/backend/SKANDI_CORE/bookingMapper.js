@@ -96,6 +96,10 @@ export function toDuffelOfferSearch(input = {}) {
 
   const cabinClass = lower(source.cabinClass || source.cabin_class || "economy", 30);
   if (!CABINS.has(cabinClass)) throw bookingError("INVALID_CABIN_CLASS", "Choose a supported cabin class.");
+  const requestedConnections = number(source.maxConnections ?? source.maxStops ?? 4, 4);
+  const maxConnections = source.nonStop === true || source.directOnly === true
+    ? 0
+    : Math.max(0, Math.min(4, Math.trunc(requestedConnections)));
   const searchContext = {
     origin: normalizedSlices[0].origin,
     destination: normalizedSlices[0].destination,
@@ -110,7 +114,7 @@ export function toDuffelOfferSearch(input = {}) {
       slices: normalizedSlices,
       passengers: normalizedPassengers,
       cabinClass,
-      maxConnections: Math.max(0, Math.min(2, Number(source.maxConnections ?? 1))),
+      maxConnections,
       supplierTimeout: Math.max(2000, Math.min(20000, Number(source.supplierTimeout ?? 15000)))
     },
     searchContext
@@ -211,6 +215,7 @@ export function flightJourneyKey(offer = {}) {
 }
 
 export function assertOfferMatchesSearch(offer = {}, searchContext = {}) {
+  if (offer.isExpired === true) throw bookingError("BOOKING_OFFER_EXPIRED", "The airline offer has expired. Search again.", 409);
   const slices = arr(offer.slices);
   const expected = arr(searchContext.slices);
   if (!slices.length || !expected.length) throw bookingError("OFFER_ROUTE_MISMATCH", "The live airline offer no longer matches this search.");

@@ -35,6 +35,16 @@ test('an expired booking search offers a working route home instead of an unusab
   assert.equal(messages.at(-1).path, '/home');
 });
 
+test('an expired offer exposes the fresh-search action', async t => {
+  const {doc, messages, host} = await bookingFrame(t);
+  host('BOOKING_SEARCH_RESULTS', {search, items:[]});
+  host('BOOKING_ERROR', {canSearchAgain:true}, {message:'The selected offer has expired. Search again.'});
+  const retry=doc.querySelector('[data-action="search-again"]');
+  assert.match(retry.textContent,/Search again/);
+  retry.click();
+  assert.equal(messages.at(-1).type,'BOOKING_SEARCH_AGAIN');
+});
+
 test('empty results, provider failures, partial results, retry and selection are distinguished', async t => {
   const {doc, messages, host} = await bookingFrame(t);
   host('BOOKING_SEARCH_LOADING', {search});

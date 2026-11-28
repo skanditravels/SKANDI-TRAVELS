@@ -40,3 +40,11 @@ The default hero is skandi-embeds/home/assets/skandi-home-aegean.webp, an origin
 The original Home appearance from ef1cd50 is the visual baseline. The centered headline, existing photograph, Montserrat, SKANDI navy and cyan, rounded booking panel and trust cards are active again. The preceding full-width coastal image and horizontal booking row are superseded. Media Control can still supply the published hero and copy.
 
 The date calendar and open traveler controls remain in the form. Customers apply a range explicitly and can recover a recent search or explore published trips. The search header restores the Collection entry and sends it to the existing Collection page. Published discovery data, pricing, saved searches and the current Home and Booking receivers use their established contracts.
+
+## INFO / LOG — 2026-11-28
+
+Home now shows one Inventory Control entity type at a time, with separate tabs for destinations, resorts, countries, hotels and published offer categories when present. The last browser-local search ranks matching cards among the published records. VOY has a dedicated card with the latest published issue cover and feature link. The Explore Anywhere form, Home resource links and duplicate footer link columns are superseded.
+
+Home’s Flights tab and the package departure field show named airports with IATA codes and available geography. Package and Hotels destination fields show published places with region and country. Package flights use the destination’s configured search airport. The Home controller still uses the canonical inventory, VOY and Duffel facades. The wider flight search allows up to four connections per direction unless the traveler selects nonstop. The existing Home receiver loads the generated Git build.
+
+Booking can refresh expired availability or return to the saved search on Home. Recent criteria stay in the current browser for up to 30 days. Offer IDs, cart capabilities and prices are excluded from those preferences. Live Wix and provider checks remain required after publication.

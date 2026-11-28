@@ -37,6 +37,8 @@ The embedded historical code and its earlier `booking-flow` path below are super
 
 - **2026-11-09** — Wix live logs identified `@wix/automations` missing from the deployed dependencies, preventing the booking web module from loading. The dependency is now declared and locked in Git; Wix publication and verification that its runtime resolves the dependency are still required. The active source at `skandi-embeds/booking/skandi-booking-flow.{html,css,js}` now offers Home when a search has expired and distinguishes provider errors from empty results. Partial results and the existing booking message contract remain intact. The older `booking-flow/` source path and the HTML payload below are historical and superseded by the current triplet. No Wix publication, provider transaction or database change was performed.
 
+2026-11-28 — The [active Booking entry](../../README.md#info--log--2026-11-28) records four-connection defaults and the expired-offer restart action. The complete HTML below records the historical booking embed.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

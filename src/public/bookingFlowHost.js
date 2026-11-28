@@ -19,6 +19,7 @@ import {
 const SOURCE='SKANDI_BOOKING_OFFER';
 const PARENT='SKANDI_WIX_PARENT';
 const STEP_ORDER=['offer','extras','hotels','transfer','upsell','apis','seats','payment','confirmation','documents'];
+const SEARCH_RECOVERY_CODES=new Set(['BOOKING_OFFER_EXPIRED','BOOKING_SEARCH_EXPIRED','OFFER_NOT_FOUND','STAY_QUOTE_REQUIRED']);
 const MUTATIONS=new Set(['BOOKING_SEARCH_SELECT','BOOKING_OFFER_ACCEPTED','BOOKING_EXTRAS_SAVE','SIGNATURE_TRANSFER_SELECT','SIGNATURE_TRANSFER_SKIP','APIS_SAVE_AND_CONTINUE','SEATMAP_SAVE','SEATMAP_SKIP','PAYMENT_COMMIT']);
 let html=null, locationApi=null, onReturnHome=()=>{}, searchContext=null, cartId='', cartToken='', step='offer', ready=false, startupDone=false, startupError='', currentSearch=null, inFlight=false, paymentInFlight=false, lastResponse=null;
 let searchJob=null, selectedSearchItem=null;
@@ -52,8 +53,16 @@ function send(type,payload={},extra={}){
 }
 function errorToUi(error,retryable=true){
   const code=text(error?.code||'BOOKING_REQUEST_FAILED');
+  const canSearchAgain=STEP_ORDER.indexOf(step)<STEP_ORDER.indexOf('payment') && SEARCH_RECOVERY_CODES.has(code);
   console.error('[SKANDI][Booking]',step,code);
-  send('BOOKING_ERROR',{}, {message:bookingError(error),code,retryable});
+  send('BOOKING_ERROR',{canSearchAgain}, {message:bookingError(error),code,retryable});
+}
+function offerExpired(item) {
+  return [item?.expiresAt,item?.flight?.expiresAt,item?.stay?.expiresAt,item?.selectedOffer?.expiresAt,item?.hotel?.quote?.expiresAt]
+    .some(value=>Date.parse(value || '')<=Date.now());
+}
+function expiredOfferError() {
+  return Object.assign(new Error('The selected offer has expired. Search again.'), {code:'BOOKING_OFFER_EXPIRED'});
 }
 function bounded(promise,timeout=30000){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error('The booking request timed out; check your existing booking before trying again.'),{code:'BOOKING_TIMEOUT'})),timeout)})]).finally(()=>clearTimeout(timer))}
 function persistCart(id,token=''){
@@ -108,10 +117,11 @@ async function goStep(next,{silentUrl=false}={}){
   try{await initialize()}catch(e){errorToUi(e,step!=='payment')}
 }
 async function initialize(){
-  if(startupError){send('BOOKING_ERROR',{}, {message:startupError,retryable:false});return}
+  if(startupError){errorToUi(startupError,false);return}
   if(step==='offer'){
     if(!cartId)return searchOffers();
     const c=await withLoginCart(cart);
+    if (c.status==='Open' && offerExpired(c)) throw expiredOfferError();
     send('BOOKING_CART_LOADED',{cart:c});
     return;
   }
@@ -173,6 +183,7 @@ async function selectOffer(msg){
   const id=text(msg.offerId||msg.payload?.offerId);
   const item=currentSearch?.items?.find(x=>text(x.id||x.staySearchResultId)===id);
   if(!item)throw Object.assign(new Error('That offer is no longer available. Refresh the search.'),{code:'BOOKING_LIVE_OFFER_INVALID'});
+  if(offerExpired(item))throw expiredOfferError();
   if(!cartToken||text(session.getItem('SKANDI_BOOKING_GUEST_OFFER'))!==id){
     const started=await bounded(beginGuestBookingSession());
     if(!/^[a-f0-9]{64}$/.test(text(started?.cartToken)))throw new Error('Your secure booking session could not be started. Please try again.');
@@ -222,6 +233,11 @@ async function processMessage(msg){
   }
   if(!ready||!startupDone)return;
   if(t==='BOOKING_NAVIGATE')return navigate(msg.path);
+  if(t==='BOOKING_SEARCH_AGAIN'){
+    if(!cartId && searchContext)return searchOffers(true);
+    if(searchContext?.source==='FLIGHTS')return locationApi.to(SITE_MAP.flights);
+    return onReturnHome(searchContext?.id || '', {restoreSearch:true});
+  }
   if(t==='BOOKING_RETRY'){
     if(!cartId)return searchOffers(true);
     const c=await withLoginCart(cart);
@@ -352,12 +368,12 @@ async function startFromLocation(){
       step=allowedStep(queryStep||lastServerStep(c),c);
     }else if(!searchContext){
       step=normalStep(queryStep||'offer');
-      startupError='Your search session is missing or has expired. Return to Home and search again.';
+      startupError=Object.assign(new Error('Your search session is missing or has expired. Return to Home and search again.'), {code:'BOOKING_SEARCH_EXPIRED'});
     }else {step='offer';startupError=''}
     startupDone=true;
     if(ready)await goStep(step,{silentUrl:true});
     return true;
-  }catch(e){startupDone=true;startupError=bookingError(e);errorToUi(e,false);return true}
+  }catch(e){startupDone=true;startupError=e;errorToUi(e,false);return true}
 }
 async function handleMessage(msg){
   if(!msg||msg.source!==SOURCE)return;

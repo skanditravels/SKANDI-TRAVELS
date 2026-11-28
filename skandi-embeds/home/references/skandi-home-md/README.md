@@ -56,6 +56,8 @@ This is an additive read-only supplier flight explorer that does not replace the
 - Duffel data availability is endpoint-specific. This embed displays the subset exposed by the current `mapOfferForHome` rather than fabricating missing values. Advanced full-offer tax/conditions, fare-family grouping, upsells, separate seat-map search, loyalty restrictions, multi-city and gated split-ticket order workflows require separately verified canonical backend changes and complete checkout testing.
 - This file is a new HTML_REF reference artifact and is not imported at runtime.
 
+2026-11-28 — The [current Home entry](../../README.md#info--log--2026-11-28) records category-only discovery, the standalone VOY card, updated airport and destination suggestions and recent-search recovery. The complete HTML below remains the historical Duffel Explorer.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

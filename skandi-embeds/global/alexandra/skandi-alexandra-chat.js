@@ -3,11 +3,15 @@
   const SOURCE = "SKANDI_SUPPORT_CHAT", PARENT = "SKANDI_WIX_PARENT";
   const ALEX_TOPIC = "lk.chat", HUMAN_TOPIC = "skandi.support.chat";
   const GREETING = {
-    EN: ["Hi, can I help you?", "Dismiss Alexandra’s greeting"],
-    SV: ["Hej, kan jag hjälpa dig?", "Stäng Alexandras hälsning"],
-    NO: ["Hei, kan jeg hjelpe deg?", "Lukk Alexandras hilsen"],
-    DA: ["Hej, kan jeg hjælpe dig?", "Luk Alexandras hilsen"],
-    FI: ["Hei, voinko auttaa?", "Sulje Alexandran tervehdys"]
+    EN: ["Where would you like to go next?", "Dismiss Alexandra’s greeting"],
+    SV: ["Vart vill du resa härnäst?", "Stäng Alexandras hälsning"],
+    NO: ["Hvor vil du reise neste gang?", "Lukk Alexandras hilsen"],
+    DA: ["Hvor vil du rejse hen næste gang?", "Luk Alexandras hilsen"],
+    FI: ["Minne haluaisit matkustaa seuraavaksi?", "Sulje Alexandran tervehdys"],
+    ES: ["¿Adónde te gustaría viajar ahora?", "Cerrar el saludo de Alexandra"],
+    FR: ["Où aimeriez-vous voyager ensuite ?", "Fermer le message d’Alexandra"],
+    DE: ["Wohin möchten Sie als Nächstes reisen?", "Alexandras Begrüßung schließen"],
+    TH: ["ทริปต่อไปอยากไปที่ไหนคะ", "ปิดคำทักทายของอเล็กซานดรา"]
   };
   const $ = id => document.getElementById(id);
   const clean = (value, length = 30000) => String(value ?? "").trim().slice(0, length);
@@ -298,6 +302,12 @@
     };
   }
 
+  function setGreetingLanguage(value) {
+    const language = clean(value, 16).toUpperCase().split("-")[0];
+    const [greeting, dismiss] = GREETING[language] || GREETING.EN;
+    $("greetingOpen").textContent = greeting;
+    $("greetingDismiss").setAttribute("aria-label", dismiss);
+  }
   function applyHost(payload) {
     configured = true;
     active = payload.active === true;
@@ -305,10 +315,7 @@
     host.classList.toggle("sitewide", payload.global === true);
     host.hidden = !active;
     if (typeof payload.open === "boolean") setPanel(active && payload.open);
-    const language = clean(payload.language, 16).toUpperCase().split("-")[0];
-    const [greeting, dismiss] = GREETING[language] || GREETING.EN;
-    $("greetingOpen").textContent = greeting;
-    $("greetingDismiss").setAttribute("aria-label", dismiss);
+    if (payload.language) setGreetingLanguage(payload.language);
     $("alexandraGreeting").hidden = !active || open || payload.greeting !== true;
   }
   function restore(payload) {
@@ -388,6 +395,7 @@
     const msg = event.data || {}, payload = msg.payload || {};
     if (event.source !== window.parent || msg.source !== PARENT || (payload.instance && payload.instance !== instance)) return;
     switch (msg.type) {
+      case "SKANDI_MASTER_CONFIG": if (payload.settings?.language) setGreetingLanguage(payload.settings.language); break;
       case "SUPPORT_CHAT_PING": ready(); break;
       case "SUPPORT_CHAT_HOST_STATE": applyHost(payload); break;
       case "SUPPORT_CHAT_RESTORE": restore(payload); break;

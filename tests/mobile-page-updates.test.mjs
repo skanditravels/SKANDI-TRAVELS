@@ -85,9 +85,5 @@ test('Home commits only applied date ranges and keeps the picker open after sele
  get('applyDates').click();
  assert.deepEqual(applied(),days);
  assert.equal(button.getAttribute('aria-expanded'),'false');
- get('explore-origin').value="JFK";
- get('explore-month').selectedIndex=2;
- get('explore-form').dispatchEvent(new w.Event('submit',{cancelable:true}));
- get('explore-results').querySelector('[data-explore-destination]').click();
- assert.equal(picker.hidden,false,"The idea click opens the calendar and keeps it open");
+ assert.equal(get('explore-form'),null);
 });

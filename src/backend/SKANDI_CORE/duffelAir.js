@@ -491,7 +491,7 @@ function validateSearch(input = {}) {
     slices: normalizedSlices,
     passengers: normalizedPassengers,
     cabin_class: cabin,
-    max_connections: integer(input.maxConnections ?? input.max_connections, 0, 2, 1),
+    max_connections: integer(input.maxConnections ?? input.max_connections, 0, 4, 1),
     supplierTimeout: integer(input.supplierTimeout ?? input.supplier_timeout, 2000, 60000, 15000)
   };
 }

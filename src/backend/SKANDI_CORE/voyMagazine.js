@@ -12,7 +12,7 @@ export async function getVoyPublicBootstrapCore(input={}){const org=await public
 export async function getVoyFeaturedStoryCore() {
   const org = await publicOrg();
   const [latest] = await rows("voy_issues", {
-    select:"issue_id,slug",
+    select:"issue_id,slug,title,cover_image_url",
     organization_id:qeq(org.id),
     publish_status:"eq.PUBLISHED",
     order:"featured.desc,publish_date.desc,updated_at.desc",
@@ -20,7 +20,7 @@ export async function getVoyFeaturedStoryCore() {
   });
   if (!latest?.issue_id) return null;
   const pages = await rows("voy_pages", {
-    select:"page_no,template,title,status",
+    select:"page_no,template,title,status,image_url",
     organization_id:qeq(org.id),
     issue_id:qeq(latest.issue_id),
     order:"page_no.asc",
@@ -28,8 +28,12 @@ export async function getVoyFeaturedStoryCore() {
   });
   const article = pages.find(page => page.template === "feature" &&
     ["READY","PUBLISHED"].includes(clean(page.status,30).toUpperCase()) && clean(page.title));
-  if (!article) return null;
-  return { title:clean(article.title,160), issue:clean(latest.slug || latest.issue_id,180), index:pages.indexOf(article)+1 };
+  return {
+    title:clean(article?.title || latest.title,160),
+    issue:clean(latest.slug || latest.issue_id,180),
+    index:article ? pages.indexOf(article)+1 : 0,
+    image:clean(latest.cover_image_url || article?.image_url,1800)
+  };
 }
 export async function trackVoyInteractionCore(input={}){return{ok:true,recorded:false,eventType:clean(input.eventType,120),issueId:clean(input.issueId,180),generatedAt:now()}}
 export async function saveVoyIssueForMemberCore(context={},input={}){const memberId=clean(context.memberId,180);if(!memberId)throw new Error("VOY_NOT_AUTHENTICATED");const issueId=clean(input.issueId,180);if(!issueId)throw new Error("VOY_ISSUE_ID_REQUIRED");const org=await publicOrg();const found=(await rows("voy_issues",{select:"*",organization_id:qeq(org.id),issue_id:qeq(issueId),publish_status:"eq.PUBLISHED",limit:"1"}))[0];if(!found)throw new Error("VOY_ISSUE_NOT_FOUND");const profiles=await rows("customer_profiles",{select:"id,member_id,wix_member_id",wix_member_id:qeq(memberId),limit:"1"},"public").catch(()=>[]);const profile=profiles[0]||null;if(!profile?.member_id)return{ok:true,saved:false,reason:"CUSTOMER_PROFILE_NOT_LINKED",issueId};const existing=await rows("customer_favorites",{select:"id",member_id:qeq(profile.member_id),item_type:"eq.VOY_ISSUE",item_id:qeq(issueId),limit:"1"},"public").catch(()=>[]);if(existing[0]?.id){await restRequest({table:"customer_favorites",method:"PATCH",query:{id:qeq(existing[0].id)},body:{active:true,item_title:found.title||"VOY Magazine",item_image_url:found.cover_image_url||null,item_url:`/voy-magazine?issue=${encodeURIComponent(found.slug||issueId)}`,updated_at:now()}});return{ok:true,saved:true,issueId,favoriteId:existing[0].id}}const inserted=await restRequest({table:"customer_favorites",method:"POST",body:{member_id:profile.member_id,wix_member_id:memberId,item_type:"VOY_ISSUE",item_id:issueId,item_slug:found.slug||null,item_title:found.title||"VOY Magazine",item_image_url:found.cover_image_url||null,item_url:`/voy-magazine?issue=${encodeURIComponent(found.slug||issueId)}`,active:true,created_at:now(),updated_at:now()},prefer:"return=representation"});const r=Array.isArray(inserted)?inserted[0]:inserted;return{ok:true,saved:true,issueId,favoriteId:r?.id||""}}

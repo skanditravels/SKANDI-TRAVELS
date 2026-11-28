@@ -133,6 +133,34 @@ function parentOf(records, record) {
   return relationTarget(records, record, ["PARENT"], []);
 }
 
+function linkedGeography(records, record, type, visited = new Set()) {
+  if (!record || visited.has(record.id)) return null;
+  if (record.entityType === type) return record;
+  visited.add(record.id);
+  const id = obj(record.details)[type === "REGION" ? "regionId" : "countryId"];
+  const direct = (id && records.find(row => row.id === id && row.entityType === type))
+    || relationTarget(records, record, [type], [type]);
+  return direct?.entityType === type ? direct : linkedGeography(records, parentOf(records, record), type, visited);
+}
+
+function placeGeography(records, record, language) {
+  const details = obj(record.details);
+  const region = linkedGeography(records, record, "REGION");
+  const country = linkedGeography(records, record, "COUNTRY");
+  return {
+    region: clean(localized(region, language).title || region?.name || details.region || details.state, 200),
+    country: clean(localized(country, language).title || country?.name || details.country || details.countryCode, 200)
+  };
+}
+
+function configuredAirportCode(details) {
+  for (const value of [details.searchAirportIata, details.destinationIata, details.nearestAirportIata, details.arrivalAirportIata, details.iata]) {
+    const code = upper(value, 16);
+    if (/^[A-Z]{3}$/.test(code)) return code;
+  }
+  return "";
+}
+
 function airportFor(records, record, visited = new Set()) {
   if (!record) return null;
   if (visited.has(record.id)) return null;
@@ -141,7 +169,7 @@ function airportFor(records, record, visited = new Set()) {
   const details = obj(record.details);
   const direct = records.find(row => row.entityType === "AIRPORT" && row.id === details.nearestAirportId);
   if (direct) return direct;
-  const iata = upper(details.searchAirportIata || details.destinationIata || details.nearestAirportIata || details.arrivalAirportIata || details.iata, 3);
+  const iata = configuredAirportCode(details);
   if (iata) {
     const byCode = records.find(row => row.entityType === "AIRPORT" && upper(obj(row.details).iata || row.code, 3) === iata);
     if (byCode) return byCode;
@@ -580,9 +608,10 @@ async function refreshHomePriceProduct(config) {
   }
 }
 
-function airportDto(record) {
+function airportDto(records, record, language) {
   const details = obj(record.details);
   const iata = upper(details.iata || record.code, 3);
+  const geography = placeGeography(records, record, language);
   return {
     id: record.id,
     type: "AIRPORT",
@@ -593,7 +622,8 @@ function airportDto(record) {
     title: clean(record.name, 500),
     name: clean(record.name, 500),
     city: clean(details.city || details.locationCity || details.location_city, 300),
-    country: clean(details.country || details.countryCode || details.country_code, 200),
+    region: geography.region,
+    country: geography.country || clean(details.country_code, 200),
     label: [clean(details.city, 200), clean(record.name, 300), iata ? `(${iata})` : ""].filter(Boolean).join(" · ")
   };
 }
@@ -610,6 +640,7 @@ async function readAirportFallback() {
       }
     });
     return arr(rows).filter(row => row.active === true && row.customer_visible === true && row.status === "PUBLISHED").map(row => {
+      const details = obj(row.inventory_details);
       const iata = upper(row.iata || row.code, 3);
       const title = clean(row.title || row.name || row.airport_name || row.airportName, 500);
       const city = clean(row.locationCity || row.location_city || row.city, 300);
@@ -624,6 +655,7 @@ async function readAirportFallback() {
         title,
         name: title,
         city,
+        region: clean(details.region || details.state, 200),
         country,
         label: [city, title, iata ? `(${iata})` : ""].filter(Boolean).join(" · ")
       };
@@ -633,20 +665,24 @@ async function readAirportFallback() {
   }
 }
 
-function destinationSearchDto(records, record) {
+function destinationSearchDto(records, record, language) {
   const details = obj(record.details);
   const airport = airportFor(records, record);
   const airportDetails = obj(airport?.details);
+  const name = clean(localized(record, language).name || record.name, 500);
   return {
     id: record.id,
     type: record.entityType,
     code: clean(record.code, 80),
     slug: record.slug || slugify(record.name),
-    title: record.name,
+    title: name,
     name: record.name,
     destinationCode: clean(record.code || record.slug, 160),
-    iata: upper(airportDetails.iata || airport?.code || details.searchAirportIata, 3),
-    label: [record.name, upper(airportDetails.iata || airport?.code, 3) ? `(${upper(airportDetails.iata || airport?.code, 3)})` : ""].filter(Boolean).join(" ")
+    iata: configuredAirportCode(details) || upper(airportDetails.iata || airport?.code, 3),
+    latitude: coordinate(details.latitude, -90, 90),
+    longitude: coordinate(details.longitude, -180, 180),
+    ...placeGeography(records, record, language),
+    label: name
   };
 }
 
@@ -655,9 +691,15 @@ export async function getHomeContentCore(input = {}) {
   const records = await catalog(input.force === true);
   const visible = records.filter(row => !["HIDDEN", "ARCHIVED", "SUSPENDED"].includes(upper(obj(row.details).status, 30)));
   const featured = visible.filter(row => row.homepageFeatured || row.featured).sort((a, b) => a.sortPriority - b.sortPriority || a.name.localeCompare(b.name));
-  let airports = visible.filter(row => row.entityType === "AIRPORT").map(airportDto);
+  let airports = visible.filter(row => row.entityType === "AIRPORT").map(row => airportDto(visible, row, language));
   if (!airports.length) airports = await readAirportFallback();
-  const searchDestinations = visible.filter(row => ["DESTINATION", "AREA"].includes(row.entityType)).map(row => destinationSearchDto(visible, row));
+  const searchDestinations = visible.filter(row => ["DESTINATION", "AREA"].includes(row.entityType)).map(row => destinationSearchDto(visible, row, language));
+  const primaryCities = new Map(searchDestinations.filter(row => row.type === "DESTINATION" && row.iata)
+    .map(row => [row.iata + ":" + slugify(row.name), row]));
+  airports = airports.map(airport => {
+    const city = primaryCities.get(airport.iata + ":" + slugify(airport.city));
+    return city ? {...airport, region:airport.region || city.region, country:airport.country || city.country} : airport;
+  });
   const destinations = featured.filter(row => ["DESTINATION", "AREA", "COUNTRY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
   const hotels = featured.filter(row => row.entityType === "HOTEL").slice(0, 10).map(row => card(visible, row, language));
   const offers = featured.filter(row => ["PACKAGE", "GUIDED_TOUR", "ACTIVITY", "TRANSFER", "CAR_RENTAL"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
