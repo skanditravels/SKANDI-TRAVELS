@@ -6,6 +6,7 @@ import { Permissions, webMethod } from "@wix/web-methods";
 import { getCurrentCustomerMemberCore, getCustomerMemberFieldsCore } from "backend/SKANDI_CORE/customerSession";
 import {
   getCustomerProfileBootstrapCore,
+  hasUpcomingCustomerTripCore,
   getCustomerCheckoutTravelersCore,
   getCustomerClubRewardsCore,
   updateCustomerProfileCore,
@@ -64,6 +65,7 @@ async function memberCall(handler, input = {}, account = false) {
 }
 
 export const getCustomerProfileBootstrap = webMethod(Permissions.SiteMember, input => memberCall(getCustomerProfileBootstrapCore, input, true));
+export const hasUpcomingCustomerTrip = webMethod(Permissions.SiteMember, () => memberCall(hasUpcomingCustomerTripCore));
 export const getCustomerCheckoutTravelers = webMethod(Permissions.SiteMember, () => memberCall(getCustomerCheckoutTravelersCore));
 export const getCustomerClubRewards = webMethod(Permissions.SiteMember, () => memberCall(getCustomerClubRewardsCore));
 export const updateCustomerProfile = webMethod(Permissions.SiteMember, input => memberCall(updateCustomerProfileCore, input, true));

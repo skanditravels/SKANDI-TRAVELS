@@ -135,14 +135,59 @@ async function hostHarness(query,store,handlers={}) {
   };
   const names=['getFlightUpsells','acceptBookingOffer','loadBookingExtras','storeBookingExtras','loadSignatureTransfers','storeSignatureTransfer','saveBookingTravelers','saveHotelGuests','loadBookingRequirements','refreshBookingRequirements','loadSeatMaps','storeSeatSelections','prepareBookingPayment','prepareHotelPayment','commitBooking','commitHotelBooking','loadBookingConfirmation','loadBookingDocuments'];
   for(const name of names)defaults[name]=async()=>({});
+  const planning=await moduleInVm('src/public/bookingSearch.js',
+    {session:storage,local:storage,APP_ROUTES:{bookingFlow:'/booking'}},
+    ['startBookingSearch','readBookingSearch','readRecentTravelSearch','readResumableBooking','rememberResumableBooking','shiftedBookingDates']);
   const api=await moduleInVm('src/public/bookingFlowHost.js',{
-    ...defaults,...handlers,session:storage,readBookingSearch:()=>({search:{origin:'JFK',destination:'ARN'}}),
+    ...defaults,...planning,
+    readBookingSearch:id=>planning.readBookingSearch(id)||{search:{origin:'JFK',destination:'ARN'}},
+    ...handlers,session:storage,
     SITE_MAP:{home:'/',carRental:'/car-rental',support:'/about/support',travelInfo:'/travel-info',search:'/search'},
     APP_ROUTES:{bookingFlow:'/booking',myProfile:'/my-profile'},isSafeInternalRoute:()=>true
   },['createBookingFlowHost']);
   const host=api.createBookingFlowHost({html:{postMessage:m=>messages.push(m)},location});
-  return {host,messages,observed,current};
+  return {host,messages,observed,current,planning};
 }
+
+test('trip planning retries shift both dates and filter actual same-currency package totals', async () => {
+  const store=new Map(), searches=[];
+  const offer=(id,amount,currency)=>({id,itemType:'PACKAGE',price:{amount,currency}});
+  const page=await hostHarness({},store,{
+    searchUnifiedOffers:async({search})=>{
+      searches.push(clone(search));
+      return {items:[offer('over',1500,'USD'),offer('different-currency',950,'EUR')]};
+    }
+  });
+  const search={tripType:'package',origin:'JFK',destination:'ARN',departureDate:'2090-06-01',returnDate:'2090-06-08',adults:2,children:1,childAges:[7],currency:'USD',budgetCurrency:'USD',maxTripTotal:1400};
+  const path=page.planning.startBookingSearch(search,'HOME');
+  await page.host.startSearch(new URL(path,'https://skanditravels.com').searchParams.get('searchId'));
+  const command=(type,extra={})=>page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type,...extra});
+  await command('BOOKING_OFFER_READY');
+  const result=()=>page.messages.filter(m=>m.type==='BOOKING_SEARCH_RESULTS').at(-1).payload;
+  assert.equal(result().items.length,0);
+  assert.equal(result().budgetLimited,true);
+  assert.equal(result().dateOptions[1].from,'2090-06-04');
+  await command('BOOKING_TRY_DATES',{days:3});
+  assert.equal(searches.at(-1).departureDate,'2090-06-04');
+  assert.equal(searches.at(-1).returnDate,'2090-06-11');
+  assert.deepEqual(searches.at(-1).childAges,[7]);
+  await command('BOOKING_CLEAR_BUDGET');
+  assert.equal(result().items.length,2);
+  assert.equal(page.planning.readRecentTravelSearch().departureDate,'2090-06-04');
+});
+
+test('the homepage resume link is limited to an unexpired same-tab draft and omits its capability', async () => {
+  const store=new Map([['SKANDI_BOOKING_CART_ID','cart-1'],['SKANDI_BOOKING_CART_TOKEN','a'.repeat(64)]]);
+  const page=await hostHarness({},store);
+  const cart={cartId:'cart-1',status:'ExtrasSaved',expiresAt:new Date(Date.now()+60000).toISOString()};
+  page.planning.rememberResumableBooking(cart);
+  assert.equal(page.planning.readResumableBooking().path,'/booking?cartId=cart-1');
+  assert.doesNotMatch(store.get('SKANDI_RESUMABLE_BOOKING'),/aaaa/);
+  page.planning.rememberResumableBooking({...cart,status:'PaymentPending'});
+  assert.equal(page.planning.readResumableBooking(),null);
+  page.planning.rememberResumableBooking({...cart,expiresAt:'2000-01-01T00:00:00Z'});
+  assert.equal(page.planning.readResumableBooking(),null);
+});
 
 test('selecting an offer starts a guest checkout and reload restores it without a login dialog', async () => {
   const store=new Map();

@@ -29,7 +29,7 @@ $w.onReady(function () {
   const host = createBookingFlowHost({
     html,
     location:wixLocationFrontend,
-    onReturnHome:() => wixLocationFrontend.to(SITE_MAP.home)
+    onReturnHome:searchId => wixLocationFrontend.to(SITE_MAP.home + (searchId ? "?editSearch=1&searchId="+encodeURIComponent(searchId) : ""))
   });
 
   html.onMessage(event => {

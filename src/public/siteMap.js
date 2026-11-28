@@ -64,7 +64,10 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
       Object.freeze({id:"riaintra-team",label:"Our team image"})
     ])
   ]),
-  page("home", "Home", SITE_MAP.home, "PUBLIC_PRESENTATION"),
+  page("home", "Home", SITE_MAP.home, "PUBLIC_PRESENTATION", [
+    section("home-hero", "Hero", [field("home-hero-title","Headline"),field("home-hero-intro","Intro","LONG_TEXT")], [Object.freeze({id:"home-hero",label:"Home hero photo"})]),
+    section("home-services", "Travel services", [field("home-select-copy","Select description","LONG_TEXT"),field("home-signature-copy","Signature description","LONG_TEXT"),field("home-excelsior-copy","Excelsior description","LONG_TEXT"),field("home-collection-copy","Collection description","LONG_TEXT")])
+  ], { presentationRuntime:true }),
   page("search", "Search", SITE_MAP.search, "PUBLIC_PRESENTATION", [
     section("search-hero", "Search hero", [field("search-hero-eyebrow","Eyebrow"),field("search-hero-h1","Headline"),field("search-hero-copy","Intro copy","LONG_TEXT")])
   ]),

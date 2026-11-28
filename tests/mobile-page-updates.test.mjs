@@ -57,6 +57,12 @@ test('Home commits only applied date ranges and keeps the picker open after sele
  const picker=get('datePickerOverlay'),button=get('holDateRangeButton');
  const applied=()=>[get('hol-departure-date').value,get('hol-return-date').value];
  const original=applied();
+ assert.deepEqual(original,["",""],"Home asks the traveler to choose dates");
+ const readyRequest=w.eval('state.bootstrapId');
+ const card={name:"Koh Ngai",href:"/destinations?area=koh-ngai",image:"https://example.test/koh-ngai.jpg"};
+ w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:"SKANDI_WIX_PARENT",type:"HOME_BOOTSTRAP_RESULT",requestId:readyRequest,payload:{content:{airports:[],searchDestinations:[],destinations:[{...card,id:"area"}],offers:[{...card,id:"offer"}]}}}}));
+ assert.equal(get('mixed-section').hidden,false);
+ assert.equal(get('mixed-feed').querySelectorAll('h3').length,1);
  button.click();
  const days=[...picker.querySelectorAll('.day-btn:not(:disabled)')].slice(0,2).map(day=>day.dataset.date);
  const choose=day=>picker.querySelector('[data-date="'+day+'"]').click();

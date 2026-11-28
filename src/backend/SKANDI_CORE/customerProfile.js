@@ -65,7 +65,7 @@ function safePublicPayload(value, depth = 0) {
   return out;
 }
 
-async function resolveProfile(context, { create = true } = {}) {
+async function resolveProfile(context, { create = true, link = true } = {}) {
   const auth = requireContext(context);
   let row = (await select("customer_profiles", { select: "*", member_id: qeq(auth.memberId), limit: "1" }))[0] || null;
   if (!row) row = (await select("customer_profiles", { select: "*", wix_member_id: qeq(auth.memberId), limit: "1" }))[0] || null;
@@ -93,7 +93,7 @@ async function resolveProfile(context, { create = true } = {}) {
   }
   if (!row) return null;
   if (row.wix_member_id && row.wix_member_id !== auth.memberId) throw fail("PROFILE_OWNERSHIP_MISMATCH", "This customer profile is linked to a different account.", 403);
-  if (!row.wix_member_id) {
+  if (!row.wix_member_id && link) {
     const updated = await patch("customer_profiles", { id: qeq(row.id), wix_member_id: "is.null" }, {
       wix_member_id: auth.memberId, auth_email: auth.email || row.auth_email || null, updated_at: now()
     });
@@ -371,6 +371,28 @@ export async function getCustomerCheckoutTravelersCore(context) {
     id: row.id, firstName: clean(row.first_name, 160), middleName: clean(row.middle_name, 160),
     lastName: clean(row.last_name, 160), birthDate: travelDate(row.date_of_birth), gender: lower(row.gender, 40)
   })) };
+}
+
+export async function hasUpcomingCustomerTripCore(context) {
+  const profile = await resolveProfile(context, { create:false, link:false });
+  if (!profile?.member_id) return { hasTrip: false };
+  const today = new Date().toISOString().slice(0, 10);
+  const tripQuery = {
+    select: "status,departure_date",
+    departure_date: "gt."+today,
+    order: "departure_date.asc",
+    limit: "100"
+  };
+  const [direct,links] = await Promise.all([
+    select("altea_bookings", {...tripQuery, customer_member_id:qeq(profile.member_id)}),
+    select("customer_profiles_booking_links", {select:"booking_id", member_id:qeq(profile.member_id), limit:"100"})
+  ]);
+  const stillScheduled = row => !CLOSED_BOOKING_STATES.has(upper(row.status,60));
+  if (direct.some(stillScheduled)) return { hasTrip: true };
+  const ids = [...new Set(links.map(link=>link.booking_id).filter(isUuid))];
+  if (!ids.length) return { hasTrip: false };
+  const linked = await select("altea_bookings", {...tripQuery, id:"in.("+ids.join(",")+")"});
+  return { hasTrip: linked.some(stillScheduled) };
 }
 
 export async function getCustomerProfileBootstrapCore(context, input = {}) {

@@ -563,3 +563,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
     }
   }
 }
+
+.booking-budget-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .75rem;
+  padding: .5rem 1rem;
+  color: #173b5b;
+  border: 1px solid #dce7ed;
+  border-radius: 10px;
+  margin: .45rem 0 .85rem;
+}
+.booking-date-alternatives { flex-wrap: wrap; }

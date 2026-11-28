@@ -4,7 +4,7 @@
 import { session } from 'wix-storage';
 import { authentication } from 'wix-members-frontend';
 import { getCustomerCheckoutTravelers } from 'backend/SKANDI_CORE/customerProfile.web';
-import { readBookingSearch } from 'public/bookingSearch';
+import { readBookingSearch, startBookingSearch, shiftedBookingDates, rememberResumableBooking } from 'public/bookingSearch';
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from 'public/siteMap';
 import {
   searchUnifiedOffers, getFlightUpsells, beginGuestBookingSession, createBookingCartFromOffer, loadBookingCart,
@@ -78,7 +78,11 @@ function lastServerStep(cart={}){
   return byStatus[cart.status]||'offer';
 }
 function normalStep(requested){let v=text(requested).toLowerCase();return STEP_ORDER.includes(v)?v:'offer'}
-async function cart(){return bounded(loadBookingCart(access()),30000)}
+async function cart(){
+  const current = await bounded(loadBookingCart(access()),30000);
+  rememberResumableBooking(current);
+  return current;
+}
 async function withLoginCart(read){
   return read();
 }
@@ -140,15 +144,27 @@ async function initialize(){
 async function searchOffers(force=false){
   if(cartId)return;
   if(!searchContext)throw new Error('Your search has expired. Return to Home and start a new search.');
-  if(searchJob&&!force){const j=await searchJob;send('BOOKING_SEARCH_RESULTS',j);return}
-  send('BOOKING_SEARCH_LOADING',{search:searchContext.search});
-  const promise=bounded(searchUnifiedOffers({search:searchContext.search}),85000);
+  if (searchJob && !force) return searchJob;
+  const search = searchContext.search;
+  send('BOOKING_SEARCH_LOADING',{search});
+  const promise=bounded(searchUnifiedOffers({search}),85000);
   searchJob=promise;
   try{
     const result=await promise;
     if(searchJob!==promise)return;
     if(!Array.isArray(result?.items))throw new Error('No valid live search result was returned.');
-    currentSearch={items:result.items,search:searchContext.search,errors:result.errors||[],recommendation:result.recommendation||null};
+    const budget = search.tripType === "package" && search.budgetCurrency === search.currency ? search.maxTripTotal : null;
+    const items = budget ? result.items.filter(item=>{
+      const amount = Number(item?.price?.amount);
+      return item?.price?.currency === search.budgetCurrency && amount > 0 && amount <= budget;
+    }) : result.items;
+    const errors = Array.isArray(result.errors) ? result.errors : [];
+    const dateOptions = !items.length && !errors.length
+      ? [-3,3].map(days=>{
+        const alternate = shiftedBookingDates(search,days);
+        return alternate && {days,from:alternate.departureDate || alternate.checkInDate,to:alternate.returnDate || alternate.checkOutDate || ""};
+      }).filter(Boolean) : [];
+    currentSearch={items,search,errors,dateOptions,budgetLimited:Boolean(budget && items.length < result.items.length),recommendation:result.recommendation||null};
     upsellJobs.clear();
     send('BOOKING_SEARCH_RESULTS',currentSearch);
   }finally{if(searchJob===promise)searchJob=null}
@@ -184,7 +200,12 @@ function routeForPath(path){
 async function navigate(raw){
   const path=text(raw);
   const page=routeForPath(path);
-  if(page==='home'){onReturnHome();return}
+  if(page==='home'){
+    const canRestore = ['HOME','BOOKING_RETRY'].includes(searchContext?.source);
+    if (!cartId && searchContext?.source === 'FLIGHTS') locationApi.to(SITE_MAP.flights);
+    else onReturnHome(canRestore && !cartId ? searchContext.id : '');
+    return;
+  }
   if(page){if(!cartId){await goStep('offer');return}const c=await withLoginCart(cart);await goStep(allowedStep(page,c));return}
   if(!isSafeInternalRoute(path))throw new Error('Invalid SKANDI navigation destination.');
   const allow=[SITE_MAP.home,APP_ROUTES.bookingFlow,APP_ROUTES.myProfile,SITE_MAP.travelInfo,SITE_MAP.support,SITE_MAP.search].some(x=>path===x||path.startsWith(`${x}/`)||path.startsWith(`${x}?`));
@@ -207,6 +228,18 @@ async function processMessage(msg){
     return goStep(allowedStep(step,c));
   }
   if(t==='BOOKING_SEARCH_REFRESH'&&!cartId)return searchOffers(true);
+  if ((t==='BOOKING_TRY_DATES' || t==='BOOKING_CLEAR_BUDGET') && step==='offer' && !cartId && !searchJob && currentSearch && searchContext) {
+    const days = Number(msg.days);
+    const canShift = currentSearch.dateOptions.some(option=>option.days===days);
+    const next = t==='BOOKING_CLEAR_BUDGET'
+      ? {...searchContext.search,maxTripTotal:undefined,budgetCurrency:undefined}
+      : canShift && shiftedBookingDates(searchContext.search,days);
+    if (!next) return;
+    const source = searchContext.source==='FLIGHTS' ? 'FLIGHTS' : 'BOOKING_RETRY';
+    const path = startBookingSearch(next,source);
+    const id = new URLSearchParams(path.split('?')[1]).get('searchId');
+    return startSearch(id);
+  }
   if(t==='BOOKING_UPSELL_REQUEST'&&step==='offer'&&!cartId){
     const offerId=text(msg.offerId), current=currentSearch;
     const item=current?.items?.find(x=>text(x.id)===offerId && text(x.itemType).toLowerCase()==='flight');
