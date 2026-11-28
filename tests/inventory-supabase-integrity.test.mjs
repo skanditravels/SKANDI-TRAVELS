@@ -53,7 +53,7 @@ test('airline media saves protect supplier rows and only activate approved Asset
 
 test('save reports an unconfirmed restore instead of claiming rollback succeeded',async()=>{
  const events=[];
- const ctx=vm.createContext({...base,validateHierarchyRelations:async()=>{},catalogBody:()=>null,MASTER_TYPES:new Set(['HOTEL']),REFERENCE_TYPES:new Set(),requireInventoryAccess:async()=>({}),snapshotBundleForRollback:async()=>({id:'hotel'}),savePrimary:async()=>({id:'hotel'}),syncMasterChildren:async()=>{throw Error('write failed')},compensateBundleSave:async()=>false,audit:async(_s,event)=>events.push(event)});
+ const ctx=vm.createContext({validateInventoryFields:()=>{},...base,validateHierarchyRelations:async()=>{},catalogBody:()=>null,MASTER_TYPES:new Set(['HOTEL']),REFERENCE_TYPES:new Set(),requireInventoryAccess:async()=>({}),snapshotBundleForRollback:async()=>({id:'hotel'}),savePrimary:async()=>({id:'hotel'}),syncMasterChildren:async()=>{throw Error('write failed')},compensateBundleSave:async()=>false,audit:async(_s,event)=>events.push(event)});
  vm.runInContext(functionCode('saveInventoryBundleCore')+'\nthis.save=saveInventoryBundleCore',ctx);
  await assert.rejects(()=>ctx.save({bundle:{record:{entityType:'HOTEL'}}}),e=>e.message==='INVENTORY_BUNDLE_RESTORE_FAILED'&&/could not be fully restored/.test(e.publicMessage));
  assert.deepEqual(events,['INVENTORY_BUNDLE_RESTORE_FAILED']);

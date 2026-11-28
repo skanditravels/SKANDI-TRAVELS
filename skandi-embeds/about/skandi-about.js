@@ -283,7 +283,7 @@ function normalizeNetwork(payload = {}) {
   let destinations = rawDestinations.filter(item => item && (!isNetworkAirport(item) || rawAirports.length > 0)).map(item => {
     const name = networkText(networkFirst(item.name,item.title,item.destinationName,item.city,item.label,item.code),180);
     const fallbackId = networkSlug(networkFirst(item.name,item.title,item.city));
-    return { id:networkText(networkFirst(item.publicId,item.id,item.code,item.Code,item.slug,item._id,item.iata,item.IATA)) || fallbackId, name, country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120) };
+    return { id:networkText(networkFirst(item.publicId,item.id,item.code,item.Code,item.slug,item._id,item.iata,item.IATA)) || fallbackId, name, country:networkText(networkFirst(item.country,item.Country,item.locationCountry),120), explorePath:networkText(item.explorePath,1000) };
   }).filter(item => item.id && item.name);
 
   // Match the map's city fallback when its feed contains airports but no destinations.
@@ -324,7 +324,7 @@ function networkMapPath(type, id) {
 }
 function networkLink(type, item, className) {
   const link = document.createElement("a");
-  const path = networkMapPath(type, item.id);
+  const path = type==="destination" && /^\/destinations\/explore\?/.test(item.explorePath||"") ? item.explorePath : networkMapPath(type, item.id);
   link.className = className;
   link.href = path;
   link.target = "_top";

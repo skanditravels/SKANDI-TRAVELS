@@ -3,6 +3,8 @@
 // Public reference content remains owned by SKANDI_CORE/publicContent; airport live/context requests reuse SKANDI_CORE/flightStatus.
 /* global $w */
 
+import wixSeoFrontend from "wix-seo-frontend";
+import { inventoryGuidePath, inventorySeo, applyInventorySeo } from "public/inventorySeo";
 import wixLocationFrontend from "wix-location-frontend";
 import {
   getPublicTravelInfoPayload,
@@ -49,8 +51,21 @@ function postError(html, error) {
   post(html, "TRAVEL_INFO_ERROR", { message: clean(error?.publicMessage || error?.message || "Travel information is temporarily unavailable.", 500) });
 }
 function travelInfoView(payload) {
-  const section = clean(wixLocationFrontend.query?.section, 40).toLowerCase();
-  return { ...payload, initialSection: section === "transfers" ? section : "" };
+  const query=wixLocationFrontend.query||{};
+  const allowed=["airlines","airports","hotels","transfers","tours","activities","tickets"];
+  const section=clean(query.section,40).toLowerCase();
+  return {...payload,initialSection:allowed.includes(section)?section:"",initialItem:clean(query.item,240)};
+}
+async function applyTravelInfoSeo(payload){
+  const {initialSection,initialItem}=travelInfoView(payload);
+  const requested=initialItem.toLowerCase();
+  const item=payload[initialSection]?.find(row=>[row.id,row.slug,row.iataCode,row.iata,row.code].some(value=>requested&&clean(value,240).toLowerCase()===requested));
+  if(!item)return;
+  const type=({airlines:"AIRLINE",airports:"AIRPORT"})[initialSection]||item.entityType;
+  const record={...item,entityType:type,code:item.iataCode||item.iata||item.code,
+    details:{summary:item.summary},media:[{role:"HERO",url:item.heroImage||item.image||item.logo}]};
+  const path=inventoryGuidePath({...record,code:item.displayGroup?.codes?.[0]||record.code});
+  if(path)await applyInventorySeo(wixSeoFrontend,inventorySeo(record,{path,location:item.city}));
 }
 function withTimeout(promise, timeoutMs, message) {
   let timer;
@@ -247,4 +262,7 @@ $w.onReady(() => {
     } catch (error) { postError(html, error); }
   });
   post(html, "TRAVEL_INFO_HOST_READY", { protocolVersion: VERSION, embedId: resolved.id, route: SITE_MAP.travelInfo });
+  if(wixLocationFrontend.query?.item){
+    return loadData(html).then(payload=>payload&&applyTravelInfoSeo(payload)).catch(error=>console.warn("[Travel info metadata]",error?.message));
+  }
 });

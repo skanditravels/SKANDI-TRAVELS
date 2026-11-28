@@ -1,5 +1,14 @@
 # INFO / LOG — Inventory Control
 
+## 2026-11-28 Geography, companies and entry assets
+
+Use Explore parent for the closest place. For a new intermediate level, review the selected direct children and save the assignment. Existing exact place labels are suggested for that parent. The SQL migration preserves UUIDs and public IDs, and the move of selected children is atomic. Publish a new parent before moving children already visible to customers.
+
+Record the contracted seller as Supplier, the customer-facing identity as Brand and corporate airline ownership as Airline group. Use Public airline listing to pair operating codes for display. The paired option uses each airline’s existing logo and thumbnail in Side by side mode, or accepts separate combined assets under Media in Combined mode. Each operating code keeps its own policy and inventory.
+
+Media groups the current entry’s assets by placement and file type. Add files and public HTTPS URLs in a batch through the Asset Library, then save the record. The source host must allow the browser to download the link. Names include the entity, placement, descriptive filename and a content hash. Supplier assets retain their source. Search and sharing metadata use the canonical public route and linked media, with editable copy. The property editor uses the same entry media controls.
+
+
 ### Logo and thumbnail selections — 2026-11-27
 
 - In **Media**, use **Logo** for the full airline or airport mark and **Thumbnail** for the compact mark. Inventory products and **Property Director → Content & media** use **Card thumbnail**. Choose a public Asset Library image or upload one from that placement, then save the record.

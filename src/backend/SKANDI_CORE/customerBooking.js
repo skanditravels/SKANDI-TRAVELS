@@ -1338,7 +1338,7 @@ async function resolveGroundLocation(input = {}) {
   const usable = airports.filter(r => Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)) && (Number(r.latitude) !== 0 || Number(r.longitude) !== 0));
   let airport = usable.find(r => upper(r.iata, 3) === iataNeedle) || usable.find(r => [r.locationCity, r.title, r.country, r.iata].map(v => lower(v, 200)).join(" ").includes(needle));
   if (airport) return { latitude: Number(airport.latitude), longitude: Number(airport.longitude), label: text(airport.locationCity || airport.title || airport.iata, 160), iata: upper(airport.iata, 3) };
-  const destinations = arr(await restRequest({ table: DESTINATIONS, query: { select: "id,public_id,code,name,slug,details", entity_type: "eq.DESTINATION", active: "eq.true", limit: 500 } }));
+  const destinations = arr(await restRequest({ table: DESTINATIONS, query: { select: "id,public_id,code,name,slug,details", entity_type: "in.(CITY,DESTINATION,AREA)", active: "eq.true", limit: 500 } }));
   const dest = destinations.find(r => [r.code, r.slug, r.public_id, r.name].map(v => lower(v, 220)).includes(needle)) || destinations.find(r => [r.code, r.slug, r.public_id, r.name].map(v => lower(v, 220)).join(" ").includes(needle));
   if (dest) {
     const d = record(dest.details);

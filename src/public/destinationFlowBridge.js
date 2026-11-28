@@ -19,7 +19,7 @@ function bounded(promise) {
   let timer;
   return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(fail("DESTINATION_TIMEOUT","Destination information took too long to load. Select Retry.")),25000);})]).finally(()=>clearTimeout(timer));
 }
-export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]} = {}) {
+export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[],setPageSeo} = {}) {
   let html = null, merged = false, catalog = [], catalogJob = null, loadedAt = 0, discoveryTimer = null;
   const retainedHotelPage=entry==="hotels"&&Boolean(embedId);
   let hotelRouteQuery;
@@ -29,8 +29,8 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
   const content = createDestinationContent(()=>catalog,()=>flowState,LANGUAGES);
   function initialState(query=hotelRouteQuery??wixLocation.query) {
     const q = obj(query);
-    const state = {countrySlug:slug(q.country),regionSlug:slug(q.region),destinationSlug:slug(q.destination),areaSlug:slug(q.area),hotelSlug:slug(q.hotel),hotelId:clean(q.hotelId,160)};
-    const level = q.view === "hotel" || state.hotelSlug || state.hotelId ? "hotel" : q.view === "hotels" ? "hotels" : state.areaSlug ? "area" : state.destinationSlug ? "destination" : state.countrySlug ? "country" : entry;
+    const state = {countrySlug:slug(q.country),stateSlug:slug(q.state),regionSlug:slug(q.region),destinationSlug:slug(q.destination),citySlug:slug(q.city),areaSlug:slug(q.area),hotelSlug:slug(q.hotel),hotelId:clean(q.hotelId,160)};
+    const level = q.view === "hotel" || state.hotelSlug || state.hotelId ? "hotel" : q.view === "hotels" ? "hotels" : state.areaSlug ? "area" : (state.citySlug||state.destinationSlug) ? "destination" : state.countrySlug ? "country" : entry;
     return {...state,level};
   }
   function post(type,payload={},requestId="",flowEpoch="") { html?.postMessage({source:PARENT,type,payload,requestId,flowEpoch,timestamp:new Date().toISOString()}); }
@@ -62,7 +62,7 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
       if(parts[parts.length-1]==="hotels")parts.pop();
       path=content.customPath(hotels?"hotels":"destination",{countrySlug:slug(decodeURIComponent(parts[1]||"")),destinationSlug:slug(decodeURIComponent(parts[2]||"")),areaSlug:slug(decodeURIComponent(parts[3]||""))});
     }
-    if(u.pathname==="/hotel-detail")path=content.customPath("hotel",{countrySlug:u.searchParams.get("country")||"",destinationSlug:u.searchParams.get("destination")||"",areaSlug:u.searchParams.get("area")||"",hotelSlug:u.searchParams.get("hotel")||"",hotelId:u.searchParams.get("hotelId")||""});
+    if(u.pathname==="/hotel-detail")path=content.customPath("hotel",{countrySlug:u.searchParams.get("country")||"",stateSlug:u.searchParams.get("state")||"",regionSlug:u.searchParams.get("region")||"",citySlug:u.searchParams.get("city")||"",destinationSlug:u.searchParams.get("destination")||"",areaSlug:u.searchParams.get("area")||"",hotelSlug:u.searchParams.get("hotel")||"",hotelId:u.searchParams.get("hotelId")||""});
     wixLocation.to(path);
     // Wix can keep the embed mounted and omit a location event for same-page links.
     if(retainedHotelPage&&normalizeSitePath(path)===APP_ROUTES.hotelList) {
@@ -76,7 +76,7 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
   }
   function context(p={}) {
     const q=obj(p.query), outer=merged?flowState:initialState();
-    return {...outer,countrySlug:slug(p.countrySlug||q.country||outer.countrySlug),regionSlug:slug(p.regionSlug||q.region||outer.regionSlug),destinationSlug:slug(p.destinationSlug||q.destination||outer.destinationSlug),areaSlug:slug(p.areaSlug||q.area||outer.areaSlug),hotelSlug:slug(p.hotelSlug||q.hotel||outer.hotelSlug),hotelId:clean((embedId&&outer.hotelId)||p.hotelId||q.hotelId||outer.hotelId,160)};
+    return {...outer,countrySlug:slug(p.countrySlug||q.country||outer.countrySlug),stateSlug:slug(p.stateSlug||q.state||outer.stateSlug),regionSlug:slug(p.regionSlug||q.region||outer.regionSlug),destinationSlug:slug(p.destinationSlug||q.destination||outer.destinationSlug),citySlug:slug(p.citySlug||q.city||outer.citySlug),areaSlug:slug(p.areaSlug||q.area||outer.areaSlug),hotelSlug:slug(p.hotelSlug||q.hotel||outer.hotelSlug),hotelId:clean((embedId&&outer.hotelId)||p.hotelId||q.hotelId||outer.hotelId,160)};
   }
   function geographicScope(c) {
     const scope=content.resolveGeography(c);
@@ -92,13 +92,13 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
         [h.slug,h.name,h.publicId].some(value=>slug(value)===c.hotelSlug));
       if(r&&scope&&!content.isUnder(r,scope))throw fail("DESTINATION_SCOPE_MISMATCH","This hotel does not belong to the selected place.");
     } else {
-      const levels=["country","region","destination","area"];
-      const keys=levels.slice(0,levels.indexOf(kind)+1).map(level=>level+"Slug");
+      const levels=["country","state","region","destination","city","area"];
+      const keys=levels.slice(0,levels.indexOf(kind==="destination"?"city":kind)+1).map(level=>level+"Slug");
       const scope=Object.fromEntries(keys.map(key=>[key,c[key]]));
       if(p.slug)scope[kind+"Slug"]=slug(p.slug);
       r=geographicScope(scope);
     }
-    if(!r||r.entityType!==kind.toUpperCase())throw fail("DESTINATION_NOT_FOUND","This item is not currently published. Choose another destination.");
+    if(!r||(r.entityType!==kind.toUpperCase()&&!(kind==="destination"&&r.entityType==="CITY")))throw fail("DESTINATION_NOT_FOUND","This item is not currently published. Choose another destination.");
     return r;
   }
   function directory() {return content.records("COUNTRY").map(c=>({slug:slug(c.slug||c.name),name:c.name,code:c.code}));}
@@ -137,11 +137,14 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
         } else if(kind==="hotels") {
           const c=context(p);
           const scope=geographicScope(c);
-          const page=content.hotelListPage(c.countrySlug,c.destinationSlug,c.areaSlug,settings.language,c.regionSlug);
+          const page=content.hotelListPage(c.countrySlug,c.destinationSlug,c.areaSlug,settings.language,c.regionSlug,c.stateSlug,c.citySlug);
+          if(scope&&setPageSeo)void setPageSeo(content.pageSeo(scope,settings.language,"hotels")).catch(error=>console.warn("[Hotel list metadata]",error?.message));
           if(scope?.entityType==="COUNTRY")page.arrivalAirports=arrivals(scope);
           type="HOTEL_SEARCH_PAGE_RESULT";result={page};
         } else if(kind==="hotel") {
-          type="HOTEL_DETAIL_DATA";result={page:content.hotelPage(recordFor(kind,p),settings.language,obj(p.query))};
+          const record=recordFor(kind,p);
+          if(setPageSeo)void setPageSeo(content.pageSeo(record,settings.language,"hotel")).catch(error=>console.warn("[Hotel metadata]",error?.message));
+          type="HOTEL_DETAIL_DATA";result={page:content.hotelPage(record,settings.language,obj(p.query))};
         }
         job.type=type;job.result={...result,settings:{...settings},routes:{...SITE_MAP,...APP_ROUTES},source:"SUPABASE_PUBLIC_INVENTORY"};
         post(type,job.result,job.id,job.flowEpoch);
@@ -213,7 +216,7 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
         if(m.type==="DESTINATION_FLOW_REFRESH"){await ensureCatalog(true);jobs.clear();post("DESTINATION_FLOW_SET_STATE",{state:flowState});return;}
         if(m.type==="DESTINATION_FLOW_STATE_CHANGED"){
           if(!["index","country","destination","area","hotels","hotel"].includes(p.level))return;
-          const next={level:p.level,countrySlug:slug(p.countrySlug),destinationSlug:slug(p.destinationSlug),areaSlug:slug(p.areaSlug),hotelSlug:slug(p.hotelSlug),hotelId:clean(p.hotelId,160)};
+          const next={level:p.level,countrySlug:slug(p.countrySlug),destinationSlug:slug(p.destinationSlug),citySlug:slug(p.citySlug||q.city||outer.citySlug),areaSlug:slug(p.areaSlug),hotelSlug:slug(p.hotelSlug),hotelId:clean(p.hotelId,160)};
           if(JSON.stringify(next)!==JSON.stringify(flowState))jobs.clear();
           flowState=next;
           const query={};for(const [k,v] of [["country",flowState.countrySlug],["destination",flowState.destinationSlug],["area",flowState.areaSlug],["hotel",flowState.hotelSlug],["hotelId",flowState.hotelId]])if(v)query[k]=v;
@@ -252,4 +255,12 @@ export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]}
     });
   }
   discover();
+  if(setPageSeo)return (async()=>{
+    try{
+      await ensureCatalog();
+      const state=initialState(),isHotel=state.level==="hotel";
+      const record=isHotel?recordFor("hotel"):geographicScope(state);
+      if(record)await setPageSeo(content.pageSeo(record,settings.language,isHotel?"hotel":"hotels"));
+    }catch(error){console.warn("[Hotel metadata]",error?.message)}
+  })();
 }

@@ -57,13 +57,13 @@ test('Explore renders the selected country even when Wix keeps the current page 
   const $w=()=>embed;
   $w.onReady=fn=>{ready=fn;};
   const context={
-    ...routes,console,setTimeout,clearTimeout,URL,URLSearchParams,$w,
+    ...routes,console,setTimeout,clearTimeout,URL,URLSearchParams,$w,wixSeoFrontend:{},applyInventorySeo:async()=>{},
     wixLocationFrontend:{query:{country:'greece'},to:path=>navigated.push(path),onChange:fn=>{change=fn;}},
     getDestinationFlowCatalog:async()=>({ok:true,records}),
     createDestinationContent:()=>({
       records:()=>records,resolveGeography:scope=>scope.destinationSlug==='stockholm'?stockholm:records.find(row=>row.slug===scope.countrySlug)??null,
       countryPage:record=>({...record,paths:{}}),countryOf:record=>record===stockholm?records[1]:record,airportFor:()=>null,
-      isUnder:()=>false,airportDirectory:()=>[]
+      isUnder:()=>false,airportDirectory:()=>[],pageSeo:()=>({})
     })
   };
   vm.createContext(context);vm.runInContext(source,context);

@@ -18,9 +18,10 @@ function selection(query = {}) {
 $w.onReady(function () {
   const query=wixLocation.query||{};
   // Earlier Explore links used the map route with geographic query parameters.
-  if(!query.pin&&(query.country||query.region||query.area)) {
+  const legacyNetworkPin=/^city:[a-z0-9-]+:[a-z0-9-]*$/i.test(query.destination||"");
+  if(!query.pin&&!legacyNetworkPin&&(query.country||query.state||query.region||query.destination||query.city||query.area||query.hotel||query.hotelId||query.view)) {
     const params=new URLSearchParams();
-    for(const key of ["country","region","destination","area","hotel","hotelId","view"]) {
+    for(const key of ["country","state","region","destination","city","area","hotel","hotelId","view"]) {
       if(typeof query[key]==="string"&&query[key].trim())params.set(key,query[key].trim().slice(0,160));
     }
     const route=params.has("hotel")||params.has("hotelId")||["hotels","hotel"].includes(params.get("view"))?APP_ROUTES.hotelList:APP_ROUTES.country;
