@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#022e64">
-<title>SKANDI My Profile · B-011.31</title>
+<title>My SKANDI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 
 
-<meta name="theme-color" content="#03111f">
+<meta name="theme-color" content="#102849">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -1812,6 +1812,263 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .support-case-error{color:#9e3b31}
 @media(max-width:1000px){#skandi-app-root .support-layout{grid-template-columns:1fr}#skandi-app-root .support-panel{min-height:0}#skandi-app-root .support-cases{max-height:270px}}
 @media(max-width:620px){#skandi-app-root .support-panel-header{padding:15px}#skandi-app-root .support-reply{flex-direction:column}#skandi-app-root .support-reply button{align-self:flex-end}#skandi-app-root .support-case-thread{height:330px}#skandi-app-root .support-contacts{flex-direction:column}#skandi-app-root .support-contact{width:100%}}
+
+/* My SKANDI account */
+#skandi-app-root{
+  --account-paper:#f5f2eb;
+  --account-card:#fffcf7;
+  --account-line:#dedbd3;
+  --account-ink:#112944;
+  --account-muted:#536576;
+  --account-teal:#0c5b62;
+  --account-navy:#102849;
+}
+#skandi-app-root,#skandi-app-root,#skandi-app-root .shell{background:var(--account-paper);color:var(--account-ink)}
+#skandi-app-root :focus-visible{outline:3px solid #17747c;outline-offset:3px}
+#skandi-app-root .my-skandi-header{
+  padding:25px 0 23px;
+  background:linear-gradient(116deg,#112e50 0%,#102849 68%,#163d53 100%);
+  color:white;
+}
+#skandi-app-root .my-skandi-header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+#skandi-app-root .my-skandi-header h1{margin:0;font:700 clamp(27px,4vw,38px)/1.08 Montserrat,sans-serif;letter-spacing:-.045em}
+#skandi-app-root .my-skandi-header p{margin:8px 0 0;color:#d4e2ea;font-size:15px;overflow-wrap:anywhere}
+#skandi-app-root .my-skandi-updates{
+  display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 13px;
+  border:1px solid #8296aa;border-radius:9px;background:transparent;color:#fff;font-weight:650;
+}
+#skandi-app-root .my-skandi-updates:hover{background:#27435d}
+#skandi-app-root .my-skandi-updates :is(span,svg){flex-shrink:0}
+#skandi-app-root #unreadCount{min-width:22px;padding:3px;background:#d6eeed;color:var(--account-navy);border-radius:5px;font-size:13px}
+#skandi-app-root .my-skandi-header :focus-visible{outline-color:#b5f1ef}
+#skandi-app-root .profile-load-state{color:var(--account-ink)}
+#skandi-app-root .profile-load-state p{color:var(--account-muted)}
+#skandi-app-root .profile-refresh-state{background:var(--account-card);color:var(--account-ink);border-color:var(--account-line)}
+
+#skandi-app-root .account-stage{padding:30px 0 90px;background:var(--account-paper)}
+#skandi-app-root .account-stage::before{display:none}
+#skandi-app-root .account-layout{grid-template-columns:204px minmax(0,1fr);gap:32px}
+#skandi-app-root .account-workspace{max-width:1000px}
+#skandi-app-root .side-menu{
+  padding:10px;border:1px solid var(--account-line);border-radius:14px;
+  background:var(--account-card);color:var(--account-ink);
+}
+#skandi-app-root .side-category,#skandi-app-root .side-category:last-of-type{border:none}
+#skandi-app-root .profile-nav-main,#skandi-app-root .side-menu .side-link{
+  display:block;width:100%;min-height:44px;padding:9px 12px;border:0;border-radius:7px;
+  background:none;color:var(--account-ink);text-align:left;font-size:14px;font-weight:700;
+}
+#skandi-app-root .profile-nav-main:hover,#skandi-app-root .side-menu .side-link:hover{background:#edf3f0;color:var(--account-ink)}
+#skandi-app-root .side-menu .side-link::before{display:none}
+#skandi-app-root .side-menu .profile-nav-main.active,#skandi-app-root .side-category.active>.profile-nav-main{background:#dcecea;color:#114951}
+#skandi-app-root .side-category .side-options{display:none;padding:3px 0 7px}
+#skandi-app-root .side-category.active .side-options{display:block}
+#skandi-app-root .side-options .side-link{padding-inline-start:22px;color:var(--account-muted);font-weight:550}
+#skandi-app-root .side-options .side-link.active{color:var(--account-teal);font-weight:750}
+#skandi-app-root .side-options .side-link.active::before{
+  display:block;height:18px;width:2px;left:12px;top:calc(50% - 9px);
+  border-radius:2px;background:var(--account-teal);
+}
+
+#skandi-app-root .profile-title,#skandi-app-root .account-workspace .section-head h2,#skandi-app-root .account-workspace .page-intro h2{
+  margin:0;color:var(--account-ink);font:700 clamp(24px,3.4vw,35px)/1.15 Montserrat,sans-serif;letter-spacing:-.043em;
+}
+#skandi-app-root .profile-title{margin:0 0 18px}
+#skandi-app-root .account-workspace .section-head,#skandi-app-root .account-workspace .page-intro{
+  display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;
+  gap:10px 24px;margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid var(--account-line);
+}
+#skandi-app-root .account-workspace .section-head p,#skandi-app-root .account-workspace .page-intro p{color:var(--account-muted);font-size:14px}
+#skandi-app-root .account-workspace .subhead{color:var(--account-ink)}
+#skandi-app-root .account-workspace :is(.card,.support-panel,.support-new-case,.activity-list,.tier-table){
+  border-color:var(--account-line);background:var(--account-card);
+}
+#skandi-app-root .account-workspace :is(.card,.support-panel,.activity-list,.tier-table),
+#skandi-app-root .account-workspace > .view > .card.pad{box-shadow:none}
+#skandi-app-root .account-workspace .empty{
+  padding:34px 24px;border:1px solid var(--account-line);border-radius:14px;
+  background:var(--account-card);color:var(--account-muted);
+}
+#skandi-app-root .account-workspace .empty :is(strong,span){color:var(--account-ink)}
+#skandi-app-root .account-workspace .empty .icon{color:var(--account-teal)}
+#skandi-app-root .account-workspace :is(.option,.activity-filter,.support-contact){color:var(--account-ink);border-color:#a8bbb9;background:#f8fbf8}
+#skandi-app-root .account-workspace .activity-filter.active,
+#skandi-app-root .account-workspace .activity-filter:hover,
+#skandi-app-root .account-workspace .support-contact:hover{color:#10434b;border-color:#658e89;background:#dcecea}
+#skandi-app-root .account-workspace .selection-label,#skandi-app-root .account-workspace .activity-row .date{color:var(--account-muted)}
+#skandi-app-root .account-workspace .notif p{color:var(--account-muted)}
+#skandi-app-root .account-workspace .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+#skandi-app-root .account-workspace .club-status-panel{min-height:0;margin-bottom:16px}
+
+#skandi-app-root .account-stage .btn,#skandi-app-root .modal .btn{min-height:44px;padding:9px 15px;border-radius:8px;font-size:14px;line-height:1.35;text-transform:none;letter-spacing:normal}
+#skandi-app-root .account-stage .btn.primary,#skandi-app-root .modal .btn.primary{background:var(--account-teal);border-color:var(--account-teal);color:white}
+#skandi-app-root .account-stage .btn.primary:hover,#skandi-app-root .modal .btn.primary:hover{background:#08454b;border-color:#08454b}
+#skandi-app-root .account-stage .btn.soft,#skandi-app-root .modal .btn.soft{background:#f7faf8;color:var(--account-teal);border-color:#bbc9c4}
+#skandi-app-root .account-stage .btn.soft:hover,#skandi-app-root .modal .btn.soft:hover{background:#e2efeb;border-color:#8ba5a0}
+#skandi-app-root .account-stage .btn.danger,#skandi-app-root .modal .btn.danger{background:#fff2ef;color:#8d2e28;border-color:#c8887c}
+#skandi-app-root .account-stage .btn.danger:hover,#skandi-app-root .modal .btn.danger:hover{background:#fae0dc}
+#skandi-app-root .account-stage a.btn{display:inline-flex;align-items:center;text-decoration:none}
+#skandi-app-root .text-action{
+  display:inline-flex;align-items:center;min-height:44px;padding:4px 0;border:0;
+  background:transparent;color:var(--account-teal);font-size:14px;font-weight:700;text-align:left;
+}
+#skandi-app-root .text-action:hover{text-decoration:underline;text-underline-offset:4px}
+
+#skandi-app-root .profile-panel{
+  padding:clamp(17px,2.2vw,24px);border:1px solid var(--account-line);border-radius:14px;
+  background:var(--account-card);color:var(--account-ink);overflow-wrap:anywhere;
+}
+#skandi-app-root .profile-panel h3,#skandi-app-root .profile-panel h4{margin:0;color:var(--account-ink);font:700 18px/1.3 Montserrat,sans-serif;letter-spacing:-.023em}
+#skandi-app-root .profile-panel h4{font-size:15px}
+#skandi-app-root .profile-panel p{margin:7px 0 0;color:var(--account-muted);font-size:14px;line-height:1.55}
+#skandi-app-root .profile-panel>.button-row{margin-top:14px}
+#skandi-app-root .profile-empty{max-width:660px}
+#skandi-app-root .profile-eyebrow{
+  margin:0 0 7px!important;color:var(--account-teal)!important;
+  font-size:13px;font-weight:750;line-height:1.4;
+}
+#skandi-app-root .visually-hidden{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
+#skandi-app-root .home-trip{
+  border:1px solid var(--account-line);border-radius:17px;overflow:hidden;
+  background:var(--account-card);
+}
+#skandi-app-root .home-trip-hero{
+  position:relative;isolation:isolate;display:flex;align-items:flex-end;min-height:204px;
+  padding:clamp(21px,3.5vw,35px);overflow:hidden;
+  background:linear-gradient(118deg,#112849 18%,#153657 67%,#1e5663 100%);color:white;
+}
+#skandi-app-root .home-trip-hero::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(90deg,#102849 8%,#102849d9 42%,#10284920 100%);
+}
+#skandi-app-root .home-trip-hero::after{
+  content:"";position:absolute;bottom:-160px;right:-80px;z-index:-1;width:440px;height:280px;
+  border:1px solid #e1efef45;border-radius:50%;transform:rotate(-19deg);
+  box-shadow:0 0 0 22px #e1efef10,0 0 0 47px #e1efef0b;pointer-events:none;
+}
+#skandi-app-root .home-trip-hero img{position:absolute;inset:0 0 0 auto;width:75%;height:100%;object-fit:cover;z-index:-2}
+#skandi-app-root .home-trip-identity{max-width:38rem}
+#skandi-app-root .home-trip-identity h2{
+  margin:0;font:700 clamp(29px,5vw,51px)/1.02 Montserrat,sans-serif;letter-spacing:-.05em;overflow-wrap:anywhere;
+}
+#skandi-app-root .home-trip-identity p{max-width:40ch;margin:11px 0 0;color:#edf4f9;font-size:16px;line-height:1.5}
+#skandi-app-root .home-trip-identity .profile-eyebrow{display:block;color:#bde8e7!important}
+#skandi-app-root .home-trip-reference{display:inline-block;margin-top:11px;color:#d8e7f0;font-size:13px}
+#skandi-app-root .home-trip-action{
+  display:flex;align-items:center;justify-content:space-between;gap:14px 24px;
+  padding:18px clamp(16px,3.2vw,30px);
+}
+#skandi-app-root .home-trip-action h3{margin:0;color:var(--account-ink);font:700 18px/1.3 Montserrat,sans-serif}
+#skandi-app-root .home-trip-action p{margin:7px 0 0;color:var(--account-muted);font-size:14px}
+#skandi-app-root .home-trip-action>.btn{flex-shrink:0}
+#skandi-app-root .home-trip-action .button-row{margin:0}
+#skandi-app-root .profile-shortcuts{display:flex;flex-wrap:wrap;gap:8px}
+#skandi-app-root .home-trip .profile-shortcuts{padding:12px clamp(16px,3.2vw,30px);border-top:1px solid var(--account-line)}
+#skandi-app-root .overview-secondary{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
+#skandi-app-root .overview-club{display:flex;align-items:center;justify-content:space-between;gap:15px}
+#skandi-app-root .overview-club .text-action{flex-shrink:0}
+#skandi-app-root .overview-links{display:flex;align-items:center;flex-wrap:wrap;gap:0 18px;padding-block:10px}
+
+#skandi-app-root .club-overview-grid{grid-template-columns:minmax(0,1fr) minmax(0,.85fr);align-items:stretch;gap:15px}
+#skandi-app-root .club-member-card{
+  position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;
+  width:100%;min-height:184px;aspect-ratio:1.586;margin:0;padding:clamp(16px,2.3vw,26px);
+  color:#fff;border:1px solid #294764;border-radius:15px;
+  background:linear-gradient(132deg,#0b1c38,#13385e 83%,#17495a);box-shadow:0 12px 25px #10284927;
+}
+#skandi-app-root .club-member-card::before{
+  content:"";position:absolute;bottom:-27%;right:-14%;width:84%;height:75%;border-radius:50%;z-index:-1;
+  border-top:1px solid #c6ad8060;transform:rotate(-21deg);
+  box-shadow:0 -10px 0 #78c7cd16,0 -20px 0 #7fa9c90d;pointer-events:none;
+}
+#skandi-app-root .club-card-lockup,#skandi-app-root .club-member-card figcaption{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#skandi-app-root .club-card-lockup{font-family:Montserrat,sans-serif;font-size:13px;letter-spacing:.035em}
+#skandi-app-root .club-card-lockup>strong{font-size:16px;letter-spacing:.12em}
+#skandi-app-root .club-card-lockup img{display:block;width:min(115px,28vw);max-height:35px;object-fit:contain;object-position:left}
+#skandi-app-root .club-card-lockup>strong>span{display:block;font-size:13px;letter-spacing:.2em}
+#skandi-app-root .club-card-number{
+  color:#f7ecd4;font:650 clamp(17px,2.7vw,25px)/1.25 Montserrat,sans-serif;
+  letter-spacing:.12em;text-shadow:0 1px 2px #020914;overflow-wrap:anywhere;
+}
+#skandi-app-root .club-member-card figcaption{align-items:flex-end;font-size:14px;color:#edf4fa;overflow-wrap:anywhere}
+#skandi-app-root .club-member-card figcaption div{flex-shrink:0;color:#dce8f2;font-size:13px}
+#skandi-app-root .club-member-card figcaption strong{display:block;margin-top:3px;color:#fff}
+#skandi-app-root .club-balance{display:flex;flex-direction:column;justify-content:center}
+#skandi-app-root .club-balance .button-row{margin-top:18px}
+#skandi-app-root .club-balance-value{font:700 clamp(22px,4vw,43px)/1.1 Montserrat,sans-serif;letter-spacing:-.045em}
+#skandi-app-root .club-tier-progress{margin-top:12px}
+#skandi-app-root .club-tier-progress progress{display:block;width:100%;height:10px;margin-top:7px;accent-color:var(--account-teal)}
+#skandi-app-root .club-missing{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:15px}
+#skandi-app-root .reward-row,#skandi-app-root .trip-list-item{display:flex;justify-content:space-between;align-items:center;gap:15px}
+#skandi-app-root .profile-list{list-style:none;margin:0;padding:0}
+#skandi-app-root .club-rewards-list,#skandi-app-root .trip-list{display:grid;gap:10px}
+
+#skandi-app-root .trip-detail-heading{margin-bottom:14px}
+#skandi-app-root .trip-detail-heading .profile-title{margin:3px 0 6px}
+#skandi-app-root .trip-detail-heading p{margin:0;color:var(--account-muted);font-size:14px}
+#skandi-app-root .trip-detail-nav{margin-bottom:14px}
+#skandi-app-root #bookingDetail>section{margin-bottom:14px;scroll-margin:16px}
+#skandi-app-root .trip-day{border-left:4px solid var(--account-teal)}
+#skandi-app-root .travel-day-block{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:14px;padding-top:14px;
+  border-top:1px solid var(--account-line);
+}
+#skandi-app-root .trip-timeline{margin:14px 0}
+#skandi-app-root .trip-timeline li{position:relative;margin-left:7px;padding:0 0 22px 23px;border-left:2px solid #d3e1da}
+#skandi-app-root .trip-timeline li:last-child{padding-bottom:4px}
+#skandi-app-root .trip-timeline li::before{
+  content:"";position:absolute;top:4px;left:-6px;width:10px;height:10px;
+  border:2px solid var(--account-card);background:var(--account-teal);border-radius:50%;
+}
+#skandi-app-root .trip-timeline li .profile-eyebrow{margin-bottom:4px!important}
+#skandi-app-root .trip-note{max-width:70ch}
+#skandi-app-root .trip-facts{display:flex;gap:10px 28px;flex-wrap:wrap;margin:14px 0}
+#skandi-app-root .trip-facts dt{color:var(--account-muted);font-size:13px}
+#skandi-app-root .trip-facts dd{margin:4px 0 0;color:var(--account-ink);font-weight:750}
+#skandi-app-root .trip-files{margin:8px 0 14px}
+#skandi-app-root .trip-files+.trip-files{margin-top:14px}
+#skandi-app-root .trip-file{
+  display:flex;justify-content:space-between;align-items:center;gap:9px 15px;
+  padding:9px 0;border-bottom:1px solid var(--account-line);
+}
+#skandi-app-root .trip-file strong{color:var(--account-ink);font-size:14px}
+#skandi-app-root .trip-file p{margin:3px 0 0}
+#skandi-app-root .trip-file-status{padding:12px;margin-top:14px;border-radius:7px;background:#eaf2ed;color:var(--account-ink)}
+#skandi-app-root .trip-file-status .btn{margin-inline-start:10px}
+#skandi-app-root #trip-documents h4{margin-top:14px}
+#skandi-app-root .trip-task-text{font-weight:680}
+#skandi-app-root .modal .iconbtn{min-width:44px;min-height:44px}
+#skandi-app-root .modal{color:var(--account-ink)}
+
+@media(max-width:820px){
+  #skandi-app-root .account-stage{padding:15px 0 95px}
+  #skandi-app-root .account-layout{display:block}
+  #skandi-app-root .mobile-profile-nav{
+    color:var(--account-ink);grid-template-columns:minmax(0,1fr);
+    gap:5px;padding:0;margin-bottom:14px;font-size:13px;
+  }
+  #skandi-app-root .mobile-profile-nav select{border-color:#9daeb0;background:#fffcf7;color:var(--account-ink)}
+}
+@media(max-width:620px){
+  #skandi-app-root .my-skandi-header{padding:17px 0}
+  #skandi-app-root .my-skandi-header p{font-size:14px}
+  #skandi-app-root .my-skandi-header-inner{gap:10px}
+  #skandi-app-root .home-trip-hero{min-height:156px}
+  #skandi-app-root .home-trip-identity p{font-size:15px}
+  #skandi-app-root .home-trip-action,#skandi-app-root .travel-day-block,#skandi-app-root .club-missing{flex-wrap:wrap}
+  #skandi-app-root .home-trip-action>.btn{width:100%}
+  #skandi-app-root .home-trip .profile-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  #skandi-app-root .home-trip .profile-shortcuts .btn{padding-inline:5px}
+  #skandi-app-root .overview-secondary,#skandi-app-root .club-overview-grid,#skandi-app-root .account-workspace .grid3{grid-template-columns:1fr}
+  #skandi-app-root .club-member-card{max-width:420px}
+  #skandi-app-root .profile-panel .btn{max-width:100%}
+  #skandi-app-root .reward-row,#skandi-app-root .trip-list-item{align-items:flex-start;flex-direction:column}
+  #skandi-app-root .profile-panel .trip-file-status .btn{margin-left:0;margin-right:8px}
+}
 </style>
 <style data-skandi-part="support-chat">
 #skandi-support-chat-root{--navy:#022e64;--teal:#5fc7cf;--ink:#111827;--muted:#687386;--line:#dfe5ef;--soft:#f5f7fa;--white:#fff;--green:#14805e;--red:#b42318;--vvh:100dvh;--safe-bottom:env(safe-area-inset-bottom,0px)}
@@ -2257,91 +2514,94 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 <div id="skandi-app-root">
 <div class="shell">
 <section class="profile-load-state wrap" id="profileLoadState" aria-labelledby="profileLoadTitle">
-  <h1 id="profileLoadTitle">My Profile</h1>
+  <h1 id="profileLoadTitle">My SKANDI</h1>
   <p id="profileLoadMessage" role="status">Loading your account…</p>
   <div class="button-row">
     <button class="btn primary" type="button" id="profileRetry" hidden="">Try again</button>
     <button class="btn primary" type="button" data-route="/skandi-club/login" id="profileSignIn" hidden="">Sign in</button>
   </div>
 </section>
-<section class="hero account-masthead" id="profileMasthead" hidden="">
-  <div class="wrap">
-    <div class="account-summary">
-      <div class="account-greeting">
-        <div class="eyebrow">My Profile</div>
-        <h1 id="greetingLine">Welcome, <span id="heroName">Member</span></h1>
-      </div>
-      <div class="account-summary-grid" aria-label="Club account summary">
-        <div class="account-summary-item"><span class="account-summary-label" id="heroPointsLabel">Points</span><strong class="account-summary-value" id="heroPoints">—</strong></div>
-        <div class="account-summary-item"><span class="account-summary-label">Club status</span><strong class="account-summary-value" id="heroTier">Member</strong></div>
-        <div class="account-summary-item"><span class="account-summary-label">Member since</span><strong class="account-summary-value" id="heroMemberSince">—</strong></div>
-      </div>
+<header class="my-skandi-header" id="profileMasthead" hidden="">
+  <div class="wrap my-skandi-header-inner">
+    <div>
+      <h1>My SKANDI</h1>
+      <p id="greetingLine">Welcome, <span id="heroName">Member</span></p>
     </div>
-    <div class="account-identity-strip">
-      <span id="heroMembership" hidden="">Club number <strong id="heroNumber"></strong></span>
-      <button type="button" data-section="trips" data-view="upcoming"><strong id="heroTrips">0</strong> upcoming trips</button>
-    </div>
+    <button class="my-skandi-updates" type="button" data-section="account" data-view="notifications">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3V9Zm4 11h4"></path></svg>
+      Updates <span id="unreadCount" hidden=""></span>
+    </button>
   </div>
-</section>
+</header>
 <section class="account-stage" id="profileStage" hidden="">
   <div class="wrap account-layout">
     <div class="mobile-profile-nav">
-      <label for="profileSectionSelect">Go to</label>
+      <label for="profileSectionSelect">Explore My SKANDI</label>
       <select id="profileSectionSelect"></select>
     </div>
-    <aside class="side-menu" id="sideMenu" aria-label="My Profile navigation">
-      <div class="side-menu-title">My Profile</div>
-      <div class="side-category open active" data-category="club">
-        <button class="side-category-head" type="button" data-category-toggle="club" aria-expanded="true">My Club</button>
-        <div class="side-options">
-          <button class="side-link active" type="button" data-section="club" data-view="overview">Overview</button>
-          <button class="side-link" type="button" data-section="club" data-view="activity">Points Activity</button>
-          <button class="side-link" type="button" data-section="club" data-view="program">Program Information</button>
-        </div>
-      </div>
+    <nav class="side-menu" id="sideMenu" aria-label="My SKANDI">
+      <button class="side-link profile-nav-main" type="button" data-section="home" data-view="overview">Overview</button>
       <div class="side-category" data-category="trips">
-        <button class="side-category-head" type="button" data-category-toggle="trips" aria-expanded="false">My Trips</button>
+        <button class="profile-nav-main" type="button" data-section="trips" data-view="upcoming">Trips</button>
         <div class="side-options">
-          <button class="side-link" type="button" data-section="trips" data-view="upcoming">My Upcoming Trips</button>
-          <button class="side-link" type="button" data-section="trips" data-view="past">Past Trips</button>
-          <button class="side-link" type="button" data-section="trips" data-view="drafts">Booking Drafts</button>
+          <button class="side-link" type="button" data-section="trips" data-view="upcoming">Upcoming &amp; active</button>
+          <button class="side-link" type="button" data-section="trips" data-view="past">Past trips</button>
+          <button class="side-link" type="button" data-section="trips" data-view="drafts">Booking drafts</button>
         </div>
       </div>
-      <div class="side-category" data-category="profile">
-        <button class="side-category-head" type="button" data-category-toggle="profile" aria-expanded="false">My Profile</button>
+      <div class="side-category" data-category="club">
+        <button class="profile-nav-main" type="button" data-section="club" data-view="overview">SKANDI Club</button>
         <div class="side-options">
-          <button class="side-link" type="button" data-section="profile" data-view="details">Personal Information</button>
-          <button class="side-link" type="button" data-section="profile" data-view="travelers">Saved Travelers</button>
-          <button class="side-link" type="button" data-section="profile" data-view="wallet">Wallet &amp; Payments</button>
-          <button class="side-link" type="button" data-section="profile" data-view="saved">Saved</button>
+          <button class="side-link" type="button" data-section="club" data-view="overview">Club card</button>
+          <button class="side-link" type="button" data-section="club" data-view="activity">Points activity</button>
+          <button class="side-link" type="button" data-section="club" data-view="rewards">Rewards</button>
+          <button class="side-link" type="button" data-section="club" data-view="program">Program information</button>
         </div>
       </div>
       <div class="side-category" data-category="account">
-        <button class="side-category-head" type="button" data-category-toggle="account" aria-expanded="false">Account</button>
+        <button class="profile-nav-main" type="button" data-section="profile" data-view="details">Account</button>
         <div class="side-options">
-          <button class="side-link" type="button" data-section="account" data-view="notifications">Notifications</button>
+          <button class="side-link" type="button" data-section="profile" data-view="details">Personal information</button>
+          <button class="side-link" type="button" data-section="profile" data-view="travelers">Saved travelers</button>
+          <button class="side-link" type="button" data-section="profile" data-view="wallet">Wallet &amp; payments</button>
+          <button class="side-link" type="button" data-section="profile" data-view="saved">Saved places</button>
+          <button class="side-link" type="button" data-section="account" data-view="notifications">Updates</button>
           <button class="side-link" type="button" data-section="account" data-view="settings">Preferences</button>
         </div>
       </div>
-      <div class="side-category" data-category="support"><button class="side-category-head" type="button" data-category-toggle="support" aria-expanded="false">My Support</button><div class="side-options"><button class="side-link" type="button" data-section="support" data-view="cases">Support Cases</button><button class="side-link" type="button" data-section="support" data-view="new">Start New Case</button></div></div>
-      <div class="side-menu-footer">Need help with a booking or account?<br><button type="button" data-section="support" data-view="cases">Contact SKANDI Support</button></div>
-    </aside>
+      <div class="side-category" data-category="support">
+        <button class="profile-nav-main" type="button" data-section="support" data-view="cases">Support</button>
+        <div class="side-options">
+          <button class="side-link" type="button" data-section="support" data-view="cases">My requests</button>
+          <button class="side-link" type="button" data-section="support" data-view="new">Start a request</button>
+        </div>
+      </div>
+    </nav>
     <main class="account-workspace" id="accountWorkspace">
       <div class="profile-refresh-state" id="profileRefreshState" role="status" hidden=""></div>
-      <section class="view active" data-page="club-overview"><div id="clubView"></div></section>
+      <section class="view active" data-page="home-overview" aria-label="Overview"><div id="accountHome"></div></section>
+      <section class="view" data-page="club-overview"><div id="clubView"></div></section>
       <section class="view" data-page="club-activity"><div id="clubActivityView"></div></section>
+      <section class="view" data-page="club-rewards"><h2 class="profile-title">Club rewards</h2><div id="clubRewards" aria-live="polite"></div></section>
       <section class="view" data-page="club-program"><div id="clubProgramView"></div></section>
 
       <section class="view" data-page="trips-upcoming">
-        <div class="page-intro"><h2>My Upcoming Trips</h2><p>Open a trip for documents, required information, and available booking changes.</p></div>
-        <div class="trip-page-toolbar"><button class="btn small primary" id="linkBookingBtn">Link a booking</button></div>
+        <div class="section-head"><h2>Upcoming &amp; active trips</h2><button class="btn small soft" id="linkBookingBtn" type="button" data-link-booking="">Link a booking</button></div>
         <div id="tripList" class="trip-list"></div>
       </section>
-      <section class="view" data-page="trips-past"><div class="page-intro"><div><div class="kicker">Travel history</div><h2>Past Trips</h2></div><p>Completed, cancelled and previous bookings linked to your SKANDI account.</p></div><div id="tripHistoryList" class="trip-list"></div></section>
-      <section class="view" data-page="trips-drafts"><div class="page-intro"><div><div class="kicker">Continue booking</div><h2>Booking Drafts</h2></div><p>Booking carts that have not yet been completed.</p></div><div id="tripDraftList" class="trip-list"></div></section>
+      <section class="view" data-page="trips-past"><div class="section-head"><h2>Past trips</h2></div><div id="tripHistoryList" class="trip-list"></div></section>
+      <section class="view" data-page="trips-drafts"><div class="section-head"><h2>Booking drafts</h2></div><div id="tripDraftList" class="trip-list"></div></section>
+      <section class="view" data-page="trips-detail" aria-label="Trip details">
+        <div class="trip-detail-heading">
+          <button class="text-action" id="backToTrips" type="button">← All trips</button>
+          <h2 class="profile-title" id="tripPageTitle" tabindex="-1">Trip details</h2>
+          <p id="tripPageMeta"></p>
+        </div>
+        <div id="bookingDetail"></div>
+      </section>
 
       <section class="view" data-page="profile-details">
-        <div class="page-intro"><h2>Personal Information</h2><p>Manage the contact details linked to your Wix member account.</p></div>
+        <div class="page-intro"><h2>Personal Information</h2><p>These details help us contact you about your bookings.</p></div>
         <div class="card pad">
           <form id="contactForm" class="profile-form">
             <label class="field">First name<input class="control" name="firstName" autocomplete="given-name"></label>
@@ -2355,15 +2615,18 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
             </div>
           </form>
           <div id="profileSummary"></div>
+          <div class="profile-account-actions button-row">
+            <button class="btn soft" type="button" data-route="/travel-info/um-form">Reset password</button>
+          </div>
         </div>
       </section>
-      <section class="view" data-page="profile-travelers"><div class="section-head"><div><div class="kicker">Traveler profiles</div><h2>Saved Travelers</h2></div><div><button class="btn primary" id="addTraveler">Add traveler</button></div></div><div id="travelerGrid" class="grid grid3"></div></section>
-      <section class="view" data-page="profile-wallet"><div class="section-head"><div><div class="kicker">Wallet</div><h2>Wallet &amp; Payments</h2></div><p>Only masked payment metadata is displayed. Full card details are never returned to My Profile.</p></div><h3 class="subhead">Payment methods</h3><div id="paymentGrid" class="grid grid3"></div><h3 class="subhead">Wallet items</h3><div id="walletGrid" class="grid grid3"></div></section>
-      <section class="view" data-page="profile-saved"><div class="section-head"><div><div class="kicker">Saved for later</div><h2>Saved</h2></div><p>Hotels, destinations and other items you saved while exploring SKANDI.</p></div><div id="favorites" class="grid grid2"></div></section>
+      <section class="view" data-page="profile-travelers"><div class="section-head"><div><h2>Saved Travelers</h2></div><div><button class="btn primary" id="addTraveler">Add traveler</button></div></div><div id="travelerGrid" class="grid grid3"></div></section>
+      <section class="view" data-page="profile-wallet"><div class="section-head"><div><h2>Wallet &amp; Payments</h2></div><p>Cards saved at checkout and eligible vouchers appear here.</p></div><h3 class="subhead">Payment methods</h3><div id="paymentGrid" class="grid grid3"></div><h3 class="subhead">Wallet items</h3><div id="walletGrid" class="grid grid3"></div></section>
+      <section class="view" data-page="profile-saved"><div class="section-head"><div><h2>Saved</h2></div><p>Hotels, destinations and other items you saved while exploring SKANDI.</p></div><div id="favorites" class="grid grid2"></div></section>
 
-      <section class="view" data-page="support-cases"><div class="page-intro"><div><div class="kicker">SKANDI CARE</div><h2>My Support</h2></div><p>Track your requests and continue secure conversations with SKANDI Customer Service. Case records are loaded only for your verified member account.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a><button class="support-contact" type="button" data-section="support" data-view="new">Start New Case</button></div><div class="support-layout"><div class="support-panel"><div class="support-panel-header"><strong>Your Cases</strong><button class="btn small" type="button" id="supportRefresh">Refresh</button></div><input class="support-search" id="supportSearch" aria-label="Search support cases" placeholder="Search cases or references"><div class="support-cases" id="supportCases"><div class="support-case-status">Open My Support to load your cases.</div></div></div><div class="support-panel"><div class="support-panel-header"><strong id="supportThreadTitle">Select a case</strong><button type="button" class="btn small" id="supportDuffel" hidden="">Manage trip</button></div><div class="support-case-thread" id="supportMessages"><div class="support-case-status">Select a case to view your secure messages.</div></div><form id="supportReplyForm" class="support-reply" hidden=""><textarea id="supportReplyText" maxlength="12000" required="" aria-label="Reply to SKANDI Support" placeholder="Type a secure reply"></textarea><button type="submit" class="btn primary">Send reply</button></form></div></div><div id="supportStatus" class="support-case-status" aria-live="polite"></div></section>
-      <section class="view" data-page="support-new"><div class="page-intro"><div><div class="kicker">SKANDI CARE</div><h2>Start New Case</h2></div><p>Contact SKANDI Customer Service about your travel, booking, membership or account. Requests appear in your Support Cases after confirmation.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a></div><form id="supportNewForm" class="support-new-case"><h3>How can we assist?</h3><div class="profile-form"><div><label>Name<input id="supportName" name="fullName" maxlength="200" required="" autocomplete="name"></label></div><div><label>Email<input id="supportEmail" name="email" type="email" maxlength="254" required="" autocomplete="email"></label></div><div><label>Category<select id="supportCategory" name="category" required=""><option value="general">General enquiry</option></select></label></div><div><label>Booking reference (when applicable)<input name="bookingRef" maxlength="80" autocomplete="off"></label></div><div class="field full" id="supportDynamicFields"></div><div class="field full"><label>Subject<input name="subject" minlength="3" maxlength="240" required=""></label></div><div class="field full"><label>Details<textarea name="message" minlength="5" maxlength="12000" required="" placeholder="Describe how SKANDI can assist"></textarea></label></div><div class="field full"><div class="button-row"><button class="btn primary" type="submit">Submit support request</button><button class="btn soft" type="button" data-section="support" data-view="cases">View Support Cases</button></div></div></div><div id="supportFormStatus" class="support-case-status" role="status" aria-live="polite"></div></form></section>
-      <section class="view" data-page="account-notifications"><div class="section-head"><div><div class="kicker">Account updates</div><h2>Notifications</h2></div></div><div class="card" id="notifications"></div></section>
+      <section class="view" data-page="support-cases"><div class="page-intro"><div><h2>My support requests</h2></div><p>Read replies and follow up with SKANDI Customer Service.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a><button class="support-contact" type="button" data-section="support" data-view="new">Start New Case</button></div><div class="support-layout"><div class="support-panel"><div class="support-panel-header"><strong>Your Cases</strong><button class="btn small" type="button" id="supportRefresh">Refresh</button></div><input class="support-search" id="supportSearch" aria-label="Search support cases" placeholder="Search cases or references"><div class="support-cases" id="supportCases"><div class="support-case-status">Open My Support to load your cases.</div></div></div><div class="support-panel"><div class="support-panel-header"><strong id="supportThreadTitle">Select a case</strong><button type="button" class="btn small" id="supportDuffel" hidden="">Manage trip</button></div><div class="support-case-thread" id="supportMessages"><div class="support-case-status">Select a case to view your secure messages.</div></div><form id="supportReplyForm" class="support-reply" hidden=""><textarea id="supportReplyText" maxlength="12000" required="" aria-label="Reply to SKANDI Support" placeholder="Type a secure reply"></textarea><button type="submit" class="btn primary">Send reply</button></form></div></div><div id="supportStatus" class="support-case-status" aria-live="polite"></div></section>
+      <section class="view" data-page="support-new"><div class="page-intro"><div><h2>Start a support request</h2></div><p>Tell us what you need help with. You can follow your request here.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a></div><form id="supportNewForm" class="support-new-case"><div class="profile-form"><div><label>Name<input id="supportName" name="fullName" maxlength="200" required="" autocomplete="name"></label></div><div><label>Email<input id="supportEmail" name="email" type="email" maxlength="254" required="" autocomplete="email"></label></div><div><label>Category<select id="supportCategory" name="category" required=""><option value="general">General enquiry</option></select></label></div><div><label>Booking reference (when applicable)<input name="bookingRef" maxlength="80" autocomplete="off"></label></div><div class="field full" id="supportDynamicFields"></div><div class="field full"><label>Subject<input name="subject" minlength="3" maxlength="240" required=""></label></div><div class="field full"><label>Details<textarea name="message" minlength="5" maxlength="12000" required="" placeholder="Describe how SKANDI can assist"></textarea></label></div><div class="field full"><div class="button-row"><button class="btn primary" type="submit">Submit support request</button><button class="btn soft" type="button" data-section="support" data-view="cases">View Support Cases</button></div></div></div><div id="supportFormStatus" class="support-case-status" role="status" aria-live="polite"></div></form></section>
+      <section class="view" data-page="account-notifications"><div class="section-head"><div><h2>Updates</h2></div></div><div class="card" id="notifications"></div></section>
       <section class="view" data-page="account-settings">
         <div class="section-head"><h2>Preferences</h2></div>
         <div class="card pad">
@@ -2407,9 +2670,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 </section>
 <div class="legacy-doc-contract hidden" aria-hidden="true"><button id="refreshBtn"></button><button id="closeBtn"></button><div id="mReady">0</div><div id="mAction">0</div><div id="mIssued">0</div><div id="mChanges">0</div><div id="documents"></div></div>
 </div>
-<div class="drawer-shade" id="drawerShade"></div><aside class="drawer" id="bookingDrawer" aria-label="Booking details" aria-hidden="true" inert=""><div class="drawer-head"><strong>Trip details</strong><button class="iconbtn" id="closeDrawer" aria-label="Close trip details">×</button></div><div class="drawer-body"><div id="bookingDocumentStatus" role="status" hidden=""></div><div id="bookingDetail"></div></div></aside>
-<div class="modal-shade" id="modalShade"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Manage trip</h3><button class="iconbtn" id="closeModal">×</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
-<div class="toast" id="toast"></div><div class="loading" id="loading"><div class="spinner"></div></div>
+<div class="modal-shade" id="modalShade"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h3 id="modalTitle">Manage trip</h3><button class="iconbtn" id="closeModal" type="button" aria-label="Close dialog">×</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
+<div class="toast" id="toast" role="status"></div><div class="loading" id="loading"><div class="spinner"></div></div>
 
 
 
@@ -4581,14 +4843,17 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 const SOURCE="SKANDI_MY_PROFILE",DOC_SOURCE="SKANDI_CUSTOMER_DOCUMENT_CENTER",PARENT="SKANDI_WIX_PARENT",$=id=>document.getElementById(id);
 const STARTUP_TIMEOUT_MS=28000;
 const READ_TIMEOUT_MS=26000;
-const state={data:null,section:"club",view:"overview",ledgerFilter:"all",bookingDetail:null,pending:new Map(),stripe:null,elements:null,payment:null,legacyDocuments:null,emailPreferences:{loaded:false,loading:false,subscribed:false,email:""},support:{loaded:false,loading:false,cases:[],selectedCaseId:"",detail:null,workflows:[],activeRequest:0}};
+const state={data:null,section:"home",view:"overview",tripId:"",tripBackView:"upcoming",previewTrip:null,rewards:null,ledgerFilter:"all",bookingDetail:null,pending:new Map(),stripe:null,elements:null,payment:null,legacyDocuments:null,emailPreferences:{loaded:false,loading:false,subscribed:false,email:""},support:{loaded:false,loading:false,cases:[],selectedCaseId:"",detail:null,workflows:[],activeRequest:0}};
 const views=new Map([...$("accountWorkspace").querySelectorAll("[data-page]")].map(view=>[view.dataset.page,view]));
 let startupTimer;
 let bootstrapping=false;
 let activeBookingRequest=0;
 const icon=(name)=>{const paths={calendar:'<path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/>',bell:'<path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',bag:'<path d="M6 7h12l1 14H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>',plane:'<path d="M22 2 9.5 14.5 3 12l-2 2 7 3 3 7 2-2-2.5-6.5L23 3z"/>',check:'<path d="m5 12 4 4L19 6"/>',wallet:'<path d="M3 6h17v14H3zM3 9h17M15 13h3v3h-3z"/>'};return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.check}</svg>`};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
-const arr=v=>Array.isArray(v)?v:[]; const money=(a,c)=>a===null||a===undefined||a===""?"":new Intl.NumberFormat(undefined,{style:"currency",currency:c||"USD"}).format(Number(a)||0); const date=v=>{if(!v)return"";try{return new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(String(v).length===10?`${v}T12:00:00`:v))}catch{return String(v)}}; const num=v=>new Intl.NumberFormat().format(Number(v)||0);
+const arr=v=>Array.isArray(v)?v:[]; const money=(amount,currency)=>{
+  if(amount===null||amount===undefined||amount===""||!Number.isFinite(Number(amount))||!/^([A-Z]{3})$/.test(String(currency||"")))return "";
+  return new Intl.NumberFormat(undefined,{style:"currency",currency}).format(Number(amount));
+}; const date=v=>{if(!v)return"";try{return new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(String(v).length===10?`${v}T12:00:00`:v))}catch{return String(v)}}; const num=v=>new Intl.NumberFormat().format(Number(v)||0);
 function post(type,payload={},source=SOURCE){window.parent.postMessage({source,type,payload,timestamp:new Date().toISOString()},"*")}
 function reqId(){return `mpr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`}
 function request(type,payload={},timeout=140000){
@@ -4606,47 +4871,71 @@ function busy(on){$("loading").classList.toggle("show",!!on)}
 let toastTimer;function toast(message,bad=false){clearTimeout(toastTimer);const el=$("toast");el.textContent=message;el.className=`toast show${bad?" bad":""}`;toastTimer=setTimeout(()=>el.className="toast",4200)}
 function empty(title,body,ic="doc"){return `<div class="empty">${icon(ic)}<strong>${esc(title)}</strong><span>${esc(body)}</span></div>`}
 function setTab(tab,push=false){
-  const map={overview:["club","overview"],club:["club","overview"],trips:["trips","upcoming"],orders:["trips","drafts"],documents:["trips","upcoming"],travelers:["profile","travelers"],wallet:["profile","wallet"],saved:["profile","saved"],notifications:["account","notifications"],settings:["account","settings"],support:["support","cases"]};
-  const pair=map[String(tab||"")]||["club","overview"];
-  setPage(pair[0],pair[1],push);
+  const map={overview:["home","overview"],club:["club","overview"],trips:["trips","upcoming"],orders:["trips","drafts"],documents:["trips","upcoming"],travelers:["profile","travelers"],wallet:["profile","wallet"],saved:["profile","saved"],notifications:["account","notifications"],settings:["account","settings"],support:["support","cases"]};
+  setPage(...(map[String(tab||"")]||map.overview),push);
 }
 
 function pageKey(section,view){return `${section}-${view}`}
-function setPage(section,view,push=false){
-  if(!views.has(pageKey(section,view))){section="club";view="overview"}
+
+function setPage(section,view,push=false,tripId=""){
+  if(view==="detail"&&!tripId)view="upcoming";
+  if(!views.has(pageKey(section,view))){section="home";view="overview"}
   const key=pageKey(section,view);
-  const changed=section!==state.section||view!==state.view;
-  state.section=section;state.view=view;
+  const tripChanged=key==="trips-detail"&&tripId!==state.tripId;
+  const changed=section!==state.section||view!==state.view||tripChanged;
+  if(changed&&state.view==="detail"){
+    activeBookingRequest++;
+    state.bookingDetail=null;
+  }
+  state.section=section;
+  state.view=view;
+  state.tripId=key==="trips-detail"?tripId:"";
   for(const [viewKey,panel] of views)panel.classList.toggle("active",viewKey===key);
-  document.querySelectorAll(".side-link").forEach(link=>{
+  for(const link of $("sideMenu").querySelectorAll(".side-link")){
     const active=pageKey(link.dataset.section,link.dataset.view)===key;
     link.classList.toggle("active",active);
     if(active)link.setAttribute("aria-current","page");
     else link.removeAttribute("aria-current");
-  });
-  document.querySelectorAll(".side-category").forEach(cat=>{const active=cat.dataset.category===section;cat.classList.toggle("active",active);if(active)cat.classList.add("open");const h=cat.querySelector("[data-category-toggle]");if(h)h.setAttribute("aria-expanded",cat.classList.contains("open")?"true":"false")});
-  $("profileSectionSelect").value=key;
-  if(push)post("MY_PROFILE_QUERY_UPDATE",{section,view});
+  }
+  const group=section==="profile"?"account":section;
+  for(const nav of $("sideMenu").querySelectorAll(".side-category")){
+    const selected=nav.dataset.category===group;
+    nav.classList.toggle("active",selected);
+    if(!selected)nav.querySelector(".profile-nav-main").removeAttribute("aria-current");
+    else if(view==="detail")nav.querySelector(".profile-nav-main").setAttribute("aria-current","true");
+    else nav.querySelector(".profile-nav-main").removeAttribute("aria-current");
+  }
+  $("profileSectionSelect").value=view==="detail"?"trips-"+state.tripBackView:key;
+  if(push)post("MY_PROFILE_QUERY_UPDATE",{section,view,tripId:state.tripId});
   if(!state.data)return;
-  if(changed)$("profileStage").scrollIntoView({block:"start",behavior:"auto"});
-  if(section==="support")loadSupport().catch(()=>{});
-  if(section==="account"&&view==="settings")loadEmailPreferences();
+  if(section==="home")void loadNextTrip();
+  if(changed&&push){
+    const heading=views.get(key).querySelector("h2");
+    if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true})}
+    $("profileStage").scrollIntoView({block:"start",behavior:"auto"});
+  }
+  if(view==="detail"&&(changed||!state.bookingDetail&&!$("bookingDetail").hasChildNodes()))void loadBooking(state.tripId);
+  if(section==="support")void loadSupport().catch(()=>{});
+  if(section==="club"&&view==="rewards")void loadRewards();
+  if(section==="account"&&view==="settings")void loadEmailPreferences();
 }
 
 function bindMobileNavigation(){
   const select=$("profileSectionSelect");
   const destinations=new Map();
+  function addOption(link, parent){
+    const {section,view}=link.dataset;
+    const option=document.createElement("option");
+    option.value=pageKey(section,view);
+    option.textContent=link.textContent.trim();
+    destinations.set(option.value,{section,view});
+    parent.append(option);
+  }
+  addOption($("sideMenu").querySelector('[data-section="home"]'),select);
   for(const category of $("sideMenu").querySelectorAll(".side-category")){
     const group=document.createElement("optgroup");
-    group.label=category.querySelector(".side-category-head").textContent.trim();
-    for(const link of category.querySelectorAll(".side-link")){
-      const {section,view}=link.dataset;
-      const option=document.createElement("option");
-      option.value=pageKey(section,view);
-      option.textContent=link.textContent.trim();
-      destinations.set(option.value,{section,view});
-      group.append(option);
-    }
+    group.label=category.querySelector(".profile-nav-main").textContent.trim();
+    for(const link of category.querySelectorAll(".side-link"))addOption(link,group);
     select.append(group);
   }
   select.addEventListener("change",()=>{
@@ -4660,92 +4949,226 @@ const ACTION_DOC_STATUSES=new Set(["WAITING_FOR_DATA","WAITING_FOR_SIGNATURE","W
 function isActionDoc(doc){return ACTION_DOC_STATUSES.has(String(doc?.status||"").toUpperCase())}
 function docsForBooking(id){const docs=state.legacyDocuments||arr(state.data?.documents);return docs.filter(d=>String(d.bookingId||"")===String(id||""))}
 function actionDocsForBooking(id){return docsForBooking(id).filter(isActionDoc)}
-function issuedDocsForBooking(id){return docsForBooking(id).filter(d=>["ISSUED","SENT","ACKNOWLEDGED","READY"].includes(String(d.status||"").toUpperCase()))}
-function pageLink(section,view,label,ic="check"){return `<button class="quick-link" type="button" data-section="${esc(section)}" data-view="${esc(view)}"><span class="quick-icon">${icon(ic)}</span><strong>${esc(label)}</strong></button>`}
 
-function statusClass(s){s=String(s||"").toUpperCase();if(["ISSUED","SENT","ACKNOWLEDGED","READY","CONFIRMED","POSTED"].includes(s))return"ok";if(["WAITING_FOR_DATA","WAITING_FOR_SIGNATURE","WAITING_FOR_APPROVAL","REQUIRED","PENDING","HELD"].includes(s))return"warn";if(["CANCELLED","REJECTED","FAILED"].includes(s))return"bad";return""}
 function friendly(s){return String(s||"").replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}
 function groupFor(doc){const s=String(doc.status||"").toUpperCase();if(["WAITING_FOR_DATA","WAITING_FOR_SIGNATURE","WAITING_FOR_APPROVAL","REQUIRED","PENDINGREVIEW"].includes(s))return"Action required";if(["ISSUED","SENT","ACKNOWLEDGED"].includes(s))return"Issued documents";if(String(doc.document_code||"").startsWith("F")||String(doc.document_code||"").startsWith("P10"))return"Travel changes";return"Upcoming / preparing"}
-function nextTrip(){return arr(state.data?.trips?.upcoming)[0]||null}
-function renderHero(){
-  const d=state.data;if(!d)return;const p=d.profile||{},c=d.club||{},first=(p.firstName||p.displayName||"Member").split(" ")[0];
-  $("heroName").textContent=first;
-  $("greetingLine").firstChild.nodeValue=`${greetingForNow()}, `;
-  $("heroTier").textContent=c.status==="UNAVAILABLE"?"Unavailable":c.enrolled?(c.tier?.name||"Member"):"Not enrolled";
-  $("heroMembership").hidden=!(c.enrolled&&p.clubNumber);
-  $("heroNumber").textContent=p.clubNumber||"";
-  $("heroPointsLabel").textContent=c.pointsName||"Points";
-  $("heroPoints").textContent=c.enrolled&&Number.isFinite(c.pointsBalance)?num(c.pointsBalance):"—";
-  $("heroTrips").textContent=num(arr(d.trips?.upcoming).length);
-  $("heroMemberSince").textContent=c.enrolled?monthYear(c.memberSince||p.accountCreatedAt):"—";
-  const progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0)));document.documentElement.style.setProperty("--club-progress",`${progress}%`);
+function tripTitle(booking){
+  const destination=String(booking?.destination||"").trim();
+  const airport=arr(state.data?.references?.airports).find(item=>item.iata===destination.toUpperCase());
+  return booking?.title||airport?.city||destination||booking?.summary||"Your SKANDI trip";
 }
+
+function dateRange(booking){
+  const start=booking?.departureDate;
+  const end=booking?.returnDate;
+  return [date(start),end&&end!==start?date(end):""].filter(Boolean).join(" – ");
+}
+
+function tripButton(id,label,style="primary",target=""){
+  return `<button class="btn ${esc(style)}" type="button" data-booking="${esc(id)}"${target?` data-trip-target="${esc(target)}"`:""}>${esc(label)}</button>`;
+}
+
+function preparationTasks(booking){
+  const tasks=actionDocsForBooking(booking.id).filter(doc=>["WAITING_FOR_DATA","WAITING_FOR_SIGNATURE","REQUIRED"].includes(String(doc.status).toUpperCase())).map(doc=>({
+    title:doc.definition_name||"Travel information required",
+    deadline:doc.dueAt,
+    target:"trip-documents"
+  }));
+  const changeCount=Number(booking.actionableScheduleChanges||0);
+  if(changeCount>0)tasks.push({title:"Review the airline schedule change",target:"trip-manage"});
+  if(booking.paymentDueAt)tasks.push({title:"Review your payment deadline",deadline:booking.paymentDueAt,target:"trip-manage"});
+  return tasks.sort((first,second)=>String(first.deadline||"9999").localeCompare(String(second.deadline||"9999")));
+}
+
+function nextTrip(){
+  const trips=state.data?.trips||{};
+  const statuses=["confirmed","ticketed","active","booked","fulfilled"];
+  return [...arr(trips.active),...arr(trips.upcoming)]
+    .find(trip=>statuses.includes(String(trip.status).toLowerCase()))||null;
+}
+
+function renderHero(){
+  const name=state.data?.profile||{};
+  const greeting=document.createElement("span");
+  greeting.id="heroName";
+  greeting.textContent=name.firstName||name.displayName||"traveler";
+  $("greetingLine").replaceChildren(document.createTextNode(`${greetingForNow()}, `),greeting);
+  const count=arr(state.data?.notifications).filter(item=>!item.read).length;
+  $("unreadCount").textContent=num(count);
+  $("unreadCount").hidden=count===0;
+}
+
+function renderHome(){
+  const booking=nextTrip();
+  const club=state.data?.club||{};
+  const hasDrafts=arr(state.data?.trips?.carts).some(cart=>String(cart.status).toLowerCase()!=="confirmed");
+  const preview=state.previewTrip?.id===booking?.id?state.previewTrip?.result:null;
+  const air=preview?.provider?.air;
+  const task=booking?preparationTasks({
+    ...booking,
+    paymentDueAt:air?.paymentStatus?.awaiting_payment===true?air.paymentRequiredBy:booking.paymentDueAt,
+    actionableScheduleChanges:arr(preview?.airlineChanges).filter(item=>!item.actionTaken&&arr(item.availableActions).includes("accept")).length
+  })[0]:null;
+  const photo=documentLink(booking?.image||preview?.provider?.stay?.accommodation?.photos?.[0]);
+  const title=booking?tripTitle(booking):"Where to next?";
+  const tripCard=booking?`<div class="home-trip-identity">
+      <span class="profile-eyebrow">${booking.inProgress?"On your trip":"Your next trip"}</span>
+      <h2>${esc(title)}</h2>
+      <p>${esc(dateRange(booking))}</p>
+      ${booking.bookingReference?`<span class="home-trip-reference">Booking ${esc(booking.bookingReference)}</span>`:""}
+    </div>`:`<div class="home-trip-identity">
+      <h2>${title}</h2><p>Find your next getaway or bring an existing booking into My SKANDI.</p>
+    </div>`;
+  const actions=booking?`<div class="home-trip-action">
+      <div>${task?`<span class="profile-eyebrow">Before you travel</span><h3>${esc(task.title)}</h3>${task.deadline?`<p>Due ${esc(date(task.deadline))}</p>`:""}`:`<h3>${booking.inProgress?"Travel Day":"Your itinerary"}</h3><p>${booking.inProgress?"See what’s next and find your arrival details.":"Flights, stays, and travel documents in one place."}</p>`}</div>
+      ${tripButton(booking.id,task?"Review next step":booking.inProgress?"View trip":"View itinerary","primary",task?.target||"")}
+    </div>
+    <nav class="profile-shortcuts" aria-label="Trip shortcuts">
+      ${tripButton(booking.id,"Itinerary","soft","trip-itinerary")}
+      ${tripButton(booking.id,"Documents","soft","trip-documents")}
+      ${tripButton(booking.id,"Trip help","soft","trip-support")}
+    </nav>`:`<div class="home-trip-action"><div class="button-row">
+      <button class="btn primary" type="button" data-route="/destinations">Find a trip</button>
+      <button class="btn soft" type="button" data-link-booking>Link a booking</button>
+    </div></div>`;
+  const clubSummary=club.enrolled
+    ?Number.isFinite(club.pointsBalance)?`${num(club.pointsBalance)} ${esc(String(club.pointsName||"points").toLowerCase())} available`:"Points balance temporarily unavailable"
+    :club.status==="UNAVAILABLE"?"Member information temporarily unavailable":"Explore member benefits and ways to earn.";
+  $("accountHome").innerHTML=`<article class="home-trip">
+      <div class="home-trip-hero">${photo?`<img src="${esc(photo)}" alt="" fetchpriority="high">`:""}${tripCard}</div>
+      ${actions}
+    </article>
+    <div class="overview-secondary">
+      <article class="profile-panel overview-club">
+        <div><h3>SKANDI Club</h3><p>${clubSummary}</p></div>
+        <button class="text-action" type="button" data-section="club" data-view="overview">${club.enrolled?"Club card":"Explore Club"} →</button>
+      </article>
+      <article class="profile-panel overview-links">
+        ${hasDrafts?'<button class="text-action" type="button" data-section="trips" data-view="drafts">Continue a booking →</button>':""}
+        <button class="text-action" type="button" data-section="profile" data-view="travelers">Saved travelers →</button>
+        <button class="text-action" type="button" data-section="support" data-view="cases">My support requests →</button>
+      </article>
+    </div>`;
+}
+
+async function loadNextTrip(){
+  const booking=nextTrip();
+  if(!booking||state.previewTrip?.id===booking.id)return;
+  const pending={id:booking.id};
+  state.previewTrip=pending;
+  try{
+    const {result}=await request("MY_PROFILE_BOOKING_DETAIL",{bookingId:booking.id},READ_TIMEOUT_MS);
+    if(state.previewTrip!==pending||result?.booking?.id!==booking.id)return;
+    pending.result=result;
+    if(state.section==="home")renderHome();
+  }catch(_){
+    // Current booking and document details are already available in the overview.
+  }
+}
+
 function renderOverview(){
   const {profile:p={},club:c={}}=state.data;
   const overview=$("clubView");
-  const title='<div class="page-intro"><h2>Club Overview</h2></div>';
-  if(c.status==="UNAVAILABLE"){
-    overview.innerHTML=title+`
-      <div class="club-status-panel">
-        <h3>Club information is temporarily unavailable</h3>
-        <p>Refresh to check your current membership and balance.</p>
-        <button class="btn cyan" type="button" data-refresh-profile>Refresh account</button>
-      </div>`;
-    return;
-  }
+  const title='<h2 class="profile-title">Club overview</h2>';
   if(!c.enrolled){
-    overview.innerHTML=title+`
-      <div class="club-status-panel">
-        <h3>Join SKANDI Club</h3>
-        <p>Enroll to start earning points and track your Club status here.</p>
-        <div class="button-row">
-          <button class="btn cyan" type="button" data-route="/skandi-club">Explore SKANDI Club</button>
-          <button class="btn" type="button" data-section="support" data-view="cases">Get enrollment help</button>
-        </div>
-      </div>`;
+    overview.innerHTML=title+`<section class="profile-panel profile-empty">
+      <h3>${c.status==="UNAVAILABLE"?"Club information is temporarily unavailable":"Join SKANDI Club"}</h3>
+      <p>${c.status==="UNAVAILABLE"?"Refresh to check your membership and points.":"Earn points when you travel and use them on eligible rewards."}</p>
+      <div class="button-row">
+        ${c.status==="UNAVAILABLE"?'<button class="btn primary" type="button" data-refresh-profile>Refresh account</button>':'<button class="btn primary" type="button" data-route="/skandi-club">Explore SKANDI Club</button>'}
+        <button class="btn soft" type="button" data-section="support" data-view="cases">Get help</button>
+      </div></section>`;
     return;
   }
-
-  const progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0)));
-  const currentTier=c.tier?.name||"Member";
-  const nextTier=c.nextTier?.name;
-  const showTier=c.tiersEnabled??(Boolean(nextTier)||arr(c.tiers).length>0);
-  const recent=arr(c.ledger).slice(0,5);
-  const recentRows=recent.map(entry=>`
-    <div class="club-activity-mini">
-      <div class="date">${esc(date(entry.date))}</div>
-      <strong>${esc(entry.description||friendly(entry.type)||"SKANDI Club activity")}</strong>
-      <div class="pts ${Number(entry.amount)<0?"neg":""}">${Number(entry.amount)>0?"+":""}${num(entry.amount)}</div>
-    </div>`).join("");
-
-  overview.innerHTML=title+`
-    <section class="club-status-panel">
-      <div class="club-status-head">
-        <div><div class="club-status-name">${esc(currentTier)}</div><div class="club-status-caption">Current Club status</div></div>
-        ${p.clubNumber?`<span class="club-number-badge">Club ${esc(p.clubNumber)}</span>`:""}
+  const progress=c.tiersEnabled&&c.nextTier&&Number.isFinite(c.progress?.percent)
+    ?`<div class="club-tier-progress"><p>${esc(c.tier?.name)} · ${num(c.progress.pointsToNext)} to ${esc(c.nextTier.name)}</p><progress max="100" value="${Math.min(100,Math.max(0,c.progress.percent))}" aria-label="Progress to ${esc(c.nextTier.name)}"></progress></div>`:"";
+  overview.innerHTML=title+`<div class="club-overview-grid">
+    <figure class="club-member-card" aria-label="SKANDI Club member card">
+      <div class="club-card-lockup">${state.clubLogo?`<img src="${esc(state.clubLogo)}" alt="SKANDI Travels">`:"<strong>SKANDI <span>TRAVELS</span></strong>"}<span>SKANDI CLUB</span></div>
+      <div class="club-card-number">${p.clubNumber?esc(p.clubNumber):"SKANDI CLUB MEMBER"}</div>
+      <figcaption><span>${esc(p.displayName||[p.firstName,p.lastName].filter(Boolean).join(" "))}</span>${c.memberSince?`<div>Member since<strong>${esc(monthYear(c.memberSince))}</strong></div>`:""}</figcaption>
+    </figure>
+    <div class="profile-panel club-balance">
+      <p class="profile-eyebrow">Available ${esc(String(c.pointsName||"points").toLowerCase())}</p>
+      <strong class="club-balance-value">${Number.isFinite(c.pointsBalance)?num(c.pointsBalance):"Unavailable"}</strong>
+      ${progress}
+      <div class="button-row">
+        <button class="btn primary" type="button" data-section="club" data-view="rewards">View rewards</button>
+        <button class="btn soft" type="button" data-section="club" data-view="activity">Points activity</button>
       </div>
-      ${showTier&&nextTier?`<div class="club-status-body">
-        <div class="status-ring" style="--p:${progress}"><div class="status-ring-content"><strong>${progress.toFixed(0)}%</strong><span>to ${esc(nextTier)}</span></div></div>
-        <div class="status-copy"><h3>Next level: ${esc(nextTier)}</h3><p>${num(c.progress?.pointsToNext)} more points to reach ${esc(nextTier)}.</p></div>
-      </div>`:`<div class="status-copy"><h3>${esc(c.programName||"SKANDI Club")}</h3><p>${showTier?"Your current level is shown above.":"Your available points appear in the account summary."}</p></div>`}
-    </section>
-    <h3 class="quick-links-title">Manage your account</h3>
-    <div class="quick-links">${pageLink("club","activity","Points Activity","wallet")}${pageLink("trips","upcoming","My Upcoming Trips","calendar")}${pageLink("profile","details","Personal Information","user")}</div>
-    <div class="club-snapshot">
-      <div class="club-snapshot-head"><strong>Recent Club activity</strong><button type="button" data-section="club" data-view="activity">View all activity</button></div>
-      ${recentRows||'<p class="club-activity-mini">No Club activity yet.</p>'}
-    </div>`;
+    </div>
+    </div>
+    <section class="profile-panel club-missing">
+      <div><h3>Missing points from a trip?</h3><p>Ask us to review a completed booking.</p></div>
+      <button class="btn soft" type="button" data-missing-points>Request a review</button>
+    </section>`;
 }
-function tripCard(b,past=false){
-  const comps=arr(b.components),tasks=actionDocsForBooking(b.id),allDocs=docsForBooking(b.id);return `<article class="trip-card"><div class="trip-datebox"><strong>${esc(b.departureDate?new Date(`${b.departureDate}T12:00:00`).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"Trip")}</strong><span>${esc(b.departureDate?new Date(`${b.departureDate}T12:00:00`).getFullYear():b.status||"")}</span></div><div><h3>${esc(b.origin||"SKANDI")} → ${esc(b.destination||b.productType||"Booking")}</h3><p>${esc(b.bookingReference?`Booking ${b.bookingReference}`:"SKANDI booking")}${b.totalAmount!==null?` · ${esc(money(b.totalAmount,b.currency))}`:""}</p><div class="chips"><span class="chip ${statusClass(b.status)}">${esc(friendly(b.status||"Booked"))}</span>${comps.slice(0,5).map(c=>`<span class="chip">${esc(friendly(c.type))}</span>`).join("")}</div>${!past&&tasks.length?`<div class="trip-action-notice">${tasks.length} travel item${tasks.length===1?"":"s"} require your action</div>`:!past&&allDocs.length?`<div class="trip-clear-note">No outstanding SKANDI information request is currently attached to this booking.</div>`:""}</div><div class="button-row"><button class="btn small primary" data-booking="${esc(b.id)}">${past?"View":"Manage trip"}</button></div></article>`
+
+async function loadRewards(force=false){
+  if(state.rewards?.loading||state.rewards?.items&&!force)return;
+  const root=$("clubRewards");
+  if(!state.data?.club?.enrolled){
+    root.innerHTML=`<div class="profile-panel profile-empty"><h3>SKANDI Club membership</h3>
+      <p>${state.data?.club?.status==="UNAVAILABLE"?"We couldn’t verify your membership. Try refreshing your account.":"Join SKANDI Club to earn points and use eligible rewards."}</p>
+      <button class="btn soft" type="button" data-section="club" data-view="overview">Club overview</button></div>`;
+    return;
+  }
+  state.rewards={loading:true};
+  root.innerHTML='<p class="profile-panel" role="status">Loading Club rewards…</p>';
+  try{
+    const {result}=await request("MY_PROFILE_CLUB_REWARDS",{},READ_TIMEOUT_MS);
+    if(!result?.ok)throw new Error("We couldn’t load Club rewards.");
+    state.rewards={items:arr(result.rewards)};
+    renderRewards();
+  }catch(_){
+    state.rewards=null;
+    root.innerHTML='<div class="profile-panel profile-empty"><h3>Club rewards are temporarily unavailable</h3><button class="btn soft" type="button" data-retry-rewards>Try again</button></div>';
+  }
 }
+
+function renderRewards(){
+  const root=$("clubRewards");
+  const items=state.rewards?.items;
+  if(!items)return;
+  root.innerHTML=items.length?`<ul class="profile-list club-rewards-list">${items.map(item=>`<li class="profile-panel reward-row">
+    <div><h3>${esc(item.name)}</h3><p>${num(item.points)} points${item.pointsToGo>0?` · ${num(item.pointsToGo)} more needed`:""}</p></div>
+    ${item.canRedeem?'<button class="btn soft" type="button" data-route="/skandi-club">How to use points</button>':""}
+  </li>`).join("")}</ul>`:'<div class="profile-panel profile-empty"><h3>No rewards available right now</h3><p>Check back as new Club rewards are added.</p></div>';
+}
+function tripCard(booking){
+  const task=preparationTasks(booking)[0];
+  const when=dateRange(booking);
+  const status=friendly(booking.status);
+  const parts=arr(booking.components).filter(item=>!["CANCELLED","CANCELED","REMOVED"].includes(String(item.status).toUpperCase()));
+  return `<article class="profile-panel trip-list-item">
+    <div>
+      <p class="profile-eyebrow">${esc(booking.inProgress?"On your trip":when)}</p>
+      <h3>${esc(tripTitle(booking))}</h3>
+      <p>${[booking.inProgress?when:"",booking.bookingReference,status].filter(Boolean).map(esc).join(" · ")}</p>
+      ${parts.length?`<p>${esc([...new Set(parts.map(part=>friendly(part.type)))].join(" · "))}</p>`:""}
+      ${task?`<p class="trip-task-text">${esc(task.title)}${task.deadline?` · Due ${esc(date(task.deadline))}`:""}</p>`:""}
+    </div>
+    ${tripButton(booking.id,"View trip","soft")}
+  </article>`;
+}
+
 function renderTrips(){
-  const d=state.data;if(!d)return;
-  const upcoming=arr(d.trips?.upcoming),history=arr(d.trips?.history),carts=arr(d.trips?.carts);
-  const up=$("tripList"),past=$("tripHistoryList"),draft=$("tripDraftList");
-  if(up)up.innerHTML=upcoming.map(b=>tripCard(b,false)).join("")||empty("No upcoming trips","Bookings linked to this account will appear here.","plane");
-  if(past)past.innerHTML=history.map(b=>tripCard(b,true)).join("")||empty("No past trips yet","Completed and cancelled SKANDI bookings will appear here.","plane");
-  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/booking?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
+  const trips=state.data?.trips||{};
+  const upcoming=[...arr(trips.active),...arr(trips.upcoming)];
+  $("tripList").innerHTML=upcoming.length
+    ?upcoming.map(tripCard).join("")
+    :`<div class="profile-panel profile-empty"><h3>No upcoming trips</h3><p>Link an existing booking or plan your next trip.</p>
+      <button class="btn primary" type="button" data-route="/destinations">Find a trip</button></div>`;
+  $("tripHistoryList").innerHTML=arr(trips.history).map(tripCard).join("")||empty("No past trips","Your completed and canceled bookings will appear here.","calendar");
+  const drafts=arr(trips.carts).filter(cart=>String(cart.status).toLowerCase()!=="confirmed");
+  $("tripDraftList").innerHTML=drafts.map(cart=>{
+    const draftId=cart.cartId||cart.id;
+    const expiry=cart.expiresAt?new Date(cart.expiresAt).getTime():0;
+    const expired=expiry&&Date.now()>expiry;
+    return `<article class="profile-panel trip-list-item"><div><h3>${esc(cart.selectedOffer?.summary||cart.payload?.selectedOffer?.summary||"Booking draft")}</h3>
+      <p>${esc(expired?"Offer expired":friendly(cart.status))}${cart.updatedAt?` · Updated ${esc(date(cart.updatedAt))}`:""}</p></div>
+      ${expired?'<button class="btn soft" type="button" data-route="/destinations">Search again</button>':draftId?`<button class="btn soft" type="button" data-route="/booking?cartId=${encodeURIComponent(draftId)}">Continue booking</button>`:""}</article>`;
+  }).join("")||empty("No drafts","Unfinished bookings appear here.","doc");
 }
 function renderClub(){
   const d=state.data,c=d?.club||{},tiers=arr(c.tiers),ledger=arr(c.ledger);
@@ -4820,6 +5243,7 @@ function renderSettings(){
 function setFormStatus(form,message,bad=false){
   const status=form.querySelector(".form-status");
   status.hidden=!message;
+  if(!status)return;
   status.textContent=message;
   status.classList.toggle("bad",bad);
 }
@@ -4917,7 +5341,9 @@ async function saveEmailPreferences(event){
 
 function renderAll(){
   renderHero();
+  renderHome();
   renderOverview();
+  renderRewards();
   renderTrips();
   renderClub();
   renderTravelers();
@@ -4949,6 +5375,7 @@ function startProfile(){
     setLoadState("Your account is taking longer than expected to load.",{retry:true});
   },STARTUP_TIMEOUT_MS);
   post("MY_PROFILE_READY");
+  post("SKANDI_MASTER_CONFIG_REQUEST");
 }
 
 function showLoadError(error){
@@ -4972,7 +5399,7 @@ function applyProfileData(data){
     $("profileRefreshState").hidden=true;
     $("profileMasthead").hidden=false;
     $("profileStage").hidden=false;
-    if(initial)setPage(data.requestedSection||"club",data.requestedView||"overview");
+    if(initial)setPage(data.requestedSection||"home",data.requestedView||"overview",false,data.requestedTripId||"");
   }catch(error){
     state.data=null;
     showLoadError({message:"Your account could not be displayed. Try again."});
@@ -4992,7 +5419,7 @@ function tripForSupportCase(supportCase){
   const matches=trip=>[trip.bookingReference,trip.pnrLocator,trip.supplierBookingReference]
     .some(value=>String(value||"").trim().toUpperCase()===reference);
   const trips=state.data?.trips||{};
-  const upcoming=arr(trips.upcoming).find(matches);
+  const upcoming=[...arr(trips.active),...arr(trips.upcoming)].find(matches);
   if(upcoming)return {id:upcoming.id,view:"upcoming"};
   const past=arr(trips.history).find(matches);
   return past?{id:past.id,view:"past"}:null;
@@ -5044,6 +5471,7 @@ async function loadSupport(force=false){
     }finally{
       support.loading=null;
       $("supportRefresh").disabled=false;
+      if($("tripCases"))$("tripCases").innerHTML=tripCasesMarkup();
     }
   })();
   return support.loading;
@@ -5072,41 +5500,57 @@ async function openSupportCase(caseId){
 
 async function submitSupportCase(event){event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;const button=form.querySelector('[type="submit"]');button.disabled=true;supportStatus("Submitting your request...",false,"supportFormStatus");try{const raw=Object.fromEntries(new FormData(form).entries());const fullName=String(raw.fullName||"").trim();const parts=fullName.split(/\s+/);const input={...raw,fullName,firstName:parts[0]||"",lastName:parts.slice(1).join(" "),source:"member-helpdesk",sourceChannel:"MEMBER_HELPDESK",sourcePage:"/my-profile",memberPriority:true,hasBooking:raw.bookingRef?"yes":"no"};const r=await request("MY_PROFILE_SUPPORT_CREATE",{input});const outcome=r.result||{};if(!outcome.ok||!outcome.caseId)throw Error("The server did not confirm case creation.");form.reset();populateSupportForm();renderSupportRequirements();state.support.loaded=false;state.support.selectedCaseId=String(outcome.caseId||"");state.support.detail=null;setPage("support","cases",true);toast(`Case submitted: ${outcome.caseRef||outcome.caseId}.`);await loadSupport(true).catch(()=>{})}catch(e){supportStatus(e.message,true,"supportFormStatus")}finally{button.disabled=false}}
 
-let drawerOpener;
-function openDrawer(){
-  const drawer=$("bookingDrawer");
-  if(drawer.inert)drawerOpener=document.activeElement;
-  $("drawerShade").classList.add("open");
-  drawer.classList.add("open");
-  drawer.inert=false;
-  drawer.removeAttribute("aria-hidden");
-  $("closeDrawer").focus();
+let tripTarget="";
+function findTrip(id){
+  const trips=state.data?.trips||{};
+  return [...arr(trips.active),...arr(trips.upcoming),...arr(trips.history)].find(item=>String(item.id)===String(id));
 }
-function closeDrawer(){
-  activeBookingRequest++;
-  const drawer=$("bookingDrawer");
-  $("drawerShade").classList.remove("open");
-  drawer.classList.remove("open");
-  drawer.inert=true;
-  drawer.setAttribute("aria-hidden","true");
-  drawerOpener?.focus();
+
+function openTrip(id,target=""){
+  const trip=findTrip(id);
+  if(!trip)return;
+  state.tripBackView=arr(state.data?.trips?.history).some(item=>item.id===trip.id)?"past":"upcoming";
+  tripTarget=target;
+  const same=state.view==="detail"&&state.tripId===id;
+  setPage("trips","detail",true,id);
+  if(same&&state.bookingDetail){
+    jumpToTripSection(tripTarget);
+    tripTarget="";
+  }
+}
+
+function jumpToTripSection(id){
+  const section=$(id);
+  if(!section||!$("bookingDetail").contains(section))return;
+  const heading=section.querySelector("h3");
+  heading?.focus({preventScroll:true});
+  section.scrollIntoView({block:"start",behavior:"auto"});
 }
 
 async function loadBooking(id){
   if(!id)return;
   const revision=++activeBookingRequest;
+  const trip=findTrip(id);
+  state.tripBackView=arr(state.data?.trips?.history).some(item=>item.id===id)?"past":"upcoming";
   state.bookingDetail=null;
-  $("bookingDocumentStatus").hidden=true;
-  $("bookingDetail").innerHTML=empty("Loading trip","Checking your booking details.","plane");
-  openDrawer();
+  $("tripPageTitle").textContent=trip?tripTitle(trip):"Trip details";
+  $("tripPageMeta").textContent=trip?[dateRange(trip),trip.bookingReference].filter(Boolean).join(" · "):"";
+  $("bookingDetail").innerHTML='<p class="profile-panel" role="status">Loading your itinerary…</p>';
   try{
     const {result}=await request("MY_PROFILE_BOOKING_DETAIL",{bookingId:id},READ_TIMEOUT_MS);
     if(revision!==activeBookingRequest)return;
     if(!result?.booking)throw new Error("The trip could not be loaded.");
     state.bookingDetail=result;
+    $("tripPageTitle").textContent=tripTitle(result.booking);
+    $("tripPageMeta").textContent=[dateRange(result.booking),result.booking.bookingReference?`Booking ${result.booking.bookingReference}`:""].filter(Boolean).join(" · ");
     renderBookingDetail();
+    if(tripTarget)jumpToTripSection(tripTarget);
+    tripTarget="";
+    void loadSupport().catch(()=>{});
   }catch(error){
-    if(revision===activeBookingRequest)$("bookingDetail").innerHTML=empty("Trip unavailable",error.message,"plane");
+    if(revision!==activeBookingRequest)return;
+    $("bookingDetail").innerHTML=`<div class="profile-panel profile-empty"><h3>Trip unavailable</h3><p>${esc(error.message)}</p>
+      <button class="btn soft" type="button" data-retry-trip>Try again</button></div>`;
   }
 }
 
@@ -5146,7 +5590,6 @@ async function showBookingDocument(button,action){
     const doc=result.document;
     if(!doc?.id)throw new Error("The document could not be opened.");
     if(requiresAction&&!doc.bookingId){
-      closeDrawer();
       setPage("profile","travelers",true);
       toast("Review the requested information in Saved Travelers.");
       return;
@@ -5155,9 +5598,17 @@ async function showBookingDocument(button,action){
     const message=link
       ? doc.definition_name||"Your document is ready."
       : requiresAction
-        ? "Contact SKANDI Support for help completing this item."
+        ? "Start a request below to complete this item with SKANDI Support."
         : "This document is not available to open yet.";
     showTripDocument(message,link);
+    if(requiresAction&&!link&&state.bookingDetail?.booking){
+      const action=document.createElement("button");
+      action.className="btn small soft";
+      action.type="button";
+      action.dataset.tripHelp="documents";
+      action.textContent="Get help with this document";
+      $("bookingDocumentStatus").append(action);
+    }
   }catch(error){
     if(bookingRequest===activeBookingRequest)showTripDocument(error.message);
   }finally{
@@ -5165,28 +5616,556 @@ async function showBookingDocument(button,action){
   }
 }
 
-function renderBookingDetail(){
-  const d=state.bookingDetail;if(!d)return;const b=d.booking||{},p=d.provider||{},cap=d.capabilities||{},air=p.air,stay=p.stay,car=p.car,localDocs=docsForBooking(b.id),tasks=localDocs.filter(isActionDoc),issued=issuedDocsForBooking(b.id),providerDocs=arr(air?.documents);
-  const taskHtml=tasks.length?`<div class="trip-attention"><strong>${tasks.length} item${tasks.length===1?"":"s"} require your action before travel</strong><p>These requests belong to this booking and are kept with the trip rather than in a separate document center.</p></div><div class="card pad" style="margin-bottom:18px"><h3 style="margin-bottom:8px">Requested travel information</h3>${tasks.map(doc=>`<div class="trip-doc-task"><div class="docicon">${esc(String(doc.document_code||"DOC").slice(0,3))}</div><div><strong>${esc(doc.definition_name||doc.document_code||"Travel information")}</strong><span>${esc(friendly(doc.status||"Required"))}${doc.document_number?` · ${esc(doc.document_number)}`:""}</span></div><div class="button-row"><button class="btn small" data-open-doc="${esc(doc.id)}">Open</button><button class="btn small primary" data-complete-doc="${esc(doc.id)}">View instructions</button></div></div>`).join("")}</div>`:"";
-  const docsHtml=(issued.length||providerDocs.length)?`<h3 class="subhead">Trip documents</h3><div class="provider-doc-list">${issued.map(doc=>`<div class="provider-doc"><div><strong>${esc(doc.definition_name||doc.document_code||"SKANDI document")}</strong><span>${esc(doc.document_number||friendly(doc.status))}</span></div><button class="btn small" data-open-doc="${esc(doc.id)}">Open</button></div>`).join("")}${providerDocs.map(doc=>`<div class="provider-doc"><div><strong>${esc(friendly(doc.type||"Airline document"))}</strong><span>${esc(doc.uniqueIdentifier||doc.id||"Issued by airline")}</span></div><span>Airline issued</span></div>`).join("")}</div>`:"";
-  $("bookingDetail").innerHTML=`<div class="booking-hero"><div class="kicker" style="color:var(--sk-aqua)">Booking ${esc(b.bookingReference||b.id)}</div><div class="route">${esc(b.origin||air?.slices?.[0]?.origin?.iataCode||"SKANDI")} → ${esc(b.destination||air?.slices?.[Math.max(0,arr(air?.slices).length-1)]?.destination?.iataCode||"Trip")}</div><p>${esc(date(b.departureDate))}${b.returnDate?` · ${esc(date(b.returnDate))}`:""} · ${esc(friendly(b.status||air?.status||"Booked"))}</p></div>${taskHtml}${arr(d.airlineChanges).length?`<div class="provider-note"><strong>Airline schedule update</strong><br>${arr(d.airlineChanges).length} airline-initiated change${arr(d.airlineChanges).length===1?"":"s"} need review. Available actions are determined by the airline payload.</div>`:""}<h3 class="subhead">Manage this trip</h3><div class="cap-grid">${air?`<div class="cap"><strong>Flight changes</strong><span>${cap.flightChange?"This order can be re-shopped through the airline API.":"The airline does not currently expose self-service changes for this order."}</span>${cap.flightChange?`<div style="margin-top:10px"><button class="btn small primary" data-manage="flight-change">Change flight</button></div>`:""}</div><div class="cap"><strong>Cancellation</strong><span>${cap.flightCancel?"A live cancellation quote can be requested before anything is cancelled.":"API cancellation is not available for this order."}</span>${cap.flightCancel?`<div style="margin-top:10px"><button class="btn small" data-manage="flight-cancel">Get cancellation quote</button></div>`:""}</div><div class="cap"><strong>Additional baggage</strong><span>${cap.postBookingBaggage?`${arr(d.baggage).length} baggage option${arr(d.baggage).length===1?"":"s"} currently available for the passenger/segment combinations returned by the airline.`:"No post-booking baggage offer is currently available from the airline."}</span>${cap.postBookingBaggage?`<div style="margin-top:10px"><button class="btn small" data-manage="baggage">Add baggage</button></div>`:""}</div><div class="cap"><strong>Seats</strong><span>SKANDI does not advertise post-booking seat reassignment here because the current Duffel post-booking service flow supports baggage, not seat reassignment.</span></div>`:""}${stay?`<div class="cap"><strong>Hotel booking</strong><span>${esc(stay.accommodation?.name||"Accommodation")} · ${esc(friendly(stay.status))}${stay.checkInDate?` · ${esc(date(stay.checkInDate))}`:""}</span>${cap.stayCancel?`<div style="margin-top:10px"><button class="btn small danger" data-manage="stay-cancel">Cancel stay</button></div>`:""}</div>`:""}${car?`<div class="cap"><strong>Car rental</strong><span>${esc(car.car?.name||"Rental car")} · ${esc(friendly(car.status))}</span>${cap.carCancel?`<div style="margin-top:10px"><button class="btn small danger" data-manage="car-cancel">Cancel rental</button></div>`:""}</div>`:""}</div>${docsHtml}<h3 class="subhead">Trip components</h3>${arr(b.components).length?arr(b.components).map(c=>`<div class="component"><strong>${esc(c.title||friendly(c.type))}</strong><span>${esc(friendly(c.type))} · ${esc(friendly(c.status||"Booked"))}${c.totalAmount!==null?` · ${esc(money(c.totalAmount,c.currency))}`:""}</span></div>`).join(""):"<div class='provider-note'>Detailed trip components are not published for this booking yet.</div>"}${arr(d.airlineChanges).length?`<h3 class="subhead">Airline-initiated changes</h3>${arr(d.airlineChanges).map(c=>`<div class="component"><strong>Schedule change · ${esc(date(c.updatedAt||c.createdAt))}</strong><span>Available actions: ${esc(arr(c.availableActions).join(", ")||"review")}</span>${arr(c.availableActions).includes("accept")?`<div style="margin-top:8px"><button class="btn small primary" data-accept-airline-change="${esc(c.id)}">Accept change</button></div>`:""}</div>`).join("")}`:""}<div class="provider-note">Self-service controls are shown only when the live supplier payload exposes that action. SKANDI keeps booking-specific information requests with the trip that needs them.</div>`
+const TRIP_DAY_MS=86400000;
+
+function localDay(timeZone,value=new Date()){
+  try{
+    const fields=new Intl.DateTimeFormat("en-CA",{timeZone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(value);
+    const parts=Object.fromEntries(fields.map(field=>[field.type,field.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }catch(_){return ""}
 }
-function openModal(title,body,foot=""){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modalFoot").innerHTML=foot;$("modalShade").classList.add("open")}function closeModal(){$("modalShade").classList.remove("open");state.payment=null;state.elements=null}
+
+function localDateTime(value,timeZone){
+  if(!value)return "";
+  const stamp=String(value);
+  const local=/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/.exec(stamp);
+  if(local)return `${date(local[1])} · ${local[2]}`;
+  try{
+    if(!timeZone)return date(stamp);
+    return new Intl.DateTimeFormat(undefined,{timeZone,month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(stamp));
+  }catch(_){return ""}
+}
+
+function tripDayDelta(value,timeZone){
+  const currentDay=localDay(timeZone);
+  const targetDay=calendarDate(value)||tripEventDay(value,timeZone);
+  if(!currentDay||!targetDay)return Infinity;
+  return (Date.parse(targetDay)-Date.parse(currentDay))/TRIP_DAY_MS;
+}
+
+function tripEventDay(value,timeZone){
+  const stamp=String(value||"");
+  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(stamp))return localDay(timeZone,new Date(stamp));
+  return /^\d{4}-\d{2}-\d{2}/.test(stamp)?stamp.slice(0,10):"";
+}
+
+function airportName(place){
+  if(!place)return "";
+  const name=place.cityName||place.name||"";
+  return [name,place.iataCode&&place.iataCode!==name?place.iataCode:""].filter(Boolean).join(" · ");
+}
+
+function stayAddress(stay){
+  const address=stay?.accommodation?.address;
+  return address?[address.lineOne,address.city,address.postalCode,address.countryCode].filter(Boolean).join(", "):"";
+}
+
+function itemState(status){
+  const label=friendly(status);
+  return label?label:"";
+}
+
+function itineraryItems(detail){
+  const {air,stay,car}=detail.provider||{};
+  const items=arr(air?.slices).flatMap(slice=>arr(slice.segments)).map(segment=>{
+    const carrier=segment.marketingCarrier||segment.operatingCarrier;
+    const flight=[carrier?.iataCode,segment.marketingFlightNumber||segment.operatingFlightNumber].filter(Boolean).join("");
+    return {
+      kind:"Flight", title:[airportName(segment.origin),airportName(segment.destination)].filter(Boolean).join(" → "),
+      subtitle:[flight,carrier?.name].filter(Boolean).join(" · "),
+      date:tripEventDay(segment.departingAt,segment.origin?.timeZone),
+      scheduled:localDateTime(segment.departingAt,segment.origin?.timeZone),
+      arrival:localDateTime(segment.arrivingAt,segment.destination?.timeZone),
+      originTerminal:segment.originTerminal, destinationTerminal:segment.destinationTerminal,
+      status:itemState(air.status), segment
+    };
+  });
+  if(stay?.id)items.push({
+    kind:"Hotel",title:stay.accommodation?.name||"Accommodation",subtitle:stayAddress(stay),
+    date:stay.checkInDate,scheduled:stay.checkInDate?`Check in ${date(stay.checkInDate)}`:"",
+    arrival:stay.checkOutDate?`Check out ${date(stay.checkOutDate)}`:"",status:itemState(stay.status)
+  });
+  if(car?.id)items.push({
+    kind:"Car rental",title:car.supplier?.name||"Car rental",subtitle:car.pickupLocation?.name||"",
+    date:car.pickupDate,scheduled:[car.pickupDate?`Pick up ${date(car.pickupDate)}`:"",car.pickupTime].filter(Boolean).join(" · "),
+    arrival:[car.dropoffDate?`Return ${date(car.dropoffDate)}`:"",car.dropoffTime].filter(Boolean).join(" · "),status:itemState(car.status)
+  });
+  for(const item of arr(detail.booking.components)){
+    const type=String(item.type||"").toUpperCase();
+    if((air?.id&&type==="FLIGHT")||(stay?.id&&["HOTEL","STAY","ACCOMMODATION"].includes(type))||(car?.id&&["CAR","CAR_RENTAL"].includes(type)))continue;
+    if(String(item.status||"").toUpperCase()==="REMOVED")continue;
+    items.push({
+      kind:friendly(item.type),title:item.title,subtitle:item.pickupLocation||item.address,
+      date:item.serviceDate,
+      scheduled:[item.serviceDate?date(item.serviceDate):"",item.serviceTime].filter(Boolean).join(" · "),
+      arrival:item.dropoffLocation,status:itemState(item.status),component:item
+    });
+  }
+  return items.sort((a,b)=>String(a.date||"9999").localeCompare(String(b.date||"9999")));
+}
+
+function stillAhead(segment){
+  const stamp=String(segment?.departingAt||"");
+  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(stamp))return Date.parse(stamp)>Date.now();
+  const parts=new Intl.DateTimeFormat("en-GB",{
+    timeZone:segment.origin?.timeZone, year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+  }).formatToParts(new Date());
+  const fields=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+  return stamp.replace(" ","T").slice(0,16)>`${fields.year}-${fields.month}-${fields.day}T${fields.hour}:${fields.minute}`;
+}
+
+function tripDayContent(detail,items){
+  const {air,stay}=detail.provider||{};
+  const flights=items.filter(item=>item.segment&&String(air?.status).toLowerCase()==="confirmed");
+  const flight=flights.find(item=>{
+    const zone=item.segment.origin?.timeZone;
+    const offset=tripDayDelta(item.segment.departingAt,zone);
+    if(offset>0&&offset<=1)return true;
+    if(offset!==0)return false;
+    try{return stillAhead(item.segment)}catch(_){return false}
+  });
+  const transfer=items.find(item=>item.component?.meetingPoint&&String(item.kind).toLowerCase().includes("transfer")&&
+    ["confirmed","booked","active","ticketed","fulfilled"].includes(String(item.status).toLowerCase())&&
+    tripDayDelta(item.date,item.component.timeZone)===0);
+  const hotelToday=stay?.id&&String(stay.status).toLowerCase()==="confirmed"&&stay.checkInDate===localDay();
+  if(!flight&&!transfer&&!hotelToday)return "";
+  const airline=flight?.segment?.operatingCarrier||flight?.segment?.marketingCarrier;
+  const airlineLink=documentLink(detail.airlineLinks?.[airline?.iataCode]?.website);
+  const nextStop=flight?.segment?.destination;
+  const transferData=transfer?.component;
+  return `<section class="profile-panel trip-day" id="trip-day"><h3 tabindex="-1">Travel Day</h3>
+    ${flight?`<div class="travel-day-block"><div><p class="profile-eyebrow">Your flight</p><h4>${esc(flight.title)}</h4>
+      <p>${esc([flight.subtitle,flight.scheduled,flight.originTerminal?`Terminal ${flight.originTerminal}`:""].filter(Boolean).join(" · "))}</p>
+      ${airline?.name?`<p>Check in with ${esc(airline.name)}.</p>`:""}
+      ${flight.arrival?`<p>Arrives ${esc(flight.arrival)}${nextStop?.iataCode?` · ${esc(nextStop.iataCode)}`:""}</p>`:""}</div>
+      ${airlineLink?`<a class="btn primary" href="${esc(airlineLink)}" target="_blank" rel="noopener noreferrer">Go to airline website</a>`:
+        '<button class="btn soft" type="button" data-route="/travel-info">Airline travel information</button>'}</div>`:""}
+    ${transferData?`<div class="travel-day-block"><div><p class="profile-eyebrow">Booked pickup</p><h4>${esc(transferData.title)}</h4>
+      <p>${esc([transferData.serviceTime,transferData.meetingPoint].filter(Boolean).join(" · "))}</p>
+      ${transferData.pickupInstructions?`<p>${esc(transferData.pickupInstructions)}</p>`:""}
+      ${transferData.customerContact?`<p>Travel support · ${esc(transferData.customerContact)}</p>`:""}</div></div>`:""}
+    ${hotelToday?`<div class="travel-day-block"><div><p class="profile-eyebrow">Hotel check-in</p>
+      <h4>${esc(stay.accommodation?.name||"Accommodation")}</h4><p>${esc(stayAddress(stay))}</p></div></div>`:""}
+    <p class="trip-note">Times are local to each airport or pickup location.</p></section>`;
+}
+
+function tripTimeline(items){
+  if(!items.length)return '<p>Itinerary details will appear when they’re available.</p>';
+  return `<ol class="profile-list trip-timeline">${items.map(item=>`<li>
+    <p class="profile-eyebrow">${esc(item.kind)}${item.status&&item.status.toLowerCase()!=="confirmed"?` · ${esc(item.status)}`:""}</p>
+    <h4>${esc(item.title)}</h4>
+    ${item.subtitle?`<p>${esc(item.subtitle)}</p>`:""}
+    ${item.scheduled?`<p><strong>${item.segment?"Departs ":""}${esc(item.scheduled)}</strong>${item.originTerminal?` · Terminal ${esc(item.originTerminal)}`:""}</p>`:""}
+    ${item.arrival?`<p>${item.segment?"Arrives ":""}${esc(item.arrival)}${item.destinationTerminal?` · Terminal ${esc(item.destinationTerminal)}`:""}</p>`:""}
+    ${item.component?.meetingPoint?`<p>Meet at ${esc(item.component.meetingPoint)}</p>`:""}
+    ${item.component?.pickupInstructions?`<p>${esc(item.component.pickupInstructions)}</p>`:""}
+    ${item.component?.customerContact?`<p>Travel support · ${esc(item.component.customerContact)}</p>`:""}
+  </li>`).join("")}</ol>`;
+}
+
+function tripDocuments(detail){
+  const bookingId=detail.booking.id;
+  const docs=docsForBooking(bookingId);
+  const required=docs.filter(isActionDoc);
+  const available=docs.filter(doc=>["ISSUED","SENT","ACKNOWLEDGED","READY","ACTIVE"].includes(String(doc.status).toUpperCase()));
+  const tickets=arr(detail.provider?.air?.documents).filter(doc=>doc.uniqueIdentifier);
+  const rows=(items,action)=>items.map(doc=>`<li class="trip-file">
+    <div><strong>${esc(doc.definition_name||"Travel document")}</strong>${doc.dueAt?`<p>Due ${esc(date(doc.dueAt))}</p>`:""}</div>
+    <button class="btn small soft" type="button" data-${action?"complete":"open"}-doc="${esc(doc.id)}">${action?"Review":"Open"} <span class="visually-hidden">${esc(doc.definition_name||"document")}</span></button>
+  </li>`).join("");
+  return `<section class="profile-panel" id="trip-documents"><h3 tabindex="-1">Documents &amp; receipts</h3>
+    <div id="bookingDocumentStatus" class="trip-file-status" role="status" hidden></div>
+    ${required.length?`<h4>Before you travel</h4><ul class="profile-list trip-files">${rows(required,true)}</ul>`:""}
+    ${available.length?`<ul class="profile-list trip-files">${rows(available,false)}</ul>`:""}
+    ${tickets.length?`<h4>Airline ticket numbers</h4><ul class="profile-list trip-files">${tickets.map(ticket=>`<li class="trip-file"><strong>${esc(friendly(ticket.type)||"Airline ticket")}</strong><span>${esc(ticket.uniqueIdentifier)}</span></li>`).join("")}</ul>`:""}
+    ${required.length||available.length||tickets.length?"":"<p>Travel documents and receipts will appear here when they’re issued.</p>"}</section>`;
+}
+
+function tripManageContent(detail){
+  const {booking,capabilities:cap={},airlineChanges}=detail;
+  const {air,stay}=detail.provider||{};
+  const actions=[
+    [cap.flightChange,"flight-change","Change flight"],
+    [cap.flightCancel,"flight-cancel","Get cancellation quote"],
+    [cap.postBookingBaggage,"baggage","Review baggage options"],
+    [cap.stayCancel,"stay-cancel","Review hotel cancellation"],
+    [cap.carCancel,"car-cancel","Review car cancellation"]
+  ].filter(item=>item[0]);
+  const changes=arr(airlineChanges).filter(change=>!change.actionTaken);
+  const cancellation=String(air?.status||"").toLowerCase()==="cancelled";
+  const paymentDeadline=air?.paymentStatus?.awaiting_payment===true?air.paymentRequiredBy:booking.paymentDueAt;
+  const dueAtHotel=Number(stay?.dueAtAccommodationAmount)>0?money(stay.dueAtAccommodationAmount,stay.dueAtAccommodationCurrency):"";
+  const [total,payment]=[money(booking.totalAmount,booking.currency),friendly(booking.paymentStatus)];
+  return `<section class="profile-panel" id="trip-manage"><h3 tabindex="-1">Manage booking</h3>
+    ${total||payment?`<dl class="trip-facts">${total?`<div><dt>Booking total</dt><dd>${esc(total)}</dd></div>`:""}
+      ${payment?`<div><dt>Payment status</dt><dd>${esc(payment)}</dd></div>`:""}</dl>`:""}
+    ${paymentDeadline?`<p>Payment deadline · ${esc(date(paymentDeadline))}</p>`:""}
+    ${dueAtHotel?`<p>Due at accommodation · ${esc(dueAtHotel)}</p>`:""}
+    ${cancellation?'<p>The airline has confirmed the cancellation. For customer refund status, check your trip support requests.</p>':""}
+    ${changes.length?`<ul class="profile-list trip-files">${changes.map(change=>`<li class="trip-file">
+      <div><strong>Airline schedule change</strong><p>${esc(date(change.updatedAt||change.createdAt))}</p></div>
+      ${arr(change.availableActions).includes("accept")?`<button class="btn small soft" type="button" data-review-airline-change="${esc(change.id)}">Review</button>`:""}
+    </li>`).join("")}</ul>`:""}
+    ${actions.length?`<div class="button-row">${actions.map(([,key,label])=>`<button class="btn soft" type="button" data-manage="${key}">${label}</button>`).join("")}</div>`:""}
+    <button class="text-action" type="button" data-trip-help="changes">Ask about payments, changes or refunds →</button>
+  </section>`;
+}
+
+function tripCasesMarkup(){
+  const booking=state.bookingDetail?.booking;
+  if(!booking)return "";
+  const related=state.support.cases.filter(item=>tripForSupportCase(item)?.id===booking.id);
+  if(!state.support.loaded){
+    return state.support.loading?'<p role="status">Looking up trip requests…</p>':'<button class="text-action" type="button" data-retry-trip-cases>Check for trip requests</button>';
+  }
+  return related.length?`<ul class="profile-list trip-files">${related.map(item=>`<li class="trip-file"><div>
+    <strong>${esc(item.subject||"Support request")}</strong><p>${esc([supportRef(item),friendly(item.status),date(item.updatedAt)].filter(Boolean).join(" · "))}</p></div>
+    <button class="btn small soft" type="button" data-trip-case="${esc(supportCaseId(item))}">Read request</button>
+  </li>`).join("")}</ul>`:"";
+}
+
+function renderBookingDetail(){
+  if(!state.bookingDetail?.booking)return;
+  const detail=state.bookingDetail;
+  const items=itineraryItems(detail);
+  const travelDay=tripDayContent(detail,items);
+  const calendar=calendarDate(detail.booking.departureDate);
+  const tasks=preparationTasks({
+    ...detail.booking,
+    paymentDueAt:detail.provider?.air?.paymentStatus?.awaiting_payment===true?detail.provider.air.paymentRequiredBy:detail.booking.paymentDueAt,
+    actionableScheduleChanges:arr(detail.airlineChanges).filter(change=>!change.actionTaken&&arr(change.availableActions).includes("accept")).length
+  });
+  const checklist=tasks.length?`<section class="profile-panel" id="trip-preparation"><h3 tabindex="-1">Before you travel</h3>
+    <ul class="profile-list trip-files">${tasks.map(item=>`<li class="trip-file"><div><strong>${esc(item.title)}</strong>
+      ${item.deadline?`<p>Due ${esc(date(item.deadline))}</p>`:""}</div>
+      <button class="btn small soft" type="button" data-trip-jump="${esc(item.target)}">Review</button></li>`).join("")}</ul></section>`:"";
+  $("bookingDetail").innerHTML=`<nav class="profile-shortcuts trip-detail-nav" aria-label="In this trip">
+      ${travelDay?'<button class="btn soft" type="button" data-trip-jump="trip-day">Travel Day</button>':""}
+      <button class="btn soft" type="button" data-trip-jump="trip-itinerary">Itinerary</button>
+      <button class="btn soft" type="button" data-trip-jump="trip-documents">Documents</button>
+      <button class="btn soft" type="button" data-trip-jump="trip-manage">Manage</button>
+      <button class="btn soft" type="button" data-trip-jump="trip-support">Help</button>
+    </nav>
+    ${travelDay}
+    ${checklist}
+    <section class="profile-panel" id="trip-itinerary"><h3 tabindex="-1">Itinerary</h3>
+      ${arr(detail.provider?.errors).length?'<p class="trip-note">Some supplier details couldn’t be refreshed. Try again for the latest itinerary.</p><button class="text-action" type="button" data-retry-trip>Refresh itinerary</button>':""}
+      ${tripTimeline(items)}
+      ${items.length||calendar?`<div class="button-row">${items.length?'<button class="btn soft" type="button" data-trip-download="itinerary">Download itinerary</button>':""}
+        ${calendar?'<button class="btn soft" type="button" data-trip-download="calendar">Add dates to calendar</button>':""}</div>`:""}
+    </section>
+    ${tripDocuments(detail)}
+    ${tripManageContent(detail)}
+    <section class="profile-panel" id="trip-support"><h3 tabindex="-1">Trip help</h3>
+      <div id="tripCases">${tripCasesMarkup()}</div>
+      <div class="button-row">
+        <button class="btn primary" type="button" data-trip-help="general">Start a request</button>
+        <button class="btn soft" type="button" data-trip-assistant>Ask Alexandra</button>
+      </div>
+    </section>`;
+}
+
+function calendarDate(value){
+  const date=String(value||"");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return "";
+  const stamp=Date.parse(date);
+  return Number.isFinite(stamp)&&new Date(stamp).toISOString().slice(0,10)===date?date:"";
+}
+
+function tripCalendar(booking){
+  const start=calendarDate(booking.departureDate);
+  const end=calendarDate(booking.returnDate)||start;
+  if(!start||end<start)return "";
+  const nextDay=new Date(Date.parse(end)+TRIP_DAY_MS).toISOString().slice(0,10);
+  const key=String(booking.id||"").replace(/[^a-z0-9-]/gi,"");
+  const text=value=>String(value).replace(/\\/g,"\\\\").replace(/\r?\n/g,"\\n").replace(/[,;]/g,"\\$&");
+  function fold(line){
+    const encoder=new TextEncoder();
+    let bytes=0;
+    let result="";
+    for(const character of line){
+      const length=encoder.encode(character).length;
+      if(bytes+length>75){result+="\r\n ";bytes=1}
+      result+=character;
+      bytes+=length;
+    }
+    return result;
+  }
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SKANDI TRAVELS//My SKANDI//EN","BEGIN:VEVENT",
+    `UID:${key}@skanditravels.com`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z")}`,
+    `DTSTART;VALUE=DATE:${start.replaceAll("-","")}`,`DTEND;VALUE=DATE:${nextDay.replaceAll("-","")}`,
+    `SUMMARY:${text(tripTitle(booking))}`,"CLASS:PRIVATE","DESCRIPTION:Open My SKANDI for the current itinerary.","TRANSP:TRANSPARENT",
+    "END:VEVENT","END:VCALENDAR",""].map(fold).join("\r\n");
+}
+
+function downloadTrip(kind){
+  const detail=state.bookingDetail;
+  if(!detail?.booking)return;
+  const booking=detail.booking;
+  const items=itineraryItems(detail);
+  const calendar=kind==="calendar";
+  const content=calendar?tripCalendar(booking):
+    [tripTitle(booking),dateRange(booking),"Times are local to each airport or pickup location.",
+      ...items.map(item=>["",item.kind,item.title,item.subtitle,item.scheduled,item.arrival,item.component?.meetingPoint].filter(Boolean).join(" · "))
+    ].filter(Boolean).join("\n\n");
+  if(!content)return;
+  const file=new Blob([content],{type:calendar?"text/calendar;charset=utf-8":"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(file);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download=calendar?"SKANDI-trip.ics":"SKANDI-itinerary.txt";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+
+function beginTripRequest(booking,topic,message=""){
+  const form=$("supportNewForm");
+  if(!booking)return;
+  closeModal();
+  form.reset();
+  populateSupportForm();
+  form.elements.bookingRef.value=booking.bookingReference||"";
+  const titles={documents:"Help with my travel documents",changes:"A payment, change or refund question",points:"Missing points from a trip",baggage:"Add baggage to my flight"};
+  form.elements.subject.value=titles[topic]||"Help with my trip";
+  form.elements.message.value=message;
+  setPage("support","new",true);
+  form.elements.message.focus();
+}
+
+function missingPoints(){
+  const trips=arr(state.data?.trips?.history).filter(booking=>
+    booking.bookingReference&&booking.departureDate&&booking.departureDate<localDay()&&
+    ["confirmed","completed","ticketed","fulfilled"].includes(String(booking.status).toLowerCase()));
+  openModal("Review missing points",trips.length?`<label class="field">Completed trip<select class="control" id="missingPointsTrip">
+    ${trips.map(booking=>`<option value="${esc(booking.id)}">${esc([tripTitle(booking),dateRange(booking),booking.bookingReference].filter(Boolean).join(" · "))}</option>`).join("")}
+    </select></label>`:'<p>A completed booking is needed. Link the booking in Trips to request a review.</p>',
+    trips.length?'<button class="btn primary" type="button" data-start-points-request>Continue to request</button>':
+      '<button class="btn soft" type="button" data-link-booking>Link a booking</button>');
+}
+
+let modalOpener=null;
+function openModal(title,body,foot=""){
+  const shade=$("modalShade");
+  if(!shade.classList.contains("open"))modalOpener=document.activeElement;
+  $("modalTitle").textContent=title;
+  $("modalBody").innerHTML=body;
+  $("modalFoot").innerHTML=foot;
+  shade.classList.add("open");
+  $("profileMasthead").inert=true;
+  $("profileStage").inert=true;
+  $("closeModal").focus();
+}
+
+function closeModal(){
+  const shade=$("modalShade");
+  if(!shade.classList.contains("open"))return;
+  shade.classList.remove("open");
+  $("profileMasthead").inert=false;
+  $("profileStage").inert=false;
+  state.elements=null;
+  state.payment=null;
+  modalOpener?.focus?.();
+  modalOpener=null;
+}
+
 function linkBookingModal(){openModal("Link a booking",`<div class="provider-note">Use the booking reference and traveler surname exactly as shown on the confirmation. This verifies ownership before the booking is added to My Trips.</div><form id="linkBookingForm" class="profile-form" style="margin-top:16px"><div class="field"><label>Booking reference</label><input class="control" name="bookingReference" required maxlength="120" autocomplete="off" placeholder="Booking reference"></div><div class="field"><label>Traveler surname</label><input class="control" name="lastName" required maxlength="160" autocomplete="family-name" placeholder="Surname"></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="confirmLinkBooking" type="submit" form="linkBookingForm">Link booking</button>`)}
 function travelerModal(t={}){const refs=state.data?.references||{};openModal(t.id?"Edit traveler":"Add traveler",`<form id="travelerForm" class="profile-form"><input type="hidden" name="id" value="${esc(t.id||"")}"><div class="field"><label>First name</label><input class="control" name="firstName" required value="${esc(t.firstName||"")}"></div><div class="field"><label>Last name</label><input class="control" name="lastName" required value="${esc(t.lastName||"")}"></div><div class="field"><label>Date of birth</label><input class="control" type="date" name="dateOfBirth" value="${esc(t.dateOfBirth||"")}"></div><div class="field"><label>Gender</label><select class="control" name="gender"><option value="">Select</option><option value="female" ${lowerEq(t.gender,"female")}>Female</option><option value="male" ${lowerEq(t.gender,"male")}>Male</option><option value="unspecified" ${lowerEq(t.gender,"unspecified")}>Unspecified</option></select></div><div class="field"><label>Nationality</label><select class="control" name="nationalityId"><option value="">Select</option>${arr(refs.countries).map(x=>`<option value="${esc(x.id)}" ${x.id===t.nationalityId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div><div class="field"><label>Contact email</label><input class="control" type="email" name="email" value="${esc(t.email||"")}"></div><div class="field"><label>Phone</label><input class="control" name="phone" value="${esc(t.phone||"")}"></div><div class="field"><label>Passport expiry</label><input class="control" type="date" name="passportExpiry" value="${esc(t.passportExpiry||"")}"></div><div class="field full"><label>Dietary preferences</label><input class="control" name="dietaryPrefs" value="${esc(t.dietaryPrefs||"")}"></div><div class="field full"><label>Accessibility needs</label><textarea class="control" name="accessibilityNeeds">${esc(t.accessibilityNeeds||"")}</textarea></div><div class="field full"><label class="checkbox"><input type="checkbox" name="isPrimary" ${t.isPrimary?"checked":""}><span>Use as primary traveler profile.</span></label></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="saveTravelerModal" type="submit" form="travelerForm">Save traveler</button>`)}function lowerEq(a,b){return String(a||"").toLowerCase()===b?"selected":""}
-async function manage(kind){const d=state.bookingDetail,b=d?.booking;if(!b)return;if(kind==="flight-cancel"){busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CANCEL_QUOTE",{bookingId:b.id});const q=r.result||r,canDirect=Number(q.cancellation?.refundAmount||0)<=0;openModal("Cancellation quote",`<div class="card pad"><h3>Airline cancellation quote</h3><p>Refund quoted by airline</p><div style="font-family:Montserrat;font-size:32px;font-weight:700;color:var(--sk-navy);margin-top:10px">${esc(money(q.cancellation?.refundAmount,q.cancellation?.refundCurrency))}</div><p style="margin-top:12px">Quote expires ${esc(date(q.cancellation?.expiresAt))}. Nothing has been cancelled yet.</p></div>${!canDirect?`<div class="provider-note">This cancellation includes a customer refund. SKANDI will not cancel the supplier order here until the customer-refund workflow is completed. Continue through Support so the refund and cancellation remain one controlled transaction.</div>`:""}`,canDirect?`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-cancel="${esc(q.cancellation?.id||"")}">Confirm cancellation</button>`:`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn primary" data-section="support" data-view="cases">Continue with Support</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}else if(kind==="flight-change")flightChangeModal();else if(kind==="baggage")baggageModal();else if(kind==="stay-cancel")confirmSimple("Cancel hotel booking","This sends a live cancellation request to the accommodation supplier. Cancellation terms from your booking still apply.","MY_PROFILE_STAY_CANCEL");else if(kind==="car-cancel")confirmSimple("Cancel car rental","This sends a live cancellation request to the rental supplier. Supplier conditions still apply.","MY_PROFILE_CAR_CANCEL")}
+async function manage(kind){
+  const detail=state.bookingDetail;
+  const booking=detail?.booking;
+  if(!booking)return;
+  if(kind==="flight-change"){flightChangeModal();return}
+  if(kind==="baggage"){await baggageModal();return}
+  if(kind==="stay-cancel"||kind==="car-cancel"){
+    const stay=kind==="stay-cancel";
+    const policies=stay?arr(detail.provider?.stay?.cancellationTimeline):[];
+    const refundRows=policies.map(policy=>({
+      starts:policy.start,
+      refund:money(policy.refund_amount,policy.currency||detail.provider?.stay?.totalCurrency)
+    })).filter(policy=>policy.starts&&policy.refund);
+    const policy=refundRows.length?`<ul class="profile-list trip-files">${refundRows.map(term=>`<li class="trip-file"><span>From ${esc(date(term.starts))}</span><strong>${esc(term.refund)} refund</strong></li>`).join("")}</ul>`:"";
+    openModal(stay?"Hotel cancellation":"Car rental cancellation",
+      `${policy}<p>Ask SKANDI to confirm the cancellation terms and any refund for your booking.</p>`,
+      '<button class="btn soft" type="button" data-close-modal>Keep booking</button><button class="btn primary" type="button" data-trip-help="changes">Start cancellation request</button>');
+    return;
+  }
+  if(kind!=="flight-cancel")return;
+  busy(true);
+  try{
+    const {result}=await request("MY_PROFILE_FLIGHT_CANCEL_QUOTE",{bookingId:booking.id});
+    if(state.bookingDetail?.booking?.id!==booking.id)return;
+    const quote=result?.cancellation;
+    if(!quote?.id)throw new Error("The airline could not provide a cancellation quote.");
+    const value=money(quote.refundAmount,quote.refundCurrency);
+    const canDirect=value&&Number(quote.refundAmount)===0&&quote.expiresAt&&Date.parse(quote.expiresAt)>Date.now();
+    openModal("Airline cancellation quote",
+      `<p>${value?`Airline refund · <strong>${esc(value)}</strong>`:"The airline didn’t provide a refund amount."}</p>
+        ${quote.expiresAt?`<p>Quote expires ${esc(localDateTime(quote.expiresAt,Intl.DateTimeFormat().resolvedOptions().timeZone))}.</p>`:""}`,
+      `<button class="btn soft" type="button" data-close-modal>Keep booking</button>
+        ${canDirect?`<button class="btn danger" type="button" data-confirm-cancel="${esc(quote.id)}">Confirm cancellation</button>`:'<button class="btn primary" type="button" data-trip-help="changes">Request cancellation with support</button>'}`);
+  }catch(error){toast(error.message,true)}finally{busy(false)}
+}
+
+function reviewAirlineChange(id){
+  const change=arr(state.bookingDetail?.airlineChanges).find(item=>item.id===id);
+  if(!change||!arr(change.availableActions).includes("accept"))return;
+  const newSegments=arr(change.slices?.add).flatMap(slice=>arr(slice.segments));
+  const details=newSegments.map(segment=>`<li>${esc([airportName(segment.origin),airportName(segment.destination)].filter(Boolean).join(" → "))} · ${esc(localDateTime(segment.departingAt,segment.origin?.timeZone))}</li>`);
+  openModal("Airline schedule change",
+    details.length?`<p>Review the airline’s proposed itinerary.</p><ul>${details.join("")}</ul>`:'<p>Ask SKANDI for the revised itinerary before accepting.</p>',
+    `<button class="btn soft" type="button" data-close-modal>Back</button>${details.length?`<button class="btn primary" type="button" data-accept-airline-change="${esc(id)}">Accept new itinerary</button>`:'<button class="btn primary" type="button" data-trip-help="changes">Get help with this change</button>'}`);
+}
+
 function flightChangeModal(){const air=state.bookingDetail?.provider?.air,slices=arr(air?.slices);openModal("Change flight",`<form id="changeSearchForm" class="profile-form"><div class="field full"><label>Flight to change</label><select class="control" name="removeSliceId">${slices.map(s=>`<option value="${esc(s.id)}">${esc(s.origin?.iataCode||"")} → ${esc(s.destination?.iataCode||"")}</option>`).join("")}</select></div><div class="field"><label>Origin</label><input class="control" name="origin" maxlength="3" value="${esc(slices[0]?.origin?.iataCode||"")}"></div><div class="field"><label>Destination</label><input class="control" name="destination" maxlength="3" value="${esc(slices[0]?.destination?.iataCode||"")}"></div><div class="field"><label>New departure date</label><input class="control" type="date" name="departureDate" min="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Cabin</label><select class="control" name="cabinClass"><option value="economy">Economy</option><option value="premium_economy">Premium Economy</option><option value="business">Business</option><option value="first">First</option></select></div></form><div id="changeOffers"></div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" id="searchChangesBtn">Search changes</button>`)}
-async function searchChanges(){const f=$("changeSearchForm"),b=state.bookingDetail.booking;busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CHANGE_SEARCH",{bookingId:b.id,removeSliceId:f.removeSliceId.value,addSlice:{origin:f.origin.value.toUpperCase(),destination:f.destination.value.toUpperCase(),departureDate:f.departureDate.value,cabinClass:f.cabinClass.value}}),data=r.result||r,offers=arr(data.offers);$("changeOffers").innerHTML=offers.length?`<h3 class="subhead">Available alternatives</h3>${offers.map(o=>`<div class="choice"><div><strong>${esc(arr(o.slices?.add)[0]?.origin?.iataCode||"")} → ${esc(arr(o.slices?.add)[0]?.destination?.iataCode||"")}</strong><span>Change total ${esc(money(o.changeTotalAmount,o.changeTotalCurrency))}${o.penaltyTotalAmount?` · penalty ${esc(money(o.penaltyTotalAmount,o.penaltyTotalCurrency))}`:""}</span></div><div class="price">${esc(money(o.changeTotalAmount,o.changeTotalCurrency))}</div><button class="btn small primary" data-select-change="${esc(o.id)}" data-change-amount="${esc(o.changeTotalAmount||"0")}">Select</button></div>`).join("")}`:empty("No alternatives returned","The airline did not return a change offer for these details.","plane")}catch(e){toast(e.message,true)}finally{busy(false)}}
-async function selectChange(offerId,amount){if(Number(amount)<0){openModal("Refund change requires support",`<div class="provider-note">This flight change would create a customer refund. The current SKANDI supplier flow can confirm the airline change, but customer refund settlement must remain part of the same controlled transaction. Continue through Support instead of confirming it here.</div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" data-section="support" data-view="cases">Continue with Support</button>`);return}busy(true);try{const b=state.bookingDetail.booking,r=await request("MY_PROFILE_FLIGHT_CHANGE_SELECT",{bookingId:b.id,orderChangeOfferId:offerId}),data=r.result||r,change=data.change;if(!change?.id)throw new Error("The airline did not return a pending change.");const prep=await request("MY_PROFILE_FLIGHT_CHANGE_PREPARE_PAYMENT",{bookingId:b.id,orderChangeId:change.id}),pd=prep.result||prep;if(pd.paymentRequired)await openPayment({kind:"change",bookingId:b.id,orderChangeId:change.id,prepared:pd});else{const done=await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId:b.id,orderChangeId:change.id});toast("Flight change confirmed.");closeModal();await refreshBooking()}}catch(e){toast(e.message,true)}finally{busy(false)}}
-async function baggageModal(){const b=state.bookingDetail.booking;busy(true);try{const r=await request("MY_PROFILE_BAGGAGE_LIST",{bookingId:b.id}),data=r.result||r,services=arr(data.services);openModal("Add baggage",services.length?`<div id="bagChoices">${services.map(s=>`<label class="choice"><input type="checkbox" value="${esc(s.id)}" data-max="${Number(s.maximumQuantity||1)}"><div><strong>${esc(s.label||"Additional baggage")}</strong><span>${arr(s.passengerIds).length?`Passenger-specific · `:""}${arr(s.segmentIds).length?"Flight-specific":""}</span></div><div class="price">${esc(money(s.totalAmount,s.totalCurrency))}</div></label>`).join("")}</div>`:empty("No baggage offers","The airline is not currently offering post-booking baggage for this order.","bag"),services.length?`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" id="prepareBagsBtn">Continue to payment</button>`:`<button class="btn soft" data-close-modal>Close</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}
-async function prepareBags(){const services=[...document.querySelectorAll("#bagChoices input:checked")].map(x=>({id:x.value,quantity:1}));if(!services.length){toast("Choose at least one baggage option.",true);return}busy(true);try{const b=state.bookingDetail.booking,r=await request("MY_PROFILE_BAGGAGE_PREPARE_PAYMENT",{bookingId:b.id,services}),data=r.result||r;await openPayment({kind:"baggage",bookingId:b.id,services,prepared:data})}catch(e){toast(e.message,true)}finally{busy(false)}}
-async function openPayment(flow){const p=flow.prepared?.payment;if(!p?.clientSecret||!p?.publishableKey)throw new Error("Secure payment could not be prepared.");state.payment=flow;openModal(flow.kind==="baggage"?"Secure baggage payment":"Secure change payment",`<div class="card pad"><h3>${esc(money(p.amount,p.currency))}</h3><p>The payment is authorized first and captured only after the supplier confirms the servicing action.</p></div><div class="stripe-box" id="paymentElement"></div><div id="paymentError" style="color:var(--danger);font-size:11px;margin-top:10px"></div>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="confirmPaymentBtn">Authorize & continue</button>`);if(!window.Stripe)throw new Error("Secure payment is temporarily unavailable.");state.stripe=Stripe(p.publishableKey);state.elements=state.stripe.elements({clientSecret:p.clientSecret,appearance:{theme:"stripe",variables:{colorPrimary:"#022e64",fontFamily:"Inter, sans-serif",borderRadius:"10px"}}});state.elements.create("payment").mount("#paymentElement")}
-async function confirmPayment(){const flow=state.payment,p=flow?.prepared?.payment;if(!flow||!state.stripe||!state.elements)return;busy(true);try{const result=await state.stripe.confirmPayment({elements:state.elements,redirect:"if_required"});if(result.error)throw new Error(result.error.message||"Payment authorization failed.");const paymentIntentId=result.paymentIntent?.id||p.paymentIntentId;if(flow.kind==="baggage")await request("MY_PROFILE_BAGGAGE_CONFIRM",{bookingId:flow.bookingId,services:flow.services,paymentIntentId});else await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId:flow.bookingId,orderChangeId:flow.orderChangeId,paymentIntentId});toast(flow.kind==="baggage"?"Baggage added to your booking.":"Flight change confirmed.");closeModal();await refreshBooking()}catch(e){$("paymentError").textContent=e.message||"Payment could not be completed.";toast(e.message,true)}finally{busy(false)}}
-function confirmSimple(title,body,type){openModal(title,`<div class="provider-note">${esc(body)}</div>`,`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-simple="${esc(type)}">Confirm cancellation</button>`)}
-async function refreshBooking(){const id=state.bookingDetail?.booking?.id;if(!id)return;const r=await request("MY_PROFILE_BOOKING_DETAIL",{bookingId:id});state.bookingDetail=r.result||r;renderBookingDetail()}
+async function searchChanges(){
+  const form=$("changeSearchForm"),booking=state.bookingDetail?.booking;
+  if(!booking||!form?.reportValidity())return;
+  busy(true);
+  try{
+    const {result}=await request("MY_PROFILE_FLIGHT_CHANGE_SEARCH",{
+      bookingId:booking.id,removeSliceId:form.removeSliceId.value,
+      addSlice:{origin:form.origin.value.toUpperCase(),destination:form.destination.value.toUpperCase(),departureDate:form.departureDate.value,cabinClass:form.cabinClass.value}
+    });
+    const root=$("changeOffers");
+    if(!root||state.bookingDetail?.booking?.id!==booking.id)return;
+    const offers=arr(result?.offers).filter(offer=>offer.id&&money(offer.changeTotalAmount,offer.changeTotalCurrency));
+    root.innerHTML=offers.length?`<h4>Available alternatives</h4><ul class="profile-list trip-files">${offers.map(offer=>{
+      const slice=arr(offer.slices?.add)[0];
+      const price=money(offer.changeTotalAmount,offer.changeTotalCurrency);
+      const penalty=money(offer.penaltyTotalAmount,offer.penaltyTotalCurrency);
+      return `<li class="trip-file"><div>
+        <strong>${esc([airportName(slice?.origin),airportName(slice?.destination)].filter(Boolean).join(" → "))}</strong>
+        <p>Change total ${esc(price)}${penalty?` · Penalty ${esc(penalty)}`:""}</p></div>
+        <button class="btn small soft" type="button" data-select-change="${esc(offer.id)}" data-change-request="${esc(result.changeRequestId)}">Review</button>
+      </li>`;
+    }).join("")}</ul>`:empty("No alternatives found","Try different dates or contact SKANDI for help.","plane");
+  }catch(error){toast(error.message,true)}finally{busy(false)}
+}
+
+async function selectChange(button){
+  const booking=state.bookingDetail?.booking;
+  if(!booking)return;
+  busy(true);
+  try{
+    const {result}=await request("MY_PROFILE_FLIGHT_CHANGE_SELECT",{
+      bookingId:booking.id,orderChangeOfferId:button.dataset.selectChange,orderChangeRequestId:button.dataset.changeRequest
+    });
+    if(state.bookingDetail?.booking?.id!==booking.id)return;
+    const change=result?.change,amount=money(change?.changeTotalAmount,change?.changeTotalCurrency);
+    if(!change?.id||result.reconciliationRequired||!amount)throw new Error("SKANDI couldn’t confirm the change quote. Ask support to review it.");
+    if(Number(change.changeTotalAmount)<0){
+      openModal("Review a flight change",`<p>Airline refund · <strong>${esc(amount.replace(/^-/,""))}</strong></p>`,
+        '<button class="btn soft" type="button" data-close-modal>Keep booking</button><button class="btn primary" type="button" data-trip-help="changes">Request change with support</button>');
+      return;
+    }
+    const {result:prepared}=await request("MY_PROFILE_FLIGHT_CHANGE_PREPARE_PAYMENT",{bookingId:booking.id,orderChangeId:change.id});
+    if(!prepared?.ok)throw new Error("SKANDI couldn’t confirm the change quote.");
+    if(prepared.paymentRequired){openPayment({bookingId:booking.id,orderChangeId:change.id,prepared});return}
+    openModal("Review a flight change",`<p>Additional charge · <strong>${esc(amount)}</strong></p>`,
+      `<button class="btn soft" type="button" data-close-modal>Keep booking</button>
+        <button class="btn primary" type="button" data-confirm-free-change="${esc(change.id)}">Confirm flight change</button>`);
+  }catch(error){toast(error.message,true)}finally{busy(false)}
+}
+
+function baggageOptions(){
+  const detail=state.bookingDetail;
+  const options=arr(detail?.baggage).filter(item=>money(item.totalAmount,item.totalCurrency));
+  const passengers=arr(detail?.provider?.air?.passengers);
+  const flights=itineraryItems(detail).filter(item=>item.segment);
+  return options.map(option=>{
+    const travelers=arr(option.passengerIds).map(id=>passengers.findIndex(person=>person.id===id)+1).filter(Boolean);
+    const segments=flights.filter(flight=>arr(option.segmentIds).includes(flight.segment.id)).map(flight=>flight.title);
+    return {...option,details:[travelers.length?`Traveler ${travelers.join(", ")}`:"",...segments].filter(Boolean).join(" · ")};
+  });
+}
+
+function baggageModal(){
+  const options=baggageOptions();
+  if(!options.length){
+    openModal("Baggage options",'<p>Your airline hasn’t supplied priced baggage options for this trip.</p>',
+      '<button class="btn soft" type="button" data-close-modal>Close</button><button class="btn primary" type="button" data-trip-help="baggage">Start a request</button>');
+    return;
+  }
+  openModal("Review baggage options",
+    `<p>Choose the items you’d like SKANDI to add to your booking.</p><ul class="profile-list trip-files">${options.map(item=>`<li class="trip-file">
+      <label><input type="checkbox" value="${esc(item.id)}" data-baggage-option> ${esc(item.label)}${item.details?`<p>${esc(item.details)}</p>`:""}</label>
+      <strong>${esc(money(item.totalAmount,item.totalCurrency))}</strong>
+    </li>`).join("")}</ul>`,
+    '<button class="btn soft" type="button" data-close-modal>Close</button><button class="btn primary" type="button" data-request-baggage>Start baggage request</button>');
+}
+
+function requestBaggage(){
+  const selected=new Set([...$("modalBody").querySelectorAll("[data-baggage-option]:checked")].map(input=>input.value));
+  const options=baggageOptions().filter(item=>selected.has(item.id));
+  if(!options.length){toast("Choose at least one baggage option.",true);return}
+  const details=options.map(item=>[item.label,item.details,money(item.totalAmount,item.totalCurrency)].filter(Boolean).join(" · "));
+  beginTripRequest(state.bookingDetail?.booking,"baggage",["Please review adding these baggage options to my booking.",...details].join("\n"));
+}
+
+function openPayment(flow){
+  const payment=flow.prepared?.payment;
+  const value=money(payment?.amount,payment?.currency);
+  if(!payment?.clientSecret||!payment?.publishableKey||!value||!window.Stripe)throw new Error("Secure payment is temporarily unavailable.");
+  state.payment=flow;
+  openModal("Flight change payment",`<p>Amount to authorize · <strong>${esc(value)}</strong></p>
+    <p>Payment is captured after the airline confirms the change.</p><div class="stripe-box" id="paymentElement"></div>
+    <p id="paymentError" role="alert"></p>`,
+    '<button class="btn soft" type="button" data-close-modal>Cancel</button><button class="btn primary" type="button" id="confirmPaymentBtn">Authorize and confirm change</button>');
+  state.stripe=Stripe(payment.publishableKey);
+  state.elements=state.stripe.elements({clientSecret:payment.clientSecret,appearance:{theme:"stripe",variables:{colorPrimary:"#022e64",fontFamily:"Inter, sans-serif",borderRadius:"10px"}}});
+  state.elements.create("payment").mount("#paymentElement");
+}
+
+async function completeFlightChange(bookingId,orderChangeId,paymentIntentId){
+  const {result}=await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId,orderChangeId,paymentIntentId});
+  if(!result?.change?.confirmedAt||result.reconciliationRequired){
+    closeModal();
+    toast("Confirmation is pending. Check your trip or contact SKANDI before trying again.",true);
+  }else{
+    closeModal();
+    toast("Flight change confirmed.");
+  }
+  await refreshBooking();
+}
+
+async function confirmPayment(button){
+  const flow=state.payment;
+  if(!flow||!state.stripe||!state.elements||button.disabled)return;
+  button.disabled=true;
+  busy(true);
+  try{
+    const result=await state.stripe.confirmPayment({elements:state.elements,redirect:"if_required"});
+    if(result.error)throw new Error(result.error.message||"Payment authorization failed.");
+    await completeFlightChange(flow.bookingId,flow.orderChangeId,result.paymentIntent?.id||flow.prepared.payment.paymentIntentId);
+  }catch(error){
+    if($("paymentError"))$("paymentError").textContent=error.message;
+    toast(error.message,true);
+  }finally{button.disabled=false;busy(false)}
+}
+
+async function confirmTripOption(button,type,payload,confirmed,message){
+  const booking=state.bookingDetail?.booking;
+  if(!booking||button.disabled)return;
+  button.disabled=true;
+  busy(true);
+  try{
+    const {result}=await request(type,{bookingId:booking.id,...payload});
+    closeModal();
+    toast(confirmed(result)?message:"Confirmation is pending. Check your trip or contact SKANDI before trying again.",!confirmed(result));
+    await refreshBooking();
+  }catch(error){toast(error.message,true)}finally{button.disabled=false;busy(false)}
+}
+async function refreshBooking(){
+  if(state.view==="detail"&&state.tripId)await loadBooking(state.tripId);
+}
 async function refresh(){
   const banner=$("profileRefreshState");
   banner.hidden=false;
+  state.previewTrip=null;
   banner.textContent="Refreshing your account…";
   try{
     await request("MY_PROFILE_REFRESH",{},READ_TIMEOUT_MS);
@@ -5262,22 +6241,40 @@ async function submitBookingOrTraveler(event){
 }
 
 document.addEventListener("click",async e=>{
-  const cat=e.target.closest("[data-category-toggle]");if(cat){const wrap=cat.closest(".side-category");const willOpen=!wrap.classList.contains("open");wrap.classList.toggle("open",willOpen);cat.setAttribute("aria-expanded",willOpen?"true":"false");return}
-  const page=e.target.closest("[data-section][data-view]");if(page){setPage(page.dataset.section,page.dataset.view,true);return}
-  const supportCase=e.target.closest("[data-support-case]");if(supportCase){openSupportCase(supportCase.dataset.supportCase);return}
-  if(e.target.id==="supportRefresh"){loadSupport(true).catch(()=>{});return}
+  const page=e.target.closest("[data-section][data-view]");
+  if(page){closeModal();setPage(page.dataset.section,page.dataset.view,true);return}
+  const supportCase=e.target.closest("[data-support-case]");
+  if(supportCase){void openSupportCase(supportCase.dataset.supportCase);return}
+  if(e.target.id==="supportRefresh"){void loadSupport(true).catch(()=>{});return}
   if(e.target.id==="supportDuffel"){
     const trip=tripForSupportCase(state.support.detail?.case);
-    if(trip){setPage("trips",trip.view,true);loadBooking(trip.id)}
+    if(trip)openTrip(trip.id,"trip-support");
     return;
   }
-  if(e.target.id==="linkBookingBtn"){linkBookingModal();return}
+  if(e.target.closest("[data-link-booking]")){linkBookingModal();return}
+  if(e.target.id==="backToTrips"){setPage("trips",state.tripBackView,true);return}
+  if(e.target.closest("[data-retry-trip]")){void loadBooking(state.tripId);return}
+  if(e.target.closest("[data-retry-rewards]")){void loadRewards(true);return}
+  if(e.target.closest("[data-missing-points]")){missingPoints();return}
+  if(e.target.closest("[data-start-points-request]")){beginTripRequest(findTrip($("missingPointsTrip")?.value),"points");return}
+  if(e.target.closest("[data-trip-assistant]")){post("MY_PROFILE_OPEN_ALEXANDRA");return}
+  const tripJump=e.target.closest("[data-trip-jump]");
+  if(tripJump){jumpToTripSection(tripJump.dataset.tripJump);return}
+  const tripFile=e.target.closest("[data-trip-download]");
+  if(tripFile){downloadTrip(tripFile.dataset.tripDownload);return}
+  const tripHelp=e.target.closest("[data-trip-help]");
+  if(tripHelp){beginTripRequest(state.bookingDetail?.booking,tripHelp.dataset.tripHelp);return}
+  const caseLink=e.target.closest("[data-trip-case]");
+  if(caseLink){setPage("support","cases",true);void openSupportCase(caseLink.dataset.tripCase);return}
+  if(e.target.closest("[data-retry-trip-cases]")){void loadSupport(true).catch(()=>{});return}
+  const change=e.target.closest("[data-review-airline-change]");
+  if(change){reviewAirlineChange(change.dataset.reviewAirlineChange);return}
 
   if(e.target.id==="refreshBtn"||e.target.id==="profileRefreshRetry"||e.target.closest("[data-refresh-profile]")){refresh();return}
   if(e.target.id==="closeBtn"){post("CUSTOMER_DOCUMENT_CLOSE",{},DOC_SOURCE);setPage("trips","upcoming",true);return}
   const legacy=e.target.closest("[data-tab]");if(legacy){setTab(legacy.dataset.tab,true);return}
   const route=e.target.closest("[data-route]");if(route){post("MY_PROFILE_NAVIGATE",{path:route.dataset.route});return}
-  const booking=e.target.closest("[data-booking]");if(booking){loadBooking(booking.dataset.booking);return}
+  const booking=e.target.closest("[data-booking]");if(booking){openTrip(booking.dataset.booking,booking.dataset.tripTarget);return}
   const lf=e.target.closest("[data-ledger-filter]");if(lf){state.ledgerFilter=lf.dataset.ledgerFilter;renderClub();return}
   if(e.target.closest("[data-close-modal]")){closeModal();return}
   const manageBtn=e.target.closest("[data-manage]");if(manageBtn){manage(manageBtn.dataset.manage);return}
@@ -5298,11 +6295,26 @@ document.addEventListener("click",async e=>{
   if(openDoc){showBookingDocument(openDoc,"CUSTOMER_DOCUMENT_OPEN");return}
   const compDoc=e.target.closest("[data-complete-doc]");
   if(compDoc){showBookingDocument(compDoc,"CUSTOMER_DOCUMENT_COMPLETE");return}
-  const acc=e.target.closest("[data-accept-airline-change]");if(acc){busy(true);try{await request("MY_PROFILE_AIRLINE_CHANGE_ACCEPT",{bookingId:state.bookingDetail.booking.id,changeId:acc.dataset.acceptAirlineChange});toast("Airline change accepted.");await refreshBooking()}catch(x){toast(x.message,true)}finally{busy(false)}return}
-  const cancel=e.target.closest("[data-confirm-cancel]");if(cancel){busy(true);try{await request("MY_PROFILE_FLIGHT_CANCEL_CONFIRM",{bookingId:state.bookingDetail.booking.id,cancellationId:cancel.dataset.confirmCancel});toast("Booking cancelled.");closeModal();await refreshBooking()}catch(x){toast(x.message,true)}finally{busy(false)}return}
-  const simple=e.target.closest("[data-confirm-simple]");if(simple){busy(true);try{await request(simple.dataset.confirmSimple,{bookingId:state.bookingDetail.booking.id});toast("Cancellation request completed.");closeModal();await refreshBooking()}catch(x){toast(x.message,true)}finally{busy(false)}return}
-  const sel=e.target.closest("[data-select-change]");if(sel){selectChange(sel.dataset.selectChange,sel.dataset.changeAmount);return}
-  if(e.target.id==="searchChangesBtn"){searchChanges();return}if(e.target.id==="prepareBagsBtn"){prepareBags();return}if(e.target.id==="confirmPaymentBtn"){confirmPayment();return}
+  const accepted=e.target.closest("[data-accept-airline-change]");
+  if(accepted){
+    await confirmTripOption(accepted,"MY_PROFILE_AIRLINE_CHANGE_ACCEPT",{changeId:accepted.dataset.acceptAirlineChange},result=>result?.accepted===true,"Airline change accepted.");
+    return;
+  }
+  const cancellation=e.target.closest("[data-confirm-cancel]");
+  if(cancellation){
+    await confirmTripOption(cancellation,"MY_PROFILE_FLIGHT_CANCEL_CONFIRM",{cancellationId:cancellation.dataset.confirmCancel},result=>Boolean(result?.cancellation?.confirmedAt&&!result.reconciliationRequired),"Airline cancellation confirmed.");
+    return;
+  }
+  const offer=e.target.closest("[data-select-change]");
+  if(offer){await selectChange(offer);return}
+  const freeChange=e.target.closest("[data-confirm-free-change]");
+  if(freeChange){
+    await confirmTripOption(freeChange,"MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{orderChangeId:freeChange.dataset.confirmFreeChange},result=>Boolean(result?.change?.confirmedAt&&!result.reconciliationRequired),"Flight change confirmed.");
+    return;
+  }
+  if(e.target.id==="searchChangesBtn"){void searchChanges();return}
+  if(e.target.closest("[data-request-baggage]")){requestBaggage();return}
+  if(e.target.id==="confirmPaymentBtn"){void confirmPayment(e.target);return}
 
 });
 $("supportSearch")?.addEventListener("input",drawSupportCases);
@@ -5331,8 +6343,6 @@ $("supportReplyForm").addEventListener("submit",async event=>{
 });
 
 $("addTraveler").addEventListener("click",()=>travelerModal({}));
-$("closeDrawer").addEventListener("click",closeDrawer);
-$("drawerShade").addEventListener("click",closeDrawer);
 $("closeModal").addEventListener("click",closeModal);
 $("modalShade").addEventListener("click",event=>{if(event.target===$("modalShade"))closeModal()});
 $("modalBody").addEventListener("submit",submitBookingOrTraveler);
@@ -5353,9 +6363,17 @@ for(const form of [$("contactForm"),$("profileForm")]){
   });
 }
 document.addEventListener("keydown",event=>{
-  if(event.key!=="Escape")return;
-  if($("modalShade").classList.contains("open"))closeModal();
-  else if(!$("bookingDrawer").inert)closeDrawer();
+  const shade=$("modalShade");
+  if(!shade.classList.contains("open"))return;
+  if(event.key==="Escape"){event.preventDefault();closeModal();return}
+  if(event.key!=="Tab")return;
+  const active=[...shade.querySelectorAll("button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled)")].filter(element=>element.type!=="hidden"&&!element.hidden);
+  const first=active[0],last=active[active.length-1];
+  if(!first)return;
+  if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){
+    event.preventDefault();
+    (event.shiftKey?last:first).focus();
+  }
 });
 
 function settleRequest(type,payload){
@@ -5379,6 +6397,14 @@ window.addEventListener("message",event=>{
   if(!message||message.source!==PARENT)return;
   const payload=message.payload||{};
   switch(message.type){
+    case "SKANDI_MASTER_CONFIG": {
+      const logo=documentLink(payload.brand?.assets?.logos?.skandiWhiteSide);
+      if(logo&&logo!==state.clubLogo){
+        state.clubLogo=logo;
+        if(state.data?.club?.enrolled)renderOverview();
+      }
+      break;
+    }
     case "MY_PROFILE_HOST_READY":
       if(bootstrapping&&!state.data)post("MY_PROFILE_READY");
       break;
@@ -5402,7 +6428,7 @@ window.addEventListener("message",event=>{
       }
       break;
     case "MY_PROFILE_SET_PAGE":
-      setPage(payload.section||"club",payload.view||"overview");
+      setPage(payload.section||"home",payload.view||"overview",false,payload.tripId||"");
       break;
     case "MY_PROFILE_SET_TAB":
       setTab(payload.tab||"overview");
