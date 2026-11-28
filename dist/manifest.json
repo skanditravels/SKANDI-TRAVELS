@@ -35,6 +35,8 @@
       "missing": [],
       "issues": [],
       "backend": [
+        "src/backend/SKANDI_CORE/customerProfile.web.js",
+        "src/backend/SKANDI_CORE/voyMagazine.web.js",
         "src/backend/SKANDI_CORE/homeContent.web.js",
         "src/backend/SKANDI_CORE/travelReference.web.js"
       ],
@@ -64,12 +66,15 @@
         "HOME_LOCATION_DATA",
         "HOME_NAVIGATE",
         "HOME_NAVIGATE_TO_OFFER",
+        "HOME_PLANNING_REQUEST",
+        "HOME_PLANNING_STATE",
         "HOME_READY",
         "HOME_REFRESH",
         "HOME_REQUEST_FAILED",
         "HOME_SEARCH",
         "HOME_SELECT_OFFER",
         "HOME_TIMEOUT",
+        "HOME_VOY_STORY",
         "LOOKUP_FAILED",
         "METHOD_UNAVAILABLE",
         "PENDING",
@@ -88,8 +93,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
       "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "81ddd33d5ba88e1dd0da7e5ca15ac40110a492927ad7fbaa7695b48a35fbd698",
-      "bytes": 482029
+      "sha256": "bd685dde24838cb73c50f0fc34f3b95deae561d9e14f01f30309f5a971e78927",
+      "bytes": 451864
     },
     {
       "key": "search",
@@ -1006,8 +1011,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/voy/skandi-voy.receiver.html",
       "receiverFile": "skandi-embeds/voy/skandi-voy.receiver.html",
-      "sha256": "feb38652fd2e8fbfcd45ef9e17a0328747dd3df23342fab84db2acfc516b32c3",
-      "bytes": 279688
+      "sha256": "90497813359ca711ece2106bddb090fa0d44562e263bf79573cc29391e363b00",
+      "bytes": 279983
     },
     {
       "key": "club",
@@ -3859,8 +3864,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
       "receiverFile": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
-      "sha256": "49f469be3d7f348c5ebbed57ef1426d67ed6caf6e50f2ba712b1d233f9c56943",
-      "bytes": 166460
+      "sha256": "2859536e48f867a843d95e46c8351f23d17cee1ff0a7bcf21a4792b5f75f8ec5",
+      "bytes": 168321
     },
     {
       "key": "myProfile",

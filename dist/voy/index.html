@@ -3859,7 +3859,7 @@ function updateInteractiveInfo(){
   $("interactiveInfo").textContent=count?`${count} interactive feature${count===1?"":"s"}`:"No interactive features";
 }
 
-function renderBootstrap(payload){
+async function renderBootstrap(payload){
   state.issues=payload.issues||[];
   state.structuredPages=payload.pages||payload.voyPages||[];
   state.categories=payload.categories||[];
@@ -3874,7 +3874,12 @@ function renderBootstrap(payload){
   status("");
   const requested=payload.requestedIssue||"";
   const latest=state.issues.find(i=>String(i.issueId||i._id)===String(requested)||String(i.slug||"")===String(requested))||state.issues.find(i=>i.featured)||state.issues[0];
-  if(latest) selectIssue(latest.issueId||latest._id);
+  if (!latest) return;
+  const issueId = latest.issueId || latest._id;
+  await selectIssue(issueId);
+  const page = Number(payload.requestedPage);
+  const selected = state.activeIssue?.issueId || state.activeIssue?._id;
+  if (requested && selected === issueId && Number.isInteger(page) && page > 0 && page <= state.totalPages) goToPage(page);
 }
 function renderFilters(){
   const cats=state.categories.length?state.categories:["Destinations","Hotels","Food & Culture","Family Travel","Signature Collection","City Breaks","Beach","Cruise","Travel Tips"];
